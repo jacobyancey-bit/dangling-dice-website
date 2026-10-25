@@ -20,6 +20,7 @@ const seedData = async () => {
       name: 'Dangling Dice Studios™',
       email: 'studio@danglingdice.com',
       password: 'StudioPassword2026!',
+      role: 'admin',
     });
     console.log(`[Seeder] Created lead creator account: ${studioAdmin.email}`);
 

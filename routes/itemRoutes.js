@@ -6,23 +6,23 @@ import {
   updateItem,
   deleteItem,
 } from '../controllers/itemController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 /**
- * Public item read operations & Protected item creation
+ * Public item read operations & Admin-only item creation
  */
 router.route('/')
   .get(getItems)
-  .post(protect, createItem);
+  .post(protect, admin, createItem);
 
 /**
- * Public item read-by-id & Protected update and deletion
+ * Public item read-by-id & Admin-only update and deletion
  */
 router.route('/:id')
   .get(getItemById)
-  .put(protect, updateItem)
-  .delete(protect, deleteItem);
+  .put(protect, admin, updateItem)
+  .delete(protect, admin, deleteItem);
 
 export default router;

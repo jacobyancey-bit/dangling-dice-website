@@ -37,3 +37,17 @@ export const protect = async (req, res, next) => {
     next(new Error('Not authorized: No Bearer token provided in Authorization header'));
   }
 };
+
+/**
+ * Admin authorization middleware
+ * Ensures the authenticated user possesses the 'admin' role.
+ * Must be executed AFTER the protect middleware.
+ */
+export const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403);
+    next(new Error('Forbidden: Admin access privileges required'));
+  }
+};
