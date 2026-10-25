@@ -69,6 +69,11 @@ const itemSchema = new mongoose.Schema(
   }
 );
 
+// Performance Indexes for fast catalog querying and sorting
+itemSchema.index({ category: 1, createdAt: -1 });
+itemSchema.index({ isFeatured: 1, isAvailable: 1 });
+itemSchema.index({ title: 'text', description: 'text', tags: 'text' });
+
 const Item = mongoose.model('Item', itemSchema);
 
 export default Item;
