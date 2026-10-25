@@ -98,7 +98,7 @@ const seedData = async () => {
         description: 'Next-generation Android calculator powered by artificial intelligence. Solves complex algebra, calculus, step-by-step homework problems, and visualizes mathematical graphs. Available on the Google Play Store.',
         category: 'Mobile Apps',
         mediaUrl: 'https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator',
-        imageUrl: '/images/ai-calculator.jpg',
+        imageUrl: '/images/ai_calculator.png',
         tags: ['Android', 'AI', 'Google Play', 'Calculator', 'Mobile App'],
         price: 0,
         isFeatured: true,

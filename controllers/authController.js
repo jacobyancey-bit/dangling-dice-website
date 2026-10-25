@@ -26,8 +26,24 @@ export const registerUser = async (req, res, next) => {
       throw new Error('Please provide name, email, and password');
     }
 
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanName = String(name).trim();
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      res.status(400);
+      throw new Error('Please provide a valid email address');
+    }
+
+    // Password strength: minimum 8 characters
+    if (String(password).length < 8) {
+      res.status(400);
+      throw new Error('Password must be at least 8 characters long');
+    }
+
     // Check if user already exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
       res.status(400);
       throw new Error('User already exists with this email');
@@ -35,8 +51,8 @@ export const registerUser = async (req, res, next) => {
 
     // Create user (password is automatically hashed via Mongoose pre-save hook)
     const user = await User.create({
-      name,
-      email,
+      name: cleanName,
+      email: cleanEmail,
       password,
     });
 
@@ -74,8 +90,10 @@ export const loginUser = async (req, res, next) => {
       throw new Error('Please provide both email and password');
     }
 
+    const cleanEmail = String(email).trim().toLowerCase();
+
     // Find user by email and explicitly include password for comparison
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     // Validate credentials using model instance method
     if (user && (await user.matchPassword(password))) {

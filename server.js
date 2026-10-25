@@ -2,11 +2,14 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
+import hpp from 'hpp';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 // Resolve __dirname in ES module scope
@@ -23,25 +26,41 @@ const app = express();
 
 /**
  * ----------------------------------------------------
- * Security & Core Middleware
+ * Enterprise Security & Hardening Middleware
  * ----------------------------------------------------
  */
-// Set security HTTP headers (customized to allow modern inline client scripts and styles)
+
+// 1. HTTP Security Headers with custom Content Security Policy (CSP)
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        frameSrc: ["'self'", 'https://www.youtube.com', 'https://youtube.com'],
+        connectSrc: ["'self'"],
+      },
+    },
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
 
-// Enable Cross-Origin Resource Sharing for decoupled clients
+// 2. Enable Cross-Origin Resource Sharing
 app.use(cors());
 
-// Body parsing middleware for JSON payloads
-app.use(express.json());
+// 3. Prevent Denial of Service (DoS) by limiting JSON & URL-encoded request body size
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Body parsing middleware for URL-encoded payloads
-app.use(express.urlencoded({ extended: true }));
+// 4. Sanitize user data against NoSQL Query Injection (strips $ and . from keys)
+app.use(mongoSanitize());
+
+// 5. Prevent HTTP Parameter Pollution (HPP)
+app.use(hpp({ whitelist: ['category', 'tags', 'price'] }));
 
 /**
  * ----------------------------------------------------
@@ -52,11 +71,11 @@ app.use(express.static(path.join(__dirname, 'client')));
 
 /**
  * ----------------------------------------------------
- * API Tier Routes
+ * API Tier Routes (Protected by General API Limiter)
  * ----------------------------------------------------
  */
-// Mount central API router containing /auth and /items
-app.use('/api', apiRoutes);
+// Mount central API router containing /auth and /items with rate limiting
+app.use('/api', apiLimiter, apiRoutes);
 
 /**
  * Dedicated Admin Portal route (Decoupled Admin Tier)

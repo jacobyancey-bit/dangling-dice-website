@@ -385,6 +385,102 @@
       box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
     }
 
+    /* Catalog Search & Sort Toolbar */
+    .catalog-toolbar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 270px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-faint);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .catalog-search-input {
+      width: 100%;
+      padding: 0.7rem 2.2rem 0.7rem 2.4rem;
+      background: rgba(14, 19, 31, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .catalog-search-input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 14px rgba(6, 182, 212, 0.25);
+      background: rgba(18, 25, 41, 0.95);
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.2rem;
+      display: none;
+      line-height: 1;
+    }
+
+    .search-clear-btn:hover {
+      color: #fff;
+    }
+
+    .sort-box-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sort-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .catalog-sort-select {
+      background: rgba(14, 19, 31, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      padding: 0.65rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .catalog-sort-select:focus {
+      border-color: var(--neon-cyan);
+    }
+
     /* Resources Grid */
     .resources-grid {
       display: grid;
@@ -716,29 +812,6 @@
       margin-top: 0.35rem;
     }
 
-    .log-panel {
-      background: #04060a;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      max-height: 180px;
-      overflow-y: auto;
-      color: #94a3b8;
-    }
-
-    .log-entry {
-      margin-bottom: 0.35rem;
-    }
-
-    .log-success {
-      color: var(--neon-emerald);
-    }
-
-    .log-error {
-      color: #f87171;
-    }
 
     footer {
       border-top: 1px solid var(--border-subtle);
@@ -792,7 +865,7 @@
       <img src="/images/banner.jpg" alt="Dangling Dice Studios™ Workspace" class="hero-img" />
       <div class="hero-overlay">
         <div class="hero-pill">Official Hub &bull; Dangling Dice Studios™</div>
-        <h1 class="hero-title">Where Beat Production Meets Code Craft, AI Apps & Creative Games</h1>
+        <h1 class="hero-title">Where Beat Production Meets Code Craft, Phone Apps & Creative Games</h1>
         <p class="hero-description">
           Welcome to the creative nexus of Dangling Dice Studios™. Watch music production on <strong>Dangling Beats</strong>, download our smart mobile apps like the <strong>AI Calculator</strong> on Google Play, master full-stack software development with <strong>Dangling Dice Coding</strong>, and explore custom games.
         </p>
@@ -876,6 +949,26 @@
             <span id="countBadge" class="status-badge" style="background: rgba(6, 182, 212, 0.12); color: var(--neon-cyan); border-color: rgba(6, 182, 212, 0.3);">0 Items</span>
           </div>
 
+          <!-- Catalog Search & Sort Controls -->
+          <div class="catalog-toolbar">
+            <div class="search-box-wrapper">
+              <span class="search-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </span>
+              <input type="text" id="catalogSearchInput" class="catalog-search-input" placeholder="Search by title, description, or tags (e.g. #calculator, #synthwave)..." oninput="handleSearch(this.value)" />
+              <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" title="Clear search">&times;</button>
+            </div>
+            <div class="sort-box-wrapper">
+              <label for="catalogSortSelect" class="sort-label">Sort by:</label>
+              <select id="catalogSortSelect" class="catalog-sort-select" onchange="handleSort(this.value)">
+                <option value="newest">Newest Releases</option>
+                <option value="alpha">Title (A - Z)</option>
+                <option value="price-low">Price (Free First)</option>
+                <option value="price-high">Price (Highest First)</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Category Filter Pills -->
           <div class="filter-pills">
             <button class="pill-btn active" onclick="filterCategory('All')">All Content</button>
@@ -890,17 +983,6 @@
             <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
               Loading studio catalog from MongoDB...
             </div>
-          </div>
-        </div>
-
-        <!-- Network & API Activity Inspector -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">📡 Network Activity & Response Inspector</h2>
-            <button class="btn btn-secondary btn-sm" onclick="clearLogs()">Clear</button>
-          </div>
-          <div class="log-panel" id="logPanel">
-            <div class="log-entry"><span class="log-time">[System]</span> Initialized Dangling Dice Studios™ Client.</div>
           </div>
         </div>
       </section>
@@ -941,14 +1023,10 @@
       </a>
     </div>
     <p><strong>Dangling Dice Studios™</strong> &bull; Music Production, Coding Masterclasses & Game Tech &bull; Founded by Dangling Dice Studios™</p>
-    <div style="margin-top: 0.75rem; text-align: center;">
-      <a href="/admin" style="color: var(--text-faint); text-decoration: none; font-size: 0.75rem; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">🔐 Studio Staff Access</a>
-    </div>
   </footer>
 
   <script>
     const API_BASE = window.location.origin + '/api';
-    let selectedCategory = 'All';
 
     // YouTube Embed Helper (Supports single videos, playlists, shortlinks)
     function getYouTubeEmbedUrl(url) {
@@ -1000,23 +1078,11 @@
       if (e.target === modal) closeCinemaModal();
     });
 
-    // Logging helper
+    // Logging helper (Developer Console)
     function logMessage(msg, type = 'info') {
-      const panel = document.getElementById('logPanel');
-      const time = new Date().toLocaleTimeString();
-      const div = document.createElement('div');
-      div.className = 'log-entry';
-      let typeClass = '';
-      if (type === 'success') typeClass = 'log-success';
-      if (type === 'error') typeClass = 'log-error';
-      div.innerHTML = `<span style="color: var(--text-faint)">[${time}]</span> <span class="${typeClass}">${msg}</span>`;
-      panel.appendChild(div);
-      panel.scrollTop = panel.scrollHeight;
-    }
-
-    function clearLogs() {
-      document.getElementById('logPanel').innerHTML = '';
-      logMessage('Logs cleared.');
+      if (type === 'error') console.error(`[DanglingDice] ${msg}`);
+      else if (type === 'success') console.log(`%c[DanglingDice] ${msg}`, 'color: #10b981;');
+      else console.log(`[DanglingDice] ${msg}`);
     }
 
     // Health Check
@@ -1043,6 +1109,30 @@
       }
     }
 
+    let allResources = [];
+    let selectedCategory = 'All';
+    let searchQuery = '';
+    let sortOption = 'newest';
+
+    // Search and Sort Event Handlers
+    function handleSearch(val) {
+      searchQuery = (val || '').trim().toLowerCase();
+      const clearBtn = document.getElementById('searchClearBtn');
+      if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+      renderCatalog();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('catalogSearchInput');
+      if (input) input.value = '';
+      handleSearch('');
+    }
+
+    function handleSort(val) {
+      sortOption = val;
+      renderCatalog();
+    }
+
     // Category Filter
     function filterCategory(cat) {
       selectedCategory = cat;
@@ -1056,84 +1146,129 @@
                         (cat === 'Developer Tools' && text.includes('Developer Tools'));
         btn.classList.toggle('active', matches);
       });
-      fetchResources();
+      renderCatalog();
     }
 
     // Resources Fetch (Public Viewer)
     async function fetchResources() {
       const grid = document.getElementById('resourcesGrid');
-      const countBadge = document.getElementById('countBadge');
       try {
-        const query = selectedCategory !== 'All' ? `?category=${encodeURIComponent(selectedCategory)}` : '';
-        logMessage(`GET /api/items${query}...`);
-        const res = await fetch(`${API_BASE}/items${query}`);
+        logMessage(`GET /api/items...`);
+        const res = await fetch(`${API_BASE}/items`);
         const json = await res.json();
         if (!res.ok) throw new Error(json.message);
 
-        const items = json.data || [];
-        countBadge.textContent = `${items.length} ${items.length === 1 ? 'Resource' : 'Resources'}`;
-
-        if (items.length === 0) {
-          grid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); border: 2px dashed var(--border-subtle); border-radius: var(--radius-md);">
-              <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">No items in this category yet.</h4>
-              <p>Check back soon for upcoming studio releases!</p>
-            </div>
-          `;
-          return;
-        }
-
-        grid.innerHTML = items.map(item => {
-          const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
-          const thumb = item.imageUrl || '/images/banner.jpg';
-          const tagsHtml = (item.tags || []).map(t => `<span class="tag-chip">#${escapeHtml(t)}</span>`).join('');
-          const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
-          const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
-
-          let actionButtons = '';
-          if (ytEmbed) {
-            actionButtons = `
-              <button class="btn btn-youtube btn-sm" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
-              <a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">↗</a>
-            `;
-          } else if (item.mediaUrl && item.mediaUrl.includes('play.google.com')) {
-            actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store</a>`;
-          } else if (item.mediaUrl) {
-            actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ Open Link</a>`;
-          }
-
-          return `
-            <div class="resource-card">
-              <div class="resource-thumb-box" ${ytEmbed ? `style="cursor: pointer;" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')" title="Click to Play"` : ''}>
-                <img src="${thumb}" alt="${escapeHtml(item.title)}" class="resource-thumb" onerror="this.src='/images/banner.jpg'" />
-                ${ytEmbed ? `
-                  <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.45)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'">
-                    <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #ff0033, #cc0000); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem; box-shadow: 0 4px 16px rgba(255,0,51,0.5);">▶</div>
-                  </div>
-                ` : ''}
-                <span class="badge-category">${escapeHtml(item.category)}</span>
-                <span class="badge-price">${priceLabel}</span>
-              </div>
-              <div class="resource-body">
-                <h3 class="resource-title">${escapeHtml(item.title)}</h3>
-                <p class="resource-desc">${escapeHtml(item.description)}</p>
-                <div class="tag-chips">${tagsHtml}</div>
-                <div class="resource-footer">
-                  <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-                    ${actionButtons}
-                  </div>
-                  <span style="font-size: 0.72rem; color: var(--text-faint);">${item.user ? escapeHtml(item.user.name) : 'Studio'}</span>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        logMessage(`Rendered ${items.length} items from database.`, 'success');
+        allResources = json.data || [];
+        logMessage(`Loaded ${allResources.length} items from database.`, 'success');
+        renderCatalog();
       } catch (err) {
         grid.innerHTML = `<div style="grid-column: 1 / -1; color: #f87171; text-align: center; padding: 2rem;">Error: ${escapeHtml(err.message)}</div>`;
         logMessage(`Fetch error: ${err.message}`, 'error');
       }
+    }
+
+    // Render Filtered and Sorted Catalog
+    function renderCatalog() {
+      const grid = document.getElementById('resourcesGrid');
+      const countBadge = document.getElementById('countBadge');
+
+      // 1. Filter by Category & Search Query
+      let filtered = allResources.filter(item => {
+        const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+        if (!matchesCategory) return false;
+        if (!searchQuery) return true;
+
+        const titleMatch = (item.title || '').toLowerCase().includes(searchQuery);
+        const descMatch = (item.description || '').toLowerCase().includes(searchQuery);
+        const catMatch = (item.category || '').toLowerCase().includes(searchQuery);
+        const cleanQuery = searchQuery.replace(/^#/, '');
+        const tagsMatch = (item.tags || []).some(t => t.toLowerCase().includes(cleanQuery));
+
+        return titleMatch || descMatch || catMatch || tagsMatch;
+      });
+
+      // 2. Sort
+      if (sortOption === 'alpha') {
+        filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      } else if (sortOption === 'price-low') {
+        filtered.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+      } else if (sortOption === 'price-high') {
+        filtered.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+      } else {
+        // 'newest'
+        filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      }
+
+      // 3. Count Badge
+      if (searchQuery || selectedCategory !== 'All') {
+        countBadge.textContent = `${filtered.length} of ${allResources.length} Items`;
+      } else {
+        countBadge.textContent = `${filtered.length} ${filtered.length === 1 ? 'Resource' : 'Resources'}`;
+      }
+
+      // 4. Empty State
+      if (filtered.length === 0) {
+        const filterNotice = searchQuery
+          ? `No items matching "<strong>${escapeHtml(searchQuery)}</strong>"${selectedCategory !== 'All' ? ` in ${escapeHtml(selectedCategory)}` : ''}.`
+          : `No items found in category <strong>${escapeHtml(selectedCategory)}</strong>.`;
+
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1.5rem; color: var(--text-muted); border: 2px dashed var(--border-subtle); border-radius: var(--radius-md);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
+            <h4 style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.5rem;">No matching releases found</h4>
+            <p style="margin-bottom: 1.25rem;">${filterNotice}</p>
+            <button class="btn btn-secondary btn-sm" onclick="clearSearch(); filterCategory('All');">Reset All Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      // 5. Render Grid Cards
+      grid.innerHTML = filtered.map(item => {
+        const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
+        const thumb = item.imageUrl || '/images/banner.jpg';
+        const tagsHtml = (item.tags || []).map(t => `<span class="tag-chip" style="cursor: pointer;" onclick="document.getElementById('catalogSearchInput').value='${escapeHtml(t)}'; handleSearch('${escapeHtml(t)}');" title="Filter by tag">#${escapeHtml(t)}</span>`).join('');
+        const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
+        const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
+
+        let actionButtons = '';
+        if (ytEmbed) {
+          actionButtons = `
+            <button class="btn btn-youtube btn-sm" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
+            <a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">↗</a>
+          `;
+        } else if (item.mediaUrl && item.mediaUrl.includes('play.google.com')) {
+          actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store</a>`;
+        } else if (item.mediaUrl) {
+          actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ Open Link</a>`;
+        }
+
+        return `
+          <div class="resource-card">
+            <div class="resource-thumb-box" ${ytEmbed ? `style="cursor: pointer;" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')" title="Click to Play"` : ''}>
+              <img src="${thumb}" alt="${escapeHtml(item.title)}" class="resource-thumb" onerror="this.src='/images/banner.jpg'" />
+              ${ytEmbed ? `
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.45)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'">
+                  <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #ff0033, #cc0000); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem; box-shadow: 0 4px 16px rgba(255,0,51,0.5);">▶</div>
+                </div>
+              ` : ''}
+              <span class="badge-category">${escapeHtml(item.category)}</span>
+              <span class="badge-price">${priceLabel}</span>
+            </div>
+            <div class="resource-body">
+              <h3 class="resource-title">${escapeHtml(item.title)}</h3>
+              <p class="resource-desc">${escapeHtml(item.description)}</p>
+              <div class="tag-chips">${tagsHtml}</div>
+              <div class="resource-footer">
+                <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                  ${actionButtons}
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-faint);">${item.user ? escapeHtml(item.user.name) : 'Studio'}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function escapeHtml(str) {

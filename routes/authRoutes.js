@@ -5,22 +5,23 @@ import {
   getUserProfile,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 /**
  * @route   POST /api/auth/register
  * @desc    Register a new user
- * @access  Public
+ * @access  Public (Protected by rate limiter)
  */
-router.post('/register', registerUser);
+router.post('/register', authLimiter, registerUser);
 
 /**
  * @route   POST /api/auth/login
  * @desc    Authenticate user credentials & return JWT
- * @access  Public
+ * @access  Public (Protected by rate limiter)
  */
-router.post('/login', loginUser);
+router.post('/login', authLimiter, loginUser);
 
 /**
  * @route   GET /api/auth/profile
