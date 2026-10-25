@@ -59,6 +59,13 @@ app.use(express.static(path.join(__dirname, 'client')));
 app.use('/api', apiRoutes);
 
 /**
+ * Dedicated Admin Portal route (Decoupled Admin Tier)
+ */
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'admin.html'));
+});
+
+/**
  * Fallback route for decoupled client single page apps
  */
 app.get('*', (req, res, next) => {

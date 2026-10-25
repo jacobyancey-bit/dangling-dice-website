@@ -115,8 +115,8 @@ export const updateItem = async (req, res, next) => {
       throw new Error(`Resource not found with id: ${req.params.id}`);
     }
 
-    // Verify creator ownership
-    if (item.user.toString() !== req.user._id.toString()) {
+    // Verify creator ownership or admin privileges
+    if (item.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       res.status(403);
       throw new Error('User not authorized to update this resource');
     }
@@ -155,8 +155,8 @@ export const deleteItem = async (req, res, next) => {
       throw new Error(`Resource not found with id: ${req.params.id}`);
     }
 
-    // Verify creator ownership
-    if (item.user.toString() !== req.user._id.toString()) {
+    // Verify creator ownership or admin privileges
+    if (item.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       res.status(403);
       throw new Error('User not authorized to delete this resource');
     }

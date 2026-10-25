@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dangling Dice Studios™ | Admin Portal</title>
+  <link rel="icon" type="image/png" href="/images/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-surface: #0e131f;
+      --bg-card: rgba(18, 25, 41, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(251, 191, 36, 0.4);
+      --gold-primary: #fbbf24;
+      --gold-light: #fef08a;
+      --neon-cyan: #06b6d4;
+      --neon-emerald: #10b981;
+      --neon-purple: #a855f7;
+      --neon-red: #f87171;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(251, 191, 36, 0.07) 0%, transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 45%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar */
+    header {
+      background: rgba(7, 9, 14, 0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.9rem 2rem;
+    }
+
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-logo-img {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .admin-pill {
+      font-size: 0.68rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-light);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold-primary), #f59e0b);
+      color: #000;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    /* Layout Containers */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    /* Login Card View */
+    .login-container {
+      max-width: 440px;
+      margin: 4rem auto;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text-muted);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem 0.9rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--gold-primary);
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+      display: none;
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    /* Admin Dashboard View */
+    #dashboardView {
+      display: none;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 0.25rem;
+    }
+
+    /* Actions Bar */
+    .dashboard-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .pill-btn.active {
+      background: rgba(251, 191, 36, 0.18);
+      border-color: var(--gold-primary);
+      color: var(--gold-light);
+    }
+
+    /* Items Table */
+    .table-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(7, 9, 14, 0.6);
+      padding: 1rem 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge-tag {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--neon-cyan);
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-box {
+      background: #0e131f;
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 620px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 1.2rem 1.5rem;
+      background: #07090e;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      background: #07090e;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    /* Activity Log */
+    .log-box {
+      background: #05070b;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      padding: 0.85rem;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 2rem;
+    }
+
+    .log-line {
+      margin-bottom: 0.3rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="/admin" class="brand">
+        <img src="/images/logo.png" alt="Logo" class="brand-logo-img" />
+        <div>
+          <div class="brand-title">
+            Dangling Dice Studios™
+            <span class="admin-pill">Admin Portal</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="nav-actions">
+        <a href="/" target="_blank" class="btn btn-secondary btn-sm">Public Website ↗</a>
+        <button id="headerLogoutBtn" class="btn btn-danger btn-sm" onclick="logoutAdmin()" style="display: none;">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- View 1: Administrator Login Screen -->
+    <div id="loginView" class="login-container">
+      <div class="card">
+        <div class="card-title">👑 Administrator Login</div>
+        <p class="card-subtitle">Restricted system. Enter your Dangling Dice administrator credentials.</p>
+
+        <div id="loginAlert" class="alert"></div>
+
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+          <div class="form-group">
+            <label for="adminEmail">Administrator Email</label>
+            <input type="email" id="adminEmail" placeholder="studio@danglingdice.com" required />
+          </div>
+          <div class="form-group">
+            <label for="adminPassword">Password</label>
+            <input type="password" id="adminPassword" placeholder="••••••••" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Authenticate & Access Portal</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- View 2: Full Admin Dashboard -->
+    <div id="dashboardView">
+      <!-- Stats Strip -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Catalog Items</div>
+          <div class="stat-value" id="statItemCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Database Connection</div>
+          <div class="stat-value" style="color: var(--neon-emerald); font-size: 1.35rem;" id="statDbStatus">Online (Atlas)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Authenticated Administrator</div>
+          <div class="stat-value" style="font-size: 1.1rem; color: var(--gold-light);" id="statAdminName">Studio Lead</div>
+        </div>
+      </div>
+
+      <!-- Action Toolbar -->
+      <div class="dashboard-toolbar">
+        <div class="filter-pills">
+          <button class="pill-btn active" onclick="filterCategory('All')">All Categories</button>
+          <button class="pill-btn" onclick="filterCategory('Coding Tutorials')">💻 Coding</button>
+          <button class="pill-btn" onclick="filterCategory('Beats & Audio')">🎧 Beats</button>
+          <button class="pill-btn" onclick="filterCategory('Mobile Apps')">📱 Mobile Apps</button>
+          <button class="pill-btn" onclick="filterCategory('Studio Games')">🎲 Games</button>
+          <button class="pill-btn" onclick="filterCategory('Developer Tools')">🛠️ Dev Tools</button>
+        </div>
+
+        <button class="btn btn-primary btn-sm" onclick="openPublishModal()">+ Publish New Item</button>
+      </div>
+
+      <!-- Inventory Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Media / External</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading inventory from MongoDB...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Console & Network Inspector -->
+      <div class="log-box" id="adminLogBox">
+        <div class="log-line">[System] Dangling Dice Studios™ Admin Console Active.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Publish Resource Modal -->
+  <div id="publishModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">🚀 Publish New Resource</h3>
+        <button onclick="closePublishModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="publishAlert" class="alert"></div>
+        <form id="publishForm" onsubmit="handlePublishSubmit(event)">
+          <div class="form-group">
+            <label for="newTitle">Title</label>
+            <input type="text" id="newTitle" placeholder="e.g. Flutter Audio Engine Masterclass" required />
+          </div>
+          <div class="form-group">
+            <label for="newCategory">Category</label>
+            <select id="newCategory">
+              <option value="Coding Tutorials">💻 Dangling Dice Coding (Tutorial)</option>
+              <option value="Beats & Audio">🎧 Dangling Beats (Music / Audio)</option>
+              <option value="Mobile Apps">📱 Mobile Apps (Google Play Store)</option>
+              <option value="Studio Games">🎲 Studio Games (Tabletop / Digital)</option>
+              <option value="Developer Tools">🛠️ Developer Tools & Assets</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="newMediaUrl">YouTube Video / Playlist URL or Store Link</label>
+            <input type="url" id="newMediaUrl" placeholder="https://www.youtube.com/watch?v=... or Google Play link" />
+          </div>
+          <div class="form-group">
+            <label for="newTags">Tags (comma-separated)</label>
+            <input type="text" id="newTags" placeholder="Node.js, Express, Music, Beats" />
+          </div>
+          <div class="form-group">
+            <label for="newPrice">Price ($ USD - 0 for Free)</label>
+            <input type="number" id="newPrice" step="0.01" min="0" value="0" />
+          </div>
+          <div class="form-group">
+            <label for="newDesc">Description</label>
+            <textarea id="newDesc" rows="3" placeholder="Resource description..." required></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closePublishModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Publish to Catalog</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Resource Modal -->
+  <div id="editModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">✏️ Edit Studio Resource</h3>
+        <button onclick="closeEditModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="editAlert" class="alert"></div>
+        <form id="editForm" onsubmit="handleEditSubmit(event)">
+          <input type="hidden" id="editItemId" />
+          <div class="form-group">
+            <label for="editTitle">Title</label>
+            <input type="text" id="editTitle" required />
+          </div>
+          <div class="form-group">
+            <label for="editCategory">Category</label>
+            <select id="editCategory">
+              <option value="Coding Tutorials">💻 Dangling Dice Coding (Tutorial)</option>
+              <option value="Beats & Audio">🎧 Dangling Beats (Music / Audio)</option>
+              <option value="Mobile Apps">📱 Mobile Apps (Google Play Store)</option>
+              <option value="Studio Games">🎲 Studio Games (Tabletop / Digital)</option>
+              <option value="Developer Tools">🛠️ Developer Tools & Assets</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editMediaUrl">YouTube URL or External Link</label>
+            <input type="url" id="editMediaUrl" />
+          </div>
+          <div class="form-group">
+            <label for="editTags">Tags (comma-separated)</label>
+            <input type="text" id="editTags" />
+          </div>
+          <div class="form-group">
+            <label for="editPrice">Price ($ USD)</label>
+            <input type="number" id="editPrice" step="0.01" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="editDesc">Description</label>
+            <textarea id="editDesc" rows="3" required></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin + '/api';
+    let adminToken = localStorage.getItem('dangling_admin_jwt');
+    let adminUser = null;
+    let selectedCategory = 'All';
+    let catalogItems = [];
+
+    // Logging helper
+    function logAdmin(msg, isSuccess = false) {
+      const box = document.getElementById('adminLogBox');
+      if (!box) return;
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.innerHTML = `<span style="color: var(--text-faint)">[${time}]</span> <span style="color: ${isSuccess ? 'var(--neon-emerald)' : 'var(--text-muted)'}">${msg}</span>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function showAlert(id, msg, isSuccess = false) {
+      const el = document.getElementById(id);
+      el.className = `alert ${isSuccess ? 'alert-success' : 'alert-error'}`;
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function clearAlert(id) {
+      const el = document.getElementById(id);
+      el.style.display = 'none';
+      el.textContent = '';
+    }
+
+    // Authentication Handlers
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      clearAlert('loginAlert');
+      const email = document.getElementById('adminEmail').value;
+      const password = document.getElementById('adminPassword').value;
+
+      try {
+        logAdmin(`Authenticating ${email}...`);
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Login failed');
+
+        if (json.data.role !== 'admin') {
+          throw new Error('Access Denied: This account does not possess administrator privileges.');
+        }
+
+        adminToken = json.data.token;
+        adminUser = json.data;
+        localStorage.setItem('dangling_admin_jwt', adminToken);
+        logAdmin(`Authenticated as Administrator: ${adminUser.name}`, true);
+        showDashboard();
+      } catch (err) {
+        showAlert('loginAlert', err.message);
+        logAdmin(`Authentication failed: ${err.message}`);
+      }
+    }
+
+    function logoutAdmin() {
+      adminToken = null;
+      adminUser = null;
+      localStorage.removeItem('dangling_admin_jwt');
+      document.getElementById('loginView').style.display = 'block';
+      document.getElementById('dashboardView').style.display = 'none';
+      document.getElementById('headerLogoutBtn').style.display = 'none';
+      logAdmin('Signed out of Administrator Portal.');
+    }
+
+    async function verifyExistingSession() {
+      if (!adminToken) return;
+      try {
+        const res = await fetch(`${API_BASE}/auth/profile`, {
+          headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const json = await res.json();
+        if (res.ok && json.data.role === 'admin') {
+          adminUser = json.data;
+          showDashboard();
+        } else {
+          logoutAdmin();
+        }
+      } catch (err) {
+        logoutAdmin();
+      }
+    }
+
+    function showDashboard() {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('dashboardView').style.display = 'block';
+      document.getElementById('headerLogoutBtn').style.display = 'inline-flex';
+      document.getElementById('statAdminName').textContent = `${adminUser.name} (${adminUser.email})`;
+      fetchInventory();
+    }
+
+    // Category Filter
+    function filterCategory(cat) {
+      selectedCategory = cat;
+      document.querySelectorAll('.pill-btn').forEach(btn => {
+        const text = btn.textContent;
+        const matches = (cat === 'All' && text.includes('All')) ||
+                        (cat === 'Coding Tutorials' && text.includes('Coding')) ||
+                        (cat === 'Beats & Audio' && text.includes('Beats')) ||
+                        (cat === 'Mobile Apps' && text.includes('Mobile')) ||
+                        (cat === 'Studio Games' && text.includes('Games')) ||
+                        (cat === 'Developer Tools' && text.includes('Dev Tools'));
+        btn.classList.toggle('active', matches);
+      });
+      fetchInventory();
+    }
+
+    // Inventory CRUD
+    async function fetchInventory() {
+      const tbody = document.getElementById('inventoryTableBody');
+      const countEl = document.getElementById('statItemCount');
+      try {
+        const query = selectedCategory !== 'All' ? `?category=${encodeURIComponent(selectedCategory)}` : '';
+        logAdmin(`GET /api/items${query}...`);
+        const res = await fetch(`${API_BASE}/items${query}`);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message);
+
+        catalogItems = json.data || [];
+        countEl.textContent = catalogItems.length;
+
+        if (catalogItems.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No items found in this category. Click "+ Publish New Item" above to add one.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = catalogItems.map(item => {
+          const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
+          return `
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: #fff;">${escapeHtml(item.title)}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.description)}</div>
+              </td>
+              <td><span class="badge-tag">${escapeHtml(item.category)}</span></td>
+              <td style="font-weight: 600;">${priceLabel}</td>
+              <td>
+                ${item.mediaUrl ? `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: none; font-size: 0.8rem;">Open Link ↗</a>` : '<span style="color: var(--text-faint);">-</span>'}
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <button class="btn btn-secondary btn-sm" onclick="openEditModal('${item._id}')">✏️ Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="handleDelete('${item._id}')">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        logAdmin(`Loaded ${catalogItems.length} items from MongoDB Atlas.`, true);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color: var(--neon-red); text-align: center; padding: 2rem;">Error: ${escapeHtml(err.message)}</td></tr>`;
+        logAdmin(`Fetch error: ${err.message}`);
+      }
+    }
+
+    // Publish Modal
+    function openPublishModal() {
+      clearAlert('publishAlert');
+      document.getElementById('publishForm').reset();
+      document.getElementById('publishModal').style.display = 'flex';
+    }
+
+    function closePublishModal() {
+      document.getElementById('publishModal').style.display = 'none';
+      clearAlert('publishAlert');
+    }
+
+    async function handlePublishSubmit(e) {
+      e.preventDefault();
+      clearAlert('publishAlert');
+
+      const title = document.getElementById('newTitle').value;
+      const category = document.getElementById('newCategory').value;
+      const mediaUrl = document.getElementById('newMediaUrl').value;
+      const tags = document.getElementById('newTags').value;
+      const price = parseFloat(document.getElementById('newPrice').value) || 0;
+      const description = document.getElementById('newDesc').value;
+
+      try {
+        logAdmin(`POST /api/items creating "${title}"...`);
+        const res = await fetch(`${API_BASE}/items`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({
+            title,
+            category,
+            mediaUrl,
+            tags,
+            price,
+            description,
+            imageUrl: category === 'Beats & Audio' ? '/images/banner.jpg' : '/images/logo.jpg'
+          })
+        });
+
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message);
+
+        logAdmin(`Successfully published resource "${json.data.title}"`, true);
+        closePublishModal();
+        fetchInventory();
+      } catch (err) {
+        showAlert('publishAlert', err.message);
+        logAdmin(`Publish error: ${err.message}`);
+      }
+    }
+
+    // Edit Modal
+    function openEditModal(id) {
+      const item = catalogItems.find(i => i._id === id || i.id === id);
+      if (!item) return;
+
+      document.getElementById('editItemId').value = item._id;
+      document.getElementById('editTitle').value = item.title || '';
+      document.getElementById('editCategory').value = item.category || 'Coding Tutorials';
+      document.getElementById('editMediaUrl').value = item.mediaUrl || '';
+      document.getElementById('editTags').value = Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '');
+      document.getElementById('editPrice').value = item.price !== undefined ? item.price : 0;
+      document.getElementById('editDesc').value = item.description || '';
+      clearAlert('editAlert');
+
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      clearAlert('editAlert');
+    }
+
+    async function handleEditSubmit(e) {
+      e.preventDefault();
+      clearAlert('editAlert');
+
+      const id = document.getElementById('editItemId').value;
+      const title = document.getElementById('editTitle').value;
+      const category = document.getElementById('editCategory').value;
+      const mediaUrl = document.getElementById('editMediaUrl').value;
+      const tags = document.getElementById('editTags').value;
+      const price = parseFloat(document.getElementById('editPrice').value) || 0;
+      const description = document.getElementById('editDesc').value;
+
+      try {
+        logAdmin(`PUT /api/items/${id} updating "${title}"...`);
+        const res = await fetch(`${API_BASE}/items/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({
+            title,
+            category,
+            mediaUrl,
+            tags,
+            price,
+            description
+          })
+        });
+
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message);
+
+        logAdmin(`Successfully updated resource "${json.data.title}"`, true);
+        closeEditModal();
+        fetchInventory();
+      } catch (err) {
+        showAlert('editAlert', err.message);
+        logAdmin(`Update error: ${err.message}`);
+      }
+    }
+
+    async function handleDelete(id) {
+      if (!confirm('Are you sure you want to permanently delete this resource from the catalog?')) return;
+      try {
+        logAdmin(`DELETE /api/items/${id}...`);
+        const res = await fetch(`${API_BASE}/items/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message);
+
+        logAdmin(`Deleted resource ${id}`, true);
+        fetchInventory();
+      } catch (err) {
+        alert(`Delete failed: ${err.message}`);
+        logAdmin(`Delete error: ${err.message}`);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Startup
+    window.addEventListener('DOMContentLoaded', () => {
+      verifyExistingSession();
+    });
+  </script>
+</body>
+</html>

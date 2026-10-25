@@ -322,15 +322,9 @@
 
     /* Content & Layout Grid */
     .content-layout {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 2rem;
-    }
-
-    @media (max-width: 1080px) {
-      .content-layout {
-        grid-template-columns: 1fr;
-      }
+      max-width: 1380px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     .card {
@@ -772,7 +766,6 @@
       <nav class="nav-links">
         <a href="#divisions" class="nav-link">Studios</a>
         <a href="#catalog" class="nav-link">Catalog & Apps</a>
-        <a href="#creator-portal" class="nav-link">Creator Portal</a>
         <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-youtube btn-sm">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
           YouTube
@@ -811,7 +804,6 @@
           <a href="#catalog" class="btn btn-primary" onclick="filterCategory('Coding Tutorials')">💻 Learn Coding</a>
           <a href="#catalog" class="btn btn-playstore" onclick="filterCategory('Mobile Apps')">📱 Mobile Apps</a>
           <a href="#catalog" class="btn btn-purple" onclick="filterCategory('Beats & Audio')">🎧 Dangling Beats</a>
-          <a href="#creator-portal" class="btn btn-secondary">🔐 Creator Portal</a>
         </div>
       </div>
     </section>
@@ -871,123 +863,9 @@
       </div>
     </section>
 
-    <!-- Content & Portal Layout -->
+    <!-- Content & Catalog Layout -->
     <div class="content-layout">
-      <!-- Left Column: Creator / Auth Portal -->
-      <aside id="creator-portal">
-        <!-- Auth Card -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">🔐 Creator Portal</h2>
-            <span id="authBadge" style="font-size: 0.75rem; color: var(--text-faint);">Guest</span>
-          </div>
-
-          <div id="authAlert" class="alert"></div>
-
-          <!-- Unauthenticated State -->
-          <div id="unauthContainer">
-            <div class="tabs">
-              <button class="tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">Sign In</button>
-              <button class="tab-btn" id="tabRegister" onclick="switchAuthTab('register')">Register</button>
-            </div>
-
-            <form id="loginForm" onsubmit="handleLogin(event)">
-              <div class="form-group">
-                <label for="loginEmail">Email</label>
-                <input type="email" id="loginEmail" placeholder="studio@danglingdice.com" required />
-              </div>
-              <div class="form-group">
-                <label for="loginPassword">Password</label>
-                <input type="password" id="loginPassword" placeholder="••••••••" required />
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Log In to Studio</button>
-            </form>
-
-            <form id="registerForm" onsubmit="handleRegister(event)" style="display: none;">
-              <div class="form-group">
-                <label for="regName">Creator Name</label>
-                <input type="text" id="regName" placeholder="e.g. Jacob" required />
-              </div>
-              <div class="form-group">
-                <label for="regEmail">Email Address</label>
-                <input type="email" id="regEmail" placeholder="jacob@danglingdice.com" required />
-              </div>
-              <div class="form-group">
-                <label for="regPassword">Password (6+ chars)</label>
-                <input type="password" id="regPassword" placeholder="••••••••" minlength="6" required />
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Create Creator Account</button>
-            </form>
-          </div>
-
-          <!-- Authenticated State -->
-          <div id="authContainer" style="display: none;">
-            <div style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; border: 1px solid var(--border-subtle);">
-              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-weight: 700;" id="userAvatar">D</div>
-                <div>
-                  <h4 id="userName" style="font-size: 0.95rem; font-weight: 700;">Studio Lead</h4>
-                  <p id="userEmail" style="font-size: 0.78rem; color: var(--text-muted);">studio@danglingdice.com</p>
-                </div>
-              </div>
-              <label>Signed JWT (Bearer Token):</label>
-              <div class="token-box" id="tokenDisplay"></div>
-            </div>
-
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="fetchUserProfile()">Verify Session</button>
-              <button class="btn btn-danger btn-sm" onclick="logoutUser()">Sign Out</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Add New Studio Resource -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">🚀 Publish Content</h2>
-            <span style="font-size: 0.75rem; color: var(--neon-cyan);">POST /api/items</span>
-          </div>
-
-          <div id="createAlert" class="alert"></div>
-
-          <form id="createForm" onsubmit="handleCreateResource(event)">
-            <div class="form-group">
-              <label for="resTitle">Title</label>
-              <input type="text" id="resTitle" placeholder="e.g. Next.js 15 Tutorial" required />
-            </div>
-            <div class="form-group">
-              <label for="resCategory">Studio Branch / Category</label>
-              <select id="resCategory">
-                <option value="Coding Tutorials" selected>💻 Dangling Dice Coding (Tutorial)</option>
-                <option value="Beats & Audio">🎧 Dangling Beats (Music / Audio)</option>
-                <option value="Mobile Apps">📱 Mobile Apps (Google Play Store)</option>
-                <option value="Studio Games">🎲 Studio Games (Tabletop / Digital)</option>
-                <option value="Developer Tools">🛠️ Developer Tools & Assets</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="resMediaUrl">YouTube Video / Playlist URL (or External Link)</label>
-              <input type="url" id="resMediaUrl" placeholder="https://www.youtube.com/watch?v=... or playlist?list=..." />
-              <p style="font-size: 0.72rem; color: var(--text-faint); margin-top: 0.3rem;">Paste any YouTube video or playlist link to enable on-site streaming</p>
-            </div>
-            <div class="form-group">
-              <label for="resTags">Tags (comma-separated)</label>
-              <input type="text" id="resTags" placeholder="JavaScript, Node, Audio, Lofi" />
-            </div>
-            <div class="form-group">
-              <label for="resPrice">Price ($ USD - 0 for Free)</label>
-              <input type="number" id="resPrice" step="0.01" min="0" value="0" />
-            </div>
-            <div class="form-group">
-              <label for="resDesc">Description</label>
-              <textarea id="resDesc" placeholder="What will viewers learn or hear?..." required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Publish to Studio Catalog</button>
-          </form>
-        </div>
-      </aside>
-
-      <!-- Right Column: Catalog Grid & Activity Console -->
+      <!-- Catalog Grid & Showcase -->
       <section id="catalog">
         <div class="card">
           <div class="card-header">
@@ -1063,12 +941,13 @@
       </a>
     </div>
     <p><strong>Dangling Dice Studios™</strong> &bull; Music Production, Coding Masterclasses & Game Tech &bull; Founded by Dangling Dice Studios™</p>
+    <div style="margin-top: 0.75rem; text-align: center;">
+      <a href="/admin" style="color: var(--text-faint); text-decoration: none; font-size: 0.75rem; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">🔐 Studio Staff Access</a>
+    </div>
   </footer>
 
   <script>
     const API_BASE = window.location.origin + '/api';
-    let currentToken = localStorage.getItem('dangling_jwt');
-    let currentUser = null;
     let selectedCategory = 'All';
 
     // YouTube Embed Helper (Supports single videos, playlists, shortlinks)
@@ -1164,134 +1043,6 @@
       }
     }
 
-    // Tabs
-    function switchAuthTab(tab) {
-      const isLogin = tab === 'login';
-      document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
-      document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
-      document.getElementById('tabLogin').classList.toggle('active', isLogin);
-      document.getElementById('tabRegister').classList.toggle('active', !isLogin);
-      clearAlert('authAlert');
-    }
-
-    function showAlert(id, msg, isSuccess = false) {
-      const el = document.getElementById(id);
-      el.className = `alert ${isSuccess ? 'alert-success' : 'alert-error'}`;
-      el.textContent = msg;
-      el.style.display = 'block';
-    }
-
-    function clearAlert(id) {
-      const el = document.getElementById(id);
-      el.style.display = 'none';
-      el.textContent = '';
-    }
-
-    // Auth logic
-    async function handleLogin(e) {
-      e.preventDefault();
-      clearAlert('authAlert');
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
-
-      try {
-        logMessage(`POST /api/auth/login for ${email}...`);
-        const res = await fetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.message || 'Login failed');
-
-        setAuth(json.data.token, json.data);
-        showAlert('authAlert', 'Welcome back to Dangling Dice Studios™!', true);
-        logMessage(`Logged in as: ${json.data.name}`, 'success');
-      } catch (err) {
-        showAlert('authAlert', err.message);
-        logMessage(`Login failed: ${err.message}`, 'error');
-      }
-    }
-
-    async function handleRegister(e) {
-      e.preventDefault();
-      clearAlert('authAlert');
-      const name = document.getElementById('regName').value;
-      const email = document.getElementById('regEmail').value;
-      const password = document.getElementById('regPassword').value;
-
-      try {
-        logMessage(`POST /api/auth/register for ${email}...`);
-        const res = await fetch(`${API_BASE}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.message || 'Registration failed');
-
-        setAuth(json.data.token, json.data);
-        showAlert('authAlert', 'Account registered and logged in!', true);
-        logMessage(`Registered new creator: ${json.data.name}`, 'success');
-      } catch (err) {
-        showAlert('authAlert', err.message);
-        logMessage(`Registration failed: ${err.message}`, 'error');
-      }
-    }
-
-    function setAuth(token, user) {
-      currentToken = token;
-      currentUser = user;
-      localStorage.setItem('dangling_jwt', token);
-      updateAuthUI();
-      fetchResources();
-    }
-
-    function logoutUser() {
-      currentToken = null;
-      currentUser = null;
-      localStorage.removeItem('dangling_jwt');
-      updateAuthUI();
-      logMessage('Signed out.');
-      fetchResources();
-    }
-
-    async function fetchUserProfile() {
-      if (!currentToken) return;
-      try {
-        logMessage('GET /api/auth/profile with Bearer token...');
-        const res = await fetch(`${API_BASE}/auth/profile`, {
-          headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
-        const json = await res.json();
-        if (res.ok) {
-          currentUser = json.data;
-          updateAuthUI();
-          logMessage(`Verified profile for ${currentUser.name}`, 'success');
-        } else {
-          throw new Error(json.message);
-        }
-      } catch (err) {
-        logMessage(`Profile error: ${err.message}`, 'error');
-        logoutUser();
-      }
-    }
-
-    function updateAuthUI() {
-      const isAuth = !!currentToken;
-      document.getElementById('unauthContainer').style.display = isAuth ? 'none' : 'block';
-      document.getElementById('authContainer').style.display = isAuth ? 'block' : 'none';
-      document.getElementById('authBadge').textContent = isAuth ? 'Creator' : 'Guest';
-      document.getElementById('authBadge').style.color = isAuth ? 'var(--neon-cyan)' : 'var(--text-faint)';
-
-      if (isAuth && currentUser) {
-        document.getElementById('userName').textContent = currentUser.name;
-        document.getElementById('userEmail').textContent = currentUser.email;
-        document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-        document.getElementById('tokenDisplay').textContent = currentToken;
-      }
-    }
-
     // Category Filter
     function filterCategory(cat) {
       selectedCategory = cat;
@@ -1308,7 +1059,7 @@
       fetchResources();
     }
 
-    // Resources Fetch
+    // Resources Fetch (Public Viewer)
     async function fetchResources() {
       const grid = document.getElementById('resourcesGrid');
       const countBadge = document.getElementById('countBadge');
@@ -1326,14 +1077,13 @@
           grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); border: 2px dashed var(--border-subtle); border-radius: var(--radius-md);">
               <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">No items in this category yet.</h4>
-              <p>Publish an app, tutorial, or beat using the form on the left!</p>
+              <p>Check back soon for upcoming studio releases!</p>
             </div>
           `;
           return;
         }
 
         grid.innerHTML = items.map(item => {
-          const isOwner = currentUser && item.user && (item.user._id === currentUser._id || item.user === currentUser._id);
           const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
           const thumb = item.imageUrl || '/images/banner.jpg';
           const tagsHtml = (item.tags || []).map(t => `<span class="tag-chip">#${escapeHtml(t)}</span>`).join('');
@@ -1344,7 +1094,7 @@
           if (ytEmbed) {
             actionButtons = `
               <button class="btn btn-youtube btn-sm" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
-              <a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open directly on YouTube">↗</a>
+              <a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">↗</a>
             `;
           } else if (item.mediaUrl && item.mediaUrl.includes('play.google.com')) {
             actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store</a>`;
@@ -1371,7 +1121,6 @@
                 <div class="resource-footer">
                   <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
                     ${actionButtons}
-                    ${isOwner ? `<button class="btn btn-danger btn-sm" onclick="handleDelete('${item._id}')">Delete</button>` : ''}
                   </div>
                   <span style="font-size: 0.72rem; color: var(--text-faint);">${item.user ? escapeHtml(item.user.name) : 'Studio'}</span>
                 </div>
@@ -1384,74 +1133,6 @@
       } catch (err) {
         grid.innerHTML = `<div style="grid-column: 1 / -1; color: #f87171; text-align: center; padding: 2rem;">Error: ${escapeHtml(err.message)}</div>`;
         logMessage(`Fetch error: ${err.message}`, 'error');
-      }
-    }
-
-    // Publish New Resource
-    async function handleCreateResource(e) {
-      e.preventDefault();
-      clearAlert('createAlert');
-
-      if (!currentToken) {
-        showAlert('createAlert', 'Please sign in or register above to publish content.');
-        return;
-      }
-
-      const title = document.getElementById('resTitle').value;
-      const category = document.getElementById('resCategory').value;
-      const mediaUrl = document.getElementById('resMediaUrl').value;
-      const tags = document.getElementById('resTags').value;
-      const price = parseFloat(document.getElementById('resPrice').value) || 0;
-      const description = document.getElementById('resDesc').value;
-
-      try {
-        logMessage(`POST /api/items publishing "${title}"...`);
-        const res = await fetch(`${API_BASE}/items`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          },
-          body: JSON.stringify({
-            title,
-            category,
-            mediaUrl,
-            tags,
-            price,
-            description,
-            imageUrl: category === 'Beats & Audio' ? '/images/banner.jpg' : '/images/logo.jpg'
-          })
-        });
-
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.message);
-
-        showAlert('createAlert', 'Content published to catalog!', true);
-        document.getElementById('createForm').reset();
-        logMessage(`Published: ${json.data.title}`, 'success');
-        fetchResources();
-      } catch (err) {
-        showAlert('createAlert', err.message);
-        logMessage(`Publish error: ${err.message}`, 'error');
-      }
-    }
-
-    async function handleDelete(id) {
-      if (!confirm('Are you sure you want to delete this resource?')) return;
-      try {
-        logMessage(`DELETE /api/items/${id}...`);
-        const res = await fetch(`${API_BASE}/items/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.message);
-
-        logMessage(`Deleted resource ${id}`, 'success');
-        fetchResources();
-      } catch (err) {
-        alert(err.message);
-        logMessage(`Delete failed: ${err.message}`, 'error');
       }
     }
 
@@ -1468,11 +1149,6 @@
     // Startup
     window.addEventListener('DOMContentLoaded', async () => {
       await checkHealth();
-      if (currentToken) {
-        await fetchUserProfile();
-      } else {
-        updateAuthUI();
-      }
       await fetchResources();
     });
   </script>
