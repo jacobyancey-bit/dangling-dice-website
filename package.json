@@ -9,6 +9,8 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "node apps/api/server.js",
+    "build": "npm run build:web",
     "dev:api": "npm run dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "seed": "npm run seed --workspace=apps/api",
