@@ -2,7 +2,9 @@
  * Dangling Dice Studios™ — Public Catalog Client Application
  */
 
-const API_BASE = window.location.origin + '/api';
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000' && window.location.port !== '3000'
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
 
 // YouTube Embed Helper (Supports single videos, playlists, shortlinks)
 function getYouTubeEmbedUrl(url) {
