@@ -1,0 +1,43 @@
+name: Continuous Integration & Security Suite
+
+# Triggers: Run on any push or pull request to main or staging
+on:
+  push:
+    branches: [ main, staging ]
+  pull_request:
+    branches: [ main, staging ]
+
+jobs:
+  verify:
+    name: Test, Audit & Build Verification
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      PORT: 5000
+      JWT_SECRET: ci_test_secret_key_for_automated_runs_only
+      CLIENT_URL: http://localhost:3000
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js runtime
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # Step 3: Install all workspace dependencies cleanly
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      # Step 4: Verify frontend builds without errors
+      - name: Build Web Client (Vite)
+        run: npm run build:web
+
+      # Step 5: Run Automated Test Suite
+      - name: Run Test Suites
+        run: npm run test
