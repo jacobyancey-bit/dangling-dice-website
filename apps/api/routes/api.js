@@ -2,6 +2,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import authRoutes from './authRoutes.js';
 import itemRoutes from './itemRoutes.js';
+import checkoutRoutes from './checkoutRoutes.js';
+import orderRoutes from './orderRoutes.js';
 
 const router = express.Router();
 
@@ -30,6 +32,8 @@ router.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth (register, login, profile)',
       items: '/api/items (GET, POST, PUT, DELETE)',
+      checkout: '/api/checkout (create-session, webhook, order/:sessionId)',
+      orders: '/api/orders (GET customer purchases)',
     },
   });
 });
@@ -39,5 +43,7 @@ router.get('/', (req, res) => {
  */
 router.use('/auth', authRoutes);
 router.use('/items', itemRoutes);
+router.use('/checkout', checkoutRoutes);
+router.use('/orders', orderRoutes);
 
 export default router;

@@ -124,6 +124,10 @@ npm run build:web
 | `POST /api/items` | `POST` | **Bearer JWT** | Publish new tutorial, beat, or game |
 | `PUT /api/items/:id` | `PUT` | **Bearer JWT** | Edit published content (creator only) |
 | `DELETE /api/items/:id` | `DELETE` | **Bearer JWT** | Remove content (creator only) |
+| `POST /api/checkout/create-session` | `POST` | Public / Optional Auth | Create Stripe Checkout Session for beats & digital assets |
+| `POST /api/checkout/webhook` | `POST` | Stripe Signature | Fulfill orders and generate digital license keys |
+| `GET /api/checkout/order/:sessionId` | `GET` | Public | Retrieve order fulfillment status post-checkout |
+| `GET /api/orders` | `GET` | Public / Optional Auth | List customer orders and verified license keys |
 
 ---
 
