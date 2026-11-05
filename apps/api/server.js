@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import connectDB from './config/db.js';
@@ -77,21 +78,33 @@ app.use(hpp({ whitelist: ['category', 'tags', 'price'] }));
  * API Tier Routes (Protected by General API Limiter)
  * ----------------------------------------------------
  */
-// Root info endpoint
-app.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    service: 'Dangling Dice Studios™ REST API',
-    version: '1.0.0',
-    documentation: '/api',
-  });
-});
-
 // Privacy-preserving outbound affiliate & partner redirector
 app.get('/go/:slug', redirectPartner);
 
 // Mount central API router containing /auth, /items, /checkout, /orders, /affiliates with rate limiting
 app.use('/api', apiLimiter, apiRoutes);
+
+// Frontend Static Files (Serve compiled Vite client in production if dist exists)
+const distPath = path.join(__dirname, '..', 'web', 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/go')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  // Root info fallback when running headless API without built web client
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      success: true,
+      service: 'Dangling Dice Studios™ REST API',
+      version: '1.0.0',
+      documentation: '/api',
+    });
+  });
+}
 
 /**
  * ----------------------------------------------------
