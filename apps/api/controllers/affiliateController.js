@@ -20,7 +20,7 @@ const PARTNER_DIRECTORY = {
   },
   vpn: {
     name: 'Dangling Dice Secure Dev VPN',
-    targetUrl: 'https://vpn.danglingdice.com',
+    targetUrl: 'https://vpn.dangling-dice-studios.com',
     category: 'Developer Tools',
   },
   calculator: {
