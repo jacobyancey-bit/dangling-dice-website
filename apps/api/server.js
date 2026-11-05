@@ -64,36 +64,21 @@ app.use(hpp({ whitelist: ['category', 'tags', 'price'] }));
 
 /**
  * ----------------------------------------------------
- * Frontend Static Files (Decoupled Client Tier)
- * ----------------------------------------------------
- */
-app.use(express.static(path.join(__dirname, 'client')));
-
-/**
- * ----------------------------------------------------
  * API Tier Routes (Protected by General API Limiter)
  * ----------------------------------------------------
  */
+// Root info endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    service: 'Dangling Dice Studios™ REST API',
+    version: '1.0.0',
+    documentation: '/api',
+  });
+});
+
 // Mount central API router containing /auth and /items with rate limiting
 app.use('/api', apiLimiter, apiRoutes);
-
-/**
- * Dedicated Admin Portal route (Decoupled Admin Tier)
- */
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'admin.html'));
-});
-
-/**
- * Fallback route for decoupled client single page apps
- */
-app.get('*', (req, res, next) => {
-  // If request begins with /api, pass down to 404 handler
-  if (req.originalUrl.startsWith('/api')) {
-    return next();
-  }
-  res.sendFile(path.join(__dirname, 'client', 'index.html'));
-});
 
 /**
  * ----------------------------------------------------

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { ITEM_CATEGORIES } from '@dangling-dice/shared';
 
 /**
  * Studio Resource / Item Schema for Dangling Dice Studios
@@ -26,14 +27,7 @@ const itemSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Please specify a studio category'],
-      enum: [
-        'Coding Tutorials',
-        'Beats & Audio',
-        'Mobile Apps',
-        'Studio Games',
-        'Developer Tools',
-        'General',
-      ],
+      enum: ITEM_CATEGORIES,
       default: 'Coding Tutorials',
     },
     mediaUrl: {
