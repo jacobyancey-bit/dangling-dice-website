@@ -17,6 +17,11 @@
       "type": "string"
     },
     {
+      "key": "userToken",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "itemId",
       "value": "",
       "type": "string"
@@ -383,6 +388,289 @@
                   "    const json = pm.response.json();",
                   "    pm.expect(json.success).to.be.true;",
                   "    pm.expect(json.data._id).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04. Security & Negative Authorization Regression",
+      "item": [
+        {
+          "name": "Setup: Register Standard Non-Admin User (Auto-captures userToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Standard Non-Admin User\",\n  \"email\": \"standard_user_{{$timestamp}}@danglingdice.com\",\n  \"password\": \"StandardPass2026!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers a test user with the default 'user' role to test privilege escalation boundaries and auto-saves token to {{userToken}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Non-admin user created with 201 and user role', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.role).to.eql('user');",
+                  "    pm.collectionVariables.set('userToken', json.data.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG-01: Missing Authorization Header (Expect 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Validates that protected endpoints immediately reject unauthenticated calls with 401 Unauthorized when Authorization header is absent."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects missing Bearer token with 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('No Bearer token provided in Authorization header');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG-02: Malformed / Tampered JWT (Expect 401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.tampered_payload_data.invalid_signature_hash"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Validates that forged, malformed, or tampered JWT signatures fail verification with 401 Unauthorized."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects invalid JWT signature with 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('Not authorized');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG-03: Non-Bearer Scheme (Expect 401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic dXNlcjpwYXNzd29yZA=="
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Validates that schemes other than Bearer (e.g. Basic auth) are rejected with 401 Unauthorized."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects non-Bearer authorization scheme with 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('No Bearer token provided in Authorization header');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG-04: Unauthenticated Resource Creation (Expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Unauthorized Exploit Beat\",\n  \"description\": \"Attempting to create resource without authentication.\",\n  \"category\": \"Beats & Audio\",\n  \"mediaUrl\": \"https://danglingdice.com\",\n  \"imageUrl\": \"/images/banner.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["items"]
+            },
+            "description": "Verifies that POST /api/items cannot be accessed anonymously."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Anonymous resource creation rejected with 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG-05: RBAC Privilege Escalation - Non-Admin Item Creation (Expect 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Non-Admin Exploit Item\",\n  \"description\": \"Should be strictly rejected by admin middleware.\",\n  \"category\": \"Beats & Audio\",\n  \"mediaUrl\": \"https://danglingdice.com\",\n  \"imageUrl\": \"/images/banner.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["items"]
+            },
+            "description": "Sends a valid JWT belonging to a user with role 'user'. Asserts that the admin middleware halts execution and returns 403 Forbidden."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects non-admin user with 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('Forbidden: Admin access privileges required');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG-06: RBAC Privilege Escalation - Non-Admin Item Deletion (Expect 403)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/items/{{itemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "{{itemId}}"]
+            },
+            "description": "Verifies that a standard authenticated user cannot delete a studio resource owned by admin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects non-admin deletion with 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('Forbidden: Admin access privileges required');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "NEG-07: Malformed ObjectId / CastError (Expect 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/items/invalid-malformed-objectid",
+              "host": ["{{baseUrl}}"],
+              "path": ["items", "invalid-malformed-objectid"]
+            },
+            "description": "Verifies that CastError on malformed MongoDB ObjectIDs is gracefully intercepted and returns 404 Not Found without leaking server internals."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Malformed ObjectId returns sanitized 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.false;",
+                  "    pm.expect(json.message).to.include('Resource not found: invalid ID format');",
                   "});"
                 ]
               }

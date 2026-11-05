@@ -1,41 +1,32 @@
 {
   "name": "dangling-dice-studios",
   "version": "1.0.0",
-  "description": "Official Full-Stack Platform for Dangling Dice Studios™ — Home to Dangling Beats Studio, Mobile Apps, and Dangling Dice Coding.",
+  "private": true,
+  "description": "Official Full-Stack Monorepo Platform for Dangling Dice Studios™ — Home to Dangling Beats Studio, Mobile Apps, and Dangling Dice Coding.",
   "type": "module",
-  "main": "server.js",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "seed": "node seeder.js"
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "seed": "npm run seed --workspace=apps/api",
+    "test": "npm run test --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web"
   },
   "keywords": [
     "dangling-dice-studios",
     "dangling-beats",
     "dangling-dice-coding",
+    "monorepo",
     "express",
     "mongodb",
     "mongoose",
     "jwt",
-    "bcryptjs",
     "rest-api"
   ],
   "author": "Dangling Dice Studios™",
   "homepage": "https://github.com/jacobyancey-bit",
-  "license": "MIT",
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-mongo-sanitize": "^2.2.0",
-    "express-rate-limit": "^8.7.1",
-    "helmet": "^8.0.0",
-    "hpp": "^0.2.3",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.5"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.9"
-  }
+  "license": "MIT"
 }

@@ -12,64 +12,69 @@ The official full-stack web application for **Dangling Dice Studios™**, servin
 - **GitHub:** [@jacobyancey-bit](https://github.com/jacobyancey-bit)
 - **LinkedIn:** [Jacob Yancey](https://www.linkedin.com/in/jacob-yancey-085151372)
 
-Built on a **three-tier decoupled architecture** (Node.js/Express REST API, MongoDB via Mongoose, and a decoupled modern frontend client).
+Built on a **modern monorepo architecture** (`apps/api`, `apps/web`, and `packages/shared`) utilizing npm workspaces.
 
 ---
 
-## 📁 Project Architecture
+## 📁 Monorepo Architecture
 
 ```text
 .
 ├── .env.example              # Template for environment configuration
 ├── .env                      # Local environment configuration (dangling_dice_db)
-├── .gitignore                # Git exclusions (node_modules, logs, .env)
+├── .gitignore                # Git exclusions (node_modules, dist, logs, .env)
 ├── README.md                 # Project architecture & setup documentation
-├── package.json              # ES Modules manifest, dependencies & scripts
-├── seeder.js                 # Database seeder for starter beats, tutorials, and games
-├── server.js                 # Central Express application entry point
-├── config/
-│   └── db.js                 # MongoDB connection with Mongoose ODM
-├── models/
-│   ├── User.js               # User/Creator schema with bcrypt hashing & JWT match
-│   └── Item.js               # Studio Resource schema (Beats, Tutorials, Games, Tools)
-├── controllers/
-│   ├── authController.js     # Auth logic: register, login, profile, and JWT generator
-│   └── itemController.js     # Resource CRUD with category filtering and media metadata
-├── routes/
-│   ├── api.js                # Central API router aggregating sub-routers & health check
-│   ├── authRoutes.js         # Authentication endpoints (/api/auth)
-│   └── itemRoutes.js         # Resource endpoints (/api/items)
-├── middleware/
-│   ├── authMiddleware.js     # JWT Bearer verification & req.user attachment
-│   └── errorHandler.js       # 404 handler and central JSON error formatter
-└── client/
-    ├── images/
-    │   ├── logo.jpg          # Dangling Dice Studios official emblem
-    │   └── banner.jpg        # Studio workspace hero artwork
-    └── index.html            # Decoupled frontend client (Interactive UI & API Inspector)
+├── package.json              # Root workspace coordinator (workspaces: ["apps/*", "packages/*"])
+├── apps/
+│   ├── api/                  # Dedicated Express REST API Service (Port 5000)
+│   │   ├── package.json      # @dangling-dice/api
+│   │   ├── server.js         # Dedicated API entry point
+│   │   ├── seeder.js         # Database seeder for starter beats, tutorials, games
+│   │   ├── config/           # MongoDB connection with Mongoose ODM
+│   │   ├── models/           # Mongoose schemas (User, Item)
+│   │   ├── controllers/      # Auth & Item CRUD logic
+│   │   ├── routes/           # Central /api router & endpoints
+│   │   ├── middleware/       # JWT auth, rate limiter, error handling
+│   │   └── tests/            # Automated security regression suite
+│   │
+│   └── web/                  # Decoupled Frontend Client Service (Port 3000)
+│       ├── package.json      # @dangling-dice/web (powered by Vite)
+│       ├── vite.config.js    # Dev server & reverse proxy (/api -> :5000)
+│       ├── index.html        # Public studio catalog & cinema viewer UI
+│       ├── admin.html        # Creator management portal UI
+│       ├── css/main.css      # Studio styling & design system
+│       ├── js/app.js         # Public catalog client script
+│       ├── js/admin.js       # Admin portal client script
+│       └── images/           # Studio branding, logos, app artwork
+│
+└── packages/
+    └── shared/               # Single Source of Truth (SSOT)
+        ├── package.json      # @dangling-dice/shared
+        └── index.js          # Shared categories, roles, divisions, API endpoints
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Runtime & Framework:** Node.js, Express.js (ES Modules `"type": "module"`)
-- **Database & ODM:** MongoDB, Mongoose v8
-- **Authentication:** JSON Web Tokens (`jsonwebtoken`), Bcrypt password hashing (`bcryptjs`)
-- **Security:** HTTP Headers hardening (`helmet`), Cross-Origin Resource Sharing (`cors`), Environment isolation (`dotenv`)
-- **Developer Tooling:** `nodemon` for auto-reloading during development
+- **Monorepo Architecture:** npm Workspaces (`apps/*`, `packages/*`)
+- **Backend API (`apps/api`):** Node.js, Express.js (ES Modules), MongoDB & Mongoose v8, JWT, Bcryptjs, Helmet, CORS, Rate-Limiting
+- **Frontend Web (`apps/web`):** Decoupled static UI built and served with Vite, reverse-proxied to API
+- **Shared Layer (`packages/shared`):** Single Source of Truth for studio domain constants and route definitions
+- **Developer Tooling:** `nodemon`, `vite`, Node.js native test runner
 
 ---
 
 ## 🚀 Quick Start Guide
 
 ### 1. Install Dependencies
+Installs dependencies across all workspaces and links shared packages:
 ```bash
 npm install
 ```
 
 ### 2. Seed Initial Studio Content
-Populates the database (`dangling_dice_db`) with sample tutorials from Dangling Dice Coding and music releases from Dangling Beats:
+Populates MongoDB (`dangling_dice_db`) with sample tutorials from Dangling Dice Coding and music releases from Dangling Beats:
 ```bash
 npm run seed
 ```
@@ -78,9 +83,26 @@ npm run seed
 > - Email: `studio@danglingdice.com`
 > - Password: `StudioPassword2026!`
 
-### 3. Start Development Server
+### 3. Start Development Services
+
+**Start API Server (Port 5000):**
 ```bash
-npm run dev
+npm run dev:api
+```
+
+**Start Web Client (Port 3000):**
+```bash
+npm run dev:web
+```
+
+### 4. Run Test Suite
+```bash
+npm run test
+```
+
+### 5. Build Web Client for Production
+```bash
+npm run build:web
 ```
 
 ### 4. Open in Browser
