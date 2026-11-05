@@ -42,6 +42,26 @@ export const STUDIO_DIVISIONS = [
 ];
 
 /**
+ * Developer Tool Classifications
+ */
+export const TOOL_TYPES = [
+  'web-utility',
+  'standalone-app',
+  'mobile-companion',
+  'api-service',
+];
+
+/**
+ * Curated Affiliate & Partner Categories
+ */
+export const AFFILIATE_CATEGORIES = [
+  'Cloud Hosting & Databases',
+  'Developer Utilities & IDEs',
+  'Mobile & Android Dev',
+  'Audio & Media Tech',
+];
+
+/**
  * Commercial Licensing Tiers for Dangling Beats & Digital Studio Assets.
  */
 export const LICENSE_TIERS = {

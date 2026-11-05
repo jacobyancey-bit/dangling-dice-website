@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 
 import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
+import { redirectPartner } from './controllers/affiliateController.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -30,7 +31,7 @@ const app = express();
  * ----------------------------------------------------
  */
 
-// 1. HTTP Security Headers with custom Content Security Policy (CSP)
+// 1. HTTP Security Headers with custom Content Security Policy (CSP) & Referrer-Policy
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -40,12 +41,13 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'https:'],
-        frameSrc: ["'self'", 'https://www.youtube.com', 'https://youtube.com'],
-        connectSrc: ["'self'"],
+        frameSrc: ["'self'", 'https://www.youtube.com', 'https://youtube.com', 'https://js.stripe.com'],
+        connectSrc: ["'self'", 'https://api.stripe.com'],
       },
     },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   })
 );
 
@@ -85,7 +87,10 @@ app.get('/', (req, res) => {
   });
 });
 
-// Mount central API router containing /auth and /items with rate limiting
+// Privacy-preserving outbound affiliate & partner redirector
+app.get('/go/:slug', redirectPartner);
+
+// Mount central API router containing /auth, /items, /checkout, /orders, /affiliates with rate limiting
 app.use('/api', apiLimiter, apiRoutes);
 
 /**
@@ -112,6 +117,11 @@ const server = app.listen(PORT, () => {
   console.log(`[API Docs] Base endpoint active at http://localhost:${PORT}/api`);
 });
 
+// In test environment, unref the server so the Node process can terminate cleanly when test assertions complete
+if (NODE_ENV === 'test') {
+  server.unref();
+}
+
 // Handle unhandled Promise rejections gracefully
 process.on('unhandledRejection', (err) => {
   console.error(`[Unhandled Rejection Error]: ${err.message}`);
@@ -120,3 +130,4 @@ process.on('unhandledRejection', (err) => {
 });
 
 export default app;
+export { server };

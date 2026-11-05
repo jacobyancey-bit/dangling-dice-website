@@ -1,5 +1,5 @@
 /**
- * Dangling Dice Studios™ — Public Catalog Client Application
+ * Dangling Dice Studios™ — Public Catalog & Developer Tools Client Application
  */
 
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000' && window.location.port !== '3000'
@@ -96,41 +96,52 @@ let allResources = [];
 let selectedCategory = 'All';
 let searchQuery = '';
 let sortOption = 'newest';
+let isCatalogExpanded = false;
+const RECENT_ROW_LIMIT = 3;
 
-// Search and Sort Handlers
-function handleSearch(val) {
-  searchQuery = (val || '').trim().toLowerCase();
-  const clearBtn = document.getElementById('searchClearBtn');
-  if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
-  renderCatalog();
-}
-
-function clearSearch() {
-  const input = document.getElementById('catalogSearchInput');
-  if (input) input.value = '';
-  handleSearch('');
-}
-
-function handleSort(val) {
-  sortOption = val;
-  renderCatalog();
-}
-
-// Category Filter
-function filterCategory(cat) {
+// Category Filtering
+window.filterCategory = function (cat) {
   selectedCategory = cat;
+  isCatalogExpanded = false;
   document.querySelectorAll('.pill-btn').forEach(btn => {
     const text = btn.textContent;
     const matches = (cat === 'All' && text.includes('All')) ||
                     (cat === 'Coding Tutorials' && text.includes('Coding')) ||
                     (cat === 'Beats & Audio' && text.includes('Beats')) ||
                     (cat === 'Mobile Apps' && text.includes('Mobile Apps')) ||
-                    (cat === 'Studio Games' && text.includes('Games')) ||
-                    (cat === 'Developer Tools' && text.includes('Developer Tools'));
+                    (cat === 'Developer Tools' && text.includes('Dev Tools'));
     btn.classList.toggle('active', matches);
   });
   renderCatalog();
-}
+};
+
+window.handleSearch = function (q) {
+  searchQuery = (q || '').trim().toLowerCase();
+  isCatalogExpanded = false;
+  const clearBtn = document.getElementById('searchClearBtn');
+  if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+  renderCatalog();
+};
+
+window.clearSearch = function () {
+  const input = document.getElementById('catalogSearchInput');
+  if (input) input.value = '';
+  searchQuery = '';
+  isCatalogExpanded = false;
+  const clearBtn = document.getElementById('searchClearBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderCatalog();
+};
+
+window.handleSort = function (opt) {
+  sortOption = opt;
+  renderCatalog();
+};
+
+window.toggleCatalogExpand = function () {
+  isCatalogExpanded = !isCatalogExpanded;
+  renderCatalog();
+};
 
 // Resources Fetch
 async function fetchResources() {
@@ -154,6 +165,8 @@ async function fetchResources() {
 function renderCatalog() {
   const grid = document.getElementById('resourcesGrid');
   const countBadge = document.getElementById('countBadge');
+  const expandWrapper = document.getElementById('catalogExpandWrapper');
+  const toggleBtn = document.getElementById('toggleCatalogBtn');
   if (!grid) return;
 
   // 1. Filter by Category & Search Query
@@ -193,6 +206,7 @@ function renderCatalog() {
 
   // 4. Empty State
   if (filtered.length === 0) {
+    if (expandWrapper) expandWrapper.style.display = 'none';
     const filterNotice = searchQuery
       ? `No items matching "<strong>${escapeHtml(searchQuery)}</strong>"${selectedCategory !== 'All' ? ` in ${escapeHtml(selectedCategory)}` : ''}.`
       : `No items found in category <strong>${escapeHtml(selectedCategory)}</strong>.`;
@@ -208,8 +222,24 @@ function renderCatalog() {
     return;
   }
 
-  // 5. Render Grid Cards
-  grid.innerHTML = filtered.map(item => {
+  // 5. Expand Button Visibility & Label
+  const totalMatches = filtered.length;
+  if (expandWrapper && toggleBtn) {
+    if (totalMatches > RECENT_ROW_LIMIT) {
+      expandWrapper.style.display = 'block';
+      toggleBtn.innerHTML = isCatalogExpanded
+        ? '▲ Show Recent Uploads Only'
+        : `📂 View Entire Course Catalog (${totalMatches} Items) ▾`;
+    } else {
+      expandWrapper.style.display = 'none';
+    }
+  }
+
+  // 6. Slice to Recent Row unless Expanded
+  const itemsToRender = isCatalogExpanded ? filtered : filtered.slice(0, RECENT_ROW_LIMIT);
+
+  // 7. Render Grid Cards
+  grid.innerHTML = itemsToRender.map(item => {
     const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
     const thumb = item.imageUrl || '/images/banner.jpg';
     const tagsHtml = (item.tags || []).map(t => `<span class="tag-chip" style="cursor: pointer;" onclick="document.getElementById('catalogSearchInput').value='${escapeHtml(t)}'; handleSearch('${escapeHtml(t)}');" title="Filter by tag">#${escapeHtml(t)}</span>`).join('');
@@ -217,7 +247,24 @@ function renderCatalog() {
     const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
 
     let actionButtons = '';
-    if (ytEmbed) {
+    let specialBadge = '';
+
+    if (item.isAffiliate) {
+      specialBadge = `<span class="badge-partner">${escapeHtml(item.affiliateBadge || 'Partner Deal')}</span>`;
+      actionButtons = `
+        <a href="${escapeHtml(item.affiliateUrl || item.mediaUrl)}" target="_blank" rel="sponsored noopener noreferrer" referrerpolicy="strict-origin-when-cross-origin" class="btn btn-playstore btn-sm">
+          Get Partner Deal ➔
+        </a>
+      `;
+    } else if (item.isTool) {
+      specialBadge = `<span class="badge-tool">${item.toolType === 'web-utility' ? '🛠️ Web Tool' : '⚡ Standalone App'}</span>`;
+      const isInternalAnchor = item.liveUrl && item.liveUrl.startsWith('#');
+      actionButtons = `
+        <a href="${escapeHtml(item.liveUrl || item.mediaUrl)}" ${isInternalAnchor ? '' : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm">
+          ${isInternalAnchor ? 'Launch Tool ⚡' : 'Open App ↗'}
+        </a>
+      `;
+    } else if (ytEmbed) {
       actionButtons = `
         <button class="btn btn-youtube btn-sm" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
         <a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">↗</a>
@@ -225,11 +272,11 @@ function renderCatalog() {
     } else if (item.mediaUrl && item.mediaUrl.includes('play.google.com')) {
       actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store</a>`;
     } else if (item.mediaUrl) {
-      actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ Open Link</a>`;
+      actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ View Project</a>`;
     }
 
     return `
-      <div class="resource-card">
+      <div class="resource-card ${item.isAffiliate ? 'resource-card-partner' : ''} ${item.isTool ? 'resource-card-tool' : ''}">
         <div class="resource-thumb-box" ${ytEmbed ? `style="cursor: pointer;" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')" title="Click to Play"` : ''}>
           <img src="${thumb}" alt="${escapeHtml(item.title)}" class="resource-thumb" onerror="this.src='/images/banner.jpg'" />
           ${ytEmbed ? `
@@ -238,7 +285,7 @@ function renderCatalog() {
             </div>
           ` : ''}
           <span class="badge-category">${escapeHtml(item.category)}</span>
-          <span class="badge-price">${priceLabel}</span>
+          ${specialBadge || `<span class="badge-price">${priceLabel}</span>`}
         </div>
         <div class="resource-body">
           <h3 class="resource-title">${escapeHtml(item.title)}</h3>
@@ -255,6 +302,136 @@ function renderCatalog() {
     `;
   }).join('');
 }
+
+/**
+ * ============================================================================
+ * Interactive MongoDB Connection URI & Query Inspector (100% Client-Side)
+ * Strictly in-memory; zero network calls or credentials transmitted.
+ * ============================================================================
+ */
+window.inspectMongoUri = function (uri) {
+  const cleanUri = (uri || '').trim();
+  const resultsBox = document.getElementById('inspectorResults');
+  const warningBox = document.getElementById('uriWarningBox');
+
+  if (!cleanUri) {
+    if (resultsBox) resultsBox.style.display = 'none';
+    return;
+  }
+
+  if (resultsBox) resultsBox.style.display = 'block';
+
+  let protocol = 'Unknown';
+  let host = '—';
+  let dbName = 'default (test)';
+  let warnings = [];
+
+  try {
+    if (cleanUri.startsWith('mongodb+srv://')) {
+      protocol = 'mongodb+srv (DNS Seedlist / Atlas)';
+    } else if (cleanUri.startsWith('mongodb://')) {
+      protocol = 'mongodb (Standard Connection)';
+    } else {
+      warnings.push('URI must start with either <code>mongodb://</code> or <code>mongodb+srv://</code>');
+    }
+
+    // Parse user:password@host/db
+    const withoutProtocol = cleanUri.replace(/^mongodb(\+srv)?:\/\//, '');
+    const atSplit = withoutProtocol.split('@');
+
+    let hostAndDbPart = withoutProtocol;
+    if (atSplit.length > 1) {
+      const creds = atSplit[0];
+      hostAndDbPart = atSplit.slice(1).join('@');
+
+      // Check for unencoded special characters in password
+      const colonIndex = creds.indexOf(':');
+      if (colonIndex !== -1) {
+        const rawPassword = creds.substring(colonIndex + 1);
+        const forbiddenChars = [
+          { char: '@', code: '%40' },
+          { char: ':', code: '%3A' },
+          { char: '#', code: '%23' },
+          { char: '%', code: '%25' },
+          { char: '&', code: '%26' },
+          { char: '?', code: '%3F' },
+          { char: '/', code: '%2F' },
+        ];
+
+        forbiddenChars.forEach(({ char, code }) => {
+          if (rawPassword.includes(char)) {
+            warnings.push(`Your password contains an unescaped <code>${char}</code> symbol. MongoDB requires this to be percent-encoded as <code>${code}</code> to prevent connection parser failures.`);
+          }
+        });
+      }
+    }
+
+    // Extract Host & Database
+    const slashSplit = hostAndDbPart.split('/');
+    host = slashSplit[0] || 'localhost';
+
+    if (slashSplit.length > 1) {
+      const dbAndQuery = slashSplit[1].split('?');
+      dbName = dbAndQuery[0] || 'default';
+    }
+
+    const resProto = document.getElementById('resProtocol');
+    const resH = document.getElementById('resHost');
+    const resD = document.getElementById('resDb');
+    const resHealth = document.getElementById('resHealth');
+
+    if (resProto) resProto.textContent = protocol;
+    if (resH) resH.textContent = host;
+    if (resD) resD.textContent = dbName;
+
+    // Render Warnings or Health
+    if (warnings.length > 0) {
+      if (resHealth) resHealth.innerHTML = '<span style="color: #f87171;">Syntax Issues Detected</span>';
+      if (warningBox) {
+        warningBox.style.display = 'block';
+        warningBox.innerHTML = `⚠️ <strong>Configuration Alert:</strong><ul style="margin: 0.5rem 0 0 1rem; padding: 0;">${warnings.map(w => `<li>${w}</li>`).join('')}</ul>`;
+      }
+    } else {
+      if (resHealth) resHealth.innerHTML = '<span style="color: var(--neon-emerald);">Valid Connection String</span>';
+      if (warningBox) warningBox.style.display = 'none';
+    }
+
+    // Generate sanitized .env output (Strips real password for PII protection)
+    let sanitizedUri = cleanUri;
+    if (atSplit.length > 1) {
+      const creds = atSplit[0];
+      const colonIndex = creds.indexOf(':');
+      const user = colonIndex !== -1 ? creds.substring(0, colonIndex) : creds;
+      sanitizedUri = `mongodb+srv://${user}:<YOUR_PASSWORD_HERE>@${host}/${dbName}?retryWrites=true&w=majority`;
+    }
+
+    const envSnippet = `# MongoDB Atlas Connection (Generated by Dangling Dice DevTools)\nPORT=5000\nNODE_ENV=production\nMONGODB_URI="${sanitizedUri}"\nMONGODB_DB_NAME="${dbName}"`;
+    const envOutput = document.getElementById('envOutputSnippet');
+    if (envOutput) envOutput.textContent = envSnippet;
+  } catch (err) {
+    if (warningBox) {
+      warningBox.style.display = 'block';
+      warningBox.textContent = `Parse error: ${err.message}`;
+    }
+  }
+};
+
+window.loadSampleUri = function () {
+  const sample = 'mongodb+srv://studio_admin:MyPass123!@dangling-cluster.nnmqrde.mongodb.net/dangling_dice_db?retryWrites=true&w=majority';
+  const input = document.getElementById('uriInput');
+  if (input) {
+    input.value = sample;
+    window.inspectMongoUri(sample);
+  }
+};
+
+window.copyEnvSnippet = function () {
+  const snippet = document.getElementById('envOutputSnippet')?.textContent;
+  if (snippet) {
+    navigator.clipboard.writeText(snippet);
+    alert('Sanitized .env snippet copied to clipboard! (Remember to substitute your real password)');
+  }
+};
 
 function escapeHtml(str) {
   if (!str) return '';

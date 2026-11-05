@@ -4,6 +4,7 @@ import authRoutes from './authRoutes.js';
 import itemRoutes from './itemRoutes.js';
 import checkoutRoutes from './checkoutRoutes.js';
 import orderRoutes from './orderRoutes.js';
+import affiliateRoutes from './affiliateRoutes.js';
 
 const router = express.Router();
 
@@ -34,6 +35,7 @@ router.get('/', (req, res) => {
       items: '/api/items (GET, POST, PUT, DELETE)',
       checkout: '/api/checkout (create-session, webhook, order/:sessionId)',
       orders: '/api/orders (GET customer purchases)',
+      affiliates: '/api/affiliates (partner directory & privacy redirects)',
     },
   });
 });
@@ -45,5 +47,6 @@ router.use('/auth', authRoutes);
 router.use('/items', itemRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/orders', orderRoutes);
+router.use('/affiliates', affiliateRoutes);
 
 export default router;
