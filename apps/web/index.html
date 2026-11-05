@@ -124,35 +124,67 @@
     </section>
 
     <!-- ======================================================================
-         Featured Studio Box: Dangling Beats Studio
+         Studio Divisions Showcase (Beats on left, Coding, Software, and Tools to the right)
          ====================================================================== -->
-    <section id="beatsStudio" class="card card-beats-featured">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
-        <div style="max-width: 820px;">
-          <div class="pill-tag" style="background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.35); margin-bottom: 0.75rem;">
-            🎧 Featured Audio Lab &bull; Dangling Beats Studio
-          </div>
-          <h2 style="font-size: 1.85rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff;">
-            Dangling Beats Studio
-          </h2>
-          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.25rem;">
-            The sound lab behind Dangling Dice. Releasing original lofi, dark trap, synthwave, and chillhop instrumentals on YouTube. Handcrafted for late-night programming sessions, deep focus, and content creators.
-          </p>
-          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-youtube">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-              Watch @danglingdicestudios
-            </a>
-            <button class="btn btn-purple" onclick="filterCategory('Beats & Audio'); document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });">
-              🎧 View Beat Releases
-            </button>
-          </div>
+    <section id="divisions" class="divisions-grid">
+      <!-- 1. Dangling Beats Studio -->
+      <div id="beatsStudio" class="division-card card-beats">
+        <div>
+          <div class="division-icon">🎧</div>
+          <h3>Dangling Beats Studio</h3>
+          <p>The sound lab behind Dangling Dice. Releasing original lofi, dark trap, synthwave, and chillhop instrumentals on YouTube. Ideal for late-night programming sessions and content creators.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-youtube btn-sm">▶ YouTube Channel</a>
+          <button class="btn btn-secondary btn-sm" onclick="filterCategory('Beats & Audio'); document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });">View Beat Catalog</button>
+        </div>
+      </div>
+
+      <!-- 2. Dangling Dice Coding -->
+      <div class="division-card card-coding">
+        <div>
+          <div class="division-icon">💻</div>
+          <h3>Dangling Dice Coding</h3>
+          <p>Practical coding tutorials showing you how to build real-world software. From modern full-stack web applications and APIs to cloud systems and developer toolchains.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <a href="https://github.com/jacobyancey-bit" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            GitHub @jacobyancey-bit
+          </a>
+          <button class="btn btn-secondary btn-sm" onclick="filterCategory('Coding Tutorials'); document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });">Browse Tutorials</button>
+        </div>
+      </div>
+
+      <!-- 3. Mobile Apps & Software -->
+      <div class="division-card card-apps">
+        <div>
+          <div class="division-icon">📱</div>
+          <h3>Mobile Apps & Software</h3>
+          <p>Intelligent mobile applications published on the Google Play Store. Featuring our flagship AI Calculator app, step-by-step math solver, and productivity utilities.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <a href="https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ AI Calculator on Google Play</a>
+          <button class="btn btn-secondary btn-sm" onclick="filterCategory('Mobile Apps'); document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });">View Mobile Apps</button>
+        </div>
+      </div>
+
+      <!-- 4. Developer Tools & Utilities -->
+      <div class="division-card card-games">
+        <div>
+          <div class="division-icon">🛠️</div>
+          <h3>Developer Tools & Utilities</h3>
+          <p>Client-side developer utilities, in-browser network diagnostics, and WireGuard VPN tooling crafted for software engineers and privacy enthusiasts.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <a href="#vpnTool" class="btn btn-primary btn-sm">Launch WireGuard VPN</a>
+          <a href="#mongoInspector" class="btn btn-secondary btn-sm">MongoDB Inspector</a>
         </div>
       </div>
     </section>
 
     <!-- ======================================================================
-         HAMBURGER STACK (Under Dangling Beats Studio):
+         HAMBURGER STACK (The 3 Bottom Boxes Vertically Stacked):
          1. TOP: Course Catalog & Studio Releases (1 Row Default + Expand Button)
          2. MIDDLE: Dangling Dice WireGuard VPN & Privacy Shield
          3. BOTTOM: MongoDB Connection URI & Query Inspector
