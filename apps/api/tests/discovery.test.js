@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { getOEmbed } from '../controllers/oembedController.js';
 import { getAnalyticsSummary } from '../middleware/analytics.js';
+import { sendDiscordBroadcast } from '../controllers/broadcastController.js';
 
 describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
   it('DISC-01: Correctly classifies and records analytics summary', () => {
@@ -78,6 +79,27 @@ describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
     assert.ok(spec.paths['/oembed']);
     assert.ok(spec.paths['/media/convert']);
     assert.ok(spec.paths['/items']);
+  });
+
+  it('DISC-05: Rejects broadcast request missing title and description with 400', async () => {
+    let statusCode = null;
+    let responseBody = null;
+    const mockReq = { body: {} };
+    const mockRes = {
+      status(code) {
+        statusCode = code;
+        return this;
+      },
+      json(body) {
+        responseBody = body;
+        return this;
+      }
+    };
+
+    await sendDiscordBroadcast(mockReq, mockRes);
+    assert.strictEqual(statusCode, 400);
+    assert.strictEqual(responseBody.success, false);
+    assert.ok(responseBody.message.includes('requires at least a title or description'));
   });
 });
 

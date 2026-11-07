@@ -115,6 +115,92 @@
         </div>
       </div>
 
+      <!-- ======================================================================
+           Central Studio Marketing & Broadcast Station (Omnipost Engine)
+           ====================================================================== -->
+      <div class="card" style="margin-bottom: 2rem; border-color: rgba(236, 72, 153, 0.35);">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span>📢 Central Studio Marketing & Broadcast Station</span>
+            <span class="admin-pill" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">Omnipost Engine</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Discord: <code style="color: #67e8f9;">#📢・studio-drops</code></span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; margin-bottom: 1.25rem;">
+          Compose your studio update once. Broadcast directly to your connected Discord channel with 1 click, or instantly copy tailored formats for Reddit, YouTube Community, and Twitter/X with zero third-party software.
+        </p>
+
+        <!-- Composer Form -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="broadcastTitle">Campaign / Post Title</label>
+            <input type="text" id="broadcastTitle" placeholder="e.g. Free 320kbps YouTube to MP3 Converter — 100% Ad-Free" value="Free 320kbps YouTube to MP3 Converter — Zero Ads & Popups" oninput="generateAllOmnipostFormats()" />
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="broadcastLink">Target Link / URL</label>
+            <input type="url" id="broadcastLink" placeholder="https://media.dangling-dice-studios.com" value="https://media.dangling-dice-studios.com" oninput="generateAllOmnipostFormats()" />
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="broadcastDesc">Hook & Key Value Proposition</label>
+            <textarea id="broadcastDesc" rows="3" placeholder="Explain the key benefit..." oninput="generateAllOmnipostFormats()">Tired of closing 5 scam popup tabs just to grab an audio sample for FL Studio or Ableton? We built a fast, ad-free 320kbps in-browser converter for beatmakers and video editors. Direct downloads with zero tracking.</textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <label for="broadcastCategory">Category</label>
+              <select id="broadcastCategory" style="height: 42px; margin-bottom: 0.75rem;" onchange="generateAllOmnipostFormats()">
+                <option value="Developer Tools">🛠️ Developer Tools & Utilities</option>
+                <option value="Beats & Audio">🎧 Beats & Music Production</option>
+                <option value="Affiliate Deals">⚡ Gear Deals & Discounts</option>
+                <option value="Studio Update">🎲 General Studio Announcement</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-primary" id="broadcastDiscordBtn" onclick="dispatchDiscordBroadcast()" style="width: 100%; height: 42px; background: linear-gradient(135deg, #5865F2, #7289da);">
+              🚀 1-Click Broadcast to Discord
+            </button>
+          </div>
+        </div>
+
+        <div id="broadcastStatusAlert" class="alert" style="display: none; margin-bottom: 1rem;"></div>
+
+        <!-- 3 Platform-Optimized Formats -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff;">📋 Platform-Optimized Omnipost Formats:</h4>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Auto-formatted with zero algorithm penalty triggers</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+          <!-- Reddit Formatter -->
+          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.78rem; font-weight: 700; color: #ff4500;">Reddit (r/FL_Studio, r/trapproduction)</span>
+              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('redditPreview')">📋 Copy</button>
+            </div>
+            <textarea id="redditPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+          </div>
+
+          <!-- YouTube Community Formatter -->
+          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.78rem; font-weight: 700; color: #ff0033;">YouTube Community & Video Desc</span>
+              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('youtubePreview')">📋 Copy</button>
+            </div>
+            <textarea id="youtubePreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+          </div>
+
+          <!-- Twitter / X Thread Formatter -->
+          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.78rem; font-weight: 700; color: #1da1f2;">Twitter / X (Algorithm-Safe Thread)</span>
+              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('twitterPreview')">📋 Copy</button>
+            </div>
+            <textarea id="twitterPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+          </div>
+        </div>
+      </div>
+
       <!-- Action Toolbar -->
       <div class="dashboard-toolbar">
         <div class="filter-pills">

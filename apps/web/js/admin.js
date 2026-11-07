@@ -379,7 +379,101 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+// Marketing Broadcast & Omnipost Engine
+async function dispatchDiscordBroadcast() {
+  const btn = document.getElementById('broadcastDiscordBtn');
+  const alertBox = document.getElementById('broadcastStatusAlert');
+  const title = document.getElementById('broadcastTitle')?.value || '';
+  const link = document.getElementById('broadcastLink')?.value || '';
+  const description = document.getElementById('broadcastDesc')?.value || '';
+  const category = document.getElementById('broadcastCategory')?.value || 'Developer Tools';
+
+  if (!title && !description) {
+    showAlert('broadcastStatusAlert', 'Please enter a title or description for your broadcast.');
+    return;
+  }
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Dispatching to Discord...';
+    }
+    logAdmin(`POST /api/broadcast/discord: "${title}"...`);
+
+    const res = await fetch(`${API_BASE}/broadcast/discord`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, link, description, category })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Discord broadcast failed');
+
+    showAlert('broadcastStatusAlert', `✅ Broadcast delivered to #${json.channel}! Check Discord.`, true);
+    logAdmin(`Broadcast dispatched successfully to Discord!`, true);
+  } catch (err) {
+    showAlert('broadcastStatusAlert', `❌ Broadcast error: ${err.message}`);
+    logAdmin(`Broadcast failure: ${err.message}`);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🚀 1-Click Broadcast to Discord';
+    }
+  }
+}
+
+function generateAllOmnipostFormats() {
+  const title = document.getElementById('broadcastTitle')?.value || 'Dangling Dice Studios™ Update';
+  const link = document.getElementById('broadcastLink')?.value || 'https://media.dangling-dice-studios.com';
+  const desc = document.getElementById('broadcastDesc')?.value || '';
+
+  // 1. Reddit (Helpful tone, markdown bullets, soft link at end)
+  const redditEl = document.getElementById('redditPreview');
+  if (redditEl) {
+    redditEl.value = `Hey producers and creators,\n\n${desc}\n\nKey features:\n• 100% Ad-Free (Zero spam redirects or fake download buttons)\n• Studio Master 320kbps MP3 audio & 1080p MP4 video\n• Drag and drop straight into your DAW (FL Studio / Ableton)\n\nCheck it out here if you need it for your workflow: ${link}\n\nHope this helps save some time!`;
+  }
+
+  // 2. YouTube Community & Video Description
+  const ytEl = document.getElementById('youtubePreview');
+  if (ytEl) {
+    ytEl.value = `🚀 ${title.toUpperCase()} is LIVE!\n\n${desc}\n\n⚡ Try it now for free: ${link}\n🎧 Stream Dangling Beats: https://dangling-dice-studios.com/#beatsStudio\n💻 Developer API: https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api\n\nDrop a comment with what tool or sound kit you want next! 🎲`;
+  }
+
+  // 3. Twitter / X Thread (Hook + Value in Tweet 1, Link in Tweet 2 to bypass algorithm suppression)
+  const twEl = document.getElementById('twitterPreview');
+  if (twEl) {
+    twEl.value = `[TWEET 1/2]\n${title} ⚡\n\n${desc.slice(0, 150)}...\n\n#beatmaker #flstudio #producer #audio\n\n---\n[TWEET 2/2 (Reply)]\nGrab the direct tool here (100% ad-free & private):\n${link}`;
+  }
+}
+
+function copyOmnipost(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el || !el.value) return;
+  navigator.clipboard.writeText(el.value).then(() => {
+    alert('Copied to clipboard!');
+  }).catch(() => {
+    el.select();
+    document.execCommand('copy');
+    alert('Copied to clipboard!');
+  });
+}
+
+// Global scope bindings for inline HTML handlers
+window.handleAdminLogin = handleAdminLogin;
+window.logoutAdmin = logoutAdmin;
+window.filterCategory = filterCategory;
+window.openPublishModal = openPublishModal;
+window.closePublishModal = closePublishModal;
+window.handlePublishSubmit = handlePublishSubmit;
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+window.handleEditSubmit = handleEditSubmit;
+window.handleDelete = handleDelete;
+window.dispatchDiscordBroadcast = dispatchDiscordBroadcast;
+window.generateAllOmnipostFormats = generateAllOmnipostFormats;
+window.copyOmnipost = copyOmnipost;
+
 // Startup
 window.addEventListener('DOMContentLoaded', () => {
   verifyExistingSession();
+  generateAllOmnipostFormats();
 });
