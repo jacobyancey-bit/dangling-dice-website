@@ -1325,3 +1325,15 @@ tr:hover td {
   padding-top: 0.85rem;
   margin-top: auto;
 }
+
+.tech-card-featured {
+  border-color: rgba(236, 72, 153, 0.6) !important;
+  background: linear-gradient(145deg, rgba(236, 72, 153, 0.1), rgba(15, 23, 42, 0.9)) !important;
+  box-shadow: 0 0 25px rgba(236, 72, 153, 0.25) !important;
+}
+
+.tech-card-featured .tech-card-badge {
+  background: rgba(236, 72, 153, 0.2);
+  color: #f472b6;
+  border-color: rgba(236, 72, 153, 0.4);
+}
