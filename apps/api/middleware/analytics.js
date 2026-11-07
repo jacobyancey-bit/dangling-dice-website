@@ -189,3 +189,4 @@ export const getAnalyticsSummary = () => {
     recentActivity: metrics.recentActivity.slice(0, 15),
   };
 };
+

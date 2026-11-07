@@ -40,3 +40,4 @@ Dangling Dice Studios™ is an independent software development, music productio
 - `GET https://dangling-dice-studios.com/api/affiliates`: Verified developer tools, cloud hosting discounts, and partner perks.
 - `GET https://dangling-dice-studios.com/api/oembed`: Standard oEmbed 1.0 endpoint for rich previews on Discord, Reddit, and Twitter.
 - `POST https://media.dangling-dice-studios.com/api/media/convert`: Media validation and stream resolution endpoint.
+

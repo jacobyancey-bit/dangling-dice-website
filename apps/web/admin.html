@@ -68,12 +68,50 @@
           <div class="stat-value" id="statItemCount">0</div>
         </div>
         <div class="stat-card">
+          <div class="stat-label">Total API Pulls</div>
+          <div class="stat-value" style="color: var(--neon-cyan);" id="statApiPulls">0</div>
+        </div>
+        <div class="stat-card">
           <div class="stat-label">Database Connection</div>
           <div class="stat-value" style="color: var(--neon-emerald); font-size: 1.35rem;" id="statDbStatus">Online (Atlas)</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Authenticated Administrator</div>
           <div class="stat-value" style="font-size: 1.1rem; color: var(--gold-light);" id="statAdminName">Studio Lead</div>
+        </div>
+      </div>
+
+      <!-- Private Studio API & Crawler Telemetry -->
+      <div class="card" style="margin-bottom: 2rem; border-color: rgba(6, 182, 212, 0.3);">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>📊 Live API Pulls & Crawler Intelligence</span>
+          <span id="apiUptimeBadge" style="font-size: 0.75rem; font-weight: normal; color: var(--neon-cyan);">Uptime: checking...</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; margin-bottom: 1.25rem;">
+          <div style="background: rgba(6, 182, 212, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(6, 182, 212, 0.2);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">AI Crawlers (ChatGPT / Claude / Perplexity)</div>
+            <div id="telemetryAiHits" style="font-size: 1.3rem; font-weight: 700; color: var(--neon-cyan);">0</div>
+          </div>
+          <div style="background: rgba(16, 185, 129, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.2);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Search Engine Spiders (Google / Bing)</div>
+            <div id="telemetrySearchHits" style="font-size: 1.3rem; font-weight: 700; color: var(--neon-emerald);">0</div>
+          </div>
+          <div style="background: rgba(236, 72, 153, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(236, 72, 153, 0.2);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Social Previews (Discord / Twitter / Reddit)</div>
+            <div id="telemetrySocialHits" style="font-size: 1.3rem; font-weight: 700; color: #f472b6;">0</div>
+          </div>
+          <div style="background: rgba(245, 158, 11, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.2);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Developer Tools & HTTP Scripts</div>
+            <div id="telemetryToolsHits" style="font-size: 1.3rem; font-weight: 700; color: var(--gold-light);">0</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Top Targeted Endpoints:</div>
+          <a href="/api/health" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">Raw JSON Diagnostics ↗</a>
+        </div>
+        <div id="telemetryTopEndpoints" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Loading endpoints...</span>
         </div>
       </div>
 

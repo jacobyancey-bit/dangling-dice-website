@@ -110,6 +110,55 @@ function showDashboard() {
   if (headerLogoutBtn) headerLogoutBtn.style.display = 'inline-flex';
   if (statAdminName && adminUser) statAdminName.textContent = `${adminUser.name} (${adminUser.email})`;
   fetchInventory();
+  fetchTelemetry();
+}
+
+// Fetch live API telemetry and crawler intelligence (Private Admin)
+async function fetchTelemetry() {
+  try {
+    const res = await fetch(`${API_BASE}/health`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const analytics = data.analytics || {};
+
+    const statApiPulls = document.getElementById('statApiPulls');
+    if (statApiPulls) statApiPulls.textContent = (analytics.totalRequests || 0).toLocaleString();
+
+    const statDbStatus = document.getElementById('statDbStatus');
+    if (statDbStatus && data.database) {
+      statDbStatus.textContent = data.database.connected ? 'Online (Atlas)' : 'Disconnected';
+      statDbStatus.style.color = data.database.connected ? 'var(--neon-emerald)' : 'var(--neon-red)';
+    }
+
+    const aiEl = document.getElementById('telemetryAiHits');
+    if (aiEl) aiEl.textContent = (analytics.crawlers?.ai || 0).toLocaleString();
+
+    const searchEl = document.getElementById('telemetrySearchHits');
+    if (searchEl) searchEl.textContent = (analytics.crawlers?.search || 0).toLocaleString();
+
+    const socialEl = document.getElementById('telemetrySocialHits');
+    if (socialEl) socialEl.textContent = (analytics.crawlers?.social || 0).toLocaleString();
+
+    const toolsEl = document.getElementById('telemetryToolsHits');
+    if (toolsEl) toolsEl.textContent = (analytics.crawlers?.tools || 0).toLocaleString();
+
+    const uptimeEl = document.getElementById('apiUptimeBadge');
+    if (uptimeEl) {
+      const mins = Math.round((analytics.uptimeSeconds || 0) / 60);
+      uptimeEl.textContent = `Server Uptime: ${mins > 60 ? (mins / 60).toFixed(1) + ' hrs' : mins + ' mins'}`;
+    }
+
+    const topEl = document.getElementById('telemetryTopEndpoints');
+    if (topEl && analytics.topEndpoints) {
+      topEl.innerHTML = analytics.topEndpoints.map(e => `
+        <span class="tag-chip" style="font-family: var(--font-mono); font-size: 0.75rem; background: #07090e; border: 1px solid rgba(6,182,212,0.3);">
+          ${escapeHtml(e.path)} <strong style="color: var(--neon-cyan); margin-left: 0.25rem;">${e.hits.toLocaleString()}</strong>
+        </span>
+      `).join('') || '<span style="color: var(--text-muted); font-size: 0.75rem;">None recorded yet</span>';
+    }
+  } catch (e) {
+    logAdmin(`Telemetry load error: ${e.message}`);
+  }
 }
 
 // Category Filter

@@ -8,3 +8,4 @@
 ## Overview
 Dangling Dice Media Converter allows creators, musicians, and developers to convert public YouTube URLs into high-fidelity MP3s (192kbps / 320kbps) and MP4 video files with zero ads and zero redirects.
 Downloaded files route automatically to the user's default browser Downloads directory.
+

@@ -65,3 +65,4 @@ describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
     assert.ok(responseBody.html.includes('media.dangling-dice-studios.com'));
   });
 });
+
