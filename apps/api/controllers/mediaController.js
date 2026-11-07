@@ -224,18 +224,7 @@ export const resolveMediaInfo = async (req, res) => {
 
       const cleanTitle = sanitizeFilename(videoDetails.title);
       const thumbnail = videoDetails.thumbnails?.[videoDetails.thumbnails.length - 1]?.url || '';
-
-      // Transcode immediately during resolution phase so file is ready for instant 0-delay download
-      let fileData = null;
-      try {
-        fileData = await transcodeMediaToFile(targetUrl, format, cleanTitle);
-      } catch (transcodeErr) {
-        console.warn('[Pre-transcode Warning]', transcodeErr.message);
-      }
-
-      const downloadUrl = fileData
-        ? `/api/media/file/${fileData.fileId}?filename=${encodeURIComponent(cleanTitle + '.' + ext)}`
-        : `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
+      const downloadUrl = `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
 
       return res.status(200).json({
         success: true,
@@ -245,7 +234,6 @@ export const resolveMediaInfo = async (req, res) => {
           author: videoDetails.author?.name || 'Creator',
           durationSeconds,
           thumbnail,
-          fileSize: fileData?.fileSize || null,
           downloadUrl,
         },
       });
@@ -255,17 +243,7 @@ export const resolveMediaInfo = async (req, res) => {
     const oembed = ytid ? await fetchOEmbedMetadata(targetUrl) : null;
     if (oembed) {
       const cleanTitle = sanitizeFilename(oembed.title);
-
-      let fileData = null;
-      try {
-        fileData = await transcodeMediaToFile(targetUrl, format, cleanTitle);
-      } catch (transcodeErr) {
-        console.warn('[Pre-transcode Warning]', transcodeErr.message);
-      }
-
-      const downloadUrl = fileData
-        ? `/api/media/file/${fileData.fileId}?filename=${encodeURIComponent(cleanTitle + '.' + ext)}`
-        : `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
+      const downloadUrl = `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
 
       return res.status(200).json({
         success: true,
@@ -275,7 +253,6 @@ export const resolveMediaInfo = async (req, res) => {
           author: oembed.author_name || 'Creator',
           durationSeconds: 180,
           thumbnail: oembed.thumbnail_url || `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`,
-          fileSize: fileData?.fileSize || null,
           downloadUrl,
         },
       });
@@ -446,6 +423,8 @@ export const streamMediaDownload = async (req, res) => {
         '-vn',
         '-acodec', 'libmp3lame',
         '-b:a', bitrate,
+        '-compression_level', '0',
+        '-threads', '0',
         '-id3v2_version', '3',
         '-write_id3v1', '1',
         '-flush_packets', '1',

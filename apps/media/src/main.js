@@ -240,7 +240,15 @@ if (convertBtn) {
         downloadBtn.href = downloadEndpoint;
         downloadBtn.setAttribute('download', media.cleanTitle);
         downloadBtn.onclick = () => {
-          showToast(`Downloading: ${media.cleanTitle}`, 'success');
+          downloadBtn.innerHTML = '⏳ Downloading to Computer...';
+          showToast(`Downloading ${media.cleanTitle} directly to your Downloads folder!`, 'success');
+          if (downloadNotice) downloadNotice.style.display = 'block';
+          if (downloadStatusText) {
+            downloadStatusText.textContent = `Saving ${media.cleanTitle} to your Downloads folder...`;
+          }
+          setTimeout(() => {
+            downloadBtn.innerHTML = '✅ Downloaded to Computer!';
+          }, 3500);
         };
       }
 
@@ -252,20 +260,8 @@ if (convertBtn) {
       if (downloadNotice) {
         downloadNotice.style.display = 'block';
         if (downloadStatusText) {
-          downloadStatusText.textContent = `✅ Ready! File is downloading to your computer. Click above if it didn't start.`;
+          downloadStatusText.textContent = `Click the download button above to save the file immediately.`;
         }
-      }
-
-      // Automatically trigger instant browser download directly to the Downloads folder
-      try {
-        const autoDownloadLink = document.createElement('a');
-        autoDownloadLink.href = downloadEndpoint;
-        autoDownloadLink.setAttribute('download', media.cleanTitle);
-        document.body.appendChild(autoDownloadLink);
-        autoDownloadLink.click();
-        autoDownloadLink.remove();
-      } catch (autoErr) {
-        console.warn('Auto-download trigger notice:', autoErr);
       }
 
       // Audio preview player (Loaded on-demand to protect server resources and prevent rate limits)
