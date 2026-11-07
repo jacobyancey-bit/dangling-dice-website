@@ -361,12 +361,17 @@ export const streamMediaDownload = async (req, res) => {
     const isMp4 = String(format).startsWith('mp4');
     const ext = isMp4 ? 'mp4' : 'mp3';
 
-    // Set download headers immediately and flush so Cloudflare and browser know the stream is active
-    res.setHeader('Content-Disposition', `attachment; filename="${cleanName}.${ext}"`);
-    res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('X-Accel-Buffering', 'no');
-    res.flushHeaders();
+    let headersSent = false;
+    const sendDownloadHeaders = () => {
+      if (!headersSent) {
+        headersSent = true;
+        res.setHeader('Content-Disposition', `attachment; filename="${cleanName}.${ext}"`);
+        res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('X-Accel-Buffering', 'no');
+        res.flushHeaders();
+      }
+    };
 
     if (isMp4) {
       // MP4 Streaming Transcoding Pipeline (Fragmented MP4 with immediate packet flushing)
@@ -384,6 +389,7 @@ export const streamMediaDownload = async (req, res) => {
         'pipe:1',
       ]);
 
+      ffmpeg.stdout.once('data', () => sendDownloadHeaders());
       videoStream.pipe(ffmpeg.stdin);
       ffmpeg.stdout.pipe(res);
 
@@ -395,8 +401,8 @@ export const streamMediaDownload = async (req, res) => {
       videoStream.on('error', (err) => {
         console.error('[Video Stream Error]', err.message);
         try { ffmpeg.kill(); } catch (e) {}
-        if (!res.headersSent) {
-          res.status(500).send('Stream error');
+        if (!headersSent) {
+          res.status(502).send('YouTube stream unavailable for this video');
         } else {
           res.end();
         }
@@ -404,7 +410,7 @@ export const streamMediaDownload = async (req, res) => {
 
       ffmpeg.on('error', (err) => {
         console.error('[FFmpeg Error]', err.message);
-        if (!res.headersSent) {
+        if (!headersSent) {
           res.status(500).send('Transcoding pipeline error');
         } else {
           res.end();
@@ -432,6 +438,7 @@ export const streamMediaDownload = async (req, res) => {
         'pipe:1',
       ]);
 
+      ffmpeg.stdout.once('data', () => sendDownloadHeaders());
       audioStream.pipe(ffmpeg.stdin);
       ffmpeg.stdout.pipe(res);
 
@@ -443,8 +450,8 @@ export const streamMediaDownload = async (req, res) => {
       audioStream.on('error', (err) => {
         console.error('[Audio Stream Error]', err.message);
         try { ffmpeg.kill(); } catch (e) {}
-        if (!res.headersSent) {
-          res.status(500).send('Stream error');
+        if (!headersSent) {
+          res.status(502).send('YouTube stream blocked or restricted by provider for this track');
         } else {
           res.end();
         }
@@ -452,16 +459,11 @@ export const streamMediaDownload = async (req, res) => {
 
       ffmpeg.on('error', (err) => {
         console.error('[FFmpeg Error]', err.message);
-        if (!res.headersSent) {
+        if (!headersSent) {
           res.status(500).send('Transcoding pipeline error');
         } else {
           res.end();
         }
-      });
-
-      ffmpeg.on('error', (err) => {
-        console.error('[FFmpeg Error]', err.message);
-        if (!res.headersSent) res.status(500).send('Transcoding pipeline error');
       });
     }
   } catch (err) {
