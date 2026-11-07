@@ -137,7 +137,8 @@ async function fetchFromExtractionGateway(targetUrl, format) {
 
   // Provider 2: RapidAPI YouTube-to-MP3 Gateway
   if (process.env.RAPIDAPI_KEY) {
-    const host = process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com';
+    const key = process.env.RAPIDAPI_KEY.trim().replace(/^['"]|['"]$/g, '');
+    const host = (process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com').trim().replace(/^['"]|['"]$/g, '');
     const ytid = extractYouTubeId(targetUrl);
     const candidatePaths = process.env.RAPIDAPI_PATH
       ? [
@@ -158,7 +159,7 @@ async function fetchFromExtractionGateway(targetUrl, format) {
         const fullUrl = `https://${host}${subpath.startsWith('/') ? subpath : '/' + subpath}`;
         const response = await fetch(fullUrl, {
           headers: {
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+            'x-rapidapi-key': key,
             'x-rapidapi-host': host,
           },
           signal: AbortSignal.timeout(12000),
@@ -414,16 +415,30 @@ export const debugStream = async (req, res) => {
   const url = req.query.url || 'https://www.youtube.com/watch?v=Db7ZrUtuCxU';
   try {
     const ytid = extractYouTubeId(url);
-    const targetUrl = ytid ? `https://www.youtube.com/watch?v=${ytid}` : url.trim();
+    const host = (process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com').trim();
+    const subpath = `/dl?id=${encodeURIComponent(ytid || 'Db7ZrUtuCxU')}`;
+    const fullUrl = `https://${host}${subpath}`;
+    const key = (process.env.RAPIDAPI_KEY || '').trim().replace(/^['"]|['"]$/g, '');
 
-    const gatewayTest = await fetchFromExtractionGateway(targetUrl, 'mp3');
+    const rapidRes = await fetch(fullUrl, {
+      headers: {
+        'x-rapidapi-key': key,
+        'x-rapidapi-host': host,
+      },
+      signal: AbortSignal.timeout(12000),
+    });
+
+    const status = rapidRes.status;
+    const bodyText = await rapidRes.text();
 
     return res.json({
       success: true,
       hasRapidKey: !!process.env.RAPIDAPI_KEY,
-      keyLength: process.env.RAPIDAPI_KEY ? process.env.RAPIDAPI_KEY.length : 0,
-      rapidHost: process.env.RAPIDAPI_HOST || 'not set',
-      gatewayTest,
+      keyLength: key.length,
+      rapidHost: host,
+      fullUrl,
+      status,
+      bodyText,
     });
   } catch (e) {
     if (!res.headersSent) {
