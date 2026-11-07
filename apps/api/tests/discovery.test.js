@@ -64,5 +64,20 @@ describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
     assert.ok(responseBody.title.includes('Media Converter'));
     assert.ok(responseBody.html.includes('media.dangling-dice-studios.com'));
   });
+
+  it('DISC-04: OpenAPI 3.0 specification is valid JSON with required paths', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const specRaw = fs.readFileSync(path.join(__dirname, '..', 'public', 'openapi.json'), 'utf8');
+    const spec = JSON.parse(specRaw);
+
+    assert.strictEqual(spec.openapi, '3.0.3');
+    assert.ok(spec.paths['/health']);
+    assert.ok(spec.paths['/oembed']);
+    assert.ok(spec.paths['/media/convert']);
+    assert.ok(spec.paths['/items']);
+  });
 });
 

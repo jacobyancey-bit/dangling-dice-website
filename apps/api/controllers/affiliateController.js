@@ -62,6 +62,42 @@ const PARTNER_DIRECTORY = {
     icon: '🎵',
     featured: true,
   },
+  sweetwater: {
+    name: 'Sweetwater Sound & Audio Gear',
+    targetUrl: 'https://www.sweetwater.com',
+    category: 'Music Gear & Production',
+    description: 'The premier online audio gear store for studio monitors, audio interfaces, microphones, and synthesizers.',
+    perkBadge: 'Free Shipping & 2-Year Warranty',
+    icon: '🎛️',
+    featured: true,
+  },
+  distrokid: {
+    name: 'DistroKid Music Distribution',
+    targetUrl: 'https://distrokid.com',
+    category: 'Music Gear & Production',
+    description: 'Get your beats and songs into Spotify, Apple Music, TikTok, and YouTube Music with unlimited uploads.',
+    perkBadge: '7% Off Artist Discount',
+    icon: '🚀',
+    featured: true,
+  },
+  namecheap: {
+    name: 'Namecheap Domains & SSL',
+    targetUrl: 'https://www.namecheap.com',
+    category: 'Cloud Hosting & Databases',
+    description: 'Industry-leading domain registration, affordable SSL certificates, and fast DNS management.',
+    perkBadge: 'Affordable .com & Free Privacy',
+    icon: '🌐',
+    featured: true,
+  },
+  coffee: {
+    name: 'Buy Me a Coffee (Studio Tip Jar)',
+    targetUrl: 'https://buymeacoffee.com/danglingdicestudios',
+    category: 'Creator Support',
+    description: 'Direct micro-patronage supporting independent open-source tools and original Dangling Beats releases.',
+    perkBadge: 'Direct Creator Support',
+    icon: '☕',
+    featured: true,
+  },
 };
 
 /**

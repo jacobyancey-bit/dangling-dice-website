@@ -68,6 +68,16 @@ router.get('/status', (req, res) => {
 router.get('/oembed', getOEmbed);
 
 /**
+ * OpenAPI 3.0 Public Specification (RapidAPI, Postman & Swagger Hub ready)
+ */
+router.get('/openapi.json', (req, res) => {
+  const specPath = new URL('../public/openapi.json', import.meta.url);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(specPath.pathname.replace(/^\/([A-Z]:)/, '$1'));
+});
+
+/**
  * Mount sub-routers
  */
 router.use('/auth', authRoutes);
