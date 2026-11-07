@@ -177,13 +177,15 @@ export const streamMediaDownload = async (req, res) => {
     const isMp4 = String(format).startsWith('mp4');
     const ext = isMp4 ? 'mp4' : 'mp3';
 
-    // Set download headers immediately
+    // Set download headers immediately and flush so Cloudflare and browser know the stream is active
     res.setHeader('Content-Disposition', `attachment; filename="${cleanName}.${ext}"`);
     res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
 
     if (isMp4) {
-      // MP4 Streaming Transcoding Pipeline (Fragmented MP4 for clean browser stream)
+      // MP4 Streaming Transcoding Pipeline (Fragmented MP4 with immediate packet flushing)
       const videoStream = ytdl.download(targetUrl, {
         quality: Quality.HighestVideo,
         filter: { hasVideo: true },
@@ -193,6 +195,7 @@ export const streamMediaDownload = async (req, res) => {
         '-i', 'pipe:0',
         '-c', 'copy',
         '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+        '-flush_packets', '1',
         '-f', 'mp4',
         'pipe:1',
       ]);
@@ -230,6 +233,7 @@ export const streamMediaDownload = async (req, res) => {
         '-b:a', bitrate,
         '-id3v2_version', '3',
         '-write_id3v1', '1',
+        '-flush_packets', '1',
         '-f', 'mp3',
         'pipe:1',
       ]);
