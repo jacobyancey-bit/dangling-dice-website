@@ -1,0 +1,26 @@
+# ==============================================================================
+# robots.txt for Dangling Dice Studios™
+# Official Domain: https://dangling-dice-studios.com/
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# Google Search Crawlers
+User-agent: Googlebot
+Allow: /
+Allow: /assets/
+Allow: /images/
+Allow: /css/
+Allow: /js/
+Disallow: /admin
+Disallow: /api/
+
+User-agent: Googlebot-Image
+Allow: /images/
+Allow: /assets/
+
+# Canonical Sitemap Declaration for Google Search Console
+Sitemap: https://dangling-dice-studios.com/sitemap.xml

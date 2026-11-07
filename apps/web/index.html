@@ -4,37 +4,57 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
+  
+  <!-- Search Engine Crawling & Canonical Directive (Google Search Console) -->
   <title>Dangling Dice Studios™ | Music Production, Coding, Phone Apps & Developer Tools</title>
   <meta name="description" content="Official platform for Dangling Dice Studios™. Featuring Dangling Beats music showcases, smart Android mobile apps, full-stack engineering masterclasses, and high-utility developer tools." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <link rel="canonical" href="https://dangling-dice-studios.com/" />
   
+  <!-- Google Search Console Verification Meta Tag Placeholder -->
+  <!-- Replace content with your verification string from Google Search Console (or use Namecheap DNS TXT verification) -->
+  <meta name="google-site-verification" content="YOUR_GOOGLE_SEARCH_CONSOLE_VERIFICATION_TOKEN" />
+
   <!-- Open Graph & Social Cards -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Dangling Dice Studios™" />
   <meta property="og:title" content="Dangling Dice Studios™ | Music, Code, Phone Apps & Dev Tools" />
   <meta property="og:description" content="Discover beats on Dangling Beats, explore our AI Calculator on Google Play, learn full-stack development, and use free client-side developer tools." />
-  <meta property="og:image" content="/images/banner.jpg" />
-  <meta property="og:url" content="https://danglingdice.com" />
+  <meta property="og:image" content="https://dangling-dice-studios.com/images/banner.jpg" />
+  <meta property="og:url" content="https://dangling-dice-studios.com/" />
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Dangling Dice Studios™" />
   <meta name="twitter:description" content="Where beat production meets code craft, phone apps, and developer tools." />
-  <meta name="twitter:image" content="/images/banner.jpg" />
+  <meta name="twitter:image" content="https://dangling-dice-studios.com/images/banner.jpg" />
 
-  <!-- Schema.org Structured Metadata (JSON-LD) -->
+  <!-- Schema.org Structured Metadata (JSON-LD for Rich Snippets) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Organization",
-        "@id": "https://danglingdice.com/#organization",
+        "@type": "WebSite",
+        "@id": "https://dangling-dice-studios.com/#website",
+        "url": "https://dangling-dice-studios.com/",
         "name": "Dangling Dice Studios™",
-        "url": "https://danglingdice.com",
-        "logo": "https://danglingdice.com/images/logo.png",
+        "description": "Where beat production meets code craft, phone apps, and developer tools.",
+        "publisher": {
+          "@id": "https://dangling-dice-studios.com/#organization"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://dangling-dice-studios.com/#organization",
+        "name": "Dangling Dice Studios™",
+        "url": "https://dangling-dice-studios.com/",
+        "logo": "https://dangling-dice-studios.com/images/logo.png",
         "sameAs": [
           "https://www.youtube.com/@danglingdicestudios",
           "https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator",
-          "https://github.com/jacobyancey-bit"
+          "https://github.com/jacobyancey-bit",
+          "https://www.linkedin.com/in/jacob-yancey-085151372"
         ]
       },
       {
