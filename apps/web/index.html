@@ -165,7 +165,8 @@
           <p>The sound lab behind Dangling Dice. Releasing original lofi, dark trap, synthwave, and chillhop instrumentals on YouTube. Ideal for late-night programming sessions and content creators.</p>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-youtube btn-sm">▶ YouTube Channel</a>
+          <button class="btn btn-youtube btn-sm" onclick="toggleDockAudio()">▶ Stream Lo-Fi Drive</button>
+          <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">YouTube Channel</a>
           <button class="btn btn-secondary btn-sm" onclick="filterCategory('Beats & Audio'); document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });">View Beat Catalog</button>
           <a href="https://media.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" class="btn btn-purple btn-sm">🎵 Get MP3 Audio</a>
         </div>
@@ -468,8 +469,8 @@
       <span class="beats-bar"></span>
     </div>
     <div class="beats-dock-full">
-      <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Dangling Beats Radio</div>
-      <div style="font-size: 0.72rem; color: var(--text-muted);">Lo-Fi & Dark Synth Focus</div>
+      <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Dangling Beats &bull; Lo-Fi Drive</div>
+      <div style="font-size: 0.72rem; color: var(--text-muted);">Chillhop & Lofi YouTube Radio</div>
     </div>
     <button id="dockPlayBtn" class="btn btn-purple btn-sm" onclick="toggleDockAudio()">▶ Play</button>
     <button class="beats-dock-min-btn" onclick="toggleDockMinimize()" title="Minimize / Expand">—</button>

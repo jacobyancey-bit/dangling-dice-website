@@ -46,6 +46,11 @@ function closeCinemaModal() {
   const iframeEl = document.getElementById('cinemaIframe');
   if (modal) modal.style.display = 'none';
   if (iframeEl) iframeEl.src = '';
+  isDockAudioActive = false;
+  const dock = document.getElementById('beatsDock');
+  const btn = document.getElementById('dockPlayBtn');
+  if (dock) dock.classList.remove('playing');
+  if (btn) btn.textContent = '▶ Play';
 }
 
 window.addEventListener('keydown', (e) => {
@@ -504,8 +509,8 @@ window.toggleDockAudio = function () {
   if (isDockAudioActive) {
     if (dock) dock.classList.add('playing');
     if (btn) btn.textContent = '⏸ Pause';
-    openCinemaModal('Dangling Beats Focus Radio (Lofi & Dark Synth)', 'https://www.youtube.com/embed?listType=user_uploads&list=danglingdicestudios');
-    window.showToast('▶ Streaming Dangling Beats Radio in Cinema Player', 'success');
+    openCinemaModal('Dangling Beats • Lo-Fi Drive (Official YouTube Playlist)', 'https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1');
+    window.showToast('▶ Streaming Lo-Fi Drive in Cinema Player', 'success');
   } else {
     if (dock) dock.classList.remove('playing');
     if (btn) btn.textContent = '▶ Play';
