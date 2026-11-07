@@ -115,6 +115,11 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // Reject malicious vulnerability probes for hidden dotfiles (.env, .git, etc.)
+  if (req.path.startsWith('/.') && !req.path.startsWith('/.well-known/')) {
+    return res.status(404).send('Not found');
+  }
+
   const hostname = (req.hostname || '').toLowerCase();
   const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media';
 
