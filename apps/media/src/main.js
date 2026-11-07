@@ -150,9 +150,19 @@ if (convertBtn) {
       if (progressStatusText) progressStatusText.textContent = 'Connecting to stream resolver...';
       if (engineLog) engineLog.textContent = 'Stream Resolver: Handshake established';
 
-      // Call Backend API to resolve media with 25-second timeout
+      // Call Backend API to resolve media with 35-second timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
+
+      // Progressive progress ticker so the UI stays active
+      let progressVal = 25;
+      const ticker = setInterval(() => {
+        if (progressVal < 75) {
+          progressVal += 10;
+          if (progressBarFill) progressBarFill.style.width = `${progressVal}%`;
+          if (progressPercent) progressPercent.textContent = `${progressVal}%`;
+        }
+      }, 600);
 
       let response;
       try {
@@ -166,11 +176,13 @@ if (convertBtn) {
           signal: controller.signal,
         });
       } catch (fetchErr) {
+        clearInterval(ticker);
         if (fetchErr.name === 'AbortError') {
           throw new Error('Stream resolution timed out. The provider took too long to respond.');
         }
         throw new Error(`Connection error (${fetchErr.message}). Check your network connection.`);
       } finally {
+        clearInterval(ticker);
         clearTimeout(timeoutId);
       }
 

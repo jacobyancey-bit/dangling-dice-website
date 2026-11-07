@@ -33,6 +33,35 @@ function sanitizeFilename(name) {
   return name.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_').slice(0, 80) || 'media_export';
 }
 
+function extractYouTubeId(urlStr) {
+  try {
+    const parsed = new URL(urlStr.trim());
+    if (parsed.hostname.includes('youtu.be')) {
+      return parsed.pathname.slice(1).split('/')[0].split('?')[0];
+    }
+    if (parsed.pathname.includes('/shorts/')) {
+      return parsed.pathname.split('/shorts/')[1].split('/')[0].split('?')[0];
+    }
+    return parsed.searchParams.get('v');
+  } catch {
+    return null;
+  }
+}
+
+async function fetchOEmbedMetadata(canonicalUrl) {
+  try {
+    const response = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`, {
+      signal: AbortSignal.timeout(4000),
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 /**
  * @desc    Resolve media metadata (title, duration, thumbnail) from URL
  * @route   POST /api/media/resolve
@@ -48,33 +77,72 @@ export const resolveMediaInfo = async (req, res) => {
     });
   }
 
-  try {
-    const info = await ytdl.getInfo(url);
-    const videoDetails = info.videoDetails || {};
+  // Normalize YouTube URLs to clean canonical format
+  const ytid = extractYouTubeId(url);
+  const targetUrl = ytid ? `https://www.youtube.com/watch?v=${ytid}` : url.trim();
+  const ext = String(format).startsWith('mp4') ? 'mp4' : 'mp3';
 
-    const durationSeconds = parseInt(videoDetails.lengthSeconds, 10) || 0;
-    // Guardrail: Max 20 minutes to prevent resource exhaustion
-    if (durationSeconds > 1200) {
-      return res.status(400).json({
-        success: false,
-        message: 'Media duration exceeds maximum allowed length of 20 minutes for free public conversion.',
+  try {
+    // Race ytdl.getInfo against a 5-second timeout with fallback to instant oEmbed
+    const infoPromise = ytdl.getInfo(targetUrl);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('RESOLVE_TIMEOUT')), 5000)
+    );
+
+    let info;
+    try {
+      info = await Promise.race([infoPromise, timeoutPromise]);
+    } catch {
+      info = null;
+    }
+
+    if (info && info.videoDetails) {
+      const videoDetails = info.videoDetails;
+      const durationSeconds = parseInt(videoDetails.lengthSeconds, 10) || 0;
+
+      if (durationSeconds > 1200) {
+        return res.status(400).json({
+          success: false,
+          message: 'Media duration exceeds maximum allowed length of 20 minutes for free public conversion.',
+        });
+      }
+
+      const cleanTitle = sanitizeFilename(videoDetails.title);
+      const thumbnail = videoDetails.thumbnails?.[videoDetails.thumbnails.length - 1]?.url || '';
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          title: videoDetails.title || 'Audio Track',
+          cleanTitle: `${cleanTitle}.${ext}`,
+          author: videoDetails.author?.name || 'Creator',
+          durationSeconds,
+          thumbnail,
+          downloadUrl: `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`,
+        },
       });
     }
 
-    const cleanTitle = sanitizeFilename(videoDetails.title);
-    const ext = String(format).startsWith('mp4') ? 'mp4' : 'mp3';
-    const thumbnail = videoDetails.thumbnails?.[videoDetails.thumbnails.length - 1]?.url || '';
+    // Instant Fallback: Use YouTube oEmbed if ytdl is slow or rate-limited
+    const oembed = ytid ? await fetchOEmbedMetadata(targetUrl) : null;
+    if (oembed) {
+      const cleanTitle = sanitizeFilename(oembed.title);
+      return res.status(200).json({
+        success: true,
+        data: {
+          title: oembed.title || 'Audio Track',
+          cleanTitle: `${cleanTitle}.${ext}`,
+          author: oembed.author_name || 'Creator',
+          durationSeconds: 180,
+          thumbnail: oembed.thumbnail_url || `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`,
+          downloadUrl: `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`,
+        },
+      });
+    }
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        title: videoDetails.title || 'Audio Track',
-        cleanTitle: `${cleanTitle}.${ext}`,
-        author: videoDetails.author?.name || 'Creator',
-        durationSeconds,
-        thumbnail,
-        downloadUrl: `/api/media/download?url=${encodeURIComponent(url)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`,
-      },
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to extract media information from provider. Please check the URL or try another link.',
     });
   } catch (err) {
     console.error('[MediaController Resolve Error]', err.message);
@@ -97,8 +165,11 @@ export const streamMediaDownload = async (req, res) => {
     return res.status(400).send('Invalid or unauthorized media URL');
   }
 
+  const ytid = extractYouTubeId(url);
+  const targetUrl = ytid ? `https://www.youtube.com/watch?v=${ytid}` : url.trim();
+
   try {
-    const info = await ytdl.getInfo(url);
+    const info = await ytdl.getInfo(targetUrl);
     const cleanName = sanitizeFilename(title);
     const isMp4 = String(format).startsWith('mp4');
     const ext = isMp4 ? 'mp4' : 'mp3';
