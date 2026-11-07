@@ -89,6 +89,15 @@ const PARTNER_DIRECTORY = {
     icon: '🌐',
     featured: true,
   },
+  rapidapi: {
+    name: 'Dangling Dice API on RapidAPI',
+    targetUrl: 'https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api',
+    category: 'Developer Tools',
+    description: 'Official developer REST API for audio/video conversion and studio catalog. Free tier with 100 requests/mo.',
+    perkBadge: '100 Free Monthly Pulls',
+    icon: '⚡',
+    featured: true,
+  },
   coffee: {
     name: 'Buy Me a Coffee (Studio Tip Jar)',
     targetUrl: 'https://buymeacoffee.com/danglingdicestudios',
