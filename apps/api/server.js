@@ -92,6 +92,13 @@ app.get(['/llms.txt', '/.well-known/llms.txt', '/llms-full.txt'], (req, res) => 
   res.status(404).send('Not found');
 });
 
+// Discord Domain Verification Standard (HTTPS Verification)
+app.get(['/.well-known/discord', '/.well-known/discord.txt'], (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.send('dh=1249865747f1f8a9daec742ba9b4bbc5dd950ae9');
+});
+
 // 3. Prevent Denial of Service (DoS) by limiting JSON & URL-encoded request body size
 // Preserves raw body for Stripe webhook cryptographic signature verification
 app.use(
