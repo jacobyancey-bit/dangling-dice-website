@@ -13,6 +13,7 @@ import apiRoutes from './routes/api.js';
 import { redirectPartner } from './controllers/affiliateController.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
+import { analyticsMiddleware } from './middleware/analytics.js';
 
 // Resolve __dirname in ES module scope
 const __filename = fileURLToPath(import.meta.url);
@@ -60,6 +61,20 @@ app.use(
 
 // 2. Enable Cross-Origin Resource Sharing
 app.use(cors());
+
+// 2b. Request Telemetry & AI Crawler Analytics Engine
+app.use(analyticsMiddleware);
+
+// AI Search Crawler Discovery Standards (llms.txt)
+app.get(['/llms.txt', '/.well-known/llms.txt', '/llms-full.txt'], (req, res) => {
+  const llmsPath = path.join(__dirname, '..', 'web', 'public', 'llms.txt');
+  if (fs.existsSync(llmsPath)) {
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(llmsPath);
+  }
+  res.status(404).send('Not found');
+});
 
 // 3. Prevent Denial of Service (DoS) by limiting JSON & URL-encoded request body size
 // Preserves raw body for Stripe webhook cryptographic signature verification

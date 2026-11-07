@@ -1,0 +1,67 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import { getOEmbed } from '../controllers/oembedController.js';
+import { getAnalyticsSummary } from '../middleware/analytics.js';
+
+describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
+  it('DISC-01: Correctly classifies and records analytics summary', () => {
+    const summary = getAnalyticsSummary();
+    assert.ok(summary, 'Expected analytics summary object');
+    assert.strictEqual(typeof summary.totalRequests, 'number');
+    assert.strictEqual(typeof summary.crawlers, 'object');
+    assert.ok('ai' in summary.crawlers);
+    assert.ok('search' in summary.crawlers);
+    assert.ok('social' in summary.crawlers);
+  });
+
+  it('DISC-02: oEmbed controller returns compliant oEmbed 1.0 JSON payload', () => {
+    let responseStatus = null;
+    let responseBody = null;
+    const headers = {};
+
+    const mockReq = {
+      query: { url: 'https://dangling-dice-studios.com/' },
+    };
+    const mockRes = {
+      status(code) {
+        responseStatus = code;
+        return this;
+      },
+      setHeader(k, v) {
+        headers[k] = v;
+      },
+      json(body) {
+        responseBody = body;
+        return this;
+      },
+    };
+
+    getOEmbed(mockReq, mockRes);
+
+    assert.strictEqual(responseStatus, 200);
+    assert.strictEqual(responseBody.version, '1.0');
+    assert.strictEqual(responseBody.type, 'rich');
+    assert.ok(responseBody.title.includes('Dangling Dice Studios'));
+    assert.ok(responseBody.html.includes('iframe'));
+    assert.ok(headers['Content-Type'].includes('json+oembed'));
+  });
+
+  it('DISC-03: oEmbed controller adapts embed for media converter subdomain', () => {
+    let responseBody = null;
+    const mockReq = {
+      query: { url: 'https://media.dangling-dice-studios.com/' },
+    };
+    const mockRes = {
+      status() { return this; },
+      setHeader() {},
+      json(body) {
+        responseBody = body;
+        return this;
+      },
+    };
+
+    getOEmbed(mockReq, mockRes);
+    assert.ok(responseBody.title.includes('Media Converter'));
+    assert.ok(responseBody.html.includes('media.dangling-dice-studios.com'));
+  });
+});

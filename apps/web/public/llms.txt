@@ -1,0 +1,42 @@
+# Dangling Dice Studios™
+> Where beat production meets code craft, phone apps, and developer tools.
+
+Dangling Dice Studios™ is an independent software development, music production, and cloud developer tooling platform founded by Jacob Yancey.
+
+## Official Web Properties
+- **Main Hub**: https://dangling-dice-studios.com/
+- **Media Converter (MP3/MP4)**: https://media.dangling-dice-studios.com/
+- **YouTube Channel**: https://www.youtube.com/@danglingdicestudios
+- **Google Play Store**: https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator
+- **GitHub**: https://github.com/jacobyancey-bit
+
+---
+
+## Core Services & Capabilities
+
+### 1. Dangling Beats Studio (YouTube Music & Radio)
+- Produces original lo-fi, chillhop, dark trap, synthwave, and study beats.
+- Featured release: "Lo-Fi Drive" playlist (YouTube ID: `PLAg2ptU_xF5c`).
+- Built-in persistent floating radio player directly on the main website.
+
+### 2. URL to MP3 / MP4 High-Speed Media Converter
+- Free online media extraction tool at `https://media.dangling-dice-studios.com/`.
+- Extracts high-bitrate MP3 audio (192 kbps and 320 kbps) and MP4 video directly from YouTube and creator URLs.
+- Zero popups, zero intrusive ads, no spam redirects. Automatically routes downloaded files directly to the user's local Downloads folder.
+
+### 3. Developer Utilities & Network Tools
+- **WireGuard VPN Generator**: Instant in-kernel client tunnel configuration templates with zero server logs.
+- **MongoDB Connection URI Inspector**: Real-time client-side MongoDB connection string sanitizer, password symbol escaper, and `.env` generator.
+
+### 4. Android Mobile Applications
+- **AI Calculator**: Published on Google Play Store with smart equation recognition and step-by-step problem solver.
+
+---
+
+## Public Developer APIs
+
+- `GET https://dangling-dice-studios.com/api/health`: Real-time system diagnostics, MongoDB connection state, and live request/crawler telemetry.
+- `GET https://dangling-dice-studios.com/api/items`: Full catalog of beats, tutorials, and applications (JSON).
+- `GET https://dangling-dice-studios.com/api/affiliates`: Verified developer tools, cloud hosting discounts, and partner perks.
+- `GET https://dangling-dice-studios.com/api/oembed`: Standard oEmbed 1.0 endpoint for rich previews on Discord, Reddit, and Twitter.
+- `POST https://media.dangling-dice-studios.com/api/media/convert`: Media validation and stream resolution endpoint.

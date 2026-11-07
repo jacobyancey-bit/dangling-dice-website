@@ -1,0 +1,10 @@
+# Dangling Dice Studios™ - Media Converter & Audio Tools
+> High-speed, in-browser YouTube to MP3 & MP4 extraction gateway.
+
+- Official Media Converter: https://media.dangling-dice-studios.com/
+- Main Studio Hub: https://dangling-dice-studios.com/
+- YouTube Channel: https://www.youtube.com/@danglingdicestudios
+
+## Overview
+Dangling Dice Media Converter allows creators, musicians, and developers to convert public YouTube URLs into high-fidelity MP3s (192kbps / 320kbps) and MP4 video files with zero ads and zero redirects.
+Downloaded files route automatically to the user's default browser Downloads directory.

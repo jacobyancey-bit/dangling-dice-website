@@ -6,13 +6,15 @@ import checkoutRoutes from './checkoutRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import affiliateRoutes from './affiliateRoutes.js';
 import mediaRoutes from './mediaRoutes.js';
+import { getOEmbed } from '../controllers/oembedController.js';
+import { getAnalyticsSummary } from '../middleware/analytics.js';
 
 const router = express.Router();
 
 /**
  * Health check / meta endpoint for the API tier & MongoDB connection status
  */
-router.get('/', (req, res) => {
+const getHealthData = () => {
   const dbState = mongoose.connection.readyState;
   const dbStates = {
     0: 'disconnected',
@@ -21,8 +23,9 @@ router.get('/', (req, res) => {
     3: 'disconnecting',
   };
 
-  res.status(200).json({
-    status: 'online',
+  return {
+    status: dbState === 1 ? 'healthy' : 'degraded',
+    service: 'Dangling Dice Studios™ Central API',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     database: {
@@ -31,15 +34,38 @@ router.get('/', (req, res) => {
       name: mongoose.connection.name || 'dangling_dice_db',
       host: mongoose.connection.host || '127.0.0.1',
     },
+    analytics: getAnalyticsSummary(),
     endpoints: {
+      health: '/api/health (live health & telemetry metrics)',
+      oembed: '/api/oembed?url=... (oEmbed 1.0 rich card provider)',
       auth: '/api/auth (register, login, profile)',
       items: '/api/items (GET, POST, PUT, DELETE)',
       checkout: '/api/checkout (create-session, webhook, order/:sessionId)',
       orders: '/api/orders (GET customer purchases)',
       affiliates: '/api/affiliates (partner directory & privacy redirects)',
+      media: '/api/media/convert (YouTube to MP3/MP4 extraction)',
     },
-  });
+  };
+};
+
+router.get('/', (req, res) => {
+  res.status(200).json(getHealthData());
 });
+
+router.get('/health', (req, res) => {
+  const data = getHealthData();
+  const statusCode = data.database.connected ? 200 : 503;
+  res.status(statusCode).json(data);
+});
+
+router.get('/status', (req, res) => {
+  res.status(200).json(getHealthData());
+});
+
+/**
+ * oEmbed 1.0 Rich Media Discovery Provider
+ */
+router.get('/oembed', getOEmbed);
 
 /**
  * Mount sub-routers

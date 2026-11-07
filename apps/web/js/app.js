@@ -97,26 +97,39 @@ function logMessage(msg, type = "info") {
   else console.log(`[DanglingDice] ${msg}`);
 }
 
-// Health Check
+// Health Check & Telemetry Poller
 async function checkHealth() {
   const statusLabel = document.getElementById("statusLabel");
   const statusBadge = document.getElementById("connectionStatus");
   try {
     const start = performance.now();
-    const res = await fetch(`${API_BASE}/`);
+    const res = await fetch(`${API_BASE}/health`);
     const duration = Math.round(performance.now() - start);
     if (res.ok) {
-      if (statusLabel) statusLabel.textContent = `API Online (${duration}ms)`;
+      const data = await res.json();
+      const totalPulls = data?.analytics?.totalRequests || 0;
+      const aiHits = data?.analytics?.crawlers?.ai || 0;
+      const searchHits = data?.analytics?.crawlers?.search || 0;
+
+      if (statusLabel) {
+        statusLabel.textContent = `API Online (${duration}ms • ${totalPulls} pulls)`;
+        statusLabel.title = `Total API Requests: ${totalPulls}\nAI/Bot Crawlers: ${aiHits}\nSearch Engine Crawlers: ${searchHits}\nUptime: ${Math.round((data?.analytics?.uptimeSeconds || 0) / 60)} mins`;
+      }
       if (statusBadge) {
         statusBadge.style.color = "var(--neon-emerald)";
         statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        statusBadge.style.cursor = "pointer";
+        statusBadge.onclick = () => window.open(`${API_BASE}/health`, '_blank');
       }
-      logMessage(`API Health check OK: status 200 (${duration}ms)`, "success");
+      logMessage(`API Health check OK: status 200 (${duration}ms, ${totalPulls} total pulls)`, "success");
     } else {
       throw new Error(`HTTP ${res.status}`);
     }
   } catch (err) {
-    if (statusLabel) statusLabel.textContent = "API Offline";
+    if (statusLabel) {
+      statusLabel.textContent = "API Offline";
+      statusLabel.title = "Could not connect to API server";
+    }
     if (statusBadge) {
       statusBadge.style.color = "#f87171";
       statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";

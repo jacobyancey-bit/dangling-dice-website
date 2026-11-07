@@ -1,0 +1,191 @@
+/**
+ * Dangling Dice Studios™ - API Telemetry & Crawler Analytics Engine
+ * Tracks total requests, response performance, endpoint frequency,
+ * and categorizes AI, search, and social media crawlers.
+ */
+
+const startTime = new Date();
+
+const metrics = {
+  totalRequests: 0,
+  startedAt: startTime.toISOString(),
+  lastRequestAt: null,
+  crawlers: {
+    ai: 0,
+    search: 0,
+    social: 0,
+    browsers: 0,
+    tools: 0,
+  },
+  crawlerBreakdown: {},
+  endpoints: {},
+  statusCodes: {},
+  recentActivity: [],
+};
+
+const MAX_RECENT_HISTORY = 20;
+
+/**
+ * Identify the category and specific bot from User-Agent
+ */
+function classifyUserAgent(ua = '') {
+  const uaLower = ua.toLowerCase();
+
+  // 1. AI Search Crawlers & LLMs
+  const aiBots = [
+    { pattern: 'gptbot', name: 'GPTBot (OpenAI)' },
+    { pattern: 'chatgpt-user', name: 'ChatGPT-User' },
+    { pattern: 'perplexitybot', name: 'PerplexityBot' },
+    { pattern: 'claudebot', name: 'ClaudeBot (Anthropic)' },
+    { pattern: 'anthropic-ai', name: 'Anthropic AI' },
+    { pattern: 'google-extended', name: 'Google-Extended (Gemini)' },
+    { pattern: 'bytespider', name: 'ByteSpider (TikTok/ByteDance)' },
+    { pattern: 'ccbot', name: 'Common Crawl' },
+    { pattern: 'cohere-ai', name: 'Cohere AI' },
+    { pattern: 'diffbot', name: 'Diffbot' },
+    { pattern: 'facebookbot', name: 'Meta AI' },
+  ];
+
+  for (const bot of aiBots) {
+    if (uaLower.includes(bot.pattern)) {
+      return { category: 'ai', name: bot.name };
+    }
+  }
+
+  // 2. Social Media Preview Crawlers (oEmbed / Card scrapers)
+  const socialBots = [
+    { pattern: 'discordbot', name: 'Discord Bot' },
+    { pattern: 'twitterbot', name: 'Twitter / X Bot' },
+    { pattern: 'facebookexternalhit', name: 'Facebook / Meta' },
+    { pattern: 'redditbot', name: 'Reddit Bot' },
+    { pattern: 'slackbot', name: 'Slack Bot' },
+    { pattern: 'telegrambot', name: 'Telegram Bot' },
+    { pattern: 'linkedinbot', name: 'LinkedIn Bot' },
+    { pattern: 'pinterest', name: 'Pinterest Bot' },
+    { pattern: 'whatsapp', name: 'WhatsApp Bot' },
+  ];
+
+  for (const bot of socialBots) {
+    if (uaLower.includes(bot.pattern)) {
+      return { category: 'social', name: bot.name };
+    }
+  }
+
+  // 3. Search Engine Indexing Spiders
+  const searchBots = [
+    { pattern: 'googlebot', name: 'Googlebot' },
+    { pattern: 'bingbot', name: 'Bingbot' },
+    { pattern: 'yandexbot', name: 'Yandex' },
+    { pattern: 'duckduckbot', name: 'DuckDuckGo' },
+    { pattern: 'baiduspider', name: 'Baidu' },
+    { pattern: 'applebot', name: 'Applebot' },
+  ];
+
+  for (const bot of searchBots) {
+    if (uaLower.includes(bot.pattern)) {
+      return { category: 'search', name: bot.name };
+    }
+  }
+
+  // 4. Developer Tools & CLI
+  if (
+    uaLower.includes('curl') ||
+    uaLower.includes('postman') ||
+    uaLower.includes('insomnia') ||
+    uaLower.includes('python-requests') ||
+    uaLower.includes('node-fetch') ||
+    uaLower.includes('axios') ||
+    uaLower.includes('http_request')
+  ) {
+    return { category: 'tools', name: ua.split('/')[0] || 'HTTP Client' };
+  }
+
+  // 5. Standard Browsers / Users
+  return { category: 'browsers', name: 'Browser' };
+}
+
+/**
+ * Mask IP address for GDPR/privacy compliance (192.168.1.100 -> 192.168.1.xxx)
+ */
+function maskIp(ip = '') {
+  if (!ip) return 'unknown';
+  if (ip.includes('.')) {
+    return ip.replace(/\.\d+$/, '.xxx');
+  }
+  if (ip.includes(':')) {
+    const parts = ip.split(':');
+    return `${parts.slice(0, 3).join(':')}::xxx`;
+  }
+  return 'masked';
+}
+
+/**
+ * Express middleware to track incoming requests
+ */
+export const analyticsMiddleware = (req, res, next) => {
+  const start = performance.now();
+  const rawUa = req.headers['user-agent'] || 'Unknown';
+  const classification = classifyUserAgent(rawUa);
+
+  // Increment metrics
+  metrics.totalRequests += 1;
+  metrics.lastRequestAt = new Date().toISOString();
+  metrics.crawlers[classification.category] = (metrics.crawlers[classification.category] || 0) + 1;
+
+  if (classification.category !== 'browsers') {
+    metrics.crawlerBreakdown[classification.name] = (metrics.crawlerBreakdown[classification.name] || 0) + 1;
+  }
+
+  const endpointPath = req.baseUrl || req.path;
+  metrics.endpoints[endpointPath] = (metrics.endpoints[endpointPath] || 0) + 1;
+
+  // Track response completion
+  res.on('finish', () => {
+    const duration = Math.round(performance.now() - start);
+    const code = res.statusCode;
+    metrics.statusCodes[code] = (metrics.statusCodes[code] || 0) + 1;
+
+    // Log to recent activity
+    metrics.recentActivity.unshift({
+      time: new Date().toISOString(),
+      method: req.method,
+      path: req.originalUrl || req.url,
+      status: code,
+      durationMs: duration,
+      category: classification.category,
+      client: classification.name,
+      ip: maskIp(req.ip || req.headers['x-forwarded-for']),
+    });
+
+    if (metrics.recentActivity.length > MAX_RECENT_HISTORY) {
+      metrics.recentActivity.pop();
+    }
+  });
+
+  next();
+};
+
+/**
+ * Returns read-only snapshot of system analytics
+ */
+export const getAnalyticsSummary = () => {
+  const uptimeSeconds = Math.round((Date.now() - startTime.getTime()) / 1000);
+
+  // Top endpoints sorted by hit volume
+  const topEndpoints = Object.entries(metrics.endpoints)
+    .map(([path, hits]) => ({ path, hits }))
+    .sort((a, b) => b.hits - a.hits)
+    .slice(0, 10);
+
+  return {
+    totalRequests: metrics.totalRequests,
+    uptimeSeconds,
+    startedAt: metrics.startedAt,
+    lastRequestAt: metrics.lastRequestAt,
+    crawlers: metrics.crawlers,
+    crawlerBreakdown: metrics.crawlerBreakdown,
+    topEndpoints,
+    statusCodes: metrics.statusCodes,
+    recentActivity: metrics.recentActivity.slice(0, 15),
+  };
+};
