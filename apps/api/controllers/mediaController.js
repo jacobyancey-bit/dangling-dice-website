@@ -411,47 +411,19 @@ export const resolveMediaInfo = async (req, res) => {
 };
 
 export const debugStream = async (req, res) => {
-  const url = req.query.url || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  const url = req.query.url || 'https://www.youtube.com/watch?v=Db7ZrUtuCxU';
   try {
     const ytid = extractYouTubeId(url);
     const targetUrl = ytid ? `https://www.youtube.com/watch?v=${ytid}` : url.trim();
 
-    let ffmpegExecutable = false;
-    try {
-      fs.accessSync(ffmpegPath, fs.constants.X_OK);
-      ffmpegExecutable = true;
-    } catch (e) {
-      ffmpegExecutable = e.message;
-    }
+    const gatewayTest = await fetchFromExtractionGateway(targetUrl, 'mp3');
 
-    const stream = ytdl.download(targetUrl, { quality: Quality.HighestAudio, filter: { hasAudio: true } });
-    
-    const timeout = setTimeout(() => {
-      try { stream.destroy(); } catch (e) {}
-      if (!res.headersSent) {
-        res.status(504).json({ success: false, error: 'DEBUG_STREAM_TIMEOUT_12S', ffmpegPath, ffmpegExecutable });
-      }
-    }, 12000);
-
-    stream.once('data', (chunk) => {
-      clearTimeout(timeout);
-      try { stream.destroy(); } catch (e) {}
-      if (!res.headersSent) {
-        res.json({
-          success: true,
-          chunkSize: chunk.length,
-          ffmpegPath,
-          ffmpegExecutable,
-          tempDirExists: fs.existsSync(tempDir),
-        });
-      }
-    });
-
-    stream.on('error', (err) => {
-      clearTimeout(timeout);
-      if (!res.headersSent) {
-        res.status(500).json({ success: false, error: err.message, stack: err.stack, ffmpegPath, ffmpegExecutable });
-      }
+    return res.json({
+      success: true,
+      hasRapidKey: !!process.env.RAPIDAPI_KEY,
+      keyLength: process.env.RAPIDAPI_KEY ? process.env.RAPIDAPI_KEY.length : 0,
+      rapidHost: process.env.RAPIDAPI_HOST || 'not set',
+      gatewayTest,
     });
   } catch (e) {
     if (!res.headersSent) {
