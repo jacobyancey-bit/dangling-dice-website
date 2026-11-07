@@ -41,9 +41,15 @@ app.use(
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https:'],
+        imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+        mediaSrc: ["'self'", 'blob:', 'data:', 'https:'],
         frameSrc: ["'self'", 'https://www.youtube.com', 'https://youtube.com', 'https://js.stripe.com'],
-        connectSrc: ["'self'", 'https://api.stripe.com'],
+        connectSrc: [
+          "'self'",
+          'https://api.stripe.com',
+          'https://*.dangling-dice-studios.com',
+          'https://dangling-dice-studios.com',
+        ],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -98,9 +104,6 @@ app.use((req, res, next) => {
   const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media';
 
   if (isMediaSubdomain && fs.existsSync(mediaDistPath)) {
-    // Enable Cross-Origin Isolation for high-speed WebAssembly SharedArrayBuffer
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     return express.static(mediaDistPath)(req, res, () => {
       res.sendFile(path.join(mediaDistPath, 'index.html'));
     });

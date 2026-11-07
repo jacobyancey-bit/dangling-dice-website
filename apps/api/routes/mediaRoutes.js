@@ -7,3 +7,4 @@ router.post('/resolve', resolveMediaInfo);
 router.get('/download', streamMediaDownload);
 
 export default router;
+

@@ -106,12 +106,22 @@ export const streamMediaDownload = async (req, res) => {
     res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
     res.setHeader('Cache-Control', 'no-cache');
 
-    const downloadFilter = isMp4
-      ? { hasAudio: true, hasVideo: true }
-      : { hasAudio: true, hasVideo: false };
+    let downloadFilter;
+    let downloadQuality;
+
+    if (isMp4) {
+      const hasCombined = info.formats.some((f) => f.hasAudio && f.hasVideo);
+      downloadFilter = hasCombined
+        ? { hasAudio: true, hasVideo: true }
+        : { hasVideo: true };
+      downloadQuality = Quality.HighestVideo;
+    } else {
+      downloadFilter = { hasAudio: true, hasVideo: false };
+      downloadQuality = Quality.HighestAudio;
+    }
 
     const stream = ytdl.download(info, {
-      quality: Quality.HighestAudio,
+      quality: downloadQuality,
       filter: downloadFilter,
     });
 
@@ -136,3 +146,4 @@ export const streamMediaDownload = async (req, res) => {
     }
   }
 };
+

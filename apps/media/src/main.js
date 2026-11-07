@@ -3,11 +3,9 @@
  * Powered by In-Browser WebAssembly (Wasm) & Stream Relaying
  */
 
-const API_BASE = window.location.origin.includes('media.')
-  ? 'https://dangling-dice-studios.com/api'
-  : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:5000/api'
-    : window.location.origin + '/api';
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
+  ? 'http://localhost:5000/api'
+  : '/api';
 
 // Toast Notifications Helper
 function showToast(message, type = 'info') {
@@ -152,21 +150,35 @@ if (convertBtn) {
       if (progressStatusText) progressStatusText.textContent = 'Connecting to stream resolver...';
       if (engineLog) engineLog.textContent = 'Stream Resolver: Handshake established';
 
-      // Call Backend API to resolve media
-      const response = await fetch(`${API_BASE}/media/resolve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: rawUrl,
-          format: selectedFormat,
-        }),
-      });
+      // Call Backend API to resolve media with 25-second timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+      let response;
+      try {
+        response = await fetch(`${API_BASE}/media/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: rawUrl,
+            format: selectedFormat,
+          }),
+          signal: controller.signal,
+        });
+      } catch (fetchErr) {
+        if (fetchErr.name === 'AbortError') {
+          throw new Error('Stream resolution timed out. The provider took too long to respond.');
+        }
+        throw new Error(`Connection error (${fetchErr.message}). Check your network connection.`);
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       // Stage 2: Parsing stream metadata
       if (progressBarFill) progressBarFill.style.width = '55%';
       if (progressPercent) progressPercent.textContent = '55%';
       if (progressStatusText) progressStatusText.textContent = 'Extracting media signatures & audio bitrate...';
-      if (engineLog) engineLog.textContent = `Wasm Muxer: Transcoding to ${selectedFormat.toUpperCase()}`;
+      if (engineLog) engineLog.textContent = `Muxer: Transcoding to ${selectedFormat.toUpperCase()}`;
 
       const resData = await response.json();
 
@@ -188,11 +200,7 @@ if (convertBtn) {
       if (progressStatusText) progressStatusText.textContent = 'Transcoding complete!';
       if (engineLog) engineLog.textContent = 'Status: Stream ready for direct download';
 
-      // Construct direct absolute download link
-      const apiHost = API_BASE.replace('/api', '');
-      const downloadEndpoint = media.downloadUrl.startsWith('http')
-        ? media.downloadUrl
-        : `${apiHost}${media.downloadUrl}`;
+      const downloadEndpoint = media.downloadUrl;
 
       // Populate Result Card
       if (resultThumb && media.thumbnail) {
@@ -231,6 +239,7 @@ if (convertBtn) {
       resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (err) {
       console.error(err);
+      if (progressContainer) progressContainer.style.display = 'none';
       showToast(err.message || 'Stream extraction error. Please check URL.', 'error');
     } finally {
       convertBtn.disabled = false;
