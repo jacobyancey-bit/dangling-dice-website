@@ -71,6 +71,15 @@ const PARTNER_DIRECTORY = {
     icon: '🎛️',
     featured: true,
   },
+  amazon: {
+    name: 'Amazon Pro Audio Gear',
+    targetUrl: 'https://www.amazon.com/b?node=1197124',
+    category: 'Music Gear & Production',
+    description: 'Shop recording studio monitors, Focusrite audio interfaces, Shure microphones, and headphones on Amazon.',
+    perkBadge: 'Amazon Associate Deals',
+    icon: '📦',
+    featured: true,
+  },
   distrokid: {
     name: 'DistroKid Music Distribution',
     targetUrl: 'https://distrokid.com',
