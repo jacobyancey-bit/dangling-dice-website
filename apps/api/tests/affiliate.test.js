@@ -34,6 +34,30 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     assert.equal(headers['Cache-Control'], 'no-store, max-age=0');
   });
 
+  it('AFF-01b: Successfully redirects /go/media with 302 to media subdomain', () => {
+    let statusCode = null;
+    let redirectLocation = null;
+
+    const req = {
+      params: { slug: 'media' },
+      query: { src: 'main_hub' },
+    };
+
+    const res = {
+      setHeader() {},
+      redirect(code, location) {
+        statusCode = code;
+        redirectLocation = location;
+      },
+    };
+
+    redirectPartner(req, res);
+
+    assert.equal(statusCode, 302);
+    assert.match(redirectLocation, /media\.dangling-dice-studios\.com/i);
+    assert.match(redirectLocation, /utm_source=danglingdice/i);
+  });
+
   it('AFF-02: Returns 404 for unrecognized partner slug', () => {
     let statusCode = null;
     let jsonBody = null;

@@ -53,6 +53,15 @@ const PARTNER_DIRECTORY = {
     icon: '🎧',
     featured: true,
   },
+  media: {
+    name: 'Dangling Dice Media Converter',
+    targetUrl: 'https://media.dangling-dice-studios.com',
+    category: 'Developer Tools',
+    description: 'In-browser WebAssembly URL to MP3 (320kbps) & MP4 media transcoder with zero server logs.',
+    perkBadge: '100% In-Browser Privacy',
+    icon: '🎵',
+    featured: true,
+  },
 };
 
 /**

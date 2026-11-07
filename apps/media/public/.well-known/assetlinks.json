@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.danglingdicestudios.mediaconverter",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:7F:0E:52:D7:11:86:10:5E:BC:48:22:1F:B1:05:35:C3:2E:66:1B:40:CE:B6:36:B2:73:E8:A3:04:F7"
+      ]
+    }
+  }
+]

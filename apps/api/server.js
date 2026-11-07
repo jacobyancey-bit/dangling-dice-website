@@ -84,27 +84,46 @@ app.get('/go/:slug', redirectPartner);
 // Mount central API router containing /auth, /items, /checkout, /orders, /affiliates with rate limiting
 app.use('/api', apiLimiter, apiRoutes);
 
-// Frontend Static Files (Serve compiled Vite client in production if dist exists)
-const distPath = path.join(__dirname, '..', 'web', 'dist');
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
-  app.get('*', (req, res, next) => {
-    if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/go')) {
-      return next();
-    }
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
-} else {
-  // Root info fallback when running headless API without built web client
-  app.get('/', (req, res) => {
-    res.status(200).json({
-      success: true,
-      service: 'Dangling Dice Studios™ REST API',
-      version: '1.0.0',
-      documentation: '/api',
+// Frontend Static Files (Supports main domain and media subdomain)
+const webDistPath = path.join(__dirname, '..', 'web', 'dist');
+const mediaDistPath = path.join(__dirname, '..', 'media', 'dist');
+
+// Multi-tenant subdomain static server
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/go')) {
+    return next();
+  }
+
+  const hostname = (req.hostname || '').toLowerCase();
+  const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media';
+
+  if (isMediaSubdomain && fs.existsSync(mediaDistPath)) {
+    // Enable Cross-Origin Isolation for high-speed WebAssembly SharedArrayBuffer
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    return express.static(mediaDistPath)(req, res, () => {
+      res.sendFile(path.join(mediaDistPath, 'index.html'));
     });
+  }
+
+  if (fs.existsSync(webDistPath)) {
+    return express.static(webDistPath)(req, res, () => {
+      res.sendFile(path.join(webDistPath, 'index.html'));
+    });
+  }
+
+  next();
+});
+
+// Root info fallback when running headless API without built web client
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    service: 'Dangling Dice Studios™ REST API',
+    version: '1.0.0',
+    documentation: '/api',
   });
-}
+});
 
 /**
  * ----------------------------------------------------
