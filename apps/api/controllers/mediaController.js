@@ -4,6 +4,7 @@ import ffmpegPath from 'ffmpeg-static';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -95,6 +96,97 @@ async function fetchOEmbedMetadata(canonicalUrl) {
 }
 
 /**
+ * Option A: Extraction Gateway Client
+ * Seamlessly routes conversion requests through dedicated media gateways (Cobalt / RapidAPI)
+ * to bypass datacenter IP BotGuard challenges with unthrottled streaming.
+ */
+async function fetchFromExtractionGateway(targetUrl, format) {
+  const isMp4 = String(format).startsWith('mp4');
+
+  // Provider 1: Cobalt Gateway (Self-hosted or private instance)
+  if (process.env.COBALT_API_URL) {
+    try {
+      const base = process.env.COBALT_API_URL.replace(/\/+$/, '');
+      const response = await fetch(base, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          ...(process.env.COBALT_API_KEY ? { 'Authorization': `Bearer ${process.env.COBALT_API_KEY}` } : {}),
+        },
+        body: JSON.stringify({
+          url: targetUrl,
+          downloadMode: isMp4 ? 'auto' : 'audio',
+          audioFormat: 'mp3',
+          audioBitrate: format === 'mp3-192' ? '192' : '320',
+        }),
+        signal: AbortSignal.timeout(12000),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const streamUrl = data.url;
+        if (streamUrl) {
+          return { streamUrl, source: 'cobalt' };
+        }
+      }
+    } catch (err) {
+      console.warn('[Extraction Gateway] Cobalt call failed:', err.message);
+    }
+  }
+
+  // Provider 2: RapidAPI YouTube-to-MP3 Gateway
+  if (process.env.RAPIDAPI_KEY) {
+    const host = process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com';
+    const candidatePaths = process.env.RAPIDAPI_PATH
+      ? [process.env.RAPIDAPI_PATH.replace('{url}', encodeURIComponent(targetUrl)).replace('{yt}', encodeURIComponent(targetUrl))]
+      : [
+          `/download-mp3?yt=${encodeURIComponent(targetUrl)}`,
+          `/download/mp3?url=${encodeURIComponent(targetUrl)}`,
+          `/dl?url=${encodeURIComponent(targetUrl)}`,
+        ];
+
+    for (const subpath of candidatePaths) {
+      try {
+        const fullUrl = `https://${host}${subpath.startsWith('/') ? subpath : '/' + subpath}`;
+        const response = await fetch(fullUrl, {
+          headers: {
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+            'x-rapidapi-host': host,
+          },
+          signal: AbortSignal.timeout(12000),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const streamUrl =
+            data.link ||
+            data.downloadUrl ||
+            data.url ||
+            data.mp3_url ||
+            data.result?.download_url ||
+            data.data?.downloadUrl;
+
+          if (streamUrl) {
+            return {
+              streamUrl,
+              title: data.title,
+              artist: data.uploader || data.artist,
+              duration: data.duration,
+              source: 'rapidapi',
+            };
+          }
+        }
+      } catch (err) {
+        console.warn(`[Extraction Gateway] RapidAPI path ${subpath} failed:`, err.message);
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Pre-transcode audio/video directly to temporary disk file
  * Enables immediate 0-delay browser downloads without gateway timeouts
  */
@@ -103,6 +195,40 @@ async function transcodeMediaToFile(targetUrl, format, cleanName) {
   const isMp4 = String(format).startsWith('mp4');
   const ext = isMp4 ? 'mp4' : 'mp3';
   const outPath = path.join(tempDir, `${fileId}.${ext}`);
+
+  // Option A: Try Gateway download first if configured
+  const gatewayResult = await fetchFromExtractionGateway(targetUrl, format);
+  if (gatewayResult && gatewayResult.streamUrl) {
+    try {
+      const upstream = await fetch(gatewayResult.streamUrl, {
+        signal: AbortSignal.timeout(30000),
+      });
+      if (upstream.ok && upstream.body) {
+        const fileWriter = fs.createWriteStream(outPath);
+        const nodeStream = Readable.fromWeb(upstream.body);
+        await new Promise((resolve, reject) => {
+          nodeStream.pipe(fileWriter);
+          fileWriter.on('finish', resolve);
+          fileWriter.on('error', reject);
+          nodeStream.on('error', reject);
+        });
+
+        if (fs.existsSync(outPath)) {
+          const stats = fs.statSync(outPath);
+          readyFiles.set(fileId, {
+            filePath: outPath,
+            fileName: `${cleanName}.${ext}`,
+            fileSize: stats.size,
+            mimeType: isMp4 ? 'video/mp4' : 'audio/mpeg',
+            createdAt: Date.now(),
+          });
+          return { fileId, outPath, fileSize: stats.size };
+        }
+      }
+    } catch (gwErr) {
+      console.warn('[Gateway Pre-transcode Failed, falling back to local FFmpeg]:', gwErr.message);
+    }
+  }
 
   return new Promise((resolve, reject) => {
     let proc;
@@ -372,6 +498,35 @@ export const streamMediaDownload = async (req, res) => {
         res.flushHeaders();
       }
     };
+
+    // Option A: Attempt extraction via dedicated Gateway (Cobalt / RapidAPI) first
+    const gatewayResult = await fetchFromExtractionGateway(targetUrl, format);
+    if (gatewayResult && gatewayResult.streamUrl) {
+      try {
+        const upstream = await fetch(gatewayResult.streamUrl, {
+          signal: AbortSignal.timeout(45000),
+        });
+
+        if (upstream.ok && upstream.body) {
+          sendDownloadHeaders();
+          const nodeStream = Readable.fromWeb(upstream.body);
+          nodeStream.pipe(res);
+
+          req.on('close', () => {
+            try { nodeStream.destroy(); } catch (e) {}
+          });
+
+          nodeStream.on('error', (err) => {
+            console.error('[Gateway Upstream Pipe Error]', err.message);
+            try { res.end(); } catch (e) {}
+          });
+
+          return;
+        }
+      } catch (gwErr) {
+        console.warn('[Extraction Gateway Streaming Failed, falling back to local FFmpeg]:', gwErr.message);
+      }
+    }
 
     if (isMp4) {
       // MP4 Streaming Transcoding Pipeline (Fragmented MP4 with immediate packet flushing)
