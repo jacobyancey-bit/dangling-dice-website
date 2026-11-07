@@ -7,7 +7,7 @@
 
   <!-- Search Engine Crawling & Canonical Directive (Google Search Console) -->
   <title>Dangling Dice Media Converter | Free In-Browser URL to MP3 & MP4 Transcoder</title>
-  <meta name="description" content="Free, private, in-browser URL to MP3 audio and MP4 video converter powered by WebAssembly (Wasm). Extract audio up to 320kbps with zero server storage and zero logs." />
+  <meta name="description" content="Free, private, in-browser URL to MP3 audio and MP4 video converter. Extract studio-quality 320kbps MP3 audio with zero server logs and zero ads." />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="https://media.dangling-dice-studios.com/" />
 
@@ -25,14 +25,14 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Dangling Dice Media Converter" />
   <meta property="og:title" content="Dangling Dice Media Converter | Free In-Browser URL to MP3 & MP4" />
-  <meta property="og:description" content="Extract studio-quality 320kbps MP3s and HD MP4s directly in your browser. 100% private with WebAssembly." />
+  <meta property="og:description" content="Extract studio-quality 320kbps MP3s directly to your downloads folder. 100% private, zero logs." />
   <meta property="og:image" content="https://dangling-dice-studios.com/images/banner.jpg" />
   <meta property="og:url" content="https://media.dangling-dice-studios.com/" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Dangling Dice Media Converter | Free Wasm MP3 & MP4 Transcoder" />
-  <meta name="twitter:description" content="Private, in-memory audio & video converter for creators. Zero server logs." />
+  <meta name="twitter:title" content="Dangling Dice Media Converter | Free MP3 & MP4 Transcoder" />
+  <meta name="twitter:description" content="Private, in-memory audio converter for creators. Zero server logs." />
   <meta name="twitter:image" content="https://dangling-dice-studios.com/images/banner.jpg" />
 
   <!-- Schema.org Structured Metadata (JSON-LD for Rich Snippets) -->
@@ -65,7 +65,7 @@
           "price": "0",
           "priceCurrency": "USD"
         },
-        "description": "Convert audio and video URLs directly into MP3 (320kbps) or MP4 (1080p) inside the browser using WebAssembly."
+        "description": "Convert audio and video URLs directly into MP3 (320kbps) or MP4 (1080p) inside the browser."
       }
     ]
   }
@@ -77,7 +77,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
-<body>
+<body class="static-view">
   <!-- Header -->
   <header>
     <div class="nav-container">
@@ -85,117 +85,112 @@
         <img src="/images/logo.png" alt="Dangling Dice Studios Logo" class="brand-logo-img" />
         <div>
           <div class="brand-title">Dangling Dice Media Converter</div>
-          <div class="brand-tagline">WebAssembly Wasm &bull; Zero Server Logs</div>
+          <div class="brand-tagline">320kbps Studio MP3 &bull; Zero Server Logs</div>
         </div>
       </a>
 
       <nav class="nav-links">
         <a href="https://dangling-dice-studios.com/" class="nav-link">🏠 Main Studio</a>
         <a href="https://dangling-dice-studios.com/#beatsStudio" class="nav-link">🎧 Dangling Beats</a>
-        <a href="https://dangling-dice-studios.com/#vpnTool" class="nav-link">🛡️ WireGuard VPN</a>
-        <a href="#coffeeSection" class="btn btn-coffee btn-sm">☕ Buy Me a Coffee</a>
+        <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-coffee btn-sm">
+          ☕ Buy Me a Coffee
+        </a>
       </nav>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main>
-    <!-- Hero Banner -->
-    <section class="hero">
-      <div class="hero-pill">⚡ 100% In-Browser Audio & Video Transcoder</div>
-      <h1 class="hero-title">URL to <span>MP3 & MP4</span> Media Converter</h1>
+  <!-- Main Content (Compact Single-Screen Layout) -->
+  <main class="main-compact">
+    <!-- Hero Banner (Sleek & Tight) -->
+    <section class="hero hero-compact">
+      <div class="hero-pill">⚡ Instant YouTube & Audio to MP3 Transcoder</div>
+      <h1 class="hero-title">URL to <span>MP3 Audio</span> Converter</h1>
       <p class="hero-desc">
-        Extract studio-quality 320kbps MP3 audio and HD MP4 video directly from creator URLs. Powered by client-side WebAssembly: <strong>zero server file storage, zero personal logging, 100% browser privacy.</strong>
+        Fast, high-fidelity 320kbps MP3 extraction. Paste a link below to download directly to your computer.
       </p>
     </section>
 
-    <!-- 3-Column Flanking Converter Layout (Left & Right Feature Boxes) -->
+    <!-- 3-Column Flanking Converter Layout -->
     <div class="converter-workbench">
-      <!-- Left Flank: Security & Privacy Guardrail Boxes -->
+      <!-- Left Flank: Feature Boxes -->
       <aside class="converter-flank-col">
         <div class="feature-box">
           <div class="feature-icon">🔒</div>
-          <h2 class="feature-title">In-Browser Wasm Engine</h2>
-          <p class="feature-desc">Transcoding executes locally inside your browser's WebAssembly sandbox. Extracted media never sits on server hard drives.</p>
+          <h2 class="feature-title">Zero-Log Guarantee</h2>
+          <p class="feature-desc">No personal data collected, no IP logging, and zero tracking cookies. 100% private extraction.</p>
         </div>
 
         <div class="feature-box">
-          <div class="feature-icon">🛡️</div>
-          <h2 class="feature-title">Zero-Log Guarantee</h2>
-          <p class="feature-desc">We collect zero browsing logs, zero IP logs, and zero tracking cookies. Designed strictly for software engineers and creators.</p>
+          <div class="feature-icon">⚡</div>
+          <h2 class="feature-title">320kbps Studio Master</h2>
+          <p class="feature-desc">Full 48kHz stereo sampling rate with genuine LAME MP3 encoding for maximum audio clarity.</p>
         </div>
       </aside>
 
-      <!-- Center: Converter Card -->
-      <section class="converter-card">
-        <div class="input-group">
-          <label for="mediaUrlInput" class="input-label">Paste Media URL (YouTube, SoundCloud, Audio Stream):</label>
-          <div class="input-row">
+      <!-- Center: High-Impact Converter Card -->
+      <section class="converter-card converter-card-prominent">
+        <!-- Prominent, Unmissable URL Paste Box -->
+        <div class="input-group prominent-input-group">
+          <label for="mediaUrlInput" class="input-label prominent-label">
+            <span class="label-badge">👉 STEP 1</span> Paste YouTube or Audio Link:
+          </label>
+          <div class="input-row prominent-input-row">
             <input
               type="url"
               id="mediaUrlInput"
-              class="url-input"
-              placeholder="https://www.youtube.com/watch?v=... or https://soundcloud.com/..."
+              class="url-input prominent-url-input"
+              placeholder="Paste YouTube URL here (e.g. https://www.youtube.com/watch?v=...)"
               autocomplete="off"
               spellcheck="false"
+              autofocus
             />
-            <button type="button" class="btn btn-secondary btn-sm" id="pasteBtn">📋 Paste</button>
+            <button type="button" class="btn btn-paste" id="pasteBtn" title="Paste from clipboard">
+              📋 Paste
+            </button>
           </div>
         </div>
 
-        <!-- Format Selection Grid -->
+        <!-- Format Selection Grid (Quick 1-click pills) -->
         <div class="format-section">
-          <label class="input-label">Select Output Format & Quality:</label>
           <div class="format-grid">
             <div class="format-pill active" data-format="mp3-320">
               <div>
-                <div class="format-title">🎵 MP3 Audio</div>
-                <div style="font-size: 0.72rem; color: var(--text-muted);">320kbps Studio Master</div>
+                <div class="format-title">🎵 MP3 Audio (320kbps)</div>
+                <div class="format-sub">Studio Master Quality</div>
               </div>
-              <span class="format-badge">Best Audio</span>
+              <span class="format-badge">Best</span>
             </div>
 
             <div class="format-pill" data-format="mp3-192">
               <div>
-                <div class="format-title">🎵 MP3 Audio</div>
-                <div style="font-size: 0.72rem; color: var(--text-muted);">192kbps Compact Size</div>
+                <div class="format-title">🎵 MP3 Audio (192kbps)</div>
+                <div class="format-sub">Compact Size</div>
               </div>
               <span class="format-badge">Fast</span>
             </div>
 
             <div class="format-pill" data-format="mp4-1080">
               <div>
-                <div class="format-title">🎬 MP4 Video</div>
-                <div style="font-size: 0.72rem; color: var(--text-muted);">1080p Full HD Video</div>
+                <div class="format-title">🎬 MP4 Video (1080p)</div>
+                <div class="format-sub">Full HD Video</div>
               </div>
-              <span class="format-badge">Crisp HD</span>
-            </div>
-
-            <div class="format-pill" data-format="mp4-720">
-              <div>
-                <div class="format-title">🎬 MP4 Video</div>
-                <div style="font-size: 0.72rem; color: var(--text-muted);">720p Mobile Video</div>
-              </div>
-              <span class="format-badge">Mobile</span>
+              <span class="format-badge">HD</span>
             </div>
           </div>
         </div>
 
-        <!-- Legal Fair Use Guardrail Checkbox -->
+        <!-- Fair Use Notice (Checked by default for minimal clicks) -->
         <div class="legal-group">
           <input type="checkbox" id="fairUseCheckbox" checked />
           <label for="fairUseCheckbox">
-            I confirm that I am converting this media for personal, educational, or creative fair-use remixing, or hold authorization from the content rights holder.
+            I confirm personal, educational, or creative fair-use remixing.
           </label>
         </div>
 
-        <!-- Action Button -->
-        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-          <button type="button" id="convertBtn" class="btn btn-primary" style="flex: 1; padding: 0.85rem;">
-            ⚡ Convert & Transcode Media
-          </button>
-          <button type="button" id="sampleUrlBtn" class="btn btn-secondary btn-sm">
-            Load Sample Beats URL
+        <!-- 1-Click Primary Action Button -->
+        <div class="action-row">
+          <button type="button" id="convertBtn" class="btn btn-primary btn-action-large">
+            ⚡ Convert & Download to Computer
           </button>
         </div>
 
@@ -208,104 +203,93 @@
           <div class="progress-bar-bg">
             <div id="progressBarFill" class="progress-bar-fill"></div>
           </div>
-          <div id="engineLog" style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-faint); margin-top: 0.35rem;">
+          <div id="engineLog" class="engine-log-text">
             Stream Resolver: Initializing direct extraction
           </div>
         </div>
 
-        <!-- Results & Download Box -->
+        <!-- Result Box (Automatic Direct Download Notification) -->
         <div id="resultBox" class="result-box">
           <div class="result-card-inner">
             <img id="resultThumb" src="/images/banner.jpg" alt="Media Thumbnail" class="result-thumb" />
             <div class="result-info">
               <div class="result-title" id="resultFilename">media_export.mp3</div>
               <div class="result-meta">
-                <span id="resultAuthor" style="color: var(--text-muted);">Dangling Dice</span>
+                <span id="resultAuthor" style="color: var(--text-muted);">Creator</span>
                 <span id="resultDuration" style="color: var(--neon-cyan);">03:15</span>
-                <span id="resultMeta">Transcoding complete</span>
+                <span id="resultMeta">Ready</span>
               </div>
             </div>
             <div>
               <a id="downloadBtn" href="#" download class="btn btn-primary btn-sm">
-                📥 Download to Computer
+                📥 Download Again
               </a>
             </div>
           </div>
-          <div id="downloadNotice" style="margin-top: 0.75rem; font-size: 0.78rem; color: var(--text-muted); display: none; background: rgba(255,255,255,0.03); padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);">
-            <div id="downloadStatusText" style="margin-bottom: 0.35rem; color: var(--text-primary); font-weight: 500;">Preparing download...</div>
-            <div style="font-size: 0.72rem; color: var(--text-faint);">
-              Alternative pathway: 
-              <a id="fallbackDownloadLink" href="#" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: underline;">
-                Open Direct Browser Stream
-              </a> (Right-click &gt; "Save link as...")
+          <div id="downloadNotice" class="download-notice-box">
+            <div id="downloadStatusText" class="download-status-highlight">
+              ✅ Track sent directly to your Downloads folder!
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-faint); margin-top: 0.25rem;">
+              If your download didn't start automatically:
+              <a id="fallbackDownloadLink" href="#" style="color: var(--neon-cyan); text-decoration: underline;">
+                Click here to download directly
+              </a>
             </div>
           </div>
-          <div id="audioPreviewWrapper" style="display: none; margin-top: 0.75rem;">
-            <button id="loadPreviewBtn" type="button" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; margin-bottom: 0.5rem;">
-              ▶️ Load Audio Preview
-            </button>
-            <audio id="audioPreview" controls style="width: 100%; border-radius: 8px; display: none;"></audio>
+        </div>
+
+        <!-- Direct In-Card Buy Me a Coffee Callout (Always Visible Without Scrolling) -->
+        <div class="compact-coffee-strip">
+          <div class="coffee-strip-content">
+            <span class="coffee-strip-emoji">☕</span>
+            <div class="coffee-strip-text">
+              <strong>Like this tool?</strong> Help keep it fast, free, and 100% ad-free!
+            </div>
           </div>
+          <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-coffee btn-sm">
+            ☕ Buy Me a Coffee ($5)
+          </a>
         </div>
       </section>
 
-      <!-- Right Flank: Fidelity & Platform Boxes -->
+      <!-- Right Flank: Feature Boxes -->
       <aside class="converter-flank-col">
         <div class="feature-box">
-          <div class="feature-icon">⚡</div>
-          <h2 class="feature-title">320kbps Studio Master</h2>
-          <p class="feature-desc">Full 44.1/48kHz stereo sampling rate with LAME VBR/CBR compression for crisp fidelity across studio monitors.</p>
+          <div class="feature-icon">🛡️</div>
+          <h2 class="feature-title">Direct Browser Routing</h2>
+          <p class="feature-desc">Files flow straight into your local browser's default Downloads folder without third-party popups.</p>
         </div>
 
         <div class="feature-box">
           <div class="feature-icon">📱</div>
           <h2 class="feature-title">Android & PWA Ready</h2>
-          <p class="feature-desc">Install directly as an Android Progressive Web App on your smartphone with one tap from Chrome.</p>
+          <p class="feature-desc">Install directly as an app on your Android or desktop system with zero app store downloads.</p>
         </div>
       </aside>
     </div>
-
-    <!-- Buy Me a Coffee Support Section -->
-    <section id="coffeeSection" class="coffee-card">
-      <div class="coffee-info">
-        <div class="coffee-title">☕ Buy Us a Coffee & Keep This Tool 100% Free</div>
-        <p class="coffee-desc">
-          Unlike other converter sites, Dangling Dice Media runs zero intrusive popups, zero crypto miners, and stores zero files. If this tool saved you time on your music or video project, consider supporting the studio!
-        </p>
-      </div>
-      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-coffee">
-          ☕ Buy Me a Coffee ($5)
-        </a>
-        <a href="https://dangling-dice-studios.com/#catalog" class="btn btn-secondary">
-          Browse Courses & Beats
-        </a>
-      </div>
-    </section>
   </main>
 
-  <!-- Footer Section -->
-  <footer>
+  <!-- Slim Static Footer -->
+  <footer class="footer-slim">
     <div class="footer-links">
       <a href="https://dangling-dice-studios.com/" class="footer-link">Home Hub</a>
       <a href="https://dangling-dice-studios.com/#beatsStudio" class="footer-link">Dangling Beats</a>
       <a href="https://dangling-dice-studios.com/#vpnTool" class="footer-link">WireGuard VPN</a>
-      <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="footer-link">YouTube</a>
-      <a href="https://github.com/jacobyancey-bit" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+      <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="footer-link" style="color: #ffdd00;">☕ Buy Us a Coffee</a>
     </div>
-    <p style="margin-bottom: 0.5rem;">
-      <strong>Dangling Dice Media Converter</strong> &bull; Subdomain of <a href="https://dangling-dice-studios.com/" style="text-decoration: underline; color: #fff;">Dangling Dice Studios™</a>
-    </p>
-    <p style="font-size: 0.72rem; color: var(--text-faint);">
-      DMCA & Legal Notice: This service operates as a technical format conversion tool for personal fair use and authorized content. To submit a DMCA notice, email: <a href="mailto:support@dangling-dice-studios.com" style="color: var(--neon-pink);">support@dangling-dice-studios.com</a>.
+    <p style="font-size: 0.7rem; color: var(--text-faint);">
+      DMCA & Legal Notice: This utility operates as a technical format conversion tool for personal fair use. Email: <a href="mailto:support@dangling-dice-studios.com" style="color: var(--neon-pink);">support@dangling-dice-studios.com</a>
     </p>
   </footer>
 
-  <!-- Toast Notification Container -->
+  <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Hidden Download Iframe (Guarantees Downloads Never Show "Page Cannot Be Reached") -->
+  <iframe id="mediaDownloadIframe" style="display:none;" title="Direct File Downloader"></iframe>
 
   <!-- Client Application Logic -->
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
-

@@ -1,6 +1,6 @@
 /**
  * Dangling Dice Media Converter Client Application
- * Powered by In-Browser WebAssembly (Wasm) & Stream Relaying
+ * 1-Click Fast URL to MP3 Transcoder
  */
 
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
@@ -29,7 +29,7 @@ function showToast(message, type = 'info') {
     setTimeout(() => {
       if (toast.parentElement) toast.parentElement.removeChild(toast);
     }, 300);
-  }, 3500);
+  }, 4000);
 }
 
 // Format Selection Logic
@@ -41,7 +41,8 @@ formatPills.forEach((pill) => {
     formatPills.forEach((p) => p.classList.remove('active'));
     pill.classList.add('active');
     selectedFormat = pill.getAttribute('data-format');
-    showToast(`Format set to: ${pill.querySelector('.format-title').textContent} (${selectedFormat})`);
+    const title = pill.querySelector('.format-title')?.textContent || selectedFormat;
+    showToast(`Format set to: ${title}`);
   });
 });
 
@@ -56,6 +57,7 @@ if (pasteBtn && mediaUrlInput) {
       if (text) {
         mediaUrlInput.value = text.trim();
         showToast('URL pasted from clipboard!', 'success');
+        mediaUrlInput.focus();
       }
     } catch (err) {
       mediaUrlInput.focus();
@@ -64,25 +66,26 @@ if (pasteBtn && mediaUrlInput) {
   });
 }
 
-// Sample URL Button
-const sampleUrlBtn = document.getElementById('sampleUrlBtn');
-if (sampleUrlBtn && mediaUrlInput) {
-  sampleUrlBtn.addEventListener('click', () => {
-    mediaUrlInput.value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    showToast('Sample Beats URL loaded!', 'success');
+// Enter key triggers immediate conversion
+if (mediaUrlInput) {
+  mediaUrlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('convertBtn')?.click();
+    }
   });
 }
 
 // URL Validation Guardrail
 function validateMediaUrl(urlStr) {
   if (!urlStr || typeof urlStr !== 'string') {
-    return { valid: false, error: 'Please enter a valid media URL' };
+    return { valid: false, error: 'Please enter a valid YouTube or audio URL' };
   }
   let parsed;
   try {
     parsed = new URL(urlStr.trim());
   } catch (e) {
-    return { valid: false, error: 'Invalid URL structure. Ensure it begins with https://' };
+    return { valid: false, error: 'Invalid URL. Ensure it begins with https://' };
   }
 
   // SSRF & Localhost Prevention
@@ -102,7 +105,22 @@ function formatDuration(sec) {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-// Convert Action
+// Trigger background browser download directly into Downloads folder without navigating away
+function triggerBrowserDownload(downloadUrl) {
+  const downloadIframe = document.getElementById('mediaDownloadIframe');
+  if (downloadIframe) {
+    downloadIframe.src = downloadUrl;
+  } else {
+    const tempLink = document.createElement('a');
+    tempLink.href = downloadUrl;
+    tempLink.setAttribute('download', '');
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
+  }
+}
+
+// 1-Click Convert & Download Action
 const convertBtn = document.getElementById('convertBtn');
 const fairUseCheckbox = document.getElementById('fairUseCheckbox');
 const progressContainer = document.getElementById('progressContainer');
@@ -120,9 +138,6 @@ const downloadBtn = document.getElementById('downloadBtn');
 const downloadNotice = document.getElementById('downloadNotice');
 const downloadStatusText = document.getElementById('downloadStatusText');
 const fallbackDownloadLink = document.getElementById('fallbackDownloadLink');
-const audioPreview = document.getElementById('audioPreview');
-const audioPreviewWrapper = document.getElementById('audioPreviewWrapper');
-const loadPreviewBtn = document.getElementById('loadPreviewBtn');
 
 if (convertBtn) {
   convertBtn.addEventListener('click', async () => {
@@ -136,37 +151,34 @@ if (convertBtn) {
     }
 
     if (!fairUseCheckbox?.checked) {
-      showToast('Please check the fair use and rights confirmation checkbox to proceed', 'error');
+      showToast('Please check the fair use confirmation checkbox to proceed', 'error');
       fairUseCheckbox?.focus();
       return;
     }
 
-    // Lock UI and start progress
+    // Lock UI and show active progress
     convertBtn.disabled = true;
-    convertBtn.textContent = '⏳ Processing Media Stream...';
+    convertBtn.textContent = '⏳ Converting & Routing to Downloads...';
     if (progressContainer) progressContainer.style.display = 'block';
     if (resultBox) resultBox.style.display = 'none';
 
     try {
-      // Stage 1: Initiating stream handshake
-      if (progressBarFill) progressBarFill.style.width = '20%';
-      if (progressPercent) progressPercent.textContent = '20%';
-      if (progressStatusText) progressStatusText.textContent = 'Connecting to stream resolver...';
+      if (progressBarFill) progressBarFill.style.width = '25%';
+      if (progressPercent) progressPercent.textContent = '25%';
+      if (progressStatusText) progressStatusText.textContent = 'Resolving media track...';
       if (engineLog) engineLog.textContent = 'Stream Resolver: Handshake established';
 
-      // Call Backend API to resolve media with 35-second timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 35000);
 
-      // Progressive progress ticker so the UI stays active
-      let progressVal = 25;
+      let progressVal = 30;
       const ticker = setInterval(() => {
-        if (progressVal < 75) {
+        if (progressVal < 80) {
           progressVal += 10;
           if (progressBarFill) progressBarFill.style.width = `${progressVal}%`;
           if (progressPercent) progressPercent.textContent = `${progressVal}%`;
         }
-      }, 600);
+      }, 500);
 
       let response;
       try {
@@ -190,12 +202,6 @@ if (convertBtn) {
         clearTimeout(timeoutId);
       }
 
-      // Stage 2: Parsing stream metadata
-      if (progressBarFill) progressBarFill.style.width = '55%';
-      if (progressPercent) progressPercent.textContent = '55%';
-      if (progressStatusText) progressStatusText.textContent = 'Extracting media signatures & audio bitrate...';
-      if (engineLog) engineLog.textContent = `Muxer: Transcoding to ${selectedFormat.toUpperCase()}`;
-
       const resData = await response.json();
 
       if (!response.ok || !resData.success) {
@@ -204,21 +210,15 @@ if (convertBtn) {
 
       const media = resData.data;
 
-      // Stage 3: Packaging Stream
-      if (progressBarFill) progressBarFill.style.width = '85%';
-      if (progressPercent) progressPercent.textContent = '85%';
-      if (progressStatusText) progressStatusText.textContent = 'Finalizing in-browser stream packaging...';
-      await new Promise((r) => setTimeout(r, 400));
-
-      // Stage 4: Ready
+      // Finalizing & 100% Ready
       if (progressBarFill) progressBarFill.style.width = '100%';
       if (progressPercent) progressPercent.textContent = '100%';
-      if (progressStatusText) progressStatusText.textContent = 'Transcoding complete!';
-      if (engineLog) engineLog.textContent = 'Status: Stream ready for direct download';
+      if (progressStatusText) progressStatusText.textContent = 'Track ready! Downloading now...';
+      if (engineLog) engineLog.textContent = 'Status: Direct download stream dispatched';
 
       const downloadEndpoint = media.downloadUrl;
 
-      // Populate Result Card
+      // Populate Result Card with genuine title (No rename editing friction)
       if (resultThumb && media.thumbnail) {
         resultThumb.src = media.thumbnail;
       }
@@ -232,23 +232,23 @@ if (convertBtn) {
         resultDuration.textContent = formatDuration(media.durationSeconds);
       }
       if (resultMeta) {
-        const sizeMb = media.fileSize ? ` • ${(media.fileSize / (1024 * 1024)).toFixed(1)} MB` : '';
-        resultMeta.textContent = `Format: ${selectedFormat.toUpperCase()}${sizeMb} Master`;
+        resultMeta.textContent = `Format: ${selectedFormat.toUpperCase()}`;
       }
+
+      // Automatically trigger download directly into user's Downloads folder
+      triggerBrowserDownload(downloadEndpoint);
 
       if (downloadBtn) {
         downloadBtn.href = downloadEndpoint;
         downloadBtn.setAttribute('download', media.cleanTitle);
-        downloadBtn.onclick = () => {
-          downloadBtn.innerHTML = '⏳ Downloading to Computer...';
-          showToast(`Downloading ${media.cleanTitle} directly to your Downloads folder!`, 'success');
-          if (downloadNotice) downloadNotice.style.display = 'block';
-          if (downloadStatusText) {
-            downloadStatusText.textContent = `Saving ${media.cleanTitle} to your Downloads folder...`;
-          }
+        downloadBtn.onclick = (e) => {
+          e.preventDefault();
+          triggerBrowserDownload(downloadEndpoint);
+          downloadBtn.innerHTML = '⏳ Downloading...';
+          showToast(`Re-downloading ${media.cleanTitle}!`, 'info');
           setTimeout(() => {
-            downloadBtn.innerHTML = '✅ Downloaded to Computer!';
-          }, 3500);
+            downloadBtn.innerHTML = '📥 Download Again';
+          }, 3000);
         };
       }
 
@@ -260,42 +260,19 @@ if (convertBtn) {
       if (downloadNotice) {
         downloadNotice.style.display = 'block';
         if (downloadStatusText) {
-          downloadStatusText.textContent = `Click the download button above to save the file immediately.`;
-        }
-      }
-
-      // Audio preview player (Loaded on-demand to protect server resources and prevent rate limits)
-      if (audioPreviewWrapper) {
-        if (!selectedFormat.startsWith('mp4')) {
-          audioPreviewWrapper.style.display = 'block';
-          if (loadPreviewBtn) {
-            loadPreviewBtn.style.display = 'inline-block';
-            loadPreviewBtn.onclick = () => {
-              loadPreviewBtn.style.display = 'none';
-              if (audioPreview) {
-                audioPreview.src = downloadEndpoint;
-                audioPreview.style.display = 'block';
-                audioPreview.play().catch(() => {});
-              }
-            };
-          }
-        } else {
-          audioPreviewWrapper.style.display = 'none';
+          downloadStatusText.textContent = `✅ ${media.cleanTitle} sent to your Downloads folder!`;
         }
       }
 
       if (resultBox) resultBox.style.display = 'block';
-      showToast(`Conversion Ready: ${media.title || 'Media File'}!`, 'success');
-
-      // Scroll smoothly to download
-      resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast(`✅ Download started: ${media.title || 'Media File'}!`, 'success');
     } catch (err) {
       console.error(err);
       if (progressContainer) progressContainer.style.display = 'none';
       showToast(err.message || 'Stream extraction error. Please check URL.', 'error');
     } finally {
       convertBtn.disabled = false;
-      convertBtn.textContent = '⚡ Convert & Transcode Media';
+      convertBtn.textContent = '⚡ Convert & Download to Computer';
     }
   });
 }
