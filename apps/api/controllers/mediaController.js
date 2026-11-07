@@ -2,7 +2,11 @@ import { Ytdl, Quality } from '@distube/ytdl-core';
 import { spawn } from 'child_process';
 import ffmpegPath from 'ffmpeg-static';
 
-const ytdl = new Ytdl();
+// Multi-client Ytdl engine configured for TV, Mobile Web, and Embedded pathways
+// (Bypasses YouTube datacenter bot detection & Cloudflare timeouts)
+const ytdl = new Ytdl({
+  clients: ['tv', 'mweb', 'web_embedded', 'web_music'],
+});
 
 // URL Validator & SSRF Guardrail
 function isValidMediaUrl(urlStr) {
@@ -169,19 +173,18 @@ export const streamMediaDownload = async (req, res) => {
   const targetUrl = ytid ? `https://www.youtube.com/watch?v=${ytid}` : url.trim();
 
   try {
-    const info = await ytdl.getInfo(targetUrl);
     const cleanName = sanitizeFilename(title);
     const isMp4 = String(format).startsWith('mp4');
     const ext = isMp4 ? 'mp4' : 'mp3';
 
-    // Set download headers
+    // Set download headers immediately
     res.setHeader('Content-Disposition', `attachment; filename="${cleanName}.${ext}"`);
     res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
     res.setHeader('Cache-Control', 'no-cache');
 
     if (isMp4) {
       // MP4 Streaming Transcoding Pipeline (Fragmented MP4 for clean browser stream)
-      const videoStream = ytdl.download(info, {
+      const videoStream = ytdl.download(targetUrl, {
         quality: Quality.HighestVideo,
         filter: { hasVideo: true },
       });
@@ -205,6 +208,7 @@ export const streamMediaDownload = async (req, res) => {
       videoStream.on('error', (err) => {
         console.error('[Video Stream Error]', err.message);
         try { ffmpeg.kill(); } catch (e) {}
+        if (!res.headersSent) res.status(500).send('Stream error');
       });
 
       ffmpeg.on('error', (err) => {
@@ -214,7 +218,7 @@ export const streamMediaDownload = async (req, res) => {
     } else {
       // Genuine LAME MP3 Transcoding Pipeline with ID3v2 metadata
       const bitrate = format === 'mp3-192' ? '192k' : '320k';
-      const audioStream = ytdl.download(info, {
+      const audioStream = ytdl.download(targetUrl, {
         quality: Quality.HighestAudio,
         filter: { hasAudio: true },
       });
@@ -241,6 +245,7 @@ export const streamMediaDownload = async (req, res) => {
       audioStream.on('error', (err) => {
         console.error('[Audio Stream Error]', err.message);
         try { ffmpeg.kill(); } catch (e) {}
+        if (!res.headersSent) res.status(500).send('Stream error');
       });
 
       ffmpeg.on('error', (err) => {

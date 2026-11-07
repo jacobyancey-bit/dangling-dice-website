@@ -226,13 +226,25 @@
               </div>
             </div>
             <div>
-              <a id="downloadBtn" href="#" download class="btn btn-primary btn-sm">
-                📥 Download File
-              </a>
+              <button id="downloadBtn" type="button" class="btn btn-primary btn-sm">
+                📥 Download to Computer
+              </button>
+            </div>
+          </div>
+          <div id="downloadNotice" style="margin-top: 0.75rem; font-size: 0.78rem; color: var(--text-muted); display: none; background: rgba(255,255,255,0.03); padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div id="downloadStatusText" style="margin-bottom: 0.35rem; color: var(--text-primary); font-weight: 500;">Preparing download...</div>
+            <div style="font-size: 0.72rem; color: var(--text-faint);">
+              Alternative pathway: 
+              <a id="fallbackDownloadLink" href="#" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: underline;">
+                Open Direct Browser Stream
+              </a> (Right-click &gt; "Save link as...")
             </div>
           </div>
           <div id="audioPreviewWrapper" style="display: none; margin-top: 0.75rem;">
-            <audio id="audioPreview" controls style="width: 100%; border-radius: 8px;"></audio>
+            <button id="loadPreviewBtn" type="button" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; margin-bottom: 0.5rem;">
+              ▶️ Load Audio Preview
+            </button>
+            <audio id="audioPreview" controls style="width: 100%; border-radius: 8px; display: none;"></audio>
           </div>
         </div>
       </section>

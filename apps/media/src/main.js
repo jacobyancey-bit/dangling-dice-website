@@ -117,8 +117,12 @@ const resultAuthor = document.getElementById('resultAuthor');
 const resultDuration = document.getElementById('resultDuration');
 const resultMeta = document.getElementById('resultMeta');
 const downloadBtn = document.getElementById('downloadBtn');
+const downloadNotice = document.getElementById('downloadNotice');
+const downloadStatusText = document.getElementById('downloadStatusText');
+const fallbackDownloadLink = document.getElementById('fallbackDownloadLink');
 const audioPreview = document.getElementById('audioPreview');
 const audioPreviewWrapper = document.getElementById('audioPreviewWrapper');
+const loadPreviewBtn = document.getElementById('loadPreviewBtn');
 
 if (convertBtn) {
   convertBtn.addEventListener('click', async () => {
@@ -232,20 +236,81 @@ if (convertBtn) {
       }
 
       if (downloadBtn) {
-        downloadBtn.href = downloadEndpoint;
-        downloadBtn.download = media.cleanTitle;
-        downloadBtn.onclick = () => {
-          showToast(`Downloading: ${media.cleanTitle}`, 'success');
+        downloadBtn.onclick = async () => {
+          downloadBtn.disabled = true;
+          downloadBtn.innerHTML = '⏳ Saving Song to Computer...';
+          if (downloadNotice) downloadNotice.style.display = 'block';
+          if (downloadStatusText) downloadStatusText.textContent = 'Connecting to provider audio stream...';
+
+          try {
+            const res = await fetch(downloadEndpoint);
+            if (!res.ok) {
+              const errText = await res.text().catch(() => '');
+              throw new Error(errText || `Server responded with status ${res.status}`);
+            }
+
+            const reader = res.body.getReader();
+            const chunks = [];
+            let receivedBytes = 0;
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              receivedBytes += value.length;
+              const mb = (receivedBytes / (1024 * 1024)).toFixed(1);
+              downloadBtn.innerHTML = `⏳ Downloading (${mb} MB)...`;
+              if (downloadStatusText) downloadStatusText.textContent = `Streaming master track: ${mb} MB received...`;
+            }
+
+            const mime = selectedFormat.startsWith('mp4') ? 'video/mp4' : 'audio/mpeg';
+            const blob = new Blob(chunks, { type: mime });
+            const blobUrl = URL.createObjectURL(blob);
+            const tempA = document.createElement('a');
+            tempA.href = blobUrl;
+            tempA.download = media.cleanTitle || 'audio_track.mp3';
+            document.body.appendChild(tempA);
+            tempA.click();
+            tempA.remove();
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 45000);
+
+            downloadBtn.innerHTML = '✅ Saved to Downloads Folder!';
+            showToast(`Saved ${media.cleanTitle} directly to your Downloads folder!`, 'success');
+            if (downloadStatusText) downloadStatusText.textContent = 'File saved successfully! Check your computer Downloads folder.';
+          } catch (err) {
+            console.error('Download stream error:', err);
+            showToast(`Download issue: ${err.message}. You can use the Direct Stream link below.`, 'error');
+            downloadBtn.innerHTML = '📥 Retry Download';
+            if (downloadStatusText) downloadStatusText.textContent = 'Stream interrupted. Try the Direct Browser Stream link below or re-convert.';
+          } finally {
+            downloadBtn.disabled = false;
+          }
         };
       }
 
-      // Audio preview player (Set preload='none' to avoid consuming stream before download)
-      if (audioPreview && !selectedFormat.startsWith('mp4')) {
-        audioPreview.src = downloadEndpoint;
-        audioPreview.preload = 'none';
-        if (audioPreviewWrapper) audioPreviewWrapper.style.display = 'block';
-      } else if (audioPreviewWrapper) {
-        audioPreviewWrapper.style.display = 'none';
+      if (fallbackDownloadLink) {
+        fallbackDownloadLink.href = downloadEndpoint;
+        fallbackDownloadLink.download = media.cleanTitle;
+      }
+
+      // Audio preview player (Loaded on-demand to protect server resources and prevent rate limits)
+      if (audioPreviewWrapper) {
+        if (!selectedFormat.startsWith('mp4')) {
+          audioPreviewWrapper.style.display = 'block';
+          if (loadPreviewBtn) {
+            loadPreviewBtn.style.display = 'inline-block';
+            loadPreviewBtn.onclick = () => {
+              loadPreviewBtn.style.display = 'none';
+              if (audioPreview) {
+                audioPreview.src = downloadEndpoint;
+                audioPreview.style.display = 'block';
+                audioPreview.play().catch(() => {});
+              }
+            };
+          }
+        } else {
+          audioPreviewWrapper.style.display = 'none';
+        }
       }
 
       if (resultBox) resultBox.style.display = 'block';
