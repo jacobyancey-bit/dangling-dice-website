@@ -443,6 +443,12 @@ function generateAllOmnipostFormats() {
   if (twEl) {
     twEl.value = `[TWEET 1/2]\n${title} ⚡\n\n${desc.slice(0, 150)}...\n\n#beatmaker #flstudio #producer #audio\n\n---\n[TWEET 2/2 (Reply)]\nGrab the direct tool here (100% ad-free & private):\n${link}`;
   }
+
+  // 4. Facebook (Groups & Pages - High Engagement with Emoji Highlights & Community Hook)
+  const fbEl = document.getElementById('facebookPreview');
+  if (fbEl) {
+    fbEl.value = `🚀 ${title} is officially live!\n\n${desc}\n\nWhat makes this different:\n⚡ 100% Ad-Free (Zero spam redirects or fake buttons)\n🎧 Studio Master 320kbps MP3 & 1080p MP4 quality\n🎹 Drag-and-drop straight into your DAW (FL Studio, Ableton, Premiere)\n🔒 100% In-Browser Privacy — zero activity logs\n\n👉 Test it out for free here: ${link}\n💬 Join our creator Discord: https://discord.gg/uFYMQahNZz\n\nWhat is your go-to software for sampling audio right now? Let us know below! 👇`;
+  }
 }
 
 function copyOmnipost(elementId) {
