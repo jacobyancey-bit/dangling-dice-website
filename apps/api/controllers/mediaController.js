@@ -1,4 +1,6 @@
 import { Ytdl, Quality } from '@distube/ytdl-core';
+import { spawn } from 'child_process';
+import ffmpegPath from 'ffmpeg-static';
 
 const ytdl = new Ytdl();
 
@@ -106,39 +108,75 @@ export const streamMediaDownload = async (req, res) => {
     res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
     res.setHeader('Cache-Control', 'no-cache');
 
-    let downloadFilter;
-    let downloadQuality;
-
     if (isMp4) {
-      const hasCombined = info.formats.some((f) => f.hasAudio && f.hasVideo);
-      downloadFilter = hasCombined
-        ? { hasAudio: true, hasVideo: true }
-        : { hasVideo: true };
-      downloadQuality = Quality.HighestVideo;
+      // MP4 Streaming Transcoding Pipeline (Fragmented MP4 for clean browser stream)
+      const videoStream = ytdl.download(info, {
+        quality: Quality.HighestVideo,
+        filter: { hasVideo: true },
+      });
+
+      const ffmpeg = spawn(ffmpegPath, [
+        '-i', 'pipe:0',
+        '-c', 'copy',
+        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+        '-f', 'mp4',
+        'pipe:1',
+      ]);
+
+      videoStream.pipe(ffmpeg.stdin);
+      ffmpeg.stdout.pipe(res);
+
+      req.on('close', () => {
+        if (!videoStream.destroyed) videoStream.destroy();
+        try { ffmpeg.kill(); } catch (e) {}
+      });
+
+      videoStream.on('error', (err) => {
+        console.error('[Video Stream Error]', err.message);
+        try { ffmpeg.kill(); } catch (e) {}
+      });
+
+      ffmpeg.on('error', (err) => {
+        console.error('[FFmpeg Error]', err.message);
+        if (!res.headersSent) res.status(500).send('Transcoding pipeline error');
+      });
     } else {
-      downloadFilter = { hasAudio: true, hasVideo: false };
-      downloadQuality = Quality.HighestAudio;
+      // Genuine LAME MP3 Transcoding Pipeline with ID3v2 metadata
+      const bitrate = format === 'mp3-192' ? '192k' : '320k';
+      const audioStream = ytdl.download(info, {
+        quality: Quality.HighestAudio,
+        filter: { hasAudio: true },
+      });
+
+      const ffmpeg = spawn(ffmpegPath, [
+        '-i', 'pipe:0',
+        '-vn',
+        '-acodec', 'libmp3lame',
+        '-b:a', bitrate,
+        '-id3v2_version', '3',
+        '-write_id3v1', '1',
+        '-f', 'mp3',
+        'pipe:1',
+      ]);
+
+      audioStream.pipe(ffmpeg.stdin);
+      ffmpeg.stdout.pipe(res);
+
+      req.on('close', () => {
+        if (!audioStream.destroyed) audioStream.destroy();
+        try { ffmpeg.kill(); } catch (e) {}
+      });
+
+      audioStream.on('error', (err) => {
+        console.error('[Audio Stream Error]', err.message);
+        try { ffmpeg.kill(); } catch (e) {}
+      });
+
+      ffmpeg.on('error', (err) => {
+        console.error('[FFmpeg Error]', err.message);
+        if (!res.headersSent) res.status(500).send('Transcoding pipeline error');
+      });
     }
-
-    const stream = ytdl.download(info, {
-      quality: downloadQuality,
-      filter: downloadFilter,
-    });
-
-    req.on('close', () => {
-      if (stream && !stream.destroyed) {
-        stream.destroy();
-      }
-    });
-
-    stream.on('error', (err) => {
-      console.error('[Stream Error]', err.message);
-      if (!res.headersSent) {
-        res.status(500).send('Media stream extraction error');
-      }
-    });
-
-    stream.pipe(res);
   } catch (err) {
     console.error('[MediaController Download Error]', err.message);
     if (!res.headersSent) {

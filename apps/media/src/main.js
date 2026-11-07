@@ -222,11 +222,15 @@ if (convertBtn) {
       if (downloadBtn) {
         downloadBtn.href = downloadEndpoint;
         downloadBtn.download = media.cleanTitle;
+        downloadBtn.onclick = () => {
+          showToast(`Downloading: ${media.cleanTitle}`, 'success');
+        };
       }
 
-      // Audio preview player
+      // Audio preview player (Set preload='none' to avoid consuming stream before download)
       if (audioPreview && !selectedFormat.startsWith('mp4')) {
         audioPreview.src = downloadEndpoint;
+        audioPreview.preload = 'none';
         if (audioPreviewWrapper) audioPreviewWrapper.style.display = 'block';
       } else if (audioPreviewWrapper) {
         audioPreviewWrapper.style.display = 'none';
