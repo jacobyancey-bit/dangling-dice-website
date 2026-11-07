@@ -2,28 +2,37 @@
  * Dangling Dice Studios™ — Public Catalog & Developer Tools Client Application
  */
 
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000' && window.location.port !== '3000'
-  ? 'http://localhost:5000/api'
-  : window.location.origin + '/api';
+const API_BASE =
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1") &&
+  window.location.port !== "5000" &&
+  window.location.port !== "3000"
+    ? "http://localhost:5000/api"
+    : window.location.origin + "/api";
 
 // YouTube Embed Helper (Supports single videos, playlists, shortlinks)
 function getYouTubeEmbedUrl(url) {
   if (!url) return null;
   try {
+    const vMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
     const playlistMatch = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+    
+    // If it has BOTH video and playlist (best for seamless playback):
+    if (vMatch && playlistMatch) {
+      return `https://www.youtube.com/embed/${vMatch[1]}?list=${playlistMatch[1]}&autoplay=1`;
+    }
     if (playlistMatch) {
-      return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}`;
+      return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1`;
     }
     const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
     if (shortMatch) {
-      return `https://www.youtube.com/embed/${shortMatch[1]}`;
+      return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`;
     }
-    const standardMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
-    if (standardMatch) {
-      return `https://www.youtube.com/embed/${standardMatch[1]}`;
+    if (vMatch) {
+      return `https://www.youtube.com/embed/${vMatch[1]}?autoplay=1`;
     }
-    if (url.includes('youtube.com/embed/')) {
-      return url;
+    if (url.includes("youtube.com/embed/")) {
+      return url.includes('autoplay=1') ? url : (url.includes('?') ? `${url}&autoplay=1` : `${url}?autoplay=1`);
     }
   } catch (e) {
     return null;
@@ -32,47 +41,58 @@ function getYouTubeEmbedUrl(url) {
 }
 
 // Cinema Modal Controls
-function openCinemaModal(title, embedUrl) {
-  const modal = document.getElementById('cinemaModal');
-  const titleEl = document.getElementById('cinemaTitle');
-  const iframeEl = document.getElementById('cinemaIframe');
+function openCinemaModal(title, urlOrEmbed) {
+  const modal = document.getElementById("cinemaModal");
+  const titleEl = document.getElementById("cinemaTitle");
+  const iframeEl = document.getElementById("cinemaIframe");
+  
+  // Guarantee valid embed format (converts watch?v= into /embed/ automatically)
+  const embedUrl = (urlOrEmbed && urlOrEmbed.includes("youtube.com/embed/"))
+    ? urlOrEmbed
+    : (getYouTubeEmbedUrl(urlOrEmbed) || urlOrEmbed);
+
   if (titleEl) titleEl.textContent = title;
   if (iframeEl) iframeEl.src = embedUrl;
-  if (modal) modal.style.display = 'flex';
+  if (modal) modal.style.display = "flex";
 }
 
 function closeCinemaModal() {
-  const modal = document.getElementById('cinemaModal');
-  const iframeEl = document.getElementById('cinemaIframe');
-  if (modal) modal.style.display = 'none';
-  if (iframeEl) iframeEl.src = '';
+  const modal = document.getElementById("cinemaModal");
+  const iframeEl = document.getElementById("cinemaIframe");
+  if (modal) modal.style.display = "none";
+  if (iframeEl) iframeEl.src = "";
   isDockAudioActive = false;
-  const dock = document.getElementById('beatsDock');
-  const btn = document.getElementById('dockPlayBtn');
-  if (dock) dock.classList.remove('playing');
-  if (btn) btn.textContent = '▶ Play';
+  const dock = document.getElementById("beatsDock");
+  const btn = document.getElementById("dockPlayBtn");
+  if (dock) dock.classList.remove("playing");
+  if (btn) btn.textContent = "▶ Play";
 }
 
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeCinemaModal();
+// Expose modal functions to window for inline HTML onclick handlers
+window.openCinemaModal = openCinemaModal;
+window.closeCinemaModal = closeCinemaModal;
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeCinemaModal();
 });
 
-document.addEventListener('click', (e) => {
-  const modal = document.getElementById('cinemaModal');
+document.addEventListener("click", (e) => {
+  const modal = document.getElementById("cinemaModal");
   if (e.target === modal) closeCinemaModal();
 });
 
 // Logging helper (Developer Console)
-function logMessage(msg, type = 'info') {
-  if (type === 'error') console.error(`[DanglingDice] ${msg}`);
-  else if (type === 'success') console.log(`%c[DanglingDice] ${msg}`, 'color: #10b981;');
+function logMessage(msg, type = "info") {
+  if (type === "error") console.error(`[DanglingDice] ${msg}`);
+  else if (type === "success")
+    console.log(`%c[DanglingDice] ${msg}`, "color: #10b981;");
   else console.log(`[DanglingDice] ${msg}`);
 }
 
 // Health Check
 async function checkHealth() {
-  const statusLabel = document.getElementById('statusLabel');
-  const statusBadge = document.getElementById('connectionStatus');
+  const statusLabel = document.getElementById("statusLabel");
+  const statusBadge = document.getElementById("connectionStatus");
   try {
     const start = performance.now();
     const res = await fetch(`${API_BASE}/`);
@@ -80,27 +100,27 @@ async function checkHealth() {
     if (res.ok) {
       if (statusLabel) statusLabel.textContent = `API Online (${duration}ms)`;
       if (statusBadge) {
-        statusBadge.style.color = 'var(--neon-emerald)';
-        statusBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        statusBadge.style.color = "var(--neon-emerald)";
+        statusBadge.style.borderColor = "rgba(16, 185, 129, 0.3)";
       }
-      logMessage(`API Health check OK: status 200 (${duration}ms)`, 'success');
+      logMessage(`API Health check OK: status 200 (${duration}ms)`, "success");
     } else {
       throw new Error(`HTTP ${res.status}`);
     }
   } catch (err) {
-    if (statusLabel) statusLabel.textContent = 'API Offline';
+    if (statusLabel) statusLabel.textContent = "API Offline";
     if (statusBadge) {
-      statusBadge.style.color = '#f87171';
-      statusBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      statusBadge.style.color = "#f87171";
+      statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
     }
-    logMessage(`API connection error: ${err.message}`, 'error');
+    logMessage(`API connection error: ${err.message}`, "error");
   }
 }
 
 let allResources = [];
-let selectedCategory = 'All';
-let searchQuery = '';
-let sortOption = 'newest';
+let selectedCategory = "All";
+let searchQuery = "";
+let sortOption = "newest";
 let isCatalogExpanded = false;
 const RECENT_ROW_LIMIT = 3;
 
@@ -108,33 +128,34 @@ const RECENT_ROW_LIMIT = 3;
 window.filterCategory = function (cat) {
   selectedCategory = cat;
   isCatalogExpanded = false;
-  document.querySelectorAll('.pill-btn').forEach(btn => {
+  document.querySelectorAll(".pill-btn").forEach((btn) => {
     const text = btn.textContent;
-    const matches = (cat === 'All' && text.includes('All')) ||
-                    (cat === 'Coding Tutorials' && text.includes('Coding')) ||
-                    (cat === 'Beats & Audio' && text.includes('Beats')) ||
-                    (cat === 'Mobile Apps' && text.includes('Mobile Apps')) ||
-                    (cat === 'Developer Tools' && text.includes('Dev Tools'));
-    btn.classList.toggle('active', matches);
+    const matches =
+      (cat === "All" && text.includes("All")) ||
+      (cat === "Coding Tutorials" && text.includes("Coding")) ||
+      (cat === "Beats & Audio" && text.includes("Beats")) ||
+      (cat === "Mobile Apps" && text.includes("Mobile Apps")) ||
+      (cat === "Developer Tools" && text.includes("Dev Tools"));
+    btn.classList.toggle("active", matches);
   });
   renderCatalog();
 };
 
 window.handleSearch = function (q) {
-  searchQuery = (q || '').trim().toLowerCase();
+  searchQuery = (q || "").trim().toLowerCase();
   isCatalogExpanded = false;
-  const clearBtn = document.getElementById('searchClearBtn');
-  if (clearBtn) clearBtn.style.display = searchQuery ? 'block' : 'none';
+  const clearBtn = document.getElementById("searchClearBtn");
+  if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
   renderCatalog();
 };
 
 window.clearSearch = function () {
-  const input = document.getElementById('catalogSearchInput');
-  if (input) input.value = '';
-  searchQuery = '';
+  const input = document.getElementById("catalogSearchInput");
+  if (input) input.value = "";
+  searchQuery = "";
   isCatalogExpanded = false;
-  const clearBtn = document.getElementById('searchClearBtn');
-  if (clearBtn) clearBtn.style.display = 'none';
+  const clearBtn = document.getElementById("searchClearBtn");
+  if (clearBtn) clearBtn.style.display = "none";
   renderCatalog();
 };
 
@@ -150,7 +171,7 @@ window.toggleCatalogExpand = function () {
 
 // Resources Fetch
 async function fetchResources() {
-  const grid = document.getElementById('resourcesGrid');
+  const grid = document.getElementById("resourcesGrid");
   try {
     logMessage(`GET /api/items...`);
     const res = await fetch(`${API_BASE}/items`);
@@ -158,62 +179,70 @@ async function fetchResources() {
     if (!res.ok) throw new Error(json.message);
 
     allResources = json.data || [];
-    logMessage(`Loaded ${allResources.length} items from database.`, 'success');
+    logMessage(`Loaded ${allResources.length} items from database.`, "success");
     renderCatalog();
   } catch (err) {
-    if (grid) grid.innerHTML = `<div style="grid-column: 1 / -1; color: #f87171; text-align: center; padding: 2rem;">Error: ${escapeHtml(err.message)}</div>`;
-    logMessage(`Fetch error: ${err.message}`, 'error');
+    if (grid)
+      grid.innerHTML = `<div style="grid-column: 1 / -1; color: #f87171; text-align: center; padding: 2rem;">Error: ${escapeHtml(err.message)}</div>`;
+    logMessage(`Fetch error: ${err.message}`, "error");
   }
 }
 
 // Render Filtered and Sorted Catalog
 function renderCatalog() {
-  const grid = document.getElementById('resourcesGrid');
-  const countBadge = document.getElementById('countBadge');
-  const expandWrapper = document.getElementById('catalogExpandWrapper');
-  const toggleBtn = document.getElementById('toggleCatalogBtn');
+  const grid = document.getElementById("resourcesGrid");
+  const countBadge = document.getElementById("countBadge");
+  const expandWrapper = document.getElementById("catalogExpandWrapper");
+  const toggleBtn = document.getElementById("toggleCatalogBtn");
   if (!grid) return;
 
   // 1. Filter by Category & Search Query
-  let filtered = allResources.filter(item => {
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+  let filtered = allResources.filter((item) => {
+    const matchesCategory =
+      selectedCategory === "All" || item.category === selectedCategory;
     if (!matchesCategory) return false;
     if (!searchQuery) return true;
 
-    const titleMatch = (item.title || '').toLowerCase().includes(searchQuery);
-    const descMatch = (item.description || '').toLowerCase().includes(searchQuery);
-    const catMatch = (item.category || '').toLowerCase().includes(searchQuery);
-    const cleanQuery = searchQuery.replace(/^#/, '');
-    const tagsMatch = (item.tags || []).some(t => t.toLowerCase().includes(cleanQuery));
+    const titleMatch = (item.title || "").toLowerCase().includes(searchQuery);
+    const descMatch = (item.description || "")
+      .toLowerCase()
+      .includes(searchQuery);
+    const catMatch = (item.category || "").toLowerCase().includes(searchQuery);
+    const cleanQuery = searchQuery.replace(/^#/, "");
+    const tagsMatch = (item.tags || []).some((t) =>
+      t.toLowerCase().includes(cleanQuery),
+    );
 
     return titleMatch || descMatch || catMatch || tagsMatch;
   });
 
   // 2. Sort
-  if (sortOption === 'alpha') {
-    filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-  } else if (sortOption === 'price-low') {
+  if (sortOption === "alpha") {
+    filtered.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+  } else if (sortOption === "price-low") {
     filtered.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
-  } else if (sortOption === 'price-high') {
+  } else if (sortOption === "price-high") {
     filtered.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
   } else {
-    filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    filtered.sort(
+      (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+    );
   }
 
   // 3. Count Badge
   if (countBadge) {
-    if (searchQuery || selectedCategory !== 'All') {
+    if (searchQuery || selectedCategory !== "All") {
       countBadge.textContent = `${filtered.length} of ${allResources.length} Items`;
     } else {
-      countBadge.textContent = `${filtered.length} ${filtered.length === 1 ? 'Resource' : 'Resources'}`;
+      countBadge.textContent = `${filtered.length} ${filtered.length === 1 ? "Resource" : "Resources"}`;
     }
   }
 
   // 4. Empty State
   if (filtered.length === 0) {
-    if (expandWrapper) expandWrapper.style.display = 'none';
+    if (expandWrapper) expandWrapper.style.display = "none";
     const filterNotice = searchQuery
-      ? `No items matching "<strong>${escapeHtml(searchQuery)}</strong>"${selectedCategory !== 'All' ? ` in ${escapeHtml(selectedCategory)}` : ''}.`
+      ? `No items matching "<strong>${escapeHtml(searchQuery)}</strong>"${selectedCategory !== "All" ? ` in ${escapeHtml(selectedCategory)}` : ""}.`
       : `No items found in category <strong>${escapeHtml(selectedCategory)}</strong>.`;
 
     grid.innerHTML = `
@@ -231,64 +260,77 @@ function renderCatalog() {
   const totalMatches = filtered.length;
   if (expandWrapper && toggleBtn) {
     if (totalMatches > RECENT_ROW_LIMIT) {
-      expandWrapper.style.display = 'block';
+      expandWrapper.style.display = "block";
       toggleBtn.innerHTML = isCatalogExpanded
-        ? '▲ Show Recent Uploads Only'
+        ? "▲ Show Recent Uploads Only"
         : `📂 View Entire Course Catalog (${totalMatches} Items) ▾`;
     } else {
-      expandWrapper.style.display = 'none';
+      expandWrapper.style.display = "none";
     }
   }
 
   // 6. Slice to Recent Row unless Expanded
-  const itemsToRender = isCatalogExpanded ? filtered : filtered.slice(0, RECENT_ROW_LIMIT);
+  const itemsToRender = isCatalogExpanded
+    ? filtered
+    : filtered.slice(0, RECENT_ROW_LIMIT);
 
   // 7. Render Grid Cards
-  grid.innerHTML = itemsToRender.map(item => {
-    const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
-    const thumb = item.imageUrl || '/images/banner.jpg';
-    const tagsHtml = (item.tags || []).map(t => `<span class="tag-chip" style="cursor: pointer;" onclick="document.getElementById('catalogSearchInput').value='${escapeHtml(t)}'; handleSearch('${escapeHtml(t)}');" title="Filter by tag">#${escapeHtml(t)}</span>`).join('');
-    const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
-    const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
+  grid.innerHTML = itemsToRender
+    .map((item) => {
+      const priceLabel =
+        item.price === 0 ? "FREE" : `$${Number(item.price).toFixed(2)}`;
+      const thumb = item.imageUrl || "/images/banner.jpg";
+      const tagsHtml = (item.tags || [])
+        .map(
+          (t) =>
+            `<span class="tag-chip" style="cursor: pointer;" onclick="document.getElementById('catalogSearchInput').value='${escapeHtml(t)}'; handleSearch('${escapeHtml(t)}');" title="Filter by tag">#${escapeHtml(t)}</span>`,
+        )
+        .join("");
+      const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
+      const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
 
-    let actionButtons = '';
-    let specialBadge = '';
+      let actionButtons = "";
+      let specialBadge = "";
 
-    if (item.isAffiliate) {
-      specialBadge = `<span class="badge-partner">${escapeHtml(item.affiliateBadge || 'Partner Deal')}</span>`;
-      actionButtons = `
+      if (item.isAffiliate) {
+        specialBadge = `<span class="badge-partner">${escapeHtml(item.affiliateBadge || "Partner Deal")}</span>`;
+        actionButtons = `
         <a href="${escapeHtml(item.affiliateUrl || item.mediaUrl)}" target="_blank" rel="sponsored noopener noreferrer" referrerpolicy="strict-origin-when-cross-origin" class="btn btn-playstore btn-sm">
           Get Partner Deal ➔
         </a>
       `;
-    } else if (item.isTool) {
-      specialBadge = `<span class="badge-tool">${item.toolType === 'web-utility' ? '🛠️ Web Tool' : '⚡ Standalone App'}</span>`;
-      const isInternalAnchor = item.liveUrl && item.liveUrl.startsWith('#');
-      actionButtons = `
-        <a href="${escapeHtml(item.liveUrl || item.mediaUrl)}" ${isInternalAnchor ? '' : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm">
-          ${isInternalAnchor ? 'Launch Tool ⚡' : 'Open App ↗'}
+      } else if (item.isTool) {
+        specialBadge = `<span class="badge-tool">${item.toolType === "web-utility" ? "🛠️ Web Tool" : "⚡ Standalone App"}</span>`;
+        const isInternalAnchor = item.liveUrl && item.liveUrl.startsWith("#");
+        actionButtons = `
+        <a href="${escapeHtml(item.liveUrl || item.mediaUrl)}" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm">
+          ${isInternalAnchor ? "Launch Tool ⚡" : "Open App ↗"}
         </a>
       `;
-    } else if (ytEmbed) {
-      actionButtons = `
+      } else if (ytEmbed) {
+        actionButtons = `
         <button class="btn btn-youtube btn-sm" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
         <a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">↗</a>
       `;
-    } else if (item.mediaUrl && item.mediaUrl.includes('play.google.com')) {
-      actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store</a>`;
-    } else if (item.mediaUrl) {
-      actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ View Project</a>`;
-    }
+      } else if (item.mediaUrl && item.mediaUrl.includes("play.google.com")) {
+        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store</a>`;
+      } else if (item.mediaUrl) {
+        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ View Project</a>`;
+      }
 
-    return `
-      <div class="resource-card ${item.isAffiliate ? 'resource-card-partner' : ''} ${item.isTool ? 'resource-card-tool' : ''}">
-        <div class="resource-thumb-box" ${ytEmbed ? `style="cursor: pointer;" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')" title="Click to Play"` : ''}>
+      return `
+      <div class="resource-card ${item.isAffiliate ? "resource-card-partner" : ""} ${item.isTool ? "resource-card-tool" : ""}">
+        <div class="resource-thumb-box" ${ytEmbed ? `style="cursor: pointer;" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')" title="Click to Play"` : ""}>
           <img src="${thumb}" alt="${escapeHtml(item.title)}" class="resource-thumb" onerror="this.src='/images/banner.jpg'" />
-          ${ytEmbed ? `
+          ${
+            ytEmbed
+              ? `
             <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.45)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'">
               <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #ff0033, #cc0000); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem; box-shadow: 0 4px 16px rgba(255,0,51,0.5);">▶</div>
             </div>
-          ` : ''}
+          `
+              : ""
+          }
           <span class="badge-category">${escapeHtml(item.category)}</span>
           ${specialBadge || `<span class="badge-price">${priceLabel}</span>`}
         </div>
@@ -300,12 +342,13 @@ function renderCatalog() {
             <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
               ${actionButtons}
             </div>
-            <span style="font-size: 0.72rem; color: var(--text-faint);">${item.user ? escapeHtml(item.user.name) : 'Studio'}</span>
+            <span style="font-size: 0.72rem; color: var(--text-faint);">${item.user ? escapeHtml(item.user.name) : "Studio"}</span>
           </div>
         </div>
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 }
 
 /**
@@ -315,75 +358,79 @@ function renderCatalog() {
  * ============================================================================
  */
 window.inspectMongoUri = function (uri) {
-  const cleanUri = (uri || '').trim();
-  const resultsBox = document.getElementById('inspectorResults');
-  const warningBox = document.getElementById('uriWarningBox');
+  const cleanUri = (uri || "").trim();
+  const resultsBox = document.getElementById("inspectorResults");
+  const warningBox = document.getElementById("uriWarningBox");
 
   if (!cleanUri) {
-    if (resultsBox) resultsBox.style.display = 'none';
+    if (resultsBox) resultsBox.style.display = "none";
     return;
   }
 
-  if (resultsBox) resultsBox.style.display = 'block';
+  if (resultsBox) resultsBox.style.display = "block";
 
-  let protocol = 'Unknown';
-  let host = '—';
-  let dbName = 'default (test)';
+  let protocol = "Unknown";
+  let host = "—";
+  let dbName = "default (test)";
   let warnings = [];
 
   try {
-    if (cleanUri.startsWith('mongodb+srv://')) {
-      protocol = 'mongodb+srv (DNS Seedlist / Atlas)';
-    } else if (cleanUri.startsWith('mongodb://')) {
-      protocol = 'mongodb (Standard Connection)';
+    if (cleanUri.startsWith("mongodb+srv://")) {
+      protocol = "mongodb+srv (DNS Seedlist / Atlas)";
+    } else if (cleanUri.startsWith("mongodb://")) {
+      protocol = "mongodb (Standard Connection)";
     } else {
-      warnings.push('URI must start with either <code>mongodb://</code> or <code>mongodb+srv://</code>');
+      warnings.push(
+        "URI must start with either <code>mongodb://</code> or <code>mongodb+srv://</code>",
+      );
     }
 
     // Parse user:password@host/db
-    const withoutProtocol = cleanUri.replace(/^mongodb(\+srv)?:\/\//, '');
-    const atSplit = withoutProtocol.split('@');
+    const withoutProtocol = cleanUri.replace(/^mongodb(\+srv)?:\/\//, "");
+    const atSplit = withoutProtocol.split("@");
 
     let hostAndDbPart = withoutProtocol;
     if (atSplit.length > 1) {
       const creds = atSplit[0];
-      hostAndDbPart = atSplit.slice(1).join('@');
+      hostAndDbPart = atSplit.slice(1).join("@");
 
       // Check for unencoded special characters in password
-      const colonIndex = creds.indexOf(':');
+      const colonIndex = creds.indexOf(":");
       if (colonIndex !== -1) {
         const rawPassword = creds.substring(colonIndex + 1);
         const forbiddenChars = [
-          { char: '@', code: '%40' },
-          { char: ':', code: '%3A' },
-          { char: '#', code: '%23' },
-          { char: '%', code: '%25' },
-          { char: '&', code: '%26' },
-          { char: '?', code: '%3F' },
-          { char: '/', code: '%2F' },
+          { char: "@", code: "%40" },
+          { char: ":", code: "%3A" },
+          { char: "#", code: "%23" },
+          { char: "%", code: "%25" },
+          { char: "&", code: "%26" },
+          { char: "?", code: "%3F" },
+          { char: "/", code: "%2F" },
         ];
 
         forbiddenChars.forEach(({ char, code }) => {
           if (rawPassword.includes(char)) {
-            warnings.push(`Your password contains an unescaped <code>${char}</code> symbol. MongoDB requires this to be percent-encoded as <code>${code}</code> to prevent connection parser failures.`);
+            warnings.push(
+              `Your password contains an unescaped <code>${char}</code> symbol. MongoDB requires this to be percent-encoded as <code>${code}</code> to prevent connection parser failures.`,
+            );
           }
         });
       }
     }
 
     // Extract Host & Database
-    const slashSplit = hostAndDbPart.split('/');
-    host = slashSplit[0] || 'localhost';
+    const slashSplit = hostAndDbPart.split("/");
+    host = slashSplit[0] || "localhost";
 
     if (slashSplit.length > 1) {
-      const dbAndQuery = slashSplit[1].split('?');
-      dbName = dbAndQuery[0] || 'default';
+      const dbAndQuery = slashSplit[1].split("?");
+      dbName = dbAndQuery[0] || "default";
     }
 
-    const resProto = document.getElementById('resProtocol');
-    const resH = document.getElementById('resHost');
-    const resD = document.getElementById('resDb');
-    const resHealth = document.getElementById('resHealth');
+    const resProto = document.getElementById("resProtocol");
+    const resH = document.getElementById("resHost");
+    const resD = document.getElementById("resDb");
+    const resHealth = document.getElementById("resHealth");
 
     if (resProto) resProto.textContent = protocol;
     if (resH) resH.textContent = host;
@@ -391,39 +438,44 @@ window.inspectMongoUri = function (uri) {
 
     // Render Warnings or Health
     if (warnings.length > 0) {
-      if (resHealth) resHealth.innerHTML = '<span style="color: #f87171;">Syntax Issues Detected</span>';
+      if (resHealth)
+        resHealth.innerHTML =
+          '<span style="color: #f87171;">Syntax Issues Detected</span>';
       if (warningBox) {
-        warningBox.style.display = 'block';
-        warningBox.innerHTML = `⚠️ <strong>Configuration Alert:</strong><ul style="margin: 0.5rem 0 0 1rem; padding: 0;">${warnings.map(w => `<li>${w}</li>`).join('')}</ul>`;
+        warningBox.style.display = "block";
+        warningBox.innerHTML = `⚠️ <strong>Configuration Alert:</strong><ul style="margin: 0.5rem 0 0 1rem; padding: 0;">${warnings.map((w) => `<li>${w}</li>`).join("")}</ul>`;
       }
     } else {
-      if (resHealth) resHealth.innerHTML = '<span style="color: var(--neon-emerald);">Valid Connection String</span>';
-      if (warningBox) warningBox.style.display = 'none';
+      if (resHealth)
+        resHealth.innerHTML =
+          '<span style="color: var(--neon-emerald);">Valid Connection String</span>';
+      if (warningBox) warningBox.style.display = "none";
     }
 
     // Generate sanitized .env output (Strips real password for PII protection)
     let sanitizedUri = cleanUri;
     if (atSplit.length > 1) {
       const creds = atSplit[0];
-      const colonIndex = creds.indexOf(':');
+      const colonIndex = creds.indexOf(":");
       const user = colonIndex !== -1 ? creds.substring(0, colonIndex) : creds;
       sanitizedUri = `mongodb+srv://${user}:<YOUR_PASSWORD_HERE>@${host}/${dbName}?retryWrites=true&w=majority`;
     }
 
     const envSnippet = `# MongoDB Atlas Connection (Generated by Dangling Dice DevTools)\nPORT=5000\nNODE_ENV=production\nMONGODB_URI="${sanitizedUri}"\nMONGODB_DB_NAME="${dbName}"`;
-    const envOutput = document.getElementById('envOutputSnippet');
+    const envOutput = document.getElementById("envOutputSnippet");
     if (envOutput) envOutput.textContent = envSnippet;
   } catch (err) {
     if (warningBox) {
-      warningBox.style.display = 'block';
+      warningBox.style.display = "block";
       warningBox.textContent = `Parse error: ${err.message}`;
     }
   }
 };
 
 window.loadSampleUri = function () {
-  const sample = 'mongodb+srv://studio_admin:MyPass123!@dangling-cluster.nnmqrde.mongodb.net/dangling_dice_db?retryWrites=true&w=majority';
-  const input = document.getElementById('uriInput');
+  const sample =
+    "mongodb+srv://studio_admin:MyPass123!@dangling-cluster.nnmqrde.mongodb.net/dangling_dice_db?retryWrites=true&w=majority";
+  const input = document.getElementById("uriInput");
   if (input) {
     input.value = sample;
     window.inspectMongoUri(sample);
@@ -431,23 +483,23 @@ window.loadSampleUri = function () {
 };
 
 // Universal Toast Notification System (10015.io inspired)
-window.showToast = function (message, type = 'info') {
-  let container = document.getElementById('toastContainer');
+window.showToast = function (message, type = "info") {
+  let container = document.getElementById("toastContainer");
   if (!container) {
-    container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.className = 'toast-container';
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container";
     document.body.appendChild(container);
   }
 
-  const toast = document.createElement('div');
-  toast.className = `toast ${type === 'success' ? 'toast-success' : ''}`;
+  const toast = document.createElement("div");
+  toast.className = `toast ${type === "success" ? "toast-success" : ""}`;
   toast.innerHTML = message;
 
   container.appendChild(toast);
 
   setTimeout(() => {
-    toast.classList.add('toast-fadeout');
+    toast.classList.add("toast-fadeout");
     setTimeout(() => {
       if (toast.parentElement) toast.parentElement.removeChild(toast);
     }, 300);
@@ -455,10 +507,13 @@ window.showToast = function (message, type = 'info') {
 };
 
 window.copyEnvSnippet = function () {
-  const snippet = document.getElementById('envOutputSnippet')?.textContent;
+  const snippet = document.getElementById("envOutputSnippet")?.textContent;
   if (snippet) {
     navigator.clipboard.writeText(snippet);
-    window.showToast('Sanitized .env snippet copied to clipboard! (Remember to substitute your real password)', 'success');
+    window.showToast(
+      "Sanitized .env snippet copied to clipboard! (Remember to substitute your real password)",
+      "success",
+    );
   }
 };
 
@@ -477,24 +532,24 @@ Endpoint = vpn.dangling-dice-studios.com:51820
 AllowedIPs = 0.0.0.0/0, ::/0
 PersistentKeepalive = 25`;
 
-  const output = document.getElementById('wgSampleOutput');
+  const output = document.getElementById("wgSampleOutput");
   if (output) {
     output.textContent = sample;
-    window.showToast('Loaded sample WireGuard client config!', 'success');
+    window.showToast("Loaded sample WireGuard client config!", "success");
   }
 };
 
 window.copyWireGuardConfig = function () {
-  const output = document.getElementById('wgSampleOutput');
+  const output = document.getElementById("wgSampleOutput");
   const text = output?.textContent;
   if (text && !text.startsWith('# Click "Load Sample Config"')) {
     navigator.clipboard.writeText(text);
-    window.showToast('WireGuard configuration copied to clipboard!', 'success');
+    window.showToast("WireGuard configuration copied to clipboard!", "success");
   } else {
     window.loadSampleWireGuard();
-    const generated = document.getElementById('wgSampleOutput')?.textContent;
+    const generated = document.getElementById("wgSampleOutput")?.textContent;
     if (generated) navigator.clipboard.writeText(generated);
-    window.showToast('Generated and copied sample config!', 'success');
+    window.showToast("Generated and copied sample config!", "success");
   }
 };
 
@@ -502,30 +557,33 @@ window.copyWireGuardConfig = function () {
 let isDockAudioActive = false;
 
 window.toggleDockAudio = function () {
-  const dock = document.getElementById('beatsDock');
-  const btn = document.getElementById('dockPlayBtn');
+  const dock = document.getElementById("beatsDock");
+  const btn = document.getElementById("dockPlayBtn");
   isDockAudioActive = !isDockAudioActive;
 
   if (isDockAudioActive) {
-    if (dock) dock.classList.add('playing');
-    if (btn) btn.textContent = '⏸ Pause';
-    openCinemaModal('Dangling Beats • Lo-Fi Drive (Official YouTube Playlist)', 'https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1');
-    window.showToast('▶ Streaming Lo-Fi Drive in Cinema Player', 'success');
+    if (dock) dock.classList.add("playing");
+    if (btn) btn.textContent = "⏸ Pause";
+    openCinemaModal(
+      "Dangling Beats • Lo-Fi Drive (Official YouTube Playlist)",
+      "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1",
+    );
+    window.showToast("▶ Streaming Lo-Fi Drive in Cinema Player", "success");
   } else {
-    if (dock) dock.classList.remove('playing');
-    if (btn) btn.textContent = '▶ Play';
+    if (dock) dock.classList.remove("playing");
+    if (btn) btn.textContent = "▶ Play";
     closeCinemaModal();
   }
 };
 
 window.toggleDockMinimize = function () {
-  const dock = document.getElementById('beatsDock');
-  const minBtn = dock?.querySelector('.beats-dock-min-btn');
+  const dock = document.getElementById("beatsDock");
+  const minBtn = dock?.querySelector(".beats-dock-min-btn");
   if (!dock) return;
-  const isMin = dock.classList.toggle('minimized');
-  if (minBtn) minBtn.textContent = isMin ? '+' : '—';
+  const isMin = dock.classList.toggle("minimized");
+  if (minBtn) minBtn.textContent = isMin ? "+" : "—";
   try {
-    localStorage.setItem('beatsDockMinimized', isMin ? 'true' : 'false');
+    localStorage.setItem("beatsDockMinimized", isMin ? "true" : "false");
   } catch (e) {
     // ignore
   }
@@ -533,20 +591,29 @@ window.toggleDockMinimize = function () {
 
 function initDockState() {
   try {
-    if (localStorage.getItem('beatsDockMinimized') === 'true') {
-      const dock = document.getElementById('beatsDock');
-      const minBtn = dock?.querySelector('.beats-dock-min-btn');
-      if (dock) dock.classList.add('minimized');
-      if (minBtn) minBtn.textContent = '+';
+    if (localStorage.getItem("beatsDockMinimized") === "true") {
+      const dock = document.getElementById("beatsDock");
+      const minBtn = dock?.querySelector(".beats-dock-min-btn");
+      if (dock) dock.classList.add("minimized");
+      if (minBtn) minBtn.textContent = "+";
     }
   } catch (e) {
     // ignore
+  }
+
+  // Explicit event listener to guarantee click triggers even across touch & deferred timing
+  const dockPlayBtn = document.getElementById("dockPlayBtn");
+  if (dockPlayBtn) {
+    dockPlayBtn.onclick = function (e) {
+      if (e) e.preventDefault();
+      window.toggleDockAudio();
+    };
   }
 }
 
 // Studio Tech Stack Directory (Wes Bos inspired)
 async function fetchTechStack() {
-  const grid = document.getElementById('techStackGrid');
+  const grid = document.getElementById("techStackGrid");
   if (!grid) return;
 
   try {
@@ -560,62 +627,69 @@ async function fetchTechStack() {
     if (!partners || partners.length === 0) {
       partners = [
         {
-          slug: 'atlas',
-          name: 'MongoDB Atlas Cloud',
-          category: 'Cloud Hosting & Databases',
-          description: 'Fully managed cloud document database with auto-scaling, global clusters, and vector search.',
-          perkBadge: 'Free 512MB M0 Cluster',
-          icon: '🍃',
-          redirectUrl: '/go/atlas',
+          slug: "atlas",
+          name: "MongoDB Atlas Cloud",
+          category: "Cloud Hosting & Databases",
+          description:
+            "Fully managed cloud document database with auto-scaling, global clusters, and vector search.",
+          perkBadge: "Free 512MB M0 Cluster",
+          icon: "🍃",
+          redirectUrl: "/go/atlas",
         },
         {
-          slug: 'digitalocean',
-          name: 'DigitalOcean Droplets',
-          category: 'Cloud Hosting & Databases',
-          description: 'Simple, scalable cloud computing and virtual machines built for developers and startups.',
-          perkBadge: '$200 Free 60-Day Credit',
-          icon: '🌊',
-          redirectUrl: '/go/digitalocean',
+          slug: "digitalocean",
+          name: "DigitalOcean Droplets",
+          category: "Cloud Hosting & Databases",
+          description:
+            "Simple, scalable cloud computing and virtual machines built for developers and startups.",
+          perkBadge: "$200 Free 60-Day Credit",
+          icon: "🌊",
+          redirectUrl: "/go/digitalocean",
         },
         {
-          slug: 'vpn',
-          name: 'Dangling Dice WireGuard VPN',
-          category: 'Developer Tools',
-          description: 'Ultra-fast in-kernel WireGuard encrypted tunnel with zero activity logs and leak protection.',
-          perkBadge: '100% Free Developer Tool',
-          icon: '🛡️',
-          redirectUrl: '/go/vpn',
+          slug: "vpn",
+          name: "Dangling Dice WireGuard VPN",
+          category: "Developer Tools",
+          description:
+            "Ultra-fast in-kernel WireGuard encrypted tunnel with zero activity logs and leak protection.",
+          perkBadge: "100% Free Developer Tool",
+          icon: "🛡️",
+          redirectUrl: "/go/vpn",
         },
         {
-          slug: 'calculator',
-          name: 'AI Calculator on Google Play',
-          category: 'Mobile Apps',
-          description: 'Smart Android homework solver with step-by-step arithmetic, scientific calculation, and AI OCR scanning.',
-          perkBadge: 'Official Google Play App',
-          icon: '📱',
-          redirectUrl: '/go/calculator',
+          slug: "calculator",
+          name: "AI Calculator on Google Play",
+          category: "Mobile Apps",
+          description:
+            "Smart Android homework solver with step-by-step arithmetic, scientific calculation, and AI OCR scanning.",
+          perkBadge: "Official Google Play App",
+          icon: "📱",
+          redirectUrl: "/go/calculator",
         },
         {
-          slug: 'youtube',
-          name: 'Dangling Beats Official Channel',
-          category: 'Official Channels',
-          description: 'Original lofi, dark trap, and synthwave instrumentals crafted for code sessions and content creators.',
-          perkBadge: '24/7 Focus Beats & Masterclasses',
-          icon: '🎧',
-          redirectUrl: '/go/youtube',
+          slug: "youtube",
+          name: "Dangling Beats Official Channel",
+          category: "Official Channels",
+          description:
+            "Original lofi, dark trap, and synthwave instrumentals crafted for code sessions and content creators.",
+          perkBadge: "24/7 Focus Beats & Masterclasses",
+          icon: "🎧",
+          redirectUrl: "/go/youtube",
         },
       ];
     }
 
-    grid.innerHTML = partners.map(p => `
+    grid.innerHTML = partners
+      .map(
+        (p) => `
       <div class="tech-stack-card">
         <div>
           <div class="tech-card-header">
-            <span class="tech-card-icon">${escapeHtml(p.icon || '⚡')}</span>
-            <span class="tech-card-badge">${escapeHtml(p.perkBadge || 'Verified Partner')}</span>
+            <span class="tech-card-icon">${escapeHtml(p.icon || "⚡")}</span>
+            <span class="tech-card-badge">${escapeHtml(p.perkBadge || "Verified Partner")}</span>
           </div>
           <div class="pill-tag pill-tag-cyan" style="display: inline-block; margin-bottom: 0.5rem; font-size: 0.68rem; padding: 0.15rem 0.5rem;">
-            ${escapeHtml(p.category || 'Tech Stack')}
+            ${escapeHtml(p.category || "Tech Stack")}
           </div>
           <h3 class="tech-card-title">${escapeHtml(p.name)}</h3>
           <p class="tech-card-desc">${escapeHtml(p.description)}</p>
@@ -629,24 +703,26 @@ async function fetchTechStack() {
           </a>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
   } catch (err) {
-    logMessage(`Failed to load tech stack: ${err.message}`, 'error');
+    logMessage(`Failed to load tech stack: ${err.message}`, "error");
   }
 }
 
 function escapeHtml(str) {
-  if (!str) return '';
+  if (!str) return "";
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 // Startup
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener("DOMContentLoaded", async () => {
   initDockState();
   await checkHealth();
   await fetchResources();
