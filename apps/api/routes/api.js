@@ -5,6 +5,7 @@ import itemRoutes from './itemRoutes.js';
 import checkoutRoutes from './checkoutRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import affiliateRoutes from './affiliateRoutes.js';
+import mediaRoutes from './mediaRoutes.js';
 
 const router = express.Router();
 
@@ -48,5 +49,6 @@ router.use('/items', itemRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/orders', orderRoutes);
 router.use('/affiliates', affiliateRoutes);
+router.use('/media', mediaRoutes);
 
 export default router;

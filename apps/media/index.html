@@ -109,111 +109,149 @@
       </p>
     </section>
 
-    <!-- Converter Form Card -->
-    <section class="converter-card">
-      <div class="input-group">
-        <label for="mediaUrlInput" class="input-label">Paste Media URL (YouTube, SoundCloud, Audio Stream):</label>
-        <div class="input-row">
-          <input
-            type="url"
-            id="mediaUrlInput"
-            class="url-input"
-            placeholder="https://www.youtube.com/watch?v=... or https://soundcloud.com/..."
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <button type="button" class="btn btn-secondary btn-sm" id="pasteBtn">📋 Paste</button>
+    <!-- 3-Column Flanking Converter Layout (Left & Right Feature Boxes) -->
+    <div class="converter-workbench">
+      <!-- Left Flank: Security & Privacy Guardrail Boxes -->
+      <aside class="converter-flank-col">
+        <div class="feature-box">
+          <div class="feature-icon">🔒</div>
+          <h2 class="feature-title">In-Browser Wasm Engine</h2>
+          <p class="feature-desc">Transcoding executes locally inside your browser's WebAssembly sandbox. Extracted media never sits on server hard drives.</p>
         </div>
-      </div>
 
-      <!-- Format Selection Grid -->
-      <div class="format-section">
-        <label class="input-label">Select Output Format & Quality:</label>
-        <div class="format-grid">
-          <div class="format-pill active" data-format="mp3-320">
-            <div>
-              <div class="format-title">🎵 MP3 Audio</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted);">320kbps Studio Master</div>
+        <div class="feature-box">
+          <div class="feature-icon">🛡️</div>
+          <h2 class="feature-title">Zero-Log Guarantee</h2>
+          <p class="feature-desc">We collect zero browsing logs, zero IP logs, and zero tracking cookies. Designed strictly for software engineers and creators.</p>
+        </div>
+      </aside>
+
+      <!-- Center: Converter Card -->
+      <section class="converter-card">
+        <div class="input-group">
+          <label for="mediaUrlInput" class="input-label">Paste Media URL (YouTube, SoundCloud, Audio Stream):</label>
+          <div class="input-row">
+            <input
+              type="url"
+              id="mediaUrlInput"
+              class="url-input"
+              placeholder="https://www.youtube.com/watch?v=... or https://soundcloud.com/..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button type="button" class="btn btn-secondary btn-sm" id="pasteBtn">📋 Paste</button>
+          </div>
+        </div>
+
+        <!-- Format Selection Grid -->
+        <div class="format-section">
+          <label class="input-label">Select Output Format & Quality:</label>
+          <div class="format-grid">
+            <div class="format-pill active" data-format="mp3-320">
+              <div>
+                <div class="format-title">🎵 MP3 Audio</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">320kbps Studio Master</div>
+              </div>
+              <span class="format-badge">Best Audio</span>
             </div>
-            <span class="format-badge">Best Audio</span>
-          </div>
 
-          <div class="format-pill" data-format="mp3-192">
-            <div>
-              <div class="format-title">🎵 MP3 Audio</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted);">192kbps Compact Size</div>
+            <div class="format-pill" data-format="mp3-192">
+              <div>
+                <div class="format-title">🎵 MP3 Audio</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">192kbps Compact Size</div>
+              </div>
+              <span class="format-badge">Fast</span>
             </div>
-            <span class="format-badge">Fast</span>
-          </div>
 
-          <div class="format-pill" data-format="mp4-1080">
-            <div>
-              <div class="format-title">🎬 MP4 Video</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted);">1080p Full HD Video</div>
+            <div class="format-pill" data-format="mp4-1080">
+              <div>
+                <div class="format-title">🎬 MP4 Video</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">1080p Full HD Video</div>
+              </div>
+              <span class="format-badge">Crisp HD</span>
             </div>
-            <span class="format-badge">Crisp HD</span>
-          </div>
 
-          <div class="format-pill" data-format="mp4-720">
-            <div>
-              <div class="format-title">🎬 MP4 Video</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted);">720p Mobile Video</div>
+            <div class="format-pill" data-format="mp4-720">
+              <div>
+                <div class="format-title">🎬 MP4 Video</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">720p Mobile Video</div>
+              </div>
+              <span class="format-badge">Mobile</span>
             </div>
-            <span class="format-badge">Mobile</span>
           </div>
         </div>
-      </div>
 
-      <!-- Legal Fair Use Guardrail Checkbox -->
-      <div class="legal-group">
-        <input type="checkbox" id="fairUseCheckbox" checked />
-        <label for="fairUseCheckbox">
-          I confirm that I am converting this media for personal, educational, or creative fair-use remixing, or hold authorization from the content rights holder.
-        </label>
-      </div>
-
-      <!-- Action Button -->
-      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-        <button type="button" id="convertBtn" class="btn btn-primary" style="flex: 1; padding: 0.85rem;">
-          ⚡ Convert & Transcode Media
-        </button>
-        <button type="button" id="sampleUrlBtn" class="btn btn-secondary btn-sm">
-          Load Sample Beats URL
-        </button>
-      </div>
-
-      <!-- Live Conversion Progress Bar -->
-      <div id="progressContainer" class="progress-container">
-        <div class="progress-header">
-          <span id="progressStatusText">Extracting media stream...</span>
-          <span id="progressPercent" style="color: var(--neon-pink); font-family: var(--font-mono);">0%</span>
+        <!-- Legal Fair Use Guardrail Checkbox -->
+        <div class="legal-group">
+          <input type="checkbox" id="fairUseCheckbox" checked />
+          <label for="fairUseCheckbox">
+            I confirm that I am converting this media for personal, educational, or creative fair-use remixing, or hold authorization from the content rights holder.
+          </label>
         </div>
-        <div class="progress-bar-bg">
-          <div id="progressBarFill" class="progress-bar-fill"></div>
-        </div>
-        <div id="engineLog" style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-faint); margin-top: 0.35rem;">
-          Wasm Engine: SharedArrayBuffer Worker Initialized
-        </div>
-      </div>
 
-      <!-- Results & Download Box -->
-      <div id="resultBox" class="result-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-          <div>
-            <div style="font-weight: 800; font-size: 1.1rem; color: #fff;" id="resultFilename">media_export.mp3</div>
-            <div style="font-size: 0.78rem; color: var(--neon-emerald);" id="resultMeta">Transcoding complete &bull; In-Browser Blob Ready</div>
+        <!-- Action Button -->
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <button type="button" id="convertBtn" class="btn btn-primary" style="flex: 1; padding: 0.85rem;">
+            ⚡ Convert & Transcode Media
+          </button>
+          <button type="button" id="sampleUrlBtn" class="btn btn-secondary btn-sm">
+            Load Sample Beats URL
+          </button>
+        </div>
+
+        <!-- Live Conversion Progress Bar -->
+        <div id="progressContainer" class="progress-container">
+          <div class="progress-header">
+            <span id="progressStatusText">Extracting media stream...</span>
+            <span id="progressPercent" style="color: var(--neon-pink); font-family: var(--font-mono);">0%</span>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <a id="downloadBtn" href="#" download class="btn btn-primary btn-sm">
-              📥 Download File
-            </a>
+          <div class="progress-bar-bg">
+            <div id="progressBarFill" class="progress-bar-fill"></div>
+          </div>
+          <div id="engineLog" style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-faint); margin-top: 0.35rem;">
+            Stream Resolver: Initializing direct extraction
           </div>
         </div>
-        <div id="audioPreviewWrapper" style="display: none; margin-top: 0.75rem;">
-          <audio id="audioPreview" controls style="width: 100%; border-radius: 8px;"></audio>
+
+        <!-- Results & Download Box -->
+        <div id="resultBox" class="result-box">
+          <div class="result-card-inner">
+            <img id="resultThumb" src="/images/banner.jpg" alt="Media Thumbnail" class="result-thumb" />
+            <div class="result-info">
+              <div class="result-title" id="resultFilename">media_export.mp3</div>
+              <div class="result-meta">
+                <span id="resultAuthor" style="color: var(--text-muted);">Dangling Dice</span>
+                <span id="resultDuration" style="color: var(--neon-cyan);">03:15</span>
+                <span id="resultMeta">Transcoding complete</span>
+              </div>
+            </div>
+            <div>
+              <a id="downloadBtn" href="#" download class="btn btn-primary btn-sm">
+                📥 Download File
+              </a>
+            </div>
+          </div>
+          <div id="audioPreviewWrapper" style="display: none; margin-top: 0.75rem;">
+            <audio id="audioPreview" controls style="width: 100%; border-radius: 8px;"></audio>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- Right Flank: Fidelity & Platform Boxes -->
+      <aside class="converter-flank-col">
+        <div class="feature-box">
+          <div class="feature-icon">⚡</div>
+          <h2 class="feature-title">320kbps Studio Master</h2>
+          <p class="feature-desc">Full 44.1/48kHz stereo sampling rate with LAME VBR/CBR compression for crisp fidelity across studio monitors.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon">📱</div>
+          <h2 class="feature-title">Android & PWA Ready</h2>
+          <p class="feature-desc">Install directly as an Android Progressive Web App on your smartphone with one tap from Chrome.</p>
+        </div>
+      </aside>
+    </div>
 
     <!-- Buy Me a Coffee Support Section -->
     <section id="coffeeSection" class="coffee-card">
@@ -230,33 +268,6 @@
         <a href="https://dangling-dice-studios.com/#catalog" class="btn btn-secondary">
           Browse Courses & Beats
         </a>
-      </div>
-    </section>
-
-    <!-- Security & Architecture Feature Highlights -->
-    <section class="features-grid">
-      <div class="feature-box">
-        <div class="feature-icon">🔒</div>
-        <h2 class="feature-title">In-Browser Wasm Engine</h2>
-        <p class="feature-desc">Transcoding executes locally inside your browser's WebAssembly sandbox. Your extracted media never sits on our hard drives.</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-icon">🛡️</div>
-        <h2 class="feature-title">Zero-Log Guarantee</h2>
-        <p class="feature-desc">We collect zero browsing logs, zero IP logs, and zero tracking cookies. Designed strictly for software engineers and creators.</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-icon">⚡</div>
-        <h2 class="feature-title">320kbps Studio Master</h2>
-        <p class="feature-desc">Full 44.1/48kHz stereo sampling rate with LAME VBR/CBR compression for crisp fidelity across studio monitors.</p>
-      </div>
-
-      <div class="feature-box">
-        <div class="feature-icon">📱</div>
-        <h2 class="feature-title">Android & PWA Ready</h2>
-        <p class="feature-desc">Install directly as an Android Progressive Web App on your smartphone with one tap from Chrome.</p>
       </div>
     </section>
   </main>
@@ -285,3 +296,4 @@
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
+

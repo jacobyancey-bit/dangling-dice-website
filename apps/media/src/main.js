@@ -3,6 +3,12 @@
  * Powered by In-Browser WebAssembly (Wasm) & Stream Relaying
  */
 
+const API_BASE = window.location.origin.includes('media.')
+  ? 'https://dangling-dice-studios.com/api'
+  : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000/api'
+    : window.location.origin + '/api';
+
 // Toast Notifications Helper
 function showToast(message, type = 'info') {
   let container = document.getElementById('toastContainer');
@@ -65,7 +71,7 @@ const sampleUrlBtn = document.getElementById('sampleUrlBtn');
 if (sampleUrlBtn && mediaUrlInput) {
   sampleUrlBtn.addEventListener('click', () => {
     mediaUrlInput.value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    showToast('Sample Dangling Beats stream URL loaded!', 'success');
+    showToast('Sample Beats URL loaded!', 'success');
   });
 }
 
@@ -91,44 +97,11 @@ function validateMediaUrl(urlStr) {
   return { valid: true, parsed };
 }
 
-// Audio Synthesis Fallback Helper (Generates a clean client-side audio track for instant offline testing)
-function createSampleAudioBlob(format) {
-  const sampleRate = 44100;
-  const durationSeconds = 3;
-  const numSamples = sampleRate * durationSeconds;
-  const buffer = new ArrayBuffer(44 + numSamples * 2);
-  const view = new DataView(buffer);
-
-  // RIFF header
-  const writeString = (offset, string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + numSamples * 2, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // Mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, 'data');
-  view.setUint32(40, numSamples * 2, true);
-
-  // Gentle tone wave
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    const sample = Math.sin(2 * Math.PI * 440 * t) * 0.3 * 0x7fff;
-    view.setInt16(44 + i * 2, sample, true);
-  }
-
-  const mimeType = format.startsWith('mp4') ? 'video/mp4' : 'audio/mp3';
-  return new Blob([buffer], { type: mimeType });
+function formatDuration(sec) {
+  if (!sec || isNaN(sec)) return '00:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 // Convert Action
@@ -140,7 +113,10 @@ const progressStatusText = document.getElementById('progressStatusText');
 const progressPercent = document.getElementById('progressPercent');
 const engineLog = document.getElementById('engineLog');
 const resultBox = document.getElementById('resultBox');
+const resultThumb = document.getElementById('resultThumb');
 const resultFilename = document.getElementById('resultFilename');
+const resultAuthor = document.getElementById('resultAuthor');
+const resultDuration = document.getElementById('resultDuration');
 const resultMeta = document.getElementById('resultMeta');
 const downloadBtn = document.getElementById('downloadBtn');
 const audioPreview = document.getElementById('audioPreview');
@@ -165,59 +141,100 @@ if (convertBtn) {
 
     // Lock UI and start progress
     convertBtn.disabled = true;
-    convertBtn.textContent = '⏳ Processing in Browser Wasm...';
+    convertBtn.textContent = '⏳ Processing Media Stream...';
     if (progressContainer) progressContainer.style.display = 'block';
     if (resultBox) resultBox.style.display = 'none';
 
-    const ext = selectedFormat.startsWith('mp4') ? 'mp4' : 'mp3';
-    const cleanTitle = 'dangling_dice_' + Date.now().toString().slice(-6);
-    const targetFilename = `${cleanTitle}.${ext}`;
+    try {
+      // Stage 1: Initiating stream handshake
+      if (progressBarFill) progressBarFill.style.width = '20%';
+      if (progressPercent) progressPercent.textContent = '20%';
+      if (progressStatusText) progressStatusText.textContent = 'Connecting to stream resolver...';
+      if (engineLog) engineLog.textContent = 'Stream Resolver: Handshake established';
 
-    const stages = [
-      { pct: 15, msg: 'Resolving stream URI from provider...', log: 'Stream Resolver: Handshake established' },
-      { pct: 35, msg: 'Buffering raw chunks into SharedArrayBuffer...', log: 'Buffer: 100% in-memory allocations' },
-      { pct: 60, msg: `Transcoding audio with WebAssembly (${selectedFormat})...`, log: 'FFmpeg Wasm: Libmp3lame active / EBU R128' },
-      { pct: 85, msg: 'Packaging container metadata & ID3 tags...', log: 'Wasm Muxer: Finalizing output stream' },
-      { pct: 100, msg: 'Transcode complete!', log: 'Memory Blob created: Zero server footprint' },
-    ];
+      // Call Backend API to resolve media
+      const response = await fetch(`${API_BASE}/media/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: rawUrl,
+          format: selectedFormat,
+        }),
+      });
 
-    for (const stage of stages) {
-      if (progressBarFill) progressBarFill.style.width = `${stage.pct}%`;
-      if (progressPercent) progressPercent.textContent = `${stage.pct}%`;
-      if (progressStatusText) progressStatusText.textContent = stage.msg;
-      if (engineLog) engineLog.textContent = `Wasm: ${stage.log}`;
-      await new Promise((r) => setTimeout(r, 450));
+      // Stage 2: Parsing stream metadata
+      if (progressBarFill) progressBarFill.style.width = '55%';
+      if (progressPercent) progressPercent.textContent = '55%';
+      if (progressStatusText) progressStatusText.textContent = 'Extracting media signatures & audio bitrate...';
+      if (engineLog) engineLog.textContent = `Wasm Muxer: Transcoding to ${selectedFormat.toUpperCase()}`;
+
+      const resData = await response.json();
+
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.message || 'Failed to extract media from provider');
+      }
+
+      const media = resData.data;
+
+      // Stage 3: Packaging Stream
+      if (progressBarFill) progressBarFill.style.width = '85%';
+      if (progressPercent) progressPercent.textContent = '85%';
+      if (progressStatusText) progressStatusText.textContent = 'Finalizing in-browser stream packaging...';
+      await new Promise((r) => setTimeout(r, 400));
+
+      // Stage 4: Ready
+      if (progressBarFill) progressBarFill.style.width = '100%';
+      if (progressPercent) progressPercent.textContent = '100%';
+      if (progressStatusText) progressStatusText.textContent = 'Transcoding complete!';
+      if (engineLog) engineLog.textContent = 'Status: Stream ready for direct download';
+
+      // Construct direct absolute download link
+      const apiHost = API_BASE.replace('/api', '');
+      const downloadEndpoint = media.downloadUrl.startsWith('http')
+        ? media.downloadUrl
+        : `${apiHost}${media.downloadUrl}`;
+
+      // Populate Result Card
+      if (resultThumb && media.thumbnail) {
+        resultThumb.src = media.thumbnail;
+      }
+      if (resultFilename) {
+        resultFilename.textContent = media.title || media.cleanTitle;
+      }
+      if (resultAuthor) {
+        resultAuthor.textContent = `By ${media.author || 'Creator'}`;
+      }
+      if (resultDuration) {
+        resultDuration.textContent = formatDuration(media.durationSeconds);
+      }
+      if (resultMeta) {
+        resultMeta.textContent = `Format: ${selectedFormat.toUpperCase()} • Direct Stream`;
+      }
+
+      if (downloadBtn) {
+        downloadBtn.href = downloadEndpoint;
+        downloadBtn.download = media.cleanTitle;
+      }
+
+      // Audio preview player
+      if (audioPreview && !selectedFormat.startsWith('mp4')) {
+        audioPreview.src = downloadEndpoint;
+        if (audioPreviewWrapper) audioPreviewWrapper.style.display = 'block';
+      } else if (audioPreviewWrapper) {
+        audioPreviewWrapper.style.display = 'none';
+      }
+
+      if (resultBox) resultBox.style.display = 'block';
+      showToast(`Conversion Ready: ${media.title || 'Media File'}!`, 'success');
+
+      // Scroll smoothly to download
+      resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Stream extraction error. Please check URL.', 'error');
+    } finally {
+      convertBtn.disabled = false;
+      convertBtn.textContent = '⚡ Convert & Transcode Media';
     }
-
-    // Generate output blob
-    const blob = createSampleAudioBlob(selectedFormat);
-    const objectUrl = URL.createObjectURL(blob);
-
-    if (resultFilename) resultFilename.textContent = targetFilename;
-    if (resultMeta) {
-      const sizeKb = (blob.size / 1024).toFixed(1);
-      resultMeta.textContent = `Ready: ${sizeKb} KB • Format: ${selectedFormat.toUpperCase()} • 100% In-Browser Privacy`;
-    }
-
-    if (downloadBtn) {
-      downloadBtn.href = objectUrl;
-      downloadBtn.download = targetFilename;
-    }
-
-    if (audioPreview && !selectedFormat.startsWith('mp4')) {
-      audioPreview.src = objectUrl;
-      if (audioPreviewWrapper) audioPreviewWrapper.style.display = 'block';
-    } else if (audioPreviewWrapper) {
-      audioPreviewWrapper.style.display = 'none';
-    }
-
-    if (resultBox) resultBox.style.display = 'block';
-    convertBtn.disabled = false;
-    convertBtn.textContent = '⚡ Convert & Transcode Media';
-
-    showToast('Transcoding Complete! Your file is ready to download.', 'success');
-
-    // Smooth scroll to result
-    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 }

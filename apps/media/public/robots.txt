@@ -6,3 +6,4 @@ Allow: /
 Disallow: /api/
 
 Sitemap: https://media.dangling-dice-studios.com/sitemap.xml
+
