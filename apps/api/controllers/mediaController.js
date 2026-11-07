@@ -257,7 +257,7 @@ async function transcodeMediaToFile(targetUrl, format, cleanName) {
     if (isMp4) {
       stream = ytdl.download(targetUrl, {
         quality: Quality.HighestVideo,
-        filter: { hasVideo: true },
+        filter: { hasVideo: true, hasAudio: true },
       });
       proc = spawn(ffmpegPath, [
         '-i', 'pipe:0',
@@ -538,7 +538,7 @@ export const streamMediaDownload = async (req, res) => {
       // MP4 Streaming Transcoding Pipeline (Fragmented MP4 with immediate packet flushing)
       const videoStream = ytdl.download(targetUrl, {
         quality: Quality.HighestVideo,
-        filter: { hasVideo: true },
+        filter: { hasVideo: true, hasAudio: true },
       });
 
       const ffmpeg = spawn(ffmpegPath, [
