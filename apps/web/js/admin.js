@@ -449,6 +449,18 @@ function generateAllOmnipostFormats() {
   if (fbEl) {
     fbEl.value = `🚀 ${title} is officially live!\n\n${desc}\n\nWhat makes this different:\n⚡ 100% Ad-Free (Zero spam redirects or fake buttons)\n🎧 Studio Master 320kbps MP3 & 1080p MP4 quality\n🎹 Drag-and-drop straight into your DAW (FL Studio, Ableton, Premiere)\n🔒 100% In-Browser Privacy — zero activity logs\n\n👉 Test it out for free here: ${link}\n💬 Join our creator Discord: https://discord.gg/uFYMQahNZz\n\nWhat is your go-to software for sampling audio right now? Let us know below! 👇`;
   }
+
+  // 5. Instagram (Reels, Carousels & Stories - Save CTA + Trending Producer Tags)
+  const igEl = document.getElementById('instagramPreview');
+  if (igEl) {
+    igEl.value = `Stop closing 5 scam tabs just to grab an audio sample 💀\n\n${desc}\n\nWe built a 100% ad-free, high-speed media converter for music producers and video creators:\n🎵 320kbps Studio Master MP3\n🎬 1080p Full HD MP4\n⚡ Drops straight into your Downloads folder\n\n👉 Tap the link in our bio to use it free: ${link}\n💾 Save this post for your next late-night studio session!\n\n#flstudio #musicproducer #beatmaker #producerlife #sampling #hiphopproducer #audiotools #beatstars #vstplugins #danglingbeats`;
+  }
+
+  // 6. TikTok (3-Second Visual Hook Script + Caption + Viral FYP Tags)
+  const ttEl = document.getElementById('tiktokPreview');
+  if (ttEl) {
+    ttEl.value = `[ON-SCREEN TEXT HOOK]\nPOV: You finally found a YouTube to MP3 converter that DOESN'T have virus popups 😭\n\n[CAPTION]\nFinally built this for my own FL Studio sessions. 320kbps audio, 1-click download, 100% ad-free ⚡ Link in bio!\n\n#producertok #flstudio #beatmaker #musicproducer #sampleflip #producerlife #flstudiotips #audiotools #fyp`;
+  }
 }
 
 function copyOmnipost(elementId) {
