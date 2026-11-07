@@ -232,65 +232,40 @@ if (convertBtn) {
         resultDuration.textContent = formatDuration(media.durationSeconds);
       }
       if (resultMeta) {
-        resultMeta.textContent = `Format: ${selectedFormat.toUpperCase()} • Direct Stream`;
+        const sizeMb = media.fileSize ? ` • ${(media.fileSize / (1024 * 1024)).toFixed(1)} MB` : '';
+        resultMeta.textContent = `Format: ${selectedFormat.toUpperCase()}${sizeMb} Master`;
       }
 
       if (downloadBtn) {
-        downloadBtn.onclick = async () => {
-          downloadBtn.disabled = true;
-          downloadBtn.innerHTML = '⏳ Saving Song to Computer...';
-          if (downloadNotice) downloadNotice.style.display = 'block';
-          if (downloadStatusText) downloadStatusText.textContent = 'Connecting to provider audio stream...';
-
-          try {
-            const res = await fetch(downloadEndpoint);
-            if (!res.ok) {
-              const errText = await res.text().catch(() => '');
-              throw new Error(errText || `Server responded with status ${res.status}`);
-            }
-
-            const reader = res.body.getReader();
-            const chunks = [];
-            let receivedBytes = 0;
-
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              chunks.push(value);
-              receivedBytes += value.length;
-              const mb = (receivedBytes / (1024 * 1024)).toFixed(1);
-              downloadBtn.innerHTML = `⏳ Downloading (${mb} MB)...`;
-              if (downloadStatusText) downloadStatusText.textContent = `Streaming master track: ${mb} MB received...`;
-            }
-
-            const mime = selectedFormat.startsWith('mp4') ? 'video/mp4' : 'audio/mpeg';
-            const blob = new Blob(chunks, { type: mime });
-            const blobUrl = URL.createObjectURL(blob);
-            const tempA = document.createElement('a');
-            tempA.href = blobUrl;
-            tempA.download = media.cleanTitle || 'audio_track.mp3';
-            document.body.appendChild(tempA);
-            tempA.click();
-            tempA.remove();
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 45000);
-
-            downloadBtn.innerHTML = '✅ Saved to Downloads Folder!';
-            showToast(`Saved ${media.cleanTitle} directly to your Downloads folder!`, 'success');
-            if (downloadStatusText) downloadStatusText.textContent = 'File saved successfully! Check your computer Downloads folder.';
-          } catch (err) {
-            console.error('Download stream error:', err);
-            showToast(`Download issue: ${err.message}. You can use the Direct Stream link below.`, 'error');
-            downloadBtn.innerHTML = '📥 Retry Download';
-            if (downloadStatusText) downloadStatusText.textContent = 'Stream interrupted. Try the Direct Browser Stream link below or re-convert.';
-          } finally {
-            downloadBtn.disabled = false;
-          }
+        downloadBtn.href = downloadEndpoint;
+        downloadBtn.setAttribute('download', media.cleanTitle);
+        downloadBtn.onclick = () => {
+          showToast(`Downloading: ${media.cleanTitle}`, 'success');
         };
       }
 
       if (fallbackDownloadLink) {
         fallbackDownloadLink.href = downloadEndpoint;
-        fallbackDownloadLink.download = media.cleanTitle;
+        fallbackDownloadLink.setAttribute('download', media.cleanTitle);
+      }
+
+      if (downloadNotice) {
+        downloadNotice.style.display = 'block';
+        if (downloadStatusText) {
+          downloadStatusText.textContent = `✅ Ready! File is downloading to your computer. Click above if it didn't start.`;
+        }
+      }
+
+      // Automatically trigger instant browser download directly to the Downloads folder
+      try {
+        const autoDownloadLink = document.createElement('a');
+        autoDownloadLink.href = downloadEndpoint;
+        autoDownloadLink.setAttribute('download', media.cleanTitle);
+        document.body.appendChild(autoDownloadLink);
+        autoDownloadLink.click();
+        autoDownloadLink.remove();
+      } catch (autoErr) {
+        console.warn('Auto-download trigger notice:', autoErr);
       }
 
       // Audio preview player (Loaded on-demand to protect server resources and prevent rate limits)

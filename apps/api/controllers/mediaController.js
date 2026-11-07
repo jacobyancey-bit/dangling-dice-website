@@ -1,6 +1,35 @@
 import { Ytdl, Quality } from '@distube/ytdl-core';
 import { spawn } from 'child_process';
 import ffmpegPath from 'ffmpeg-static';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const tempDir = path.join(__dirname, '..', 'temp_media');
+
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
+// In-memory registry of ready-to-deliver files for instant downloads
+const readyFiles = new Map();
+
+// Periodic sweep to clean up temporary conversion files older than 15 minutes
+const cleanupTimer = setInterval(() => {
+  const now = Date.now();
+  for (const [id, entry] of readyFiles.entries()) {
+    if (now - entry.createdAt > 15 * 60 * 1000) {
+      try {
+        if (fs.existsSync(entry.filePath)) fs.unlinkSync(entry.filePath);
+      } catch (e) {}
+      readyFiles.delete(id);
+    }
+  }
+}, 5 * 60 * 1000);
+cleanupTimer.unref();
 
 // Multi-client Ytdl engine configured for TV, Mobile Web, and Embedded pathways
 // (Bypasses YouTube datacenter bot detection & Cloudflare timeouts)
@@ -67,6 +96,89 @@ async function fetchOEmbedMetadata(canonicalUrl) {
 }
 
 /**
+ * Pre-transcode audio/video directly to temporary disk file
+ * Enables immediate 0-delay browser downloads without gateway timeouts
+ */
+async function transcodeMediaToFile(targetUrl, format, cleanName) {
+  const fileId = crypto.randomUUID();
+  const isMp4 = String(format).startsWith('mp4');
+  const ext = isMp4 ? 'mp4' : 'mp3';
+  const outPath = path.join(tempDir, `${fileId}.${ext}`);
+
+  return new Promise((resolve, reject) => {
+    let proc;
+    let stream;
+
+    const timeout = setTimeout(() => {
+      try { proc?.kill(); } catch (e) {}
+      try { stream?.destroy(); } catch (e) {}
+      reject(new Error('TRANSCODE_TIMEOUT'));
+    }, 25000);
+
+    if (isMp4) {
+      stream = ytdl.download(targetUrl, {
+        quality: Quality.HighestVideo,
+        filter: { hasVideo: true },
+      });
+      proc = spawn(ffmpegPath, [
+        '-i', 'pipe:0',
+        '-c', 'copy',
+        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+        '-y',
+        outPath,
+      ]);
+    } else {
+      const bitrate = format === 'mp3-192' ? '192k' : '320k';
+      stream = ytdl.download(targetUrl, {
+        quality: Quality.HighestAudio,
+        filter: { hasAudio: true },
+      });
+      proc = spawn(ffmpegPath, [
+        '-i', 'pipe:0',
+        '-vn',
+        '-acodec', 'libmp3lame',
+        '-b:a', bitrate,
+        '-id3v2_version', '3',
+        '-write_id3v1', '1',
+        '-y',
+        outPath,
+      ]);
+    }
+
+    stream.pipe(proc.stdin);
+
+    stream.on('error', (err) => {
+      clearTimeout(timeout);
+      try { proc?.kill(); } catch (e) {}
+      reject(err);
+    });
+
+    proc.on('error', (err) => {
+      clearTimeout(timeout);
+      try { stream?.destroy(); } catch (e) {}
+      reject(err);
+    });
+
+    proc.on('close', (code) => {
+      clearTimeout(timeout);
+      if (code === 0 && fs.existsSync(outPath)) {
+        const stats = fs.statSync(outPath);
+        readyFiles.set(fileId, {
+          filePath: outPath,
+          fileName: `${cleanName}.${ext}`,
+          fileSize: stats.size,
+          mimeType: isMp4 ? 'video/mp4' : 'audio/mpeg',
+          createdAt: Date.now(),
+        });
+        resolve({ fileId, outPath, fileSize: stats.size });
+      } else {
+        reject(new Error(`FFmpeg exited with code ${code}`));
+      }
+    });
+  });
+}
+
+/**
  * @desc    Resolve media metadata (title, duration, thumbnail) from URL
  * @route   POST /api/media/resolve
  * @access  Public
@@ -114,6 +226,18 @@ export const resolveMediaInfo = async (req, res) => {
       const cleanTitle = sanitizeFilename(videoDetails.title);
       const thumbnail = videoDetails.thumbnails?.[videoDetails.thumbnails.length - 1]?.url || '';
 
+      // Transcode immediately during resolution phase so file is ready for instant 0-delay download
+      let fileData = null;
+      try {
+        fileData = await transcodeMediaToFile(targetUrl, format, cleanTitle);
+      } catch (transcodeErr) {
+        console.warn('[Pre-transcode Warning]', transcodeErr.message);
+      }
+
+      const downloadUrl = fileData
+        ? `/api/media/file/${fileData.fileId}?filename=${encodeURIComponent(cleanTitle + '.' + ext)}`
+        : `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
+
       return res.status(200).json({
         success: true,
         data: {
@@ -122,7 +246,8 @@ export const resolveMediaInfo = async (req, res) => {
           author: videoDetails.author?.name || 'Creator',
           durationSeconds,
           thumbnail,
-          downloadUrl: `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`,
+          fileSize: fileData?.fileSize || null,
+          downloadUrl,
         },
       });
     }
@@ -131,6 +256,18 @@ export const resolveMediaInfo = async (req, res) => {
     const oembed = ytid ? await fetchOEmbedMetadata(targetUrl) : null;
     if (oembed) {
       const cleanTitle = sanitizeFilename(oembed.title);
+
+      let fileData = null;
+      try {
+        fileData = await transcodeMediaToFile(targetUrl, format, cleanTitle);
+      } catch (transcodeErr) {
+        console.warn('[Pre-transcode Warning]', transcodeErr.message);
+      }
+
+      const downloadUrl = fileData
+        ? `/api/media/file/${fileData.fileId}?filename=${encodeURIComponent(cleanTitle + '.' + ext)}`
+        : `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
+
       return res.status(200).json({
         success: true,
         data: {
@@ -139,7 +276,8 @@ export const resolveMediaInfo = async (req, res) => {
           author: oembed.author_name || 'Creator',
           durationSeconds: 180,
           thumbnail: oembed.thumbnail_url || `https://i.ytimg.com/vi/${ytid}/hqdefault.jpg`,
-          downloadUrl: `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`,
+          fileSize: fileData?.fileSize || null,
+          downloadUrl,
         },
       });
     }
@@ -155,6 +293,26 @@ export const resolveMediaInfo = async (req, res) => {
       message: 'Failed to extract media information from provider. Please check the URL or try another link.',
     });
   }
+};
+
+/**
+ * @desc    Serve completed media file instantly for download
+ * @route   GET /api/media/file/:id
+ * @access  Public
+ */
+export const serveMediaFile = (req, res) => {
+  const { id } = req.params;
+  const entry = readyFiles.get(id);
+
+  if (!entry || !fs.existsSync(entry.filePath)) {
+    return res.status(404).send('Download link expired or not found. Please convert again.');
+  }
+
+  res.download(entry.filePath, entry.fileName, (err) => {
+    if (err) {
+      console.error('[Serve Media File Error]', err.message);
+    }
+  });
 };
 
 /**
