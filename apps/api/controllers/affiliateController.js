@@ -107,6 +107,15 @@ const PARTNER_DIRECTORY = {
     icon: '⚡',
     featured: true,
   },
+  discord: {
+    name: 'Dangling Dice Studios Discord',
+    targetUrl: 'https://discord.gg/uFYMQahNZz',
+    category: 'Official Channels',
+    description: 'Official Discord community for music beatmakers, video creators, and developers.',
+    perkBadge: 'Official Creator Community',
+    icon: '💬',
+    featured: true,
+  },
   coffee: {
     name: 'Buy Me a Coffee (Studio Tip Jar)',
     targetUrl: 'https://buymeacoffee.com/danglingdicestudios',
