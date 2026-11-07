@@ -312,6 +312,45 @@ main {
   flex: 1;
 }
 
+/* Status Pills (Levels.io inspired visual matrix) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+  width: fit-content;
+}
+
+.status-pill-red {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pill-blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-pill-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-pill-cyan {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
 /* ==========================================================================
    Content & Layout Cards
    ========================================================================== */
@@ -1038,4 +1077,204 @@ tr:hover td {
 .log-line {
   margin-bottom: 0.3rem;
   color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Toast Notification System (10015.io inspired)
+   ========================================================================== */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  background: #0f172a;
+  border: 1px solid var(--border-glow);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.toast-success {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: #061c14;
+  color: #34d399;
+}
+
+.toast.toast-fadeout {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   Persistent Floating Audio Dock (Lofi Girl inspired)
+   ========================================================================== */
+.beats-dock {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 950;
+  background: rgba(10, 14, 23, 0.94);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(236, 72, 153, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.2rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75), 0 0 20px rgba(236, 72, 153, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 420px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.beats-dock.minimized {
+  padding: 0.5rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(10, 14, 23, 0.96);
+  gap: 0.5rem;
+}
+
+.beats-dock.minimized .beats-dock-full {
+  display: none;
+}
+
+.beats-dock-min-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.2rem;
+  transition: color 0.2s;
+}
+
+.beats-dock-min-btn:hover {
+  color: #fff;
+}
+
+.beats-visualizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+}
+
+.beats-bar {
+  width: 3px;
+  background: linear-gradient(180deg, #f472b6, #ec4899);
+  border-radius: 2px;
+  height: 4px;
+}
+
+.beats-dock.playing .beats-bar:nth-child(1) { animation: soundBar 0.8s ease infinite alternate; }
+.beats-dock.playing .beats-bar:nth-child(2) { animation: soundBar 1.1s ease infinite alternate 0.2s; }
+.beats-dock.playing .beats-bar:nth-child(3) { animation: soundBar 0.7s ease infinite alternate 0.4s; }
+.beats-dock.playing .beats-bar:nth-child(4) { animation: soundBar 1.3s ease infinite alternate 0.1s; }
+
+@keyframes soundBar {
+  from { height: 4px; }
+  to { height: 18px; }
+}
+
+/* ==========================================================================
+   Studio Tech Stack & Partner Deals Section (Wes Bos inspired)
+   ========================================================================== */
+.tech-stack-section {
+  margin-top: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.tech-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.tech-stack-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tech-stack-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.tech-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.tech-card-icon {
+  font-size: 1.8rem;
+}
+
+.tech-card-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--neon-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.tech-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  color: #fff;
+}
+
+.tech-card-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+  flex: 1;
+}
+
+.tech-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.85rem;
+  margin-top: auto;
 }

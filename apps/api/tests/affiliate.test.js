@@ -60,7 +60,7 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     assert.equal(jsonBody?.success, false);
   });
 
-  it('AFF-03: Returns active partner directory at /api/affiliates', () => {
+  it('AFF-03: Returns active partner directory at /api/affiliates with enriched metadata', () => {
     let statusCode = null;
     let jsonBody = null;
 
@@ -81,6 +81,11 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     assert.equal(statusCode, 200);
     assert.equal(jsonBody?.success, true);
     assert.ok(Array.isArray(jsonBody?.data));
+    assert.ok(jsonBody.data.length >= 5, 'Should return at least 5 studio partners');
     assert.ok(jsonBody.data.some((p) => p.slug === 'atlas'));
+    assert.ok(
+      jsonBody.data.every((p) => typeof p.description === 'string' && typeof p.perkBadge === 'string' && typeof p.icon === 'string'),
+      'Each partner must contain description, perkBadge, and icon'
+    );
   });
 });

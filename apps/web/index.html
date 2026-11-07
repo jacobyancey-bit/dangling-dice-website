@@ -104,6 +104,7 @@
         <a href="#catalog" class="nav-link">📚 Course Catalog</a>
         <a href="#vpnTool" class="nav-link">🛡️ WireGuard VPN</a>
         <a href="#mongoInspector" class="nav-link">🛠️ MongoDB Inspector</a>
+        <a href="#techStack" class="nav-link">⚡ Tech Stack</a>
         <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-youtube btn-sm">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
           YouTube
@@ -157,6 +158,7 @@
       <div id="beatsStudio" class="division-card card-beats">
         <div>
           <div class="division-icon">🎧</div>
+          <div class="status-pill status-pill-red">🔴 YouTube Focus Radio</div>
           <h3>Dangling Beats Studio</h3>
           <p>The sound lab behind Dangling Dice. Releasing original lofi, dark trap, synthwave, and chillhop instrumentals on YouTube. Ideal for late-night programming sessions and content creators.</p>
         </div>
@@ -170,6 +172,7 @@
       <div class="division-card card-coding">
         <div>
           <div class="division-icon">💻</div>
+          <div class="status-pill status-pill-blue">💻 Open Source & Tutorials</div>
           <h3>Dangling Dice Coding</h3>
           <p>Practical coding tutorials showing you how to build real-world software. From modern full-stack web applications and APIs to cloud systems and developer toolchains.</p>
         </div>
@@ -186,6 +189,7 @@
       <div class="division-card card-apps">
         <div>
           <div class="division-icon">📱</div>
+          <div class="status-pill status-pill-green">✅ Google Play Store</div>
           <h3>Mobile Apps & Software</h3>
           <p>Intelligent mobile applications published on the Google Play Store. Featuring our flagship AI Calculator app, step-by-step math solver, and productivity utilities.</p>
         </div>
@@ -199,6 +203,7 @@
       <div class="division-card card-games">
         <div>
           <div class="division-icon">🛠️</div>
+          <div class="status-pill status-pill-cyan">🔒 100% In-Browser Privacy</div>
           <h3>Developer Tools & Utilities</h3>
           <p>Client-side developer utilities, in-browser network diagnostics, and WireGuard VPN tooling crafted for software engineers and privacy enthusiasts.</p>
         </div>
@@ -288,6 +293,20 @@
         </div>
 
         <div style="padding: 1.5rem;">
+          <!-- Interactive Sample WireGuard Config (10015.io & Transform.tools inspired) -->
+          <div style="background: rgba(16, 185, 129, 0.05); border: 1px dashed rgba(16, 185, 129, 0.25); border-radius: var(--radius-md); padding: 1.1rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 0.85rem; font-weight: 700; color: var(--neon-emerald); display: flex; align-items: center; gap: 0.4rem;">
+                ⚡ Fast-Start WireGuard Client Template:
+              </span>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="loadSampleWireGuard()">Load Sample Config</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="copyWireGuardConfig()">Copy Config</button>
+              </div>
+            </div>
+            <pre id="wgSampleOutput" style="background: #030712; padding: 0.85rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.8rem; overflow-x: auto; color: #34d399; margin: 0; line-height: 1.5;"># Click "Load Sample Config" to generate a battle-tested client tunnel template</pre>
+          </div>
+
           <!-- Single Source of Truth (SSOT) Interactive VPN & Telemetry Widget -->
           <div id="dangling-dice-vpn-widget"></div>
         </div>
@@ -361,6 +380,32 @@
         </div>
       </section>
     </div>
+
+    <!-- ======================================================================
+         Studio Tech Stack & Verified Partner Deals (Wes Bos inspired)
+         ====================================================================== -->
+    <section id="techStack" class="card tech-stack-section">
+      <div class="card-header">
+        <div>
+          <div class="pill-tag pill-tag-cyan" style="display: inline-block; margin-bottom: 0.4rem;">
+            ⚡ Verified Cloud Infrastructure & Tooling
+          </div>
+          <h2 class="card-title">Studio Tech Stack & Developer Deals</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+            The battle-tested technologies and verified cloud providers powering Dangling Dice Studios™. Click through for active developer credits and partner perks.
+          </p>
+        </div>
+        <span class="status-badge" style="background: rgba(6, 182, 212, 0.12); color: var(--neon-cyan); border-color: rgba(6, 182, 212, 0.3);">
+          Zero PII Tracking &bull; Clean Attributions
+        </span>
+      </div>
+
+      <div id="techStackGrid" class="tech-stack-grid">
+        <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; color: var(--text-muted);">
+          Loading verified studio partners...
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Load Standalone VPN Client Widget & Telemetry Engine -->
@@ -406,6 +451,25 @@
     </div>
     <p><strong>Dangling Dice Studios™</strong> &bull; Music Production, Coding Masterclasses, Phone Apps & Developer Tools &bull; Founded by Dangling Dice Studios™</p>
   </footer>
+
+  <!-- Persistent Floating Audio Dock (Lofi Girl inspired) -->
+  <div id="beatsDock" class="beats-dock">
+    <div class="beats-visualizer">
+      <span class="beats-bar"></span>
+      <span class="beats-bar"></span>
+      <span class="beats-bar"></span>
+      <span class="beats-bar"></span>
+    </div>
+    <div class="beats-dock-full">
+      <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Dangling Beats Radio</div>
+      <div style="font-size: 0.72rem; color: var(--text-muted);">Lo-Fi & Dark Synth Focus</div>
+    </div>
+    <button id="dockPlayBtn" class="btn btn-purple btn-sm" onclick="toggleDockAudio()">▶ Play</button>
+    <button class="beats-dock-min-btn" onclick="toggleDockMinimize()" title="Minimize / Expand">—</button>
+  </div>
+
+  <!-- Toast Notification Container (10015.io inspired) -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <!-- Modular Client Logic -->
   <script type="module" src="/js/app.js"></script>

@@ -425,13 +425,210 @@ window.loadSampleUri = function () {
   }
 };
 
+// Universal Toast Notification System (10015.io inspired)
+window.showToast = function (message, type = 'info') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type === 'success' ? 'toast-success' : ''}`;
+  toast.innerHTML = message;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast-fadeout');
+    setTimeout(() => {
+      if (toast.parentElement) toast.parentElement.removeChild(toast);
+    }, 300);
+  }, 3200);
+};
+
 window.copyEnvSnippet = function () {
   const snippet = document.getElementById('envOutputSnippet')?.textContent;
   if (snippet) {
     navigator.clipboard.writeText(snippet);
-    alert('Sanitized .env snippet copied to clipboard! (Remember to substitute your real password)');
+    window.showToast('Sanitized .env snippet copied to clipboard! (Remember to substitute your real password)', 'success');
   }
 };
+
+// WireGuard Sample Configuration Tools (10015.io & Transform.tools inspired)
+window.loadSampleWireGuard = function () {
+  const sample = `# Dangling Dice WireGuard Client Configuration
+# Generated for client tunnel (Zero Server Logs)
+[Interface]
+PrivateKey = aAAAa111SampleClientPrivateKeyHereGenerated1=
+Address = 10.13.13.2/32
+DNS = 1.1.1.1, 8.8.8.8
+
+[Peer]
+PublicKey = sSSSs222SampleServerPublicKeyHereValidated2=
+Endpoint = vpn.dangling-dice-studios.com:51820
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25`;
+
+  const output = document.getElementById('wgSampleOutput');
+  if (output) {
+    output.textContent = sample;
+    window.showToast('Loaded sample WireGuard client config!', 'success');
+  }
+};
+
+window.copyWireGuardConfig = function () {
+  const output = document.getElementById('wgSampleOutput');
+  const text = output?.textContent;
+  if (text && !text.startsWith('# Click "Load Sample Config"')) {
+    navigator.clipboard.writeText(text);
+    window.showToast('WireGuard configuration copied to clipboard!', 'success');
+  } else {
+    window.loadSampleWireGuard();
+    const generated = document.getElementById('wgSampleOutput')?.textContent;
+    if (generated) navigator.clipboard.writeText(generated);
+    window.showToast('Generated and copied sample config!', 'success');
+  }
+};
+
+// Floating Beats Audio Dock (Lofi Girl inspired)
+let isDockAudioActive = false;
+
+window.toggleDockAudio = function () {
+  const dock = document.getElementById('beatsDock');
+  const btn = document.getElementById('dockPlayBtn');
+  isDockAudioActive = !isDockAudioActive;
+
+  if (isDockAudioActive) {
+    if (dock) dock.classList.add('playing');
+    if (btn) btn.textContent = '⏸ Pause';
+    openCinemaModal('Dangling Beats Focus Radio (Lofi & Dark Synth)', 'https://www.youtube.com/embed?listType=user_uploads&list=danglingdicestudios');
+    window.showToast('▶ Streaming Dangling Beats Radio in Cinema Player', 'success');
+  } else {
+    if (dock) dock.classList.remove('playing');
+    if (btn) btn.textContent = '▶ Play';
+    closeCinemaModal();
+  }
+};
+
+window.toggleDockMinimize = function () {
+  const dock = document.getElementById('beatsDock');
+  const minBtn = dock?.querySelector('.beats-dock-min-btn');
+  if (!dock) return;
+  const isMin = dock.classList.toggle('minimized');
+  if (minBtn) minBtn.textContent = isMin ? '+' : '—';
+  try {
+    localStorage.setItem('beatsDockMinimized', isMin ? 'true' : 'false');
+  } catch (e) {
+    // ignore
+  }
+};
+
+function initDockState() {
+  try {
+    if (localStorage.getItem('beatsDockMinimized') === 'true') {
+      const dock = document.getElementById('beatsDock');
+      const minBtn = dock?.querySelector('.beats-dock-min-btn');
+      if (dock) dock.classList.add('minimized');
+      if (minBtn) minBtn.textContent = '+';
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
+// Studio Tech Stack Directory (Wes Bos inspired)
+async function fetchTechStack() {
+  const grid = document.getElementById('techStackGrid');
+  if (!grid) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/affiliates`);
+    let partners = [];
+    if (res.ok) {
+      const json = await res.json();
+      partners = json.data || [];
+    }
+
+    if (!partners || partners.length === 0) {
+      partners = [
+        {
+          slug: 'atlas',
+          name: 'MongoDB Atlas Cloud',
+          category: 'Cloud Hosting & Databases',
+          description: 'Fully managed cloud document database with auto-scaling, global clusters, and vector search.',
+          perkBadge: 'Free 512MB M0 Cluster',
+          icon: '🍃',
+          redirectUrl: '/go/atlas',
+        },
+        {
+          slug: 'digitalocean',
+          name: 'DigitalOcean Droplets',
+          category: 'Cloud Hosting & Databases',
+          description: 'Simple, scalable cloud computing and virtual machines built for developers and startups.',
+          perkBadge: '$200 Free 60-Day Credit',
+          icon: '🌊',
+          redirectUrl: '/go/digitalocean',
+        },
+        {
+          slug: 'vpn',
+          name: 'Dangling Dice WireGuard VPN',
+          category: 'Developer Tools',
+          description: 'Ultra-fast in-kernel WireGuard encrypted tunnel with zero activity logs and leak protection.',
+          perkBadge: '100% Free Developer Tool',
+          icon: '🛡️',
+          redirectUrl: '/go/vpn',
+        },
+        {
+          slug: 'calculator',
+          name: 'AI Calculator on Google Play',
+          category: 'Mobile Apps',
+          description: 'Smart Android homework solver with step-by-step arithmetic, scientific calculation, and AI OCR scanning.',
+          perkBadge: 'Official Google Play App',
+          icon: '📱',
+          redirectUrl: '/go/calculator',
+        },
+        {
+          slug: 'youtube',
+          name: 'Dangling Beats Official Channel',
+          category: 'Official Channels',
+          description: 'Original lofi, dark trap, and synthwave instrumentals crafted for code sessions and content creators.',
+          perkBadge: '24/7 Focus Beats & Masterclasses',
+          icon: '🎧',
+          redirectUrl: '/go/youtube',
+        },
+      ];
+    }
+
+    grid.innerHTML = partners.map(p => `
+      <div class="tech-stack-card">
+        <div>
+          <div class="tech-card-header">
+            <span class="tech-card-icon">${escapeHtml(p.icon || '⚡')}</span>
+            <span class="tech-card-badge">${escapeHtml(p.perkBadge || 'Verified Partner')}</span>
+          </div>
+          <div class="pill-tag pill-tag-cyan" style="display: inline-block; margin-bottom: 0.5rem; font-size: 0.68rem; padding: 0.15rem 0.5rem;">
+            ${escapeHtml(p.category || 'Tech Stack')}
+          </div>
+          <h3 class="tech-card-title">${escapeHtml(p.name)}</h3>
+          <p class="tech-card-desc">${escapeHtml(p.description)}</p>
+        </div>
+        <div class="tech-card-footer">
+          <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">
+            /go/${escapeHtml(p.slug)}
+          </span>
+          <a href="${escapeHtml(p.redirectUrl)}?src=tech_stack" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+            Access Deal ↗
+          </a>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    logMessage(`Failed to load tech stack: ${err.message}`, 'error');
+  }
+}
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -445,6 +642,8 @@ function escapeHtml(str) {
 
 // Startup
 window.addEventListener('DOMContentLoaded', async () => {
+  initDockState();
   await checkHealth();
   await fetchResources();
+  await fetchTechStack();
 });

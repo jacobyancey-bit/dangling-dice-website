@@ -9,29 +9,49 @@
 
 const PARTNER_DIRECTORY = {
   atlas: {
-    name: 'MongoDB Atlas',
+    name: 'MongoDB Atlas Cloud',
     targetUrl: 'https://www.mongodb.com/cloud/atlas/register',
     category: 'Cloud Hosting & Databases',
+    description: 'Fully managed cloud document database with auto-scaling, global clusters, and vector search.',
+    perkBadge: 'Free 512MB M0 Cluster',
+    icon: '🍃',
+    featured: true,
   },
   digitalocean: {
-    name: 'DigitalOcean Cloud Droplets',
+    name: 'DigitalOcean Droplets',
     targetUrl: 'https://www.digitalocean.com',
     category: 'Cloud Hosting & Databases',
+    description: 'Simple, scalable cloud computing and virtual machines built for developers and startups.',
+    perkBadge: '$200 Free 60-Day Credit',
+    icon: '🌊',
+    featured: true,
   },
   vpn: {
-    name: 'Dangling Dice Secure Dev VPN',
+    name: 'Dangling Dice WireGuard VPN',
     targetUrl: 'https://vpn.dangling-dice-studios.com',
     category: 'Developer Tools',
+    description: 'Ultra-fast in-kernel WireGuard encrypted tunnel with zero activity logs and leak protection.',
+    perkBadge: '100% Free Developer Tool',
+    icon: '🛡️',
+    featured: true,
   },
   calculator: {
-    name: 'AI Calculator Google Play',
+    name: 'AI Calculator on Google Play',
     targetUrl: 'https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator',
     category: 'Mobile Apps',
+    description: 'Smart Android homework solver with step-by-step arithmetic, scientific calculation, and AI OCR scanning.',
+    perkBadge: 'Official Google Play App',
+    icon: '📱',
+    featured: true,
   },
   youtube: {
-    name: 'Dangling Dice Studios YouTube',
+    name: 'Dangling Beats Official Channel',
     targetUrl: 'https://www.youtube.com/@danglingdicestudios',
     category: 'Official Channels',
+    description: 'Original lofi, dark trap, and synthwave instrumentals crafted for code sessions and content creators.',
+    perkBadge: '24/7 Focus Beats & Masterclasses',
+    icon: '🎧',
+    featured: true,
   },
 };
 
@@ -81,6 +101,10 @@ export const getPartnerDirectory = (req, res) => {
     slug,
     name: data.name,
     category: data.category,
+    description: data.description,
+    perkBadge: data.perkBadge,
+    icon: data.icon,
+    featured: data.featured,
     redirectUrl: `/go/${slug}`,
   }));
 
