@@ -24,3 +24,4 @@ Allow: /assets/
 
 # Canonical Sitemap Declaration for Google Search Console
 Sitemap: https://dangling-dice-studios.com/sitemap.xml
+
