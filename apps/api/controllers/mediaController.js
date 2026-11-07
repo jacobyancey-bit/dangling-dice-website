@@ -138,9 +138,16 @@ async function fetchFromExtractionGateway(targetUrl, format) {
   // Provider 2: RapidAPI YouTube-to-MP3 Gateway
   if (process.env.RAPIDAPI_KEY) {
     const host = process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com';
+    const ytid = extractYouTubeId(targetUrl);
     const candidatePaths = process.env.RAPIDAPI_PATH
-      ? [process.env.RAPIDAPI_PATH.replace('{url}', encodeURIComponent(targetUrl)).replace('{yt}', encodeURIComponent(targetUrl))]
+      ? [
+          process.env.RAPIDAPI_PATH
+            .replace('{url}', encodeURIComponent(targetUrl))
+            .replace('{yt}', encodeURIComponent(targetUrl))
+            .replace('{id}', encodeURIComponent(ytid || ''))
+        ]
       : [
+          ...(ytid ? [`/dl?id=${encodeURIComponent(ytid)}`] : []),
           `/download-mp3?yt=${encodeURIComponent(targetUrl)}`,
           `/download/mp3?url=${encodeURIComponent(targetUrl)}`,
           `/dl?url=${encodeURIComponent(targetUrl)}`,
@@ -201,6 +208,11 @@ async function transcodeMediaToFile(targetUrl, format, cleanName) {
   if (gatewayResult && gatewayResult.streamUrl) {
     try {
       const upstream = await fetch(gatewayResult.streamUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+        },
+        redirect: 'follow',
         signal: AbortSignal.timeout(30000),
       });
       if (upstream.ok && upstream.body) {
@@ -504,6 +516,11 @@ export const streamMediaDownload = async (req, res) => {
     if (gatewayResult && gatewayResult.streamUrl) {
       try {
         const upstream = await fetch(gatewayResult.streamUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+          },
+          redirect: 'follow',
           signal: AbortSignal.timeout(45000),
         });
 
