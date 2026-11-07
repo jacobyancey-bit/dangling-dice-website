@@ -1147,21 +1147,68 @@ tr:hover td {
   padding: 0.85rem 1.2rem;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75), 0 0 20px rgba(236, 72, 153, 0.2);
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  max-width: 420px;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 340px;
+  max-width: calc(100vw - 2rem);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.dock-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dock-video-drawer {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.dock-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
 .beats-dock.minimized {
+  width: auto;
   padding: 0.5rem 0.85rem;
   border-radius: 9999px;
   background: rgba(10, 14, 23, 0.96);
   gap: 0.5rem;
 }
 
-.beats-dock.minimized .beats-dock-full {
-  display: none;
+.beats-dock.minimized .dock-video-drawer,
+.beats-dock.minimized .beats-dock-full,
+.beats-dock.minimized #dockCinemaBtn {
+  display: none !important;
+}
+
+.beats-dock-icon-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.35rem 0.5rem;
+  transition: all 0.2s;
+}
+
+.beats-dock-icon-btn:hover {
+  color: #fff;
+  border-color: var(--neon-pink);
+  background: rgba(236, 72, 153, 0.15);
 }
 
 .beats-dock-min-btn {

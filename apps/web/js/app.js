@@ -45,6 +45,19 @@ function openCinemaModal(title, urlOrEmbed) {
   const modal = document.getElementById("cinemaModal");
   const titleEl = document.getElementById("cinemaTitle");
   const iframeEl = document.getElementById("cinemaIframe");
+
+  // Pause corner mini-player if it is running to prevent overlapping audio
+  const dockIframe = document.getElementById("dockIframe");
+  if (dockIframe && isDockAudioActive) {
+    dockIframe.src = "";
+    const dockDrawer = document.getElementById("dockVideoDrawer");
+    if (dockDrawer) dockDrawer.style.display = "none";
+    const dock = document.getElementById("beatsDock");
+    const btn = document.getElementById("dockPlayBtn");
+    if (dock) dock.classList.remove("playing");
+    if (btn) btn.textContent = "▶ Play";
+    isDockAudioActive = false;
+  }
   
   // Guarantee valid embed format (converts watch?v= into /embed/ automatically)
   const embedUrl = (urlOrEmbed && urlOrEmbed.includes("youtube.com/embed/"))
@@ -61,11 +74,6 @@ function closeCinemaModal() {
   const iframeEl = document.getElementById("cinemaIframe");
   if (modal) modal.style.display = "none";
   if (iframeEl) iframeEl.src = "";
-  isDockAudioActive = false;
-  const dock = document.getElementById("beatsDock");
-  const btn = document.getElementById("dockPlayBtn");
-  if (dock) dock.classList.remove("playing");
-  if (btn) btn.textContent = "▶ Play";
 }
 
 // Expose modal functions to window for inline HTML onclick handlers
@@ -553,26 +561,38 @@ window.copyWireGuardConfig = function () {
   }
 };
 
-// Floating Beats Audio Dock (Lofi Girl inspired)
+// Floating Beats Audio Dock 
 let isDockAudioActive = false;
 
 window.toggleDockAudio = function () {
   const dock = document.getElementById("beatsDock");
   const btn = document.getElementById("dockPlayBtn");
+  const drawer = document.getElementById("dockVideoDrawer");
+  const iframe = document.getElementById("dockIframe");
   isDockAudioActive = !isDockAudioActive;
 
   if (isDockAudioActive) {
-    if (dock) dock.classList.add("playing");
+    if (dock) {
+      dock.classList.add("playing");
+      dock.classList.remove("minimized");
+    }
+    const minBtn = dock?.querySelector(".beats-dock-min-btn");
+    if (minBtn) minBtn.textContent = "—";
+
     if (btn) btn.textContent = "⏸ Pause";
-    openCinemaModal(
-      "Dangling Beats • Lo-Fi Drive (Official YouTube Playlist)",
-      "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1",
-    );
-    window.showToast("▶ Streaming Lo-Fi Drive in Cinema Player", "success");
+    if (drawer) drawer.style.display = "block";
+    if (iframe) {
+      const targetSrc = "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1";
+      if (!iframe.src || !iframe.src.includes("2J-U0EUATHs")) {
+        iframe.src = targetSrc;
+      }
+    }
+    window.showToast("▶ Streaming Lo-Fi Drive in background player", "success");
   } else {
     if (dock) dock.classList.remove("playing");
     if (btn) btn.textContent = "▶ Play";
-    closeCinemaModal();
+    if (iframe) iframe.src = "";
+    if (drawer) drawer.style.display = "none";
   }
 };
 

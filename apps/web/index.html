@@ -460,20 +460,38 @@
     <p><strong>Dangling Dice Studios™</strong> &bull; Music Production, Coding Masterclasses, Phone Apps & Developer Tools &bull; Founded by Dangling Dice Studios™</p>
   </footer>
 
-  <!-- Persistent Floating Audio Dock (Lofi Girl inspired) -->
+  <!-- Persistent Floating Audio Dock (Lofi Girl & Background Radio inspired) -->
   <div id="beatsDock" class="beats-dock">
-    <div class="beats-visualizer">
-      <span class="beats-bar"></span>
-      <span class="beats-bar"></span>
-      <span class="beats-bar"></span>
-      <span class="beats-bar"></span>
+    <!-- Mini Video Drawer (Streams directly in corner while allowing full site usage) -->
+    <div id="dockVideoDrawer" class="dock-video-drawer" style="display: none;">
+      <iframe
+        id="dockIframe"
+        class="dock-iframe"
+        src=""
+        title="Dangling Beats Lo-Fi Radio Player"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
     </div>
-    <div class="beats-dock-full">
-      <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Dangling Beats &bull; Lo-Fi Drive</div>
-      <div style="font-size: 0.72rem; color: var(--text-muted);">Chillhop & Lofi YouTube Radio</div>
+
+    <!-- Dock Controls Row -->
+    <div class="dock-controls-row">
+      <div class="beats-visualizer">
+        <span class="beats-bar"></span>
+        <span class="beats-bar"></span>
+        <span class="beats-bar"></span>
+        <span class="beats-bar"></span>
+      </div>
+      <div class="beats-dock-full">
+        <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Dangling Beats &bull; Lo-Fi Drive</div>
+        <div style="font-size: 0.72rem; color: var(--text-muted);">Lo-Fi Focus Radio</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.35rem;">
+        <button id="dockPlayBtn" class="btn btn-purple btn-sm" onclick="toggleDockAudio()">▶ Play</button>
+        <button id="dockCinemaBtn" class="beats-dock-icon-btn" onclick="openCinemaModal('Dangling Beats • Lo-Fi Drive (Official YouTube Playlist)', 'https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1')" title="Open Full Cinema Mode">⛶</button>
+        <button class="beats-dock-min-btn" onclick="toggleDockMinimize()" title="Minimize / Expand">—</button>
+      </div>
     </div>
-    <button id="dockPlayBtn" class="btn btn-purple btn-sm" onclick="toggleDockAudio()">▶ Play</button>
-    <button class="beats-dock-min-btn" onclick="toggleDockMinimize()" title="Minimize / Expand">—</button>
   </div>
 
   <!-- Toast Notification Container (10015.io inspired) -->
