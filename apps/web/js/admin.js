@@ -142,6 +142,12 @@ async function fetchTelemetry() {
     const toolsEl = document.getElementById('telemetryToolsHits');
     if (toolsEl) toolsEl.textContent = (analytics.crawlers?.tools || 0).toLocaleString();
 
+    const rapidEl = document.getElementById('telemetryRapidApiHits');
+    if (rapidEl) rapidEl.textContent = (analytics.apiChannels?.rapidapi || 0).toLocaleString();
+
+    const postmanEl = document.getElementById('telemetryPostmanHits');
+    if (postmanEl) postmanEl.textContent = (analytics.apiChannels?.postman || 0).toLocaleString();
+
     const uptimeEl = document.getElementById('apiUptimeBadge');
     if (uptimeEl) {
       const mins = Math.round((analytics.uptimeSeconds || 0) / 60);
