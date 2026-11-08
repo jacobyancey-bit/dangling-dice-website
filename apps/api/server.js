@@ -136,6 +136,10 @@ app.use('/v1', async (req, res) => {
     const headers = { 'Content-Type': 'application/json' };
     if (req.headers.authorization) headers['Authorization'] = req.headers.authorization;
     if (req.headers['x-api-key']) headers['x-api-key'] = req.headers['x-api-key'];
+    if (req.headers['x-rapidapi-key']) headers['x-rapidapi-key'] = req.headers['x-rapidapi-key'];
+    if (req.headers['x-rapidapi-proxy-secret']) {
+      headers['x-rapidapi-proxy-secret'] = req.headers['x-rapidapi-proxy-secret'];
+    }
 
     const upstreamRes = await fetch(targetUrl, {
       method: req.method,
