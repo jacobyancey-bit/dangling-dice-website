@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@dangling-dice/shared": "*",
-    "vite": "^5.4.11"
+    "vite": "^6.4.4"
   }
 }
 

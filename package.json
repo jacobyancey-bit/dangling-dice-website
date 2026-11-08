@@ -32,5 +32,9 @@
   ],
   "author": "Dangling Dice Studios™",
   "homepage": "https://github.com/jacobyancey-bit",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "esbuild": "^0.25.0",
+    "minimatch": "^11.0.1"
+  }
 }
