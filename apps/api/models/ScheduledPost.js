@@ -51,3 +51,4 @@ const scheduledPostSchema = new mongoose.Schema(
 
 const ScheduledPost = mongoose.model('ScheduledPost', scheduledPostSchema);
 export default ScheduledPost;
+

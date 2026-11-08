@@ -112,6 +112,7 @@ function showDashboard() {
   fetchInventory();
   fetchTelemetry();
   loadScheduledQueue();
+  loadShowcaseSubmissions();
 }
 
 // Fetch live API telemetry and crawler intelligence (Private Admin)
@@ -468,6 +469,35 @@ function generateAllOmnipostFormats() {
   if (ttEl) {
     ttEl.value = `[ON-SCREEN TEXT HOOK]\nPOV: You finally found a YouTube to MP3 converter that DOESN'T have virus popups 😭\n\n[CAPTION]\nFinally built this for my own FL Studio sessions. 320kbps audio, 1-click download, 100% ad-free ⚡ Link in bio!\n\n#producertok #flstudio #beatmaker #musicproducer #sampleflip #producerlife #flstudiotips #audiotools #fyp`;
   }
+
+  // 7. Dev.to / Hashnode Technical Article
+  const devtoEl = document.getElementById('devtoPreview');
+  if (devtoEl) {
+    devtoEl.value = `---
+title: Building ${title} — Clean Architecture & In-Browser Media Processing
+published: true
+tags: webdev, javascript, node, programming
+---
+
+## The Problem
+${desc}
+
+## How We Built It
+We engineered a clean monorepo architecture leveraging:
+- Express & Fastify sub-15ms compute engines
+- Node.js & FFmpeg 320kbps audio extraction pipeline
+- Zero server-side activity logs to guarantee user privacy
+
+Try it live here: ${link}
+
+Would love your architectural feedback or feature requests in the comments!`;
+  }
+
+  // 8. GitHub Public-APIs Pull Request Formatter
+  const apiReadmeEl = document.getElementById('publicApisReadmePreview');
+  if (apiReadmeEl) {
+    apiReadmeEl.value = `| ${title} | ${desc.slice(0, 100)}... | \`apiKey\` | Yes | https://dangling-dice-studios.com/api/openapi.json |`;
+  }
 }
 
 function copyOmnipost(elementId) {
@@ -612,6 +642,143 @@ async function cancelScheduledPost(id) {
   }
 }
 
+// Showcase Submissions & App of the Week Admin Handlers
+async function loadShowcaseSubmissions() {
+  const tbody = document.getElementById('showcaseTableBody');
+  if (!tbody) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/showcase/admin`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
+
+    const submissions = json.data || [];
+    if (submissions.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+            No showcase submissions yet. Community apps submitted on your homepage will appear here!
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = submissions.map(item => {
+      const isApproved = item.status === 'APPROVED';
+      const isPending = item.status === 'PENDING';
+      const isAOTW = item.isAppOfTheWeek;
+      const statusColor = isApproved ? 'var(--neon-emerald)' : isPending ? '#fbbf24' : 'var(--neon-red)';
+
+      return `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: #fff;">${item.title}</div>
+            <div style="font-size: 0.72rem; color: var(--neon-cyan);">${item.tagline}</div>
+            <a href="${item.appUrl}" target="_blank" rel="noopener noreferrer" style="font-size: 0.7rem; color: var(--text-muted); text-decoration: underline;">
+              ${item.appUrl} ↗
+            </a>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: #fff; font-size: 0.8rem;">${item.authorName}</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">${item.authorSocial || 'No social'}</div>
+          </td>
+          <td>
+            <span class="pill-tag pill-tag-cyan" style="font-size: 0.68rem; padding: 0.1rem 0.4rem;">${item.category}</span>
+            <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.25rem;">
+              ${(item.techStack || []).join(', ')}
+            </div>
+          </td>
+          <td>
+            <span style="font-size: 0.75rem; font-weight: 700; color: ${statusColor};">
+              ${item.status}
+            </span>
+          </td>
+          <td>
+            ${isAOTW 
+              ? `<span style="font-size: 0.75rem; font-weight: 800; color: #fbbf24; background: rgba(245, 158, 11, 0.2); padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem;">⭐ Current AOTW</span>`
+              : `<button class="btn btn-primary btn-sm" onclick="setAppOfTheWeekAdmin('${item._id}')" style="font-size: 0.68rem; padding: 0.2rem 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 700;">Set AOTW ⭐</button>`
+            }
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+              ${isPending ? `
+                <button class="btn btn-primary btn-sm" onclick="updateShowcaseStatus('${item._id}', 'APPROVED')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Approve</button>
+                <button class="btn btn-secondary btn-sm" onclick="updateShowcaseStatus('${item._id}', 'REJECTED')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Reject</button>
+              ` : `
+                <button class="btn btn-secondary btn-sm" onclick="updateShowcaseStatus('${item._id}', '${isApproved ? 'PENDING' : 'APPROVED'}')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">
+                  ${isApproved ? 'Un-approve' : 'Re-approve'}
+                </button>
+              `}
+              <button class="btn btn-danger btn-sm" onclick="deleteShowcaseItem('${item._id}')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Failed to load showcase submissions:', err);
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--neon-red); padding: 1.5rem;">Error loading submissions: ${err.message}</td></tr>`;
+  }
+}
+
+async function updateShowcaseStatus(id, status) {
+  try {
+    const res = await fetch(`${API_BASE}/showcase/${id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({ status })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
+    logAdmin(`Project status updated: ${status}`, true);
+    loadShowcaseSubmissions();
+  } catch (err) {
+    alert(`Failed to update status: ${err.message}`);
+  }
+}
+
+async function setAppOfTheWeekAdmin(id) {
+  const broadcastShoutout = confirm('Make this the App of the Week AND broadcast an announcement to your Discord community (#studio-drops)?');
+  try {
+    const res = await fetch(`${API_BASE}/showcase/${id}/feature`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({ isAppOfTheWeek: true, broadcastShoutout })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
+    logAdmin(`New App of the Week activated!`, true);
+    loadShowcaseSubmissions();
+  } catch (err) {
+    alert(`Failed to set App of the Week: ${err.message}`);
+  }
+}
+
+async function deleteShowcaseItem(id) {
+  if (!confirm('Permanently delete this project submission?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/showcase/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
+    logAdmin(`Showcase project deleted.`);
+    loadShowcaseSubmissions();
+  } catch (err) {
+    alert(`Failed to delete project: ${err.message}`);
+  }
+}
+
 // Global scope bindings for inline HTML handlers
 window.handleAdminLogin = handleAdminLogin;
 window.logoutAdmin = logoutAdmin;
@@ -632,6 +799,10 @@ window.copyText = copyText;
 window.queueScheduledBroadcast = queueScheduledBroadcast;
 window.loadScheduledQueue = loadScheduledQueue;
 window.cancelScheduledPost = cancelScheduledPost;
+window.loadShowcaseSubmissions = loadShowcaseSubmissions;
+window.updateShowcaseStatus = updateShowcaseStatus;
+window.setAppOfTheWeekAdmin = setAppOfTheWeekAdmin;
+window.deleteShowcaseItem = deleteShowcaseItem;
 
 // Startup
 window.addEventListener('DOMContentLoaded', () => {

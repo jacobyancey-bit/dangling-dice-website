@@ -6,6 +6,7 @@ import checkoutRoutes from './checkoutRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import affiliateRoutes from './affiliateRoutes.js';
 import mediaRoutes from './mediaRoutes.js';
+import showcaseRoutes from './showcaseRoutes.js';
 import v1ComputeRoutes from './v1Compute.js';
 import { getOEmbed } from '../controllers/oembedController.js';
 import {
@@ -93,6 +94,7 @@ router.use('/checkout', checkoutRoutes);
 router.use('/orders', orderRoutes);
 router.use('/affiliates', affiliateRoutes);
 router.use('/media', mediaRoutes);
+router.use('/showcase', showcaseRoutes);
 router.use('/v1', v1ComputeRoutes);
 router.post('/broadcast/discord', sendDiscordBroadcast);
 router.get('/broadcast/scheduled', getScheduledPosts);

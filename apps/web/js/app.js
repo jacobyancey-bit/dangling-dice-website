@@ -853,10 +853,195 @@ window.runCloudSandbox = async function () {
   }
 };
 
+// ============================================================================
+// Indie Developer Showcase & Community Submissions
+// ============================================================================
+async function fetchDevShowcase() {
+  try {
+    const res = await fetch(`${API_BASE}/showcase`);
+    if (!res.ok) return;
+    const json = await res.json();
+    const data = json.data || {};
+
+    // Render App of the Week
+    if (data.appOfTheWeek) {
+      const aotw = data.appOfTheWeek;
+      const titleEl = document.getElementById("aotwTitle");
+      const taglineEl = document.getElementById("aotwTagline");
+      const descEl = document.getElementById("aotwDescription");
+      const authorEl = document.getElementById("aotwAuthor");
+      const liveLinkEl = document.getElementById("aotwLiveLink");
+      const githubLinkEl = document.getElementById("aotwGithubLink");
+      const categoryEl = document.getElementById("aotwCategory");
+      const stackEl = document.getElementById("aotwTechStack");
+
+      if (titleEl) titleEl.textContent = aotw.title;
+      if (taglineEl) taglineEl.textContent = aotw.tagline;
+      if (descEl) descEl.textContent = aotw.description;
+      if (authorEl) {
+        authorEl.textContent = aotw.authorSocial
+          ? `${aotw.authorName} (${aotw.authorSocial})`
+          : aotw.authorName;
+      }
+      if (liveLinkEl) liveLinkEl.href = aotw.appUrl;
+      if (githubLinkEl) {
+        if (aotw.githubUrl) {
+          githubLinkEl.href = aotw.githubUrl;
+          githubLinkEl.style.display = "inline-flex";
+        } else {
+          githubLinkEl.style.display = "none";
+        }
+      }
+      if (categoryEl) categoryEl.textContent = aotw.category;
+      if (stackEl && Array.isArray(aotw.techStack)) {
+        stackEl.innerHTML = aotw.techStack
+          .map((tech) => `<span class="pill-tag pill-tag-cyan">${tech}</span>`)
+          .join("");
+      }
+    }
+
+    // Render Showcase Grid
+    const gridEl = document.getElementById("devShowcaseGrid");
+    if (!gridEl) return;
+
+    if (!data.projects || data.projects.length === 0) {
+      gridEl.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; color: var(--text-muted);">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🛠️</div>
+          <div>Be the first indie creator featured! Click <strong>+ Submit Your App</strong> above.</div>
+        </div>
+      `;
+      return;
+    }
+
+    gridEl.innerHTML = data.projects
+      .map((proj) => {
+        const stackBadges = (proj.techStack || [])
+          .slice(0, 3)
+          .map((t) => `<span class="pill-tag pill-tag-purple" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">${t}</span>`)
+          .join(" ");
+
+        return `
+          <div class="tech-stack-card" style="border-color: ${proj.isAppOfTheWeek ? 'rgba(245, 158, 11, 0.4)' : 'var(--border-subtle)'};">
+            <div>
+              <div class="tech-card-header">
+                <span class="tech-card-icon">🚀</span>
+                <span class="tech-card-badge" style="color: ${proj.isAppOfTheWeek ? '#fbbf24' : 'var(--neon-cyan)'};">
+                  ${proj.isAppOfTheWeek ? '⭐ App of Week' : proj.category}
+                </span>
+              </div>
+              <div style="margin-bottom: 0.4rem; display: flex; gap: 0.3rem; flex-wrap: wrap;">
+                ${stackBadges}
+              </div>
+              <h3 class="tech-card-title">${proj.title}</h3>
+              <p style="font-size: 0.78rem; font-weight: 600; color: var(--neon-cyan); margin-bottom: 0.4rem;">
+                ${proj.tagline}
+              </p>
+              <p class="tech-card-desc">${proj.description.slice(0, 140)}${proj.description.length > 140 ? '...' : ''}</p>
+            </div>
+            <div class="tech-card-footer" style="padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.72rem; color: var(--text-muted);">
+                by <strong style="color: #fff;">${proj.authorName}</strong>
+              </span>
+              <a href="${proj.appUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">
+                Try App ↗
+              </a>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  } catch (err) {
+    console.error("Failed to load developer showcase:", err);
+  }
+}
+
+// Modal controls
+function openDevSubmissionModal() {
+  const el = document.getElementById("devSubmissionModal");
+  if (el) el.style.display = "flex";
+}
+
+function closeDevSubmissionModal() {
+  const el = document.getElementById("devSubmissionModal");
+  if (el) el.style.display = "none";
+}
+
+async function handleDevSubmission(e) {
+  e.preventDefault();
+  const alertEl = document.getElementById("submissionAlert");
+  const submitBtn = document.getElementById("subSubmitBtn");
+
+  const title = document.getElementById("subAppTitle")?.value;
+  const category = document.getElementById("subCategory")?.value;
+  const tagline = document.getElementById("subTagline")?.value;
+  const description = document.getElementById("subDescription")?.value;
+  const appUrl = document.getElementById("subAppUrl")?.value;
+  const githubUrl = document.getElementById("subGithubUrl")?.value;
+  const authorName = document.getElementById("subAuthorName")?.value;
+  const authorSocial = document.getElementById("subAuthorSocial")?.value;
+  const techStack = document.getElementById("subTechStack")?.value;
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "⏳ Submitting...";
+    }
+
+    const res = await fetch(`${API_BASE}/showcase/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        category,
+        tagline,
+        description,
+        appUrl,
+        githubUrl,
+        authorName,
+        authorSocial,
+        techStack,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || "Failed to submit project.");
+
+    if (alertEl) {
+      alertEl.className = "alert alert-success";
+      alertEl.textContent = "🎉 Project submitted successfully! Our team will review and spotlight it.";
+      alertEl.style.display = "block";
+    }
+
+    document.getElementById("devSubmissionForm")?.reset();
+    setTimeout(() => {
+      closeDevSubmissionModal();
+      if (alertEl) alertEl.style.display = "none";
+    }, 2500);
+  } catch (err) {
+    if (alertEl) {
+      alertEl.className = "alert alert-error";
+      alertEl.textContent = `❌ ${err.message}`;
+      alertEl.style.display = "block";
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "🚀 Submit for Review";
+    }
+  }
+}
+
+// Window bindings
+window.openDevSubmissionModal = openDevSubmissionModal;
+window.closeDevSubmissionModal = closeDevSubmissionModal;
+window.handleDevSubmission = handleDevSubmission;
+
 // Startup
 window.addEventListener("DOMContentLoaded", async () => {
   initDockState();
   await checkHealth();
   await fetchResources();
   await fetchTechStack();
+  await fetchDevShowcase();
 });
