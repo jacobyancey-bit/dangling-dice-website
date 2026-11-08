@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 
 import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
+import v1ComputeRoutes from './routes/v1Compute.js';
 import { redirectPartner } from './controllers/affiliateController.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -128,45 +129,8 @@ app.get('/go/:slug', redirectPartner);
 // Mount central API router containing /auth, /items, /checkout, /orders, /affiliates with rate limiting
 app.use('/api', apiLimiter, apiRoutes);
 
-// Subdomain / Path Reverse-Proxy Bridge to Dangling Dice Stateless Compute Gateway (:4100)
-const COMPUTE_GATEWAY_ORIGIN = process.env.COMPUTE_GATEWAY_URL || 'http://127.0.0.1:4100';
-app.use('/v1', async (req, res) => {
-  try {
-    const targetUrl = `${COMPUTE_GATEWAY_ORIGIN}${req.originalUrl}`;
-    const headers = { 'Content-Type': 'application/json' };
-    if (req.headers.authorization) headers['Authorization'] = req.headers.authorization;
-    if (req.headers['x-api-key']) headers['x-api-key'] = req.headers['x-api-key'];
-    if (req.headers['x-rapidapi-key']) headers['x-rapidapi-key'] = req.headers['x-rapidapi-key'];
-    if (req.headers['x-rapidapi-host']) headers['x-rapidapi-host'] = req.headers['x-rapidapi-host'];
-    if (req.headers['x-rapidapi-proxy-secret']) {
-      headers['x-rapidapi-proxy-secret'] = req.headers['x-rapidapi-proxy-secret'];
-    }
-    if (req.headers['postman-token']) headers['postman-token'] = req.headers['postman-token'];
-    if (req.headers['user-agent']) headers['user-agent'] = req.headers['user-agent'];
-    if (req.headers.origin) headers['origin'] = req.headers.origin;
-
-    const upstreamRes = await fetch(targetUrl, {
-      method: req.method,
-      headers,
-      body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body || {}),
-    });
-
-    const data = await upstreamRes.text();
-    res.status(upstreamRes.status);
-    upstreamRes.headers.forEach((value, key) => {
-      if (key.toLowerCase().startsWith('x-')) {
-        res.setHeader(key, value);
-      }
-    });
-    res.setHeader('Content-Type', upstreamRes.headers.get('content-type') || 'application/json');
-    return res.send(data);
-  } catch (err) {
-    return res.status(502).json({
-      error: 'ComputeGatewayUnavailable',
-      message: 'Stateless Compute Gateway (:4100) is not reachable.',
-    });
-  }
-});
+// Mount native in-process Stateless Compute & Connected Ecosystem /v1 endpoints (24/7 cloud execution on Render)
+app.use('/v1', apiLimiter, v1ComputeRoutes);
 
 // Frontend Static Files (Supports main domain and media subdomain)
 const webDistPath = path.join(__dirname, '..', 'web', 'dist');
