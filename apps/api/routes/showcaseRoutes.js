@@ -10,7 +10,7 @@ import {
   toggleRotationConfig,
   forceRotateNow,
 } from '../controllers/showcaseController.js';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -19,13 +19,13 @@ router.get('/', getPublicShowcase);
 router.post('/submit', submitDevProject);
 
 // Admin-only management routes
-router.get('/admin', protect, authorize('admin'), getAdminShowcase);
-router.get('/config/rotation', protect, authorize('admin'), getRotationConfig);
-router.put('/config/rotation', protect, authorize('admin'), toggleRotationConfig);
-router.post('/rotate-now', protect, authorize('admin'), forceRotateNow);
-router.put('/:id/status', protect, authorize('admin'), updateProjectStatus);
-router.put('/:id/feature', protect, authorize('admin'), setAppOfTheWeek);
-router.delete('/:id', protect, authorize('admin'), deleteShowcaseProject);
+router.get('/admin', protect, admin, getAdminShowcase);
+router.get('/config/rotation', protect, admin, getRotationConfig);
+router.put('/config/rotation', protect, admin, toggleRotationConfig);
+router.post('/rotate-now', protect, admin, forceRotateNow);
+router.put('/:id/status', protect, admin, updateProjectStatus);
+router.put('/:id/feature', protect, admin, setAppOfTheWeek);
+router.delete('/:id', protect, admin, deleteShowcaseProject);
 
 export default router;
 
