@@ -46,3 +46,4 @@ const dailyAnalyticsSchema = new mongoose.Schema(
 
 const DailyAnalytics = mongoose.model('DailyAnalytics', dailyAnalyticsSchema);
 export default DailyAnalytics;
+
