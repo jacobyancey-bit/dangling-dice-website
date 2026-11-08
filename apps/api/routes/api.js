@@ -6,6 +6,7 @@ import checkoutRoutes from './checkoutRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import affiliateRoutes from './affiliateRoutes.js';
 import mediaRoutes from './mediaRoutes.js';
+import v1ComputeRoutes from './v1Compute.js';
 import { getOEmbed } from '../controllers/oembedController.js';
 import { sendDiscordBroadcast } from '../controllers/broadcastController.js';
 import { getAnalyticsSummary } from '../middleware/analytics.js';
@@ -87,6 +88,7 @@ router.use('/checkout', checkoutRoutes);
 router.use('/orders', orderRoutes);
 router.use('/affiliates', affiliateRoutes);
 router.use('/media', mediaRoutes);
+router.use('/v1', v1ComputeRoutes);
 router.post('/broadcast/discord', sendDiscordBroadcast);
 
 export default router;

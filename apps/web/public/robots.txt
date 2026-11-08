@@ -5,8 +5,14 @@
 
 User-agent: *
 Allow: /
+Allow: /api/openapi.json
+Allow: /api/oembed
+Allow: /api/health
+Allow: /llms.txt
 Disallow: /admin
-Disallow: /api/
+Disallow: /api/auth
+Disallow: /api/checkout
+Disallow: /api/orders
 
 # Google Search Crawlers
 User-agent: Googlebot
@@ -16,12 +22,35 @@ Allow: /images/
 Allow: /css/
 Allow: /js/
 Disallow: /admin
-Disallow: /api/
 
 User-agent: Googlebot-Image
 Allow: /images/
 Allow: /assets/
 
-# Canonical Sitemap Declaration for Google Search Console
-Sitemap: https://dangling-dice-studios.com/sitemap.xml
+# AI & LLM Search Agents (OpenAI ChatGPT, Anthropic Claude, Perplexity, Google Gemini)
+User-agent: GPTBot
+Allow: /
 
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Cohere-ai
+Allow: /
+
+# Canonical Sitemap Declaration for Google Search Console & AI Engines
+Sitemap: https://dangling-dice-studios.com/sitemap.xml

@@ -4,6 +4,9 @@
  * and categorizes AI, search, and social media crawlers.
  */
 
+import mongoose from 'mongoose';
+import DailyAnalytics from '../models/DailyAnalytics.js';
+
 const startTime = new Date();
 
 const metrics = {
@@ -268,4 +271,36 @@ export const getAnalyticsSummary = () => {
     recentActivity: metrics.recentActivity.slice(0, 15),
   };
 };
+
+/**
+ * Persist current metrics snapshot to MongoDB DailyAnalytics collection
+ */
+export async function flushDailyMetrics() {
+  if (mongoose.connection?.readyState !== 1) return null;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  try {
+    return await DailyAnalytics.findOneAndUpdate(
+      { date: todayStr },
+      {
+        $set: {
+          totalRequests: metrics.totalRequests,
+          crawlers: metrics.crawlers,
+          apiChannels: metrics.apiChannels,
+          endpoints: metrics.endpoints,
+          statusCodes: metrics.statusCodes,
+          lastUpdated: new Date(),
+        },
+      },
+      { upsert: true, new: true }
+    );
+  } catch (err) {
+    return null;
+  }
+}
+
+// Automatically sync metrics to MongoDB every 5 minutes (unref so tests/scripts exit cleanly)
+const syncTimer = setInterval(flushDailyMetrics, 5 * 60 * 1000);
+if (syncTimer.unref) {
+  syncTimer.unref();
+}
 

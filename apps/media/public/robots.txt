@@ -1,9 +1,37 @@
-# Robots.txt for media.dangling-dice-studios.com
-# Googlebot & Search Engine Indexing Directives
+# ==============================================================================
+# robots.txt for media.dangling-dice-studios.com
+# Dangling Dice Studios™ Free Studio-Grade Media & Audio Converter
+# ==============================================================================
 
 User-agent: *
 Allow: /
-Disallow: /api/
+Allow: /api/openapi.json
+Allow: /api/oembed
+Allow: /api/health
+Allow: /llms.txt
+Disallow: /api/auth
+Disallow: /api/checkout
+
+# AI & LLM Search Agents (OpenAI ChatGPT, Anthropic Claude, Perplexity, Google Gemini)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
 
 Sitemap: https://media.dangling-dice-studios.com/sitemap.xml
-

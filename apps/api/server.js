@@ -1,3 +1,10 @@
+import tracer from 'dd-trace';
+tracer.init({
+  service: 'dangling-dice-api',
+  env: process.env.NODE_ENV || 'development',
+  logInjection: true
+});
+
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -131,6 +138,7 @@ app.use('/api', apiLimiter, apiRoutes);
 
 // Mount native in-process Stateless Compute & Connected Ecosystem /v1 endpoints (24/7 cloud execution on Render)
 app.use('/v1', apiLimiter, v1ComputeRoutes);
+app.use('/api/v1', apiLimiter, v1ComputeRoutes);
 
 // Frontend Static Files (Supports main domain and media subdomain)
 const webDistPath = path.join(__dirname, '..', 'web', 'dist');
