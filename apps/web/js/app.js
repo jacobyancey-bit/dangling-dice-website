@@ -296,8 +296,6 @@ function renderCatalog() {
   // 7. Render Grid Cards (Every card & thumbnail is 100% clickable)
   grid.innerHTML = itemsToRender
     .map((item) => {
-      const priceLabel =
-        item.price === 0 ? "FREE" : `$${Number(item.price).toFixed(2)}`;
       const thumb = item.imageUrl || "/images/banner.jpg";
       const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
       const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
@@ -312,10 +310,8 @@ function renderCatalog() {
           : `window.open('${safeTargetUrl}', '_blank', 'noopener,noreferrer')`;
 
       let actionButtons = "";
-      let specialBadge = "";
 
       if (item.isTool) {
-        specialBadge = `<span class="badge-tool">${item.toolType === "web-utility" ? "🛠️ Studio Platform" : "⚡ Live Web App"}</span>`;
         actionButtons = `
         <a href="${escapeHtml(targetUrl)}" onclick="event.stopPropagation();" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm" style="min-width: 152px;">
           ${isInternalAnchor ? "Explore Sandboxes ⚡" : "Launch Web App ↗"}
@@ -344,14 +340,12 @@ function renderCatalog() {
           `
               : ""
           }
-          <span class="badge-category">${escapeHtml(item.category)}</span>
-          ${specialBadge || `<span class="badge-price">${priceLabel}</span>`}
         </div>
         <div class="resource-body">
           <h3 class="resource-title">${escapeHtml(item.title)}</h3>
           <p class="resource-desc">${escapeHtml(item.description)}</p>
           <div class="resource-footer">
-            <span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">Official Release</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.category || "Official Release")}</span>
             ${actionButtons}
           </div>
         </div>
