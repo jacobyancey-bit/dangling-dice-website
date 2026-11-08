@@ -682,42 +682,59 @@ main {
 }
 
 .resource-title {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 700;
   line-height: 1.35;
+  min-height: 2.7em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   margin-bottom: 0.5rem;
   color: var(--text-main);
 }
 
 .resource-desc {
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   line-height: 1.5;
-  margin-bottom: 1rem;
+  min-height: 4.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 0.9rem;
   flex: 1;
 }
 
 .tag-chips {
   display: flex;
   gap: 0.35rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  height: 24px;
+  align-items: center;
+  margin-bottom: 0.9rem;
 }
 
 .tag-chip {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-family: var(--font-mono);
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-muted);
   padding: 0.15rem 0.5rem;
   border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .resource-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   padding-top: 0.75rem;
+  margin-top: auto;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -738,6 +755,8 @@ main {
   text-decoration: none;
   transition: all 0.2s ease;
   font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-primary {
@@ -810,8 +829,10 @@ main {
 }
 
 .btn-sm {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.75rem;
+  height: 34px;
+  padding: 0 0.85rem;
+  font-size: 0.76rem;
+  white-space: nowrap;
 }
 
 .btn-block {
@@ -1303,9 +1324,15 @@ tr:hover td {
 }
 
 .tech-card-title {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 700;
-  margin-bottom: 0.35rem;
+  line-height: 1.35;
+  min-height: 2.7em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 0.4rem;
   color: #fff;
 }
 
@@ -1313,7 +1340,12 @@ tr:hover td {
   font-size: 0.82rem;
   color: var(--text-muted);
   line-height: 1.5;
-  margin-bottom: 1.25rem;
+  min-height: 4.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 1.15rem;
   flex: 1;
 }
 
@@ -1321,6 +1353,7 @@ tr:hover td {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   border-top: 1px solid var(--border-subtle);
   padding-top: 0.85rem;
   margin-top: auto;

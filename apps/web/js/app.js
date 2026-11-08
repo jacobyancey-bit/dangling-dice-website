@@ -323,19 +323,18 @@ function renderCatalog() {
       if (item.isTool) {
         specialBadge = `<span class="badge-tool">${item.toolType === "web-utility" ? "🛠️ Studio Platform" : "⚡ Live Web App"}</span>`;
         actionButtons = `
-        <a href="${escapeHtml(targetUrl)}" onclick="event.stopPropagation();" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm">
+        <a href="${escapeHtml(targetUrl)}" onclick="event.stopPropagation();" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm" style="min-width: 152px;">
           ${isInternalAnchor ? "Explore Sandboxes ⚡" : "Launch Web App ↗"}
         </a>
       `;
       } else if (ytEmbed) {
         actionButtons = `
-        <button class="btn btn-youtube btn-sm" onclick="event.stopPropagation(); openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
-        <a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">YouTube ↗</a>
+        <button class="btn btn-youtube btn-sm" style="min-width: 152px;" onclick="event.stopPropagation(); openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
       `;
       } else if (item.mediaUrl && item.mediaUrl.includes("play.google.com")) {
-        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store ↗</a>`;
+        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm" style="min-width: 152px;">▶ Google Play ↗</a>`;
       } else if (item.mediaUrl) {
-        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ Open Channel ↗</a>`;
+        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="min-width: 152px;">▶ Open Channel ↗</a>`;
       }
 
       return `
@@ -359,10 +358,8 @@ function renderCatalog() {
           <p class="resource-desc">${escapeHtml(item.description)}</p>
           <div class="tag-chips">${tagsHtml}</div>
           <div class="resource-footer">
-            <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-              ${actionButtons}
-            </div>
-            <span style="font-size: 0.72rem; color: var(--text-faint);">Dangling Dice Studios™</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">Official Release</span>
+            ${actionButtons}
           </div>
         </div>
       </div>
