@@ -8,7 +8,12 @@ import affiliateRoutes from './affiliateRoutes.js';
 import mediaRoutes from './mediaRoutes.js';
 import v1ComputeRoutes from './v1Compute.js';
 import { getOEmbed } from '../controllers/oembedController.js';
-import { sendDiscordBroadcast } from '../controllers/broadcastController.js';
+import {
+  sendDiscordBroadcast,
+  getScheduledPosts,
+  createScheduledPost,
+  deleteScheduledPost
+} from '../controllers/broadcastController.js';
 import { getAnalyticsSummary } from '../middleware/analytics.js';
 
 const router = express.Router();
@@ -90,5 +95,8 @@ router.use('/affiliates', affiliateRoutes);
 router.use('/media', mediaRoutes);
 router.use('/v1', v1ComputeRoutes);
 router.post('/broadcast/discord', sendDiscordBroadcast);
+router.get('/broadcast/scheduled', getScheduledPosts);
+router.post('/broadcast/scheduled', createScheduledPost);
+router.delete('/broadcast/scheduled/:id', deleteScheduledPost);
 
 export default router;

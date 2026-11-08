@@ -111,6 +111,7 @@ function showDashboard() {
   if (statAdminName && adminUser) statAdminName.textContent = `${adminUser.name} (${adminUser.email})`;
   fetchInventory();
   fetchTelemetry();
+  loadScheduledQueue();
 }
 
 // Fetch live API telemetry and crawler intelligence (Private Admin)
@@ -481,6 +482,136 @@ function copyOmnipost(elementId) {
   });
 }
 
+// Product Hunt Launch Kit Modal
+function openProductHuntModal() {
+  const el = document.getElementById('productHuntModal');
+  if (el) el.style.display = 'flex';
+}
+
+function closeProductHuntModal() {
+  const el = document.getElementById('productHuntModal');
+  if (el) el.style.display = 'none';
+}
+
+function copyText(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el || !el.value) return;
+  navigator.clipboard.writeText(el.value).then(() => {
+    alert('Copied to clipboard!');
+  }).catch(() => {
+    el.select();
+    document.execCommand('copy');
+    alert('Copied to clipboard!');
+  });
+}
+
+// Scheduled Post Queue Engine
+async function queueScheduledBroadcast() {
+  const title = document.getElementById('broadcastTitle')?.value;
+  const link = document.getElementById('broadcastLink')?.value;
+  const description = document.getElementById('broadcastDesc')?.value;
+  const category = document.getElementById('broadcastCategory')?.value;
+  const timeInput = document.getElementById('broadcastScheduleTime')?.value;
+
+  if (!title || !description) {
+    alert('Please enter a campaign title and hook description.');
+    return;
+  }
+
+  if (!timeInput) {
+    alert('Please select a date and time to schedule the drop.');
+    return;
+  }
+
+  const scheduledDate = new Date(timeInput);
+  if (scheduledDate <= new Date()) {
+    alert('Please choose a future date and time for the scheduled drop.');
+    return;
+  }
+
+  try {
+    logAdmin(`Queueing scheduled drop for ${scheduledDate.toLocaleString()}...`);
+    const res = await fetch(`${API_BASE}/broadcast/scheduled`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        link,
+        description,
+        category,
+        scheduledFor: scheduledDate.toISOString()
+      })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Failed to queue post');
+
+    showAlert('broadcastStatusAlert', `✅ Drop successfully scheduled for ${scheduledDate.toLocaleString()}!`, true);
+    logAdmin(`Drop queued successfully: "${title}"`, true);
+    loadScheduledQueue();
+  } catch (err) {
+    showAlert('broadcastStatusAlert', `❌ Scheduling error: ${err.message}`);
+    logAdmin(`Scheduling error: ${err.message}`);
+  }
+}
+
+async function loadScheduledQueue() {
+  const section = document.getElementById('scheduledQueueSection');
+  const container = document.getElementById('scheduledQueueList');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/broadcast/scheduled`);
+    const json = await res.json();
+    if (!res.ok || !json.data || json.data.length === 0) {
+      if (section) section.style.display = 'none';
+      return;
+    }
+
+    if (section) section.style.display = 'block';
+    container.innerHTML = json.data.map(post => {
+      const isPending = post.status === 'PENDING';
+      const statusColor = isPending ? '#fbbf24' : post.status === 'SENT' ? '#10b981' : '#f43f5e';
+      const scheduledTime = new Date(post.scheduledFor).toLocaleString();
+
+      return `
+        <div style="background: rgba(6, 9, 14, 0.85); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.65rem 0.85rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 3px; background: rgba(255,255,255,0.05); color: ${statusColor}; border: 1px solid ${statusColor}40;">
+              ${post.status}
+            </span>
+            <div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">${post.title}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">
+                Scheduled for: <strong style="color: var(--neon-cyan);">${scheduledTime}</strong> &bull; Category: ${post.category}
+              </div>
+            </div>
+          </div>
+          <div>
+            ${isPending ? `<button class="btn btn-danger btn-sm" onclick="cancelScheduledPost('${post._id}')" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">Cancel Drop</button>` : `<span style="font-size: 0.72rem; color: #10b981;">✓ Delivered to #studio-drops</span>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Failed to load scheduled queue:', err);
+  }
+}
+
+async function cancelScheduledPost(id) {
+  if (!confirm('Are you sure you want to cancel this scheduled drop?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/broadcast/scheduled/${id}`, {
+      method: 'DELETE'
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
+    logAdmin(`Scheduled drop cancelled.`);
+    loadScheduledQueue();
+  } catch (err) {
+    alert(`Failed to cancel drop: ${err.message}`);
+  }
+}
+
 // Global scope bindings for inline HTML handlers
 window.handleAdminLogin = handleAdminLogin;
 window.logoutAdmin = logoutAdmin;
@@ -495,9 +626,16 @@ window.handleDelete = handleDelete;
 window.dispatchDiscordBroadcast = dispatchDiscordBroadcast;
 window.generateAllOmnipostFormats = generateAllOmnipostFormats;
 window.copyOmnipost = copyOmnipost;
+window.openProductHuntModal = openProductHuntModal;
+window.closeProductHuntModal = closeProductHuntModal;
+window.copyText = copyText;
+window.queueScheduledBroadcast = queueScheduledBroadcast;
+window.loadScheduledQueue = loadScheduledQueue;
+window.cancelScheduledPost = cancelScheduledPost;
 
 // Startup
 window.addEventListener('DOMContentLoaded', () => {
   verifyExistingSession();
   generateAllOmnipostFormats();
+  loadScheduledQueue();
 });
