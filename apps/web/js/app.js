@@ -718,8 +718,8 @@ async function fetchTechStack() {
           <p class="tech-card-desc">${escapeHtml(p.description)}</p>
         </div>
         <div class="tech-card-footer">
-          <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">
-            /go/${escapeHtml(p.slug)}
+          <span style="font-size: 0.72rem; color: var(--text-muted);">
+            Verified Partner Perk
           </span>
           <a href="${escapeHtml(p.redirectUrl)}?src=tech_stack" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
             Access Deal ↗
