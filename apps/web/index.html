@@ -655,31 +655,31 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
           <!-- 4 Compute Engines Grid -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
             <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700;">@dangling-dice/engine-schema</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🧩 JSON &rarr; Zod / TS / SQL</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Deterministically infer Zod validators, TypeScript interfaces, JSON Schema, and Postgres DDL from any JSON or SQL payload.</p>
-              <a href="http://localhost:3100/tools/json-to-zod" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-family: var(--font-mono);">Open Sandbox &rarr;</a>
+              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Schema &amp; Database Tools</div>
+              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🧩 JSON &amp; SQL Schema Converter</div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Automatically generate TypeScript types, validation schemas, and database table definitions from any JSON or SQL input.</p>
+              <a href="http://localhost:3100/tools/json-to-zod" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
             </div>
 
             <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700;">@dangling-dice/engine-geo</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🗺️ GIS Parcel &amp; Acreage Math</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Calculate exact polygon acreage, hectares, square footage, perimeter, centroid, and point-in-polygon checks from coordinates.</p>
-              <a href="http://localhost:3100/tools/polygon-acreage-calculator" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-family: var(--font-mono);">Open Sandbox &rarr;</a>
+              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Maps, GPS &amp; Network Tools</div>
+              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🗺️ Land Acreage &amp; GPS Calculator</div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Calculate exact property acreage, hectares, square footage, perimeter, and GPS distance from map coordinates.</p>
+              <a href="http://localhost:3100/tools/polygon-acreage-calculator" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
             </div>
 
             <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700;">@dangling-dice/engine-privacy</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🛡️ PII &amp; Luhn Log Redactor</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Sanitize emails, SSNs, Luhn-verified credit cards, phone numbers, IPs, and nested JSON secrets before LLM or log ingestion.</p>
-              <a href="http://localhost:3100/tools/pii-redactor" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-family: var(--font-mono);">Open Sandbox &rarr;</a>
+              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Data Privacy &amp; Security</div>
+              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🛡️ Sensitive Data &amp; Log Redactor</div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Automatically scrub emails, SSNs, credit card numbers, phone numbers, and secret keys from text and data logs.</p>
+              <a href="http://localhost:3100/tools/pii-redactor" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
             </div>
 
             <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700;">@dangling-dice/engine-finance</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">💰 Amortization &amp; IRR Engine</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Penny-accurate loan amortization schedules, extra-payment payoff acceleration, compound interest APY, and NPV/IRR cashflows.</p>
-              <a href="http://localhost:3100/tools/loan-amortization-calculator" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-family: var(--font-mono);">Open Sandbox &rarr;</a>
+              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Finance &amp; Project Calculators</div>
+              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">💰 Loan Payoff &amp; ROI Calculator</div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Generate monthly loan payoff schedules, extra-payment savings, compound interest projections, and project cost estimates.</p>
+              <a href="http://localhost:3100/tools/loan-amortization-calculator" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
             </div>
           </div>
 
