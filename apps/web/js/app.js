@@ -299,12 +299,6 @@ function renderCatalog() {
       const priceLabel =
         item.price === 0 ? "FREE" : `$${Number(item.price).toFixed(2)}`;
       const thumb = item.imageUrl || "/images/banner.jpg";
-      const tagsHtml = (item.tags || [])
-        .map(
-          (t) =>
-            `<span class="tag-chip" style="cursor: pointer;" onclick="event.stopPropagation(); document.getElementById('catalogSearchInput').value='${escapeHtml(t)}'; handleSearch('${escapeHtml(t)}');" title="Filter by tag">#${escapeHtml(t)}</span>`,
-        )
-        .join("");
       const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
       const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
       const targetUrl = item.liveUrl || item.mediaUrl || "#catalog";
@@ -356,7 +350,6 @@ function renderCatalog() {
         <div class="resource-body">
           <h3 class="resource-title">${escapeHtml(item.title)}</h3>
           <p class="resource-desc">${escapeHtml(item.description)}</p>
-          <div class="tag-chips">${tagsHtml}</div>
           <div class="resource-footer">
             <span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">Official Release</span>
             ${actionButtons}
