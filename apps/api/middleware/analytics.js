@@ -126,6 +126,44 @@ function maskIp(ip = '') {
 }
 
 /**
+ * Check if a request path is a static frontend asset or internal admin health poll
+ */
+function isNonApiTraffic(req) {
+  const p = (req.originalUrl || req.url || req.path || '').split('?')[0].toLowerCase();
+
+  // Ignore static files (images, CSS, JS bundles, fonts, favicons, source maps)
+  if (
+    p === '/' ||
+    p === '/index.html' ||
+    p === '/admin' ||
+    p === '/admin.html' ||
+    p === '/manifest.json' ||
+    p === '/robots.txt' ||
+    p === '/sitemap.xml' ||
+    p.startsWith('/images/') ||
+    p.startsWith('/assets/') ||
+    p.startsWith('/css/') ||
+    p.startsWith('/js/') ||
+    /\.(png|jpg|jpeg|gif|svg|webp|ico|css|js|map|woff|woff2|ttf)$/.test(p)
+  ) {
+    return true;
+  }
+
+  // Ignore automated Admin Portal polling (/api/health called from /admin)
+  const referer = (req.headers['referer'] || '').toLowerCase();
+  if (p === '/api/health' && referer.includes('/admin')) {
+    return true;
+  }
+
+  // Only count legitimate API & partner routes (/api/*, /v1/*, /go/*)
+  if (!p.startsWith('/api') && !p.startsWith('/v1') && !p.startsWith('/go/')) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Express middleware to track incoming requests
  */
 export const analyticsMiddleware = (req, res, next) => {
@@ -133,10 +171,27 @@ export const analyticsMiddleware = (req, res, next) => {
   const rawUa = req.headers['user-agent'] || 'Unknown';
   const classification = classifyUserAgent(rawUa);
 
-  // Increment metrics
+  // Always record verified AI, Search Engine, and Social Media crawlers (even on '/')
+  if (
+    classification.category === 'ai' ||
+    classification.category === 'search' ||
+    classification.category === 'social'
+  ) {
+    metrics.crawlers[classification.category] = (metrics.crawlers[classification.category] || 0) + 1;
+    metrics.crawlerBreakdown[classification.name] = (metrics.crawlerBreakdown[classification.name] || 0) + 1;
+  }
+
+  // Skip static assets, random 404 bot scans (/wp-admin), and Admin Portal polling for API pull counts
+  if (isNonApiTraffic(req)) {
+    return next();
+  }
+
+  // Increment real API metrics
   metrics.totalRequests += 1;
   metrics.lastRequestAt = new Date().toISOString();
-  metrics.crawlers[classification.category] = (metrics.crawlers[classification.category] || 0) + 1;
+  if (classification.category === 'browsers' || classification.category === 'tools') {
+    metrics.crawlers[classification.category] = (metrics.crawlers[classification.category] || 0) + 1;
+  }
 
   // Track API marketplace channel source (RapidAPI vs Postman vs Web vs Direct)
   const uaLower = rawUa.toLowerCase();
@@ -155,11 +210,11 @@ export const analyticsMiddleware = (req, res, next) => {
     metrics.apiChannels.direct += 1;
   }
 
-  if (classification.category !== 'browsers') {
+  if (classification.category === 'tools') {
     metrics.crawlerBreakdown[classification.name] = (metrics.crawlerBreakdown[classification.name] || 0) + 1;
   }
 
-  const endpointPath = req.baseUrl || req.path;
+  const endpointPath = (req.originalUrl || req.url || req.path || '').split('?')[0];
   metrics.endpoints[endpointPath] = (metrics.endpoints[endpointPath] || 0) + 1;
 
   // Track response completion

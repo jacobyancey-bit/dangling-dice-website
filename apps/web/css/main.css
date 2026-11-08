@@ -81,7 +81,7 @@ header {
 }
 
 .brand-logo-img {
-  height: 52px;
+  height: 72px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 4px 14px rgba(245, 158, 11, 0.45));
