@@ -10,44 +10,26 @@ const seedData = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('[Seeder] Connected to MongoDB at:', mongoose.connection.host);
 
-    // Clear existing data
-    await User.deleteMany({});
+    // Clear existing catalog items (preserving existing admin user accounts)
     await Item.deleteMany({});
-    console.log('[Seeder] Cleared previous records.');
+    console.log('[Seeder] Cleared previous catalog records.');
 
-    // Create Studio Admin / Creator
-    const studioAdmin = await User.create({
-      name: 'Dangling Dice Studios™',
-      email: 'studio@danglingdice.com',
-      password: 'StudioPassword2026!',
-      role: 'admin',
-    });
-    console.log(`[Seeder] Created lead creator account: ${studioAdmin.email}`);
+    // Find or create Studio Admin / Creator
+    let studioAdmin = await User.findOne({ role: 'admin' });
+    if (!studioAdmin) {
+      studioAdmin = await User.create({
+        name: 'Dangling Dice Studios™',
+        email: 'studio@danglingdice.com',
+        password: 'StudioPassword2026!',
+        role: 'admin',
+      });
+      console.log(`[Seeder] Created lead creator account: ${studioAdmin.email}`);
+    } else {
+      console.log(`[Seeder] Using existing admin account: ${studioAdmin.email}`);
+    }
 
-    // Create studio resources
-        const initialResources = [
-      {
-        user: studioAdmin._id,
-        title: 'Building Modern Full-Stack Applications from Scratch',
-        description: 'Comprehensive video course showing beginners and developers how to scaffold clean three-tier architecture with Node, Express, MongoDB, and modern decoupled clients.',
-        category: 'Coding Tutorials',
-        mediaUrl: 'https://www.youtube.com/@danglingdicestudios',
-        imageUrl: '/images/banner.jpg',
-        tags: ['JavaScript', 'Node.js', 'MongoDB', 'Architecture', 'Web Dev'],
-        price: 0,
-        isFeatured: true,
-      },
-      {
-        user: studioAdmin._id,
-        title: 'Neon D20 — Cyberpunk Lofi Instrumental EP',
-        description: 'Atmospheric beat collection crafted for late-night coding sessions, studying, and focus. Produced by Dangling Beats Studio.',
-        category: 'Beats & Audio',
-        mediaUrl: 'https://www.youtube.com/@danglingdicestudios',
-        imageUrl: '/images/banner.jpg',
-        tags: ['Lofi', 'Beats', 'Cyberpunk', 'Study Music', 'Coding Beats'],
-        price: 0,
-        isFeatured: true,
-      },
+    // Create studio resources (100% Dangling Dice Studios™ In-House Products & Releases)
+    const initialResources = [
       {
         user: studioAdmin._id,
         title: 'AI Calculator — Smart Android Mathematical Assistant',
@@ -59,65 +41,55 @@ const seedData = async () => {
         price: 0,
         isFeatured: true,
       },
-      // --- STANDALONE & BROWSER DEVELOPER TOOLS ---
       {
         user: studioAdmin._id,
-        title: 'MongoDB Connection URI & Query Inspector',
-        description: 'Interactive client-side developer utility. Validates SRV connection strings, encodes credentials, highlights syntax errors, and generates clean .env environment variable configs.',
+        title: 'Dangling Dice Media Converter — URL to 320kbps MP3 & 1080p MP4',
+        description: 'Our high-speed, zero-ad media transcoder. Extract clean 320kbps MP3 audio tracks, samples, reference stems, and 1080p MP4 video directly to your local Downloads folder.',
         category: 'Developer Tools',
-        mediaUrl: '#mongoInspector',
-        imageUrl: '/images/logo.png',
-        tags: ['MongoDB', 'DevTools', 'Database', 'Utility'],
-        price: 0,
-        isFeatured: true,
-        isTool: true,
-        toolType: 'web-utility',
-        liveUrl: '#mongoInspector',
-      },
-      {
-        user: studioAdmin._id,
-        title: 'Dangling Dice Secure Dev VPN & Proxy',
-        description: 'High-speed, encrypted WireGuard VPN built specifically for developers. Geolocation testing, static IP whitelisting for cloud databases, and privacy protection.',
-        category: 'Developer Tools',
-        mediaUrl: 'https://vpn.danglingdice.com',
-        imageUrl: '/images/logo.png',
-        tags: ['VPN', 'WireGuard', 'Privacy', 'Android', 'DevTools'],
+        mediaUrl: 'https://media.dangling-dice-studios.com/',
+        imageUrl: '/images/thumb_media_converter.svg',
+        tags: ['MP3 Converter', 'MP4 Video', 'Audio Sampling', 'Web App', 'Studio Tool'],
         price: 0,
         isFeatured: true,
         isTool: true,
         toolType: 'standalone-app',
-        liveUrl: 'https://vpn.danglingdice.com',
-      },
-      // --- CURATED PARTNER & AFFILIATE RECOMMENDATIONS ---
-      {
-        user: studioAdmin._id,
-        title: 'MongoDB Atlas — Multi-Cloud Managed Database',
-        description: 'Deploy fully managed MongoDB clusters across AWS, Google Cloud, and Azure. Free shared cluster tier with automated backups, monitoring, and seamless scaling.',
-        category: 'Developer Tools',
-        mediaUrl: 'https://www.mongodb.com/cloud/atlas/register',
-        imageUrl: '/images/logo.png',
-        tags: ['MongoDB', 'Atlas', 'Cloud Database', 'Recommended'],
-        price: 0,
-        isFeatured: true,
-        isAffiliate: true,
-        affiliateCategory: 'Cloud Hosting & Databases',
-        affiliateBadge: 'Official Cloud Partner • Free Tier Available',
-        affiliateUrl: 'https://www.mongodb.com/cloud/atlas/register',
+        liveUrl: 'https://media.dangling-dice-studios.com/',
       },
       {
         user: studioAdmin._id,
-        title: 'DigitalOcean — Cloud Compute & Dedicated Droplets',
-        description: 'Developer-friendly cloud computing, scalable VPS droplets, managed Kubernetes, and databases. Simple pricing with zero hidden egress fees.',
-        category: 'Developer Tools',
-        mediaUrl: 'https://www.digitalocean.com',
-        imageUrl: '/images/logo.png',
-        tags: ['Cloud', 'VPS', 'Hosting', 'Droplets', 'Recommended'],
+        title: 'Dangling Beats — Lo-Fi Drive & Cyberpunk Focus Radio',
+        description: 'Original lofi, dark trap, and synthwave instrumental stream crafted for late-night programming sessions, studying, and focus. Produced in-house by Dangling Beats Studio.',
+        category: 'Beats & Audio',
+        mediaUrl: 'https://www.youtube.com/watch?v=2J-U0EUATHs&list=PLAg2ptU_xF5c',
+        imageUrl: 'https://i.ytimg.com/vi/2J-U0EUATHs/maxresdefault.jpg',
+        tags: ['Lofi', 'Beats', 'Cyberpunk', 'Study Music', 'Coding Beats'],
         price: 0,
         isFeatured: true,
-        isAffiliate: true,
-        affiliateCategory: 'Cloud Hosting & Databases',
-        affiliateBadge: 'Partner Deal • $200 Free 60-Day Credit',
-        affiliateUrl: 'https://www.digitalocean.com',
+      },
+      {
+        user: studioAdmin._id,
+        title: 'Dangling Dice Central REST API & 13 Developer Sandboxes',
+        description: '21 production REST API endpoints and 13 interactive browser sandboxes covering JSON-to-Zod schema inference, GIS polygon acreage math, Luhn PII redaction, and financial amortization.',
+        category: 'Developer Tools',
+        mediaUrl: 'https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api',
+        imageUrl: '/images/thumb_compute_api.svg',
+        tags: ['REST API', 'RapidAPI', 'TypeScript', 'Sandboxes', 'DevTools'],
+        price: 0,
+        isFeatured: true,
+        isTool: true,
+        toolType: 'web-utility',
+        liveUrl: '#computeApiSuite',
+      },
+      {
+        user: studioAdmin._id,
+        title: 'Building Modern Full-Stack Applications from Scratch',
+        description: 'Hands-on software engineering masterclasses and open-source repositories showing how to architect production Node.js, Fastify, Express, MongoDB, and React/Next.js systems.',
+        category: 'Coding Tutorials',
+        mediaUrl: 'https://www.youtube.com/@danglingdicestudios',
+        imageUrl: '/images/thumb_fullstack_coding.svg',
+        tags: ['JavaScript', 'Node.js', 'MongoDB', 'Architecture', 'Web Dev'],
+        price: 0,
+        isFeatured: true,
       },
     ];
 

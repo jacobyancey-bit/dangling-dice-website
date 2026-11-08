@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bgApi" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070b14"/>
+      <stop offset="50%" stop-color="#0c192c"/>
+      <stop offset="100%" stop-color="#07090e"/>
+    </linearGradient>
+    <linearGradient id="goldCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bgApi)"/>
+  <circle cx="650" cy="90" r="190" fill="#fbbf24" opacity="0.12"/>
+  <circle cx="140" cy="360" r="200" fill="#06b6d4" opacity="0.12"/>
+  <!-- Terminal / API Card Window -->
+  <rect x="110" y="85" width="580" height="240" rx="16" fill="#0b111e" stroke="url(#goldCyan)" stroke-width="2.5"/>
+  <circle cx="142" cy="115" r="7" fill="#f87171"/>
+  <circle cx="164" cy="115" r="7" fill="#fbbf24"/>
+  <circle cx="186" cy="115" r="7" fill="#10b981"/>
+  <text x="215" y="120" font-family="monospace" font-size="15" font-weight="700" fill="#94a3b8">POST /v1/schema • /v1/geo • /v1/privacy • /v1/finance</text>
+  <line x1="110" y1="138" x2="690" y2="138" stroke="#1e293b" stroke-width="2"/>
+  <text x="140" y="178" font-family="monospace" font-size="18" fill="#67e8f9">"status": <tspan fill="#10b981">"200 OK"</tspan>,</text>
+  <text x="140" y="212" font-family="monospace" font-size="18" fill="#67e8f9">"engine": <tspan fill="#fbbf24">"Dangling Dice Stateless Compute"</tspan>,</text>
+  <text x="140" y="246" font-family="monospace" font-size="18" fill="#67e8f9">"endpoints": <tspan fill="#f472b6">21</tspan>, "latency": <tspan fill="#10b981">"4.2ms"</tspan></text>
+  <text x="140" y="280" font-family="monospace" font-size="18" fill="#67e8f9">"hub": <tspan fill="#fef08a">"RapidAPI &amp; Postman Verified"</tspan></text>
+  <rect x="170" y="352" width="460" height="50" rx="25" fill="#111a2e" stroke="#fbbf24" stroke-width="2"/>
+  <text x="400" y="383" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#fbbf24" text-anchor="middle" letter-spacing="1.5">21 REST ENDPOINTS &amp; 13 SANDBOXES</text>
+</svg>

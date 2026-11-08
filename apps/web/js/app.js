@@ -133,7 +133,7 @@ let selectedCategory = "All";
 let searchQuery = "";
 let sortOption = "newest";
 let isCatalogExpanded = false;
-const RECENT_ROW_LIMIT = 3;
+const RECENT_ROW_LIMIT = 6;
 
 // Category Filtering
 window.filterCategory = function (cat) {
@@ -207,8 +207,16 @@ function renderCatalog() {
   const toggleBtn = document.getElementById("toggleCatalogBtn");
   if (!grid) return;
 
-  // 1. Filter by Category & Search Query
-  let filtered = allResources.filter((item) => {
+  // 1. Filter to strictly Dangling Dice Studios™ In-House Releases (exclude partner/affiliate items & dead legacy placeholders)
+  const studioOnlyResources = allResources.filter((item) => {
+    if (item.isAffiliate) return false;
+    const url = (item.liveUrl || item.mediaUrl || "").toLowerCase();
+    if (url.includes("vpn.danglingdice.com") || url === "#mongoinspector") return false;
+    return true;
+  });
+
+  // 2. Filter by Category & Search Query
+  let filtered = studioOnlyResources.filter((item) => {
     const matchesCategory =
       selectedCategory === "All" || item.category === selectedCategory;
     if (!matchesCategory) return false;
@@ -243,9 +251,9 @@ function renderCatalog() {
   // 3. Count Badge
   if (countBadge) {
     if (searchQuery || selectedCategory !== "All") {
-      countBadge.textContent = `${filtered.length} of ${allResources.length} Items`;
+      countBadge.textContent = `${filtered.length} of ${studioOnlyResources.length} Releases`;
     } else {
-      countBadge.textContent = `${filtered.length} ${filtered.length === 1 ? "Resource" : "Resources"}`;
+      countBadge.textContent = `${filtered.length} Studio ${filtered.length === 1 ? "Release" : "Releases"}`;
     }
   }
 
@@ -285,7 +293,7 @@ function renderCatalog() {
     ? filtered
     : filtered.slice(0, RECENT_ROW_LIMIT);
 
-  // 7. Render Grid Cards
+  // 7. Render Grid Cards (Every card & thumbnail is 100% clickable)
   grid.innerHTML = itemsToRender
     .map((item) => {
       const priceLabel =
@@ -294,44 +302,45 @@ function renderCatalog() {
       const tagsHtml = (item.tags || [])
         .map(
           (t) =>
-            `<span class="tag-chip" style="cursor: pointer;" onclick="document.getElementById('catalogSearchInput').value='${escapeHtml(t)}'; handleSearch('${escapeHtml(t)}');" title="Filter by tag">#${escapeHtml(t)}</span>`,
+            `<span class="tag-chip" style="cursor: pointer;" onclick="event.stopPropagation(); document.getElementById('catalogSearchInput').value='${escapeHtml(t)}'; handleSearch('${escapeHtml(t)}');" title="Filter by tag">#${escapeHtml(t)}</span>`,
         )
         .join("");
       const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
       const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
+      const targetUrl = item.liveUrl || item.mediaUrl || "#catalog";
+      const isInternalAnchor = targetUrl.startsWith("#");
+      const safeTargetUrl = escapeHtml(targetUrl).replace(/'/g, "\\'");
+
+      const cardClickHandler = ytEmbed
+        ? `openCinemaModal('${safeTitle}', '${ytEmbed}')`
+        : isInternalAnchor
+          ? `const el = document.querySelector('${safeTargetUrl}'); if (el) el.scrollIntoView({ behavior: 'smooth' });`
+          : `window.open('${safeTargetUrl}', '_blank', 'noopener,noreferrer')`;
 
       let actionButtons = "";
       let specialBadge = "";
 
-      if (item.isAffiliate) {
-        specialBadge = `<span class="badge-partner">${escapeHtml(item.affiliateBadge || "Partner Deal")}</span>`;
+      if (item.isTool) {
+        specialBadge = `<span class="badge-tool">${item.toolType === "web-utility" ? "🛠️ Studio Platform" : "⚡ Live Web App"}</span>`;
         actionButtons = `
-        <a href="${escapeHtml(item.affiliateUrl || item.mediaUrl)}" target="_blank" rel="sponsored noopener noreferrer" referrerpolicy="strict-origin-when-cross-origin" class="btn btn-playstore btn-sm">
-          Get Partner Deal ➔
-        </a>
-      `;
-      } else if (item.isTool) {
-        specialBadge = `<span class="badge-tool">${item.toolType === "web-utility" ? "🛠️ Web Tool" : "⚡ Standalone App"}</span>`;
-        const isInternalAnchor = item.liveUrl && item.liveUrl.startsWith("#");
-        actionButtons = `
-        <a href="${escapeHtml(item.liveUrl || item.mediaUrl)}" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm">
-          ${isInternalAnchor ? "Launch Tool ⚡" : "Open App ↗"}
+        <a href="${escapeHtml(targetUrl)}" onclick="event.stopPropagation();" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm">
+          ${isInternalAnchor ? "Explore Sandboxes ⚡" : "Launch Web App ↗"}
         </a>
       `;
       } else if (ytEmbed) {
         actionButtons = `
-        <button class="btn btn-youtube btn-sm" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
-        <a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">↗</a>
+        <button class="btn btn-youtube btn-sm" onclick="event.stopPropagation(); openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
+        <a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Open on YouTube">YouTube ↗</a>
       `;
       } else if (item.mediaUrl && item.mediaUrl.includes("play.google.com")) {
-        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store</a>`;
+        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm">▶ Google Play Store ↗</a>`;
       } else if (item.mediaUrl) {
-        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ View Project</a>`;
+        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">▶ Open Channel ↗</a>`;
       }
 
       return `
-      <div class="resource-card ${item.isAffiliate ? "resource-card-partner" : ""} ${item.isTool ? "resource-card-tool" : ""}">
-        <div class="resource-thumb-box" ${ytEmbed ? `style="cursor: pointer;" onclick="openCinemaModal('${safeTitle}', '${ytEmbed}')" title="Click to Play"` : ""}>
+      <div class="resource-card ${item.isTool ? "resource-card-tool" : ""}" style="cursor: pointer;" onclick="${cardClickHandler}" title="Click to open ${escapeHtml(item.title)}">
+        <div class="resource-thumb-box">
           <img src="${thumb}" alt="${escapeHtml(item.title)}" class="resource-thumb" onerror="this.src='/images/banner.jpg'" />
           ${
             ytEmbed
@@ -353,7 +362,7 @@ function renderCatalog() {
             <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
               ${actionButtons}
             </div>
-            <span style="font-size: 0.72rem; color: var(--text-faint);">${item.user ? escapeHtml(item.user.name) : "Studio"}</span>
+            <span style="font-size: 0.72rem; color: var(--text-faint);">Dangling Dice Studios™</span>
           </div>
         </div>
       </div>
