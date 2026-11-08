@@ -294,11 +294,32 @@
             <span>⭐ Indie Developer Spotlight & App of the Week</span>
             <span class="admin-pill" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Curator</span>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="loadShowcaseSubmissions()" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">↻ Refresh Submissions</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow()" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;">
+              🔄 Rotate AOTW Now
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadShowcaseSubmissions()" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
+              ↻ Refresh
+            </button>
+          </div>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; margin-bottom: 1.25rem;">
-          Review community-submitted apps, approve them to appear on your homepage showcase, or promote one to <strong>App of the Week</strong> with automated Discord broadcast.
-        </p>
+
+        <!-- Autonomous Rotation Banner -->
+        <div style="margin-top: 0.75rem; margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span style="font-size: 1.3rem;">🤖</span>
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Autonomous 7-Day Weekly Rotation Engine</div>
+              <div style="font-size: 0.74rem; color: var(--text-muted);">Automatically swaps to the least-recently-featured approved app every Sunday with zero manual work.</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <label style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <input type="checkbox" id="autoRotationToggle" onchange="toggleAutoRotation(this.checked)" checked style="cursor: pointer;" />
+              Auto-Rotate Weekly
+            </label>
+          </div>
+        </div>
 
         <div class="table-container">
           <table>

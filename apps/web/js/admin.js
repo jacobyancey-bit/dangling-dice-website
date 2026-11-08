@@ -779,6 +779,41 @@ async function deleteShowcaseItem(id) {
   }
 }
 
+async function toggleAutoRotation(enabled) {
+  try {
+    const res = await fetch(`${API_BASE}/showcase/config/rotation`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ enabled }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
+    logAdmin(`Auto-rotation updated: ${enabled ? 'ENABLED' : 'PAUSED'}`, true);
+  } catch (err) {
+    alert(`Failed to update auto-rotation: ${err.message}`);
+  }
+}
+
+async function triggerManualRotationNow() {
+  if (!confirm('Force an immediate rotation to the next candidate App of the Week?')) return;
+  try {
+    const res = await fetch(`${API_BASE}/showcase/rotate-now`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${adminToken}` },
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
+    alert(json.message);
+    logAdmin(json.message, true);
+    loadShowcaseSubmissions();
+  } catch (err) {
+    alert(`Rotation error: ${err.message}`);
+  }
+}
+
 // Global scope bindings for inline HTML handlers
 window.handleAdminLogin = handleAdminLogin;
 window.logoutAdmin = logoutAdmin;
@@ -803,6 +838,8 @@ window.loadShowcaseSubmissions = loadShowcaseSubmissions;
 window.updateShowcaseStatus = updateShowcaseStatus;
 window.setAppOfTheWeekAdmin = setAppOfTheWeekAdmin;
 window.deleteShowcaseItem = deleteShowcaseItem;
+window.toggleAutoRotation = toggleAutoRotation;
+window.triggerManualRotationNow = triggerManualRotationNow;
 
 // Startup
 window.addEventListener('DOMContentLoaded', () => {
