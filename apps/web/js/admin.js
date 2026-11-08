@@ -797,12 +797,16 @@ async function toggleAutoRotation(enabled) {
   }
 }
 
-async function triggerManualRotationNow() {
-  if (!confirm('Force an immediate rotation to the next candidate App of the Week?')) return;
+async function triggerManualRotationNow(category = 'all') {
+  if (!confirm(`Force an immediate rotation for ${category === 'all' ? 'ALL category spotlights' : category + ' spotlight'}?`)) return;
   try {
     const res = await fetch(`${API_BASE}/showcase/rotate-now`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${adminToken}` },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ category }),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message);

@@ -854,8 +854,43 @@ window.runCloudSandbox = async function () {
 };
 
 // ============================================================================
-// Indie Developer Showcase & Community Submissions
+// Multi-Category Indie Developer & Creator Showcase
 // ============================================================================
+function populateCategorySpotlight(prefix, app, defaultCategory) {
+  if (!app) return;
+  const titleEl = document.getElementById(`${prefix}SpotlightTitle`);
+  const taglineEl = document.getElementById(`${prefix}SpotlightTagline`);
+  const descEl = document.getElementById(`${prefix}SpotlightDesc`);
+  const authorEl = document.getElementById(`${prefix}SpotlightAuthor`);
+  const liveEl = document.getElementById(`${prefix}SpotlightLive`);
+  const githubEl = document.getElementById(`${prefix}SpotlightGithub`);
+  const badgeEl = document.getElementById(`${prefix}SpotlightCatBadge`);
+  const stackEl = document.getElementById(`${prefix}SpotlightStack`);
+
+  if (titleEl) titleEl.textContent = app.title;
+  if (taglineEl) taglineEl.textContent = app.tagline;
+  if (descEl) descEl.textContent = app.description;
+  if (authorEl) {
+    authorEl.textContent = app.authorSocial ? `${app.authorName} (${app.authorSocial})` : app.authorName;
+  }
+  if (liveEl) liveEl.href = app.appUrl;
+  if (githubEl) {
+    if (app.githubUrl) {
+      githubEl.href = app.githubUrl;
+      githubEl.style.display = "inline-flex";
+    } else {
+      githubEl.style.display = "none";
+    }
+  }
+  if (badgeEl) badgeEl.textContent = app.category || defaultCategory;
+  if (stackEl && Array.isArray(app.techStack)) {
+    const pillClass = prefix === "creator" ? "pill-tag-purple" : prefix === "music" ? "pill-tag-pink" : "pill-tag-cyan";
+    stackEl.innerHTML = app.techStack
+      .map((tech) => `<span class="pill-tag ${pillClass}">${tech}</span>`)
+      .join("");
+  }
+}
+
 async function fetchDevShowcase() {
   try {
     const res = await fetch(`${API_BASE}/showcase`);
@@ -863,9 +898,15 @@ async function fetchDevShowcase() {
     const json = await res.json();
     const data = json.data || {};
 
-    // Render App of the Week
-    if (data.appOfTheWeek) {
-      const aotw = data.appOfTheWeek;
+    // 1. Populate Category-Specific Spotlights across all Suites
+    const spotlights = data.spotlights || {};
+    populateCategorySpotlight("creator", spotlights.creator, "Social & Video");
+    populateCategorySpotlight("music", spotlights.music, "Audio & Music");
+    populateCategorySpotlight("developer", spotlights.developer, "Developer Tools");
+
+    // 2. Render App of the Week in Central Community Section
+    const aotw = data.appOfTheWeek || spotlights.developer || spotlights.music || spotlights.creator;
+    if (aotw) {
       const titleEl = document.getElementById("aotwTitle");
       const taglineEl = document.getElementById("aotwTagline");
       const descEl = document.getElementById("aotwDescription");
@@ -900,7 +941,7 @@ async function fetchDevShowcase() {
       }
     }
 
-    // Render Showcase Grid
+    // 3. Render Showcase Grid
     const gridEl = document.getElementById("devShowcaseGrid");
     if (!gridEl) return;
 
@@ -927,7 +968,7 @@ async function fetchDevShowcase() {
               <div class="tech-card-header">
                 <span class="tech-card-icon">🚀</span>
                 <span class="tech-card-badge" style="color: ${proj.isAppOfTheWeek ? '#fbbf24' : 'var(--neon-cyan)'};">
-                  ${proj.isAppOfTheWeek ? '⭐ App of Week' : proj.category}
+                  ${proj.isAppOfTheWeek ? '⭐ Active Spotlight' : proj.category}
                 </span>
               </div>
               <div style="margin-bottom: 0.4rem; display: flex; gap: 0.3rem; flex-wrap: wrap;">
@@ -957,9 +998,23 @@ async function fetchDevShowcase() {
 }
 
 // Modal controls
-function openDevSubmissionModal() {
+function openDevSubmissionModal(defaultCategory) {
   const el = document.getElementById("devSubmissionModal");
   if (el) el.style.display = "flex";
+  if (defaultCategory) {
+    const selectEl = document.getElementById("subCategory");
+    if (selectEl) {
+      for (let i = 0; i < selectEl.options.length; i++) {
+        if (
+          selectEl.options[i].value.toLowerCase().includes(defaultCategory.toLowerCase()) ||
+          defaultCategory.toLowerCase().includes(selectEl.options[i].value.toLowerCase())
+        ) {
+          selectEl.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }
 }
 
 function closeDevSubmissionModal() {

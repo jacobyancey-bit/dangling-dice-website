@@ -53,8 +53,33 @@ const devShowcaseSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Web App', 'Developer Tool', 'Audio & Music', 'Mobile App', 'AI / ML', 'Open Source'],
+      enum: [
+        'Web App',
+        'Developer Tool',
+        'Audio & Music',
+        'Social & Creative',
+        'Mobile App',
+        'AI / ML',
+        'Open Source',
+      ],
       default: 'Developer Tool',
+      index: true,
+    },
+    categoryGroup: {
+      type: String,
+      enum: ['creator', 'music', 'developer'],
+      default: 'developer',
+      index: true,
+    },
+    featuredCategory: {
+      type: String,
+      default: '',
+      index: true,
+    },
+    featuredCount: {
+      type: Number,
+      default: 0,
+      index: true,
     },
     techStack: {
       type: [String],
@@ -82,6 +107,36 @@ const devShowcaseSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+/**
+ * Resolves high-level category group for cross-suite rotation:
+ * - 'creator' -> Social-Media & Content Creator Suite
+ * - 'music'   -> Music Creator & Beatmaker Suite
+ * - 'developer' -> Developer Suite & Studio Tech Stack
+ */
+export function resolveCategoryGroup(category) {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('audio') || cat.includes('music') || cat.includes('beat') || cat.includes('sound')) {
+    return 'music';
+  }
+  if (
+    cat.includes('creator') ||
+    cat.includes('social') ||
+    cat.includes('video') ||
+    cat.includes('design') ||
+    cat.includes('creative')
+  ) {
+    return 'creator';
+  }
+  return 'developer';
+}
+
+devShowcaseSchema.pre('save', function (next) {
+  if (!this.categoryGroup || this.isModified('category')) {
+    this.categoryGroup = resolveCategoryGroup(this.category);
+  }
+  next();
+});
 
 const DevShowcase = mongoose.model('DevShowcase', devShowcaseSchema);
 export default DevShowcase;

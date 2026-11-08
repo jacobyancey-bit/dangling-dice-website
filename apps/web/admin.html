@@ -295,8 +295,17 @@
             <span class="admin-pill" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Curator</span>
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow()" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;">
-              🔄 Rotate AOTW Now
+            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('all')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;">
+              🔄 Rotate All Suites
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('creator')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(168, 85, 247, 0.4); color: #c084fc;">
+              🎨 Rotate Creator
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('music')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(236, 72, 153, 0.4); color: #f472b6;">
+              🎛️ Rotate Music
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('developer')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(6, 182, 212, 0.4); color: var(--neon-cyan);">
+              💻 Rotate Dev Tool
             </button>
             <button class="btn btn-secondary btn-sm" onclick="loadShowcaseSubmissions()" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
               ↻ Refresh
