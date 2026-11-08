@@ -41,3 +41,22 @@ Dangling Dice Studios™ is an independent software development, music productio
 - `GET https://dangling-dice-studios.com/api/oembed`: Standard oEmbed 1.0 endpoint for rich previews on Discord, Reddit, and Twitter.
 - `POST https://media.dangling-dice-studios.com/api/media/convert`: Media validation and stream resolution endpoint.
 
+---
+
+## Stateless Compute API Platform & Free In-Browser Sandboxes (`@dangling-dice/engine-*`)
+Deterministic, sub-15ms TypeScript compute engines available as free browser utilities (`https://tools.dangling-dice-studios.com`) and metered REST APIs (`https://api.dangling-dice-studios.com/v1/*`):
+
+- **Schema Inference Engine (`@dangling-dice/engine-schema`)**:
+  - Sandbox: `https://tools.dangling-dice-studios.com/tools/json-to-zod` & `/tools/sql-to-typescript`
+  - API: `POST /v1/schema/infer` (JSON → Zod, TypeScript, JSON Schema, Postgres DDL) & `POST /v1/schema/sql-to-ts`
+- **Geospatial & Parcel Acreage Engine (`@dangling-dice/engine-geo`)**:
+  - Sandbox: `https://tools.dangling-dice-studios.com/tools/polygon-acreage-calculator` & `/tools/coordinate-distance-bearing`
+  - API: `POST /v1/geo/parcel-metrics`, `POST /v1/geo/distance`, `POST /v1/geo/point-in-polygon`
+- **PII Redaction & Luhn Validation Engine (`@dangling-dice/engine-privacy`)**:
+  - Sandbox: `https://tools.dangling-dice-studios.com/tools/pii-redactor` & `/tools/json-secret-masker`
+  - API: `POST /v1/privacy/redact`, `POST /v1/privacy/validate-luhn`, `POST /v1/privacy/mask-json`
+- **Financial Amortization & Cashflow Engine (`@dangling-dice/engine-finance`)**:
+  - Sandbox: `https://tools.dangling-dice-studios.com/tools/loan-amortization-calculator` & `/tools/compound-interest-calculator`
+  - API: `POST /v1/finance/amortization`, `POST /v1/finance/extra-payments`, `POST /v1/finance/compound-interest`, `POST /v1/finance/cashflow`
+
+

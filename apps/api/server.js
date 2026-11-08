@@ -128,6 +128,38 @@ app.get('/go/:slug', redirectPartner);
 // Mount central API router containing /auth, /items, /checkout, /orders, /affiliates with rate limiting
 app.use('/api', apiLimiter, apiRoutes);
 
+// Subdomain / Path Reverse-Proxy Bridge to Dangling Dice Stateless Compute Gateway (:4100)
+const COMPUTE_GATEWAY_ORIGIN = process.env.COMPUTE_GATEWAY_URL || 'http://127.0.0.1:4100';
+app.use('/v1', async (req, res) => {
+  try {
+    const targetUrl = `${COMPUTE_GATEWAY_ORIGIN}${req.originalUrl}`;
+    const headers = { 'Content-Type': 'application/json' };
+    if (req.headers.authorization) headers['Authorization'] = req.headers.authorization;
+    if (req.headers['x-api-key']) headers['x-api-key'] = req.headers['x-api-key'];
+
+    const upstreamRes = await fetch(targetUrl, {
+      method: req.method,
+      headers,
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body || {}),
+    });
+
+    const data = await upstreamRes.text();
+    res.status(upstreamRes.status);
+    upstreamRes.headers.forEach((value, key) => {
+      if (key.toLowerCase().startsWith('x-')) {
+        res.setHeader(key, value);
+      }
+    });
+    res.setHeader('Content-Type', upstreamRes.headers.get('content-type') || 'application/json');
+    return res.send(data);
+  } catch (err) {
+    return res.status(502).json({
+      error: 'ComputeGatewayUnavailable',
+      message: 'Stateless Compute Gateway (:4100) is not reachable.',
+    });
+  }
+});
+
 // Frontend Static Files (Supports main domain and media subdomain)
 const webDistPath = path.join(__dirname, '..', 'web', 'dist');
 const mediaDistPath = path.join(__dirname, '..', 'media', 'dist');
