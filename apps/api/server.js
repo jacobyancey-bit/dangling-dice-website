@@ -137,9 +137,13 @@ app.use('/v1', async (req, res) => {
     if (req.headers.authorization) headers['Authorization'] = req.headers.authorization;
     if (req.headers['x-api-key']) headers['x-api-key'] = req.headers['x-api-key'];
     if (req.headers['x-rapidapi-key']) headers['x-rapidapi-key'] = req.headers['x-rapidapi-key'];
+    if (req.headers['x-rapidapi-host']) headers['x-rapidapi-host'] = req.headers['x-rapidapi-host'];
     if (req.headers['x-rapidapi-proxy-secret']) {
       headers['x-rapidapi-proxy-secret'] = req.headers['x-rapidapi-proxy-secret'];
     }
+    if (req.headers['postman-token']) headers['postman-token'] = req.headers['postman-token'];
+    if (req.headers['user-agent']) headers['user-agent'] = req.headers['user-agent'];
+    if (req.headers.origin) headers['origin'] = req.headers.origin;
 
     const upstreamRes = await fetch(targetUrl, {
       method: req.method,

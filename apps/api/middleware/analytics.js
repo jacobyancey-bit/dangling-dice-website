@@ -17,6 +17,12 @@ const metrics = {
     browsers: 0,
     tools: 0,
   },
+  apiChannels: {
+    rapidapi: 0,
+    postman: 0,
+    web: 0,
+    direct: 0,
+  },
   crawlerBreakdown: {},
   endpoints: {},
   statusCodes: {},
@@ -132,6 +138,23 @@ export const analyticsMiddleware = (req, res, next) => {
   metrics.lastRequestAt = new Date().toISOString();
   metrics.crawlers[classification.category] = (metrics.crawlers[classification.category] || 0) + 1;
 
+  // Track API marketplace channel source (RapidAPI vs Postman vs Web vs Direct)
+  const uaLower = rawUa.toLowerCase();
+  if (
+    req.headers['x-rapidapi-key'] ||
+    req.headers['x-rapidapi-host'] ||
+    req.headers['x-rapidapi-proxy-secret'] ||
+    uaLower.includes('rapidapi')
+  ) {
+    metrics.apiChannels.rapidapi += 1;
+  } else if (req.headers['postman-token'] || uaLower.includes('postman')) {
+    metrics.apiChannels.postman += 1;
+  } else if (classification.category === 'browsers') {
+    metrics.apiChannels.web += 1;
+  } else {
+    metrics.apiChannels.direct += 1;
+  }
+
   if (classification.category !== 'browsers') {
     metrics.crawlerBreakdown[classification.name] = (metrics.crawlerBreakdown[classification.name] || 0) + 1;
   }
@@ -183,6 +206,7 @@ export const getAnalyticsSummary = () => {
     startedAt: metrics.startedAt,
     lastRequestAt: metrics.lastRequestAt,
     crawlers: metrics.crawlers,
+    apiChannels: metrics.apiChannels,
     crawlerBreakdown: metrics.crawlerBreakdown,
     topEndpoints,
     statusCodes: metrics.statusCodes,
