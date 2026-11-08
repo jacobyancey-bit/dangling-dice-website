@@ -14,6 +14,21 @@ Disallow: /api/auth
 Disallow: /api/checkout
 Disallow: /api/orders
 
+# Microsoft Bing & Copilot Crawlers
+User-agent: bingbot
+Allow: /
+Allow: /assets/
+Allow: /images/
+Allow: /css/
+Allow: /js/
+Disallow: /admin
+
+User-agent: msnbot
+Allow: /
+
+User-agent: BingPreview
+Allow: /
+
 # Google Search Crawlers
 User-agent: Googlebot
 Allow: /

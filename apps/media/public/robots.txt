@@ -12,6 +12,20 @@ Allow: /llms.txt
 Disallow: /api/auth
 Disallow: /api/checkout
 
+# Microsoft Bing & Copilot Crawlers
+User-agent: bingbot
+Allow: /
+
+User-agent: msnbot
+Allow: /
+
+User-agent: BingPreview
+Allow: /
+
+# Google Search Crawlers
+User-agent: Googlebot
+Allow: /
+
 # AI & LLM Search Agents (OpenAI ChatGPT, Anthropic Claude, Perplexity, Google Gemini)
 User-agent: GPTBot
 Allow: /

@@ -140,3 +140,4 @@ describe('🌟 Community Showcase & Categorized Rotation Suite', () => {
     assert.equal(selected._id, 'app-b', 'Must pick App B because it was least recently featured');
   });
 });
+
