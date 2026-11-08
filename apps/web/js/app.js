@@ -737,6 +737,122 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+// =========================================================================
+// Live Cloud Sandbox Runner (Executes 24/7 against Render /v1/* Endpoints)
+// =========================================================================
+const SANDBOX_PRESETS = {
+  schema: {
+    title: "🧩 JSON & SQL Schema Converter",
+    endpoint: "/v1/schema/infer",
+    payload: {
+      rootName: "UserAccount",
+      jsonInput: {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        email: "creator@dangling-dice-studios.com",
+        plan: "PRO",
+        credits: 2500,
+        active: true,
+      },
+    },
+  },
+  geo: {
+    title: "🗺️ Land Acreage & GPS Calculator",
+    endpoint: "/v1/geo/parcel-metrics",
+    payload: {
+      coordinates: [
+        [-86.7816, 36.1627],
+        [-86.7796, 36.1627],
+        [-86.7796, 36.1642],
+        [-86.7816, 36.1642],
+      ],
+    },
+  },
+  privacy: {
+    title: "🛡️ Sensitive Data & Log Redactor",
+    endpoint: "/v1/privacy/redact",
+    payload: {
+      mode: "mask",
+      text: "Customer email is jacob@dangling-dice-studios.com, phone (615) 555-0199, SSN 123-45-6789.",
+    },
+  },
+  finance: {
+    title: "💰 Loan Payoff & ROI Calculator",
+    endpoint: "/v1/finance/amortization",
+    payload: {
+      principal: 250000,
+      annualRatePercent: 6.25,
+      termMonths: 360,
+    },
+  },
+};
+
+let activeSandboxKey = "schema";
+
+window.openCloudSandbox = async function (key) {
+  const preset = SANDBOX_PRESETS[key] || SANDBOX_PRESETS.schema;
+  activeSandboxKey = key in SANDBOX_PRESETS ? key : "schema";
+  const drawer = document.getElementById("cloudSandboxDrawer");
+  const titleEl = document.getElementById("sandboxTitle");
+  const badgeEl = document.getElementById("sandboxBadge");
+  const inputEl = document.getElementById("sandboxInput");
+
+  if (titleEl) titleEl.textContent = preset.title;
+  if (badgeEl) badgeEl.textContent = `LIVE CLOUD SANDBOX • POST ${preset.endpoint}`;
+  if (inputEl) inputEl.value = JSON.stringify(preset.payload, null, 2);
+  if (drawer) {
+    drawer.style.display = "block";
+    drawer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  await window.runCloudSandbox();
+};
+
+window.runCloudSandbox = async function () {
+  const preset = SANDBOX_PRESETS[activeSandboxKey] || SANDBOX_PRESETS.schema;
+  const inputEl = document.getElementById("sandboxInput");
+  const outputEl = document.getElementById("sandboxOutput");
+  const labelEl = document.getElementById("sandboxOutputLabel");
+
+  if (!inputEl || !outputEl) return;
+  outputEl.textContent = "Executing on Dangling Dice Cloud Engine...";
+
+  try {
+    const parsedBody = JSON.parse(inputEl.value);
+    const baseOrigin =
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") &&
+      window.location.port !== "5000" &&
+      window.location.port !== "3000"
+        ? "http://localhost:5000"
+        : window.location.origin;
+
+    const res = await fetch(`${baseOrigin}${preset.endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsedBody),
+    });
+    const json = await res.json();
+    if (labelEl) {
+      labelEl.textContent = `Live Engine Output (${json.latencyMs ?? 1}ms • ${res.status} OK)`;
+    }
+    if (activeSandboxKey === "finance" && json.data?.schedule) {
+      outputEl.textContent = JSON.stringify(
+        {
+          monthlyPayment: json.data.monthlyPayment,
+          totalPrincipal: json.data.totalPrincipal,
+          totalInterest: json.data.totalInterest,
+          totalCost: json.data.totalCost,
+          first3MonthsPreview: json.data.schedule.slice(0, 3),
+        },
+        null,
+        2,
+      );
+    } else {
+      outputEl.textContent = JSON.stringify(json.data || json, null, 2);
+    }
+  } catch (err) {
+    outputEl.textContent = `Error: ${err.message}`;
+  }
+};
+
 // Startup
 window.addEventListener("DOMContentLoaded", async () => {
   initDockState();

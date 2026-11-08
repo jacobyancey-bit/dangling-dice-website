@@ -590,9 +590,9 @@
               </p>
             </div>
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-              <a href="http://localhost:3100" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
-                Launch Interactive Sandboxes ⚡
-              </a>
+              <button type="button" onclick="openCloudSandbox('schema')" class="btn btn-primary btn-sm">
+                Launch Interactive Sandbox ⚡
+              </button>
               <a href="https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api/pricing" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
                 Price Details (RapidAPI) ↗
               </a>
@@ -601,37 +601,69 @@
 
           <!-- 4 Compute Engines Grid -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
-            <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Schema &amp; Database Tools</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🧩 JSON &amp; SQL Schema Converter</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Automatically generate TypeScript types, validation schemas, and database table definitions from any JSON or SQL input.</p>
-              <a href="http://localhost:3100/tools/json-to-zod" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
+            <div onclick="openCloudSandbox('schema')" style="cursor: pointer; background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Schema &amp; Database Tools</div>
+                <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🧩 JSON &amp; SQL Schema Converter</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Automatically generate TypeScript types, validation schemas, and database table definitions from any JSON or SQL input.</p>
+              </div>
+              <span style="font-size: 0.76rem; color: #67e8f9; font-weight: 700;">Test Tool Live &rarr;</span>
             </div>
 
-            <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Maps, GPS &amp; Network Tools</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🗺️ Land Acreage &amp; GPS Calculator</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Calculate exact property acreage, hectares, square footage, perimeter, and GPS distance from map coordinates.</p>
-              <a href="http://localhost:3100/tools/polygon-acreage-calculator" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
+            <div onclick="openCloudSandbox('geo')" style="cursor: pointer; background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Maps, GPS &amp; Network Tools</div>
+                <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🗺️ Land Acreage &amp; GPS Calculator</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Calculate exact property acreage, hectares, square footage, perimeter, and GPS distance from map coordinates.</p>
+              </div>
+              <span style="font-size: 0.76rem; color: #67e8f9; font-weight: 700;">Test Tool Live &rarr;</span>
             </div>
 
-            <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Data Privacy &amp; Security</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🛡️ Sensitive Data &amp; Log Redactor</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Automatically scrub emails, SSNs, credit card numbers, phone numbers, and secret keys from text and data logs.</p>
-              <a href="http://localhost:3100/tools/pii-redactor" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
+            <div onclick="openCloudSandbox('privacy')" style="cursor: pointer; background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Data Privacy &amp; Security</div>
+                <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">🛡️ Sensitive Data &amp; Log Redactor</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Automatically scrub emails, SSNs, credit card numbers, phone numbers, and secret keys from text and data logs.</p>
+              </div>
+              <span style="font-size: 0.76rem; color: #67e8f9; font-weight: 700;">Test Tool Live &rarr;</span>
             </div>
 
-            <div style="background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem;">
-              <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Finance &amp; Project Calculators</div>
-              <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">💰 Loan Payoff &amp; ROI Calculator</div>
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Generate monthly loan payoff schedules, extra-payment savings, compound interest projections, and project cost estimates.</p>
-              <a href="http://localhost:3100/tools/loan-amortization-calculator" target="_blank" rel="noopener noreferrer" style="font-size: 0.76rem; color: #67e8f9; font-weight: 600;">Open Tool &rarr;</a>
+            <div onclick="openCloudSandbox('finance')" style="cursor: pointer; background: rgba(12, 18, 29, 0.88); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Finance &amp; Project Calculators</div>
+                <div style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0.25rem 0;">💰 Loan Payoff &amp; ROI Calculator</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.65rem;">Generate monthly loan payoff schedules, extra-payment savings, compound interest projections, and project cost estimates.</p>
+              </div>
+              <span style="font-size: 0.76rem; color: #67e8f9; font-weight: 700;">Test Tool Live &rarr;</span>
+            </div>
+          </div>
+
+          <!-- Interactive Cloud Sandbox Drawer (Runs 24/7 against live /v1/* Render API) -->
+          <div id="cloudSandboxDrawer" style="display: none; background: #060911; border: 1px solid rgba(6, 182, 212, 0.45); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem;">
+              <div>
+                <span id="sandboxBadge" style="font-size: 0.7rem; color: #fbbf24; font-weight: 700; text-transform: uppercase;">LIVE CLOUD SANDBOX</span>
+                <h4 id="sandboxTitle" style="font-size: 1.05rem; font-weight: 800; color: #fff; margin-top: 0.15rem;">🧩 JSON &amp; SQL Schema Converter</h4>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" onclick="runCloudSandbox()" class="btn btn-primary btn-sm">▶ Run Live Engine</button>
+                <button type="button" onclick="document.getElementById('cloudSandboxDrawer').style.display='none'" class="btn btn-secondary btn-sm">Close &times;</button>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+              <div>
+                <label style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">Input Payload (Editable JSON)</label>
+                <textarea id="sandboxInput" rows="7" style="font-family: var(--font-mono); font-size: 0.76rem; background: #030509; color: #e2e8f0; border: 1px solid var(--border-subtle); width: 100%; border-radius: var(--radius-sm); padding: 0.75rem;"></textarea>
+              </div>
+              <div>
+                <label id="sandboxOutputLabel" style="font-size: 0.74rem; color: #34d399; margin-bottom: 0.35rem; display: block;">Live Engine Output</label>
+                <pre id="sandboxOutput" style="margin: 0; height: 158px; overflow: auto; font-family: var(--font-mono); font-size: 0.75rem; background: #030509; color: #67e8f9; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.75rem;">Click "▶ Run Live Engine" to execute...</pre>
+              </div>
             </div>
           </div>
 
           <!-- 5-Line Node.js / Discord Bot Quickstart -->
-          <div style="background: #04060a; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1rem;">
+          <div style="background: #04060a; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
               <span style="font-size: 0.72rem; color: #67e8f9; font-family: var(--font-mono); font-weight: 700;">// Quickstart Example — Media &amp; Compute REST API</span>
               <span style="font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-mono);">POST /api/media/convert</span>
@@ -643,12 +675,6 @@
 });
 const { data } = await res.json();
 console.log("Download Stream:", data.downloadUrl);</code></pre>
-          </div>
-
-          <div style="display: flex; justify-content: flex-end; align-items: center; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-size: 0.8rem;">
-            <a href="http://localhost:3100/#enterprise" target="_blank" rel="noopener noreferrer" style="color: #fbbf24; font-weight: 700;">
-              Need Private AWS/GCP VPC or Custom Engine Architecture? Request Consultation &rarr;
-            </a>
           </div>
         </div>
       </section>
