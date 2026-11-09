@@ -563,63 +563,122 @@ window.copyWireGuardConfig = function () {
 let isDockAudioActive = false;
 let isPlaylistDrawerOpen = false;
 
-// 1. Official Dangling Beats Studio Stations
+// 1. Official Dangling Beats Studio Stations (All 8 Curated Channel Playlists)
 const officialStations = [
   {
     id: "lofi-drive",
     title: "Dangling Beats • Lo-Fi Drive",
     subtitle: "Official Lo-Fi Focus Radio",
-    badge: "Official Lofi",
-    url: "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
-  },
-  {
-    id: "dark-trap",
-    title: "Dangling Beats • Dark Trap & 808s",
-    subtitle: "Late-Night Coding & Heavy 808s",
-    badge: "Trap & 808s",
+    badge: "Lo-Fi",
     url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
   },
   {
-    id: "synthwave",
-    title: "Dangling Beats • Synthwave Cyber",
-    subtitle: "Retro Futuristic Instrumental Vault",
-    badge: "Synthwave",
-    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+    id: "dreamcore",
+    title: "Dangling Beats • Dreamcore",
+    subtitle: "Ethereal Ambient Soundscapes",
+    badge: "Dreamcore",
+    url: "https://www.youtube.com/embed/videoseries?list=PLByFVPrF7p0s&autoplay=1&enablejsapi=1",
   },
   {
-    id: "chillhop",
-    title: "Dangling Beats • Chillhop Cafe",
-    subtitle: "Smooth Rhodes & Jazzy Beats",
-    badge: "Chillhop",
-    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+    id: "relaxing-jazz",
+    title: "Dangling Beats • Relaxing Jazz",
+    subtitle: "Smooth Rhodes & Jazzy Vibes",
+    badge: "Jazz",
+    url: "https://www.youtube.com/embed/videoseries?list=PLZzyR4Y8j_gA&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "jk-pop",
+    title: "Dangling Beats • J/K Pop Background",
+    subtitle: "Upbeat Coding & Creative Rhythm",
+    badge: "Pop",
+    url: "https://www.youtube.com/embed/videoseries?list=PLUOqd5Jfm3gw&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "yacht-rock",
+    title: "Dangling Beats • Yacht Rock",
+    subtitle: "Classic Sunset Grooves",
+    badge: "Groove",
+    url: "https://www.youtube.com/embed/videoseries?list=PLOQPFjHz5Vs4&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "sleep-music",
+    title: "Dangling Beats • Sleep Music",
+    subtitle: "Deep Relaxation & Binaural Waves",
+    badge: "Sleep",
+    url: "https://www.youtube.com/embed/videoseries?list=PLJL6dnrrRw-k&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "music-albums",
+    title: "Dangling Beats • Music Albums",
+    subtitle: "Full Studio Album Catalog",
+    badge: "Albums",
+    url: "https://www.youtube.com/embed/videoseries?list=PLR6uUDnIO7P0&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "live-videos",
+    title: "Dangling Beats • Live Sessions",
+    subtitle: "Live Studio Broadcasts",
+    badge: "Live",
+    url: "https://www.youtube.com/embed/videoseries?list=PLFLqzwDKWUyQ&autoplay=1&enablejsapi=1",
   },
 ];
 
-// 2. Featured Indie Music Producer Stations (Dynamically expanded via /api/showcase)
-let indieStations = [
-  {
-    id: "beatforge-stems",
-    title: "BeatForge WebAudio Stem Player",
-    subtitle: "Producer: @indieaudio",
-    badge: "Indie Creator",
-    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
-  },
-];
+// 2. Custom User Added Playlists (Persisted in localStorage)
+let customStations = [];
+try {
+  customStations = JSON.parse(localStorage.getItem("customBeatsStations") || "[]");
+} catch (e) {
+  customStations = [];
+}
+
+// 3. Featured Indie Music Producer Stations (Dynamically expanded via /api/showcase)
+let indieStations = [];
 
 let activeStationId = localStorage.getItem("activeBeatsStation") || "lofi-drive";
 
 function getActiveStation() {
   return (
     officialStations.find((s) => s.id === activeStationId) ||
+    customStations.find((s) => s.id === activeStationId) ||
     indieStations.find((s) => s.id === activeStationId) ||
     officialStations[0]
   );
 }
 
 function renderStationsList() {
+  const customSection = document.getElementById("customStationsSection");
+  const customContainer = document.getElementById("customStationsList");
   const officialContainer = document.getElementById("officialStationsList");
   const indieContainer = document.getElementById("indieStationsList");
 
+  // Render Custom Playlists
+  if (customContainer && customSection) {
+    if (customStations.length > 0) {
+      customSection.style.display = "block";
+      customContainer.innerHTML = customStations
+        .map(
+          (s) => `
+          <div class="dock-station-item ${s.id === activeStationId ? "active" : ""}" onclick="selectStation('${s.id}')">
+            <div class="dock-station-info">
+              <span class="dock-station-title">${s.title}</span>
+              <span class="dock-station-sub" style="color: #67e8f9;">${s.subtitle}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="font-size: 0.72rem; color: ${s.id === activeStationId ? "#f472b6" : "var(--text-muted)"};">
+                ${s.id === activeStationId ? "▶ Playing" : "▶"}
+              </span>
+              <button type="button" onclick="removeCustomStation('${s.id}', event)" title="Remove playlist" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-size: 0.8rem; padding: 0.1rem 0.25rem;">&times;</button>
+            </div>
+          </div>
+        `
+        )
+        .join("");
+    } else {
+      customSection.style.display = "none";
+    }
+  }
+
+  // Render Official Dangling Beats Playlists
   if (officialContainer) {
     officialContainer.innerHTML = officialStations
       .map(
@@ -638,6 +697,7 @@ function renderStationsList() {
       .join("");
   }
 
+  // Render Indie Producer Stations
   if (indieContainer) {
     if (indieStations.length === 0) {
       indieContainer.innerHTML = `
@@ -664,6 +724,71 @@ function renderStationsList() {
     }
   }
 }
+
+window.toggleCustomStationForm = function () {
+  const form = document.getElementById("dockAddStationForm");
+  if (!form) return;
+  const isHidden = form.style.display === "none";
+  form.style.display = isHidden ? "block" : "none";
+  if (isHidden) {
+    const titleInput = document.getElementById("customStationTitle");
+    if (titleInput) titleInput.focus();
+  }
+};
+
+window.submitCustomStation = function () {
+  const titleInput = document.getElementById("customStationTitle");
+  const urlInput = document.getElementById("customStationUrl");
+  const title = titleInput?.value?.trim() || "";
+  const url = urlInput?.value?.trim() || "";
+
+  if (!url) {
+    window.showToast("Please enter a YouTube playlist or video link", "error");
+    return;
+  }
+
+  const embed = getYouTubeEmbedUrl(url);
+  if (!embed) {
+    window.showToast("Invalid YouTube URL. Please provide a playlist or watch link.", "error");
+    return;
+  }
+
+  const stationName = title || "Custom Beats Playlist";
+  const newStation = {
+    id: "custom-" + Date.now(),
+    title: stationName,
+    subtitle: "Custom YouTube Station",
+    badge: "Custom",
+    url: embed.includes("autoplay=1") ? embed : `${embed}${embed.includes("?") ? "&" : "?"}autoplay=1&enablejsapi=1`,
+    isCustom: true,
+  };
+
+  customStations.unshift(newStation);
+  try {
+    localStorage.setItem("customBeatsStations", JSON.stringify(customStations));
+  } catch (e) {}
+
+  if (titleInput) titleInput.value = "";
+  if (urlInput) urlInput.value = "";
+  window.toggleCustomStationForm();
+  renderStationsList();
+  window.selectStation(newStation.id);
+  window.showToast(`✅ Added & playing: ${stationName}`, "success");
+};
+
+window.removeCustomStation = function (stationId, event) {
+  if (event) event.stopPropagation();
+  customStations = customStations.filter((s) => s.id !== stationId);
+  try {
+    localStorage.setItem("customBeatsStations", JSON.stringify(customStations));
+  } catch (e) {}
+  if (activeStationId === stationId) {
+    window.selectStation(officialStations[0].id);
+  } else {
+    renderStationsList();
+  }
+  window.showToast("Station removed", "info");
+};
 
 window.togglePlaylistDrawer = function () {
   const drawer = document.getElementById("dockPlaylistDrawer");
@@ -692,18 +817,24 @@ window.selectStation = function (stationId) {
   const dock = document.getElementById("beatsDock");
   const btn = document.getElementById("dockPlayBtn");
 
+  // Force clean iframe reload so YouTube starts playing the new playlist immediately
   if (iframe) {
-    iframe.src = station.url;
+    iframe.src = "";
+    setTimeout(() => {
+      const url = station.url.includes("autoplay=1")
+        ? station.url
+        : `${station.url}${station.url.includes("?") ? "&" : "?"}autoplay=1&enablejsapi=1`;
+      iframe.src = url;
+    }, 60);
   }
-  if (!isDockAudioActive) {
-    isDockAudioActive = true;
-    if (dock) {
-      dock.classList.add("playing");
-      dock.classList.remove("minimized");
-    }
-    if (btn) btn.textContent = "⏸ Pause";
-    if (drawer) drawer.style.display = "block";
+
+  isDockAudioActive = true;
+  if (dock) {
+    dock.classList.add("playing");
+    dock.classList.remove("minimized");
   }
+  if (btn) btn.textContent = "⏸ Pause";
+  if (drawer) drawer.style.display = "block";
 
   // Close drawer after selection
   isPlaylistDrawerOpen = false;
@@ -711,7 +842,7 @@ window.selectStation = function (stationId) {
   if (pDrawer) pDrawer.style.display = "none";
 
   renderStationsList();
-  window.showToast(`▶ Station: ${station.title}`, "success");
+  window.showToast(`▶ Now Playing: ${station.title}`, "success");
 };
 
 window.openCurrentStationCinema = function () {

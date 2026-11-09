@@ -1032,12 +1032,36 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
           <span style="font-size: 1rem;">📻</span>
           <span style="font-size: 0.82rem; font-weight: 800; color: #fff;">Radio Stations &amp; Playlists</span>
         </div>
-        <button type="button" class="dock-close-btn" onclick="togglePlaylistDrawer()" title="Close stations">&times;</button>
+        <div style="display: flex; align-items: center; gap: 0.35rem;">
+          <button type="button" class="dock-submit-beat-btn" onclick="toggleCustomStationForm()" title="Add any YouTube playlist or video" style="padding: 0.15rem 0.45rem; font-size: 0.65rem;">
+            + Add Playlist
+          </button>
+          <button type="button" class="dock-close-btn" onclick="togglePlaylistDrawer()" title="Close stations">&times;</button>
+        </div>
+      </div>
+
+      <!-- Inline Add Playlist Form (expandable) -->
+      <div id="dockAddStationForm" style="display: none; padding: 0.65rem 0.85rem; background: rgba(0, 0, 0, 0.45); border-bottom: 1px solid rgba(236, 72, 153, 0.25);">
+        <div style="font-size: 0.72rem; font-weight: 700; color: #f472b6; margin-bottom: 0.35rem;">Add Any YouTube Playlist or Video Link</div>
+        <input type="text" id="customStationTitle" placeholder="Playlist / Station Name (e.g. My Beats)" style="width: 100%; font-size: 0.75rem; padding: 0.35rem 0.5rem; background: #070a10; border: 1px solid var(--border-subtle); border-radius: 4px; color: #fff; margin-bottom: 0.35rem; box-sizing: border-box;" />
+        <input type="url" id="customStationUrl" placeholder="https://www.youtube.com/playlist?list=... or video link" style="width: 100%; font-size: 0.75rem; padding: 0.35rem 0.5rem; background: #070a10; border: 1px solid var(--border-subtle); border-radius: 4px; color: #fff; margin-bottom: 0.5rem; box-sizing: border-box;" />
+        <div style="display: flex; justify-content: flex-end; gap: 0.4rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCustomStationForm()" style="height: 26px; padding: 0 0.5rem; font-size: 0.7rem;">Cancel</button>
+          <button type="button" class="btn btn-purple btn-sm" onclick="submitCustomStation()" style="height: 26px; padding: 0 0.65rem; font-size: 0.7rem;">Add &amp; Play ▶</button>
+        </div>
       </div>
 
       <div class="dock-playlist-content">
+        <!-- Custom User Playlists -->
+        <div id="customStationsSection" style="display: none; margin-bottom: 0.85rem;">
+          <div class="dock-playlist-section-label">🎵 My Added Playlists</div>
+          <div id="customStationsList" class="dock-stations-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
         <!-- Official Studio Stations -->
-        <div class="dock-playlist-section-label">🎧 Official Dangling Beats Stations</div>
+        <div class="dock-playlist-section-label">🎧 Official Dangling Beats Playlists</div>
         <div id="officialStationsList" class="dock-stations-list">
           <!-- Populated by JS -->
         </div>
