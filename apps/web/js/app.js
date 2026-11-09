@@ -213,6 +213,8 @@ function renderCatalog() {
     if (item.isAffiliate) return false;
     const url = (item.liveUrl || item.mediaUrl || "").toLowerCase();
     if (url.includes("vpn.danglingdice.com") || url === "#mongoinspector") return false;
+    // Temporarily hide Coding Tutorials until dedicated Dangling Dice Coding YouTube is connected
+    if (item.category === "Coding Tutorials") return false;
     return true;
   });
 
