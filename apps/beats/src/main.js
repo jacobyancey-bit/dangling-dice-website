@@ -42,112 +42,11 @@ import {
   render808ToWav,
 } from './beatmaker808.js';
 
+import { midiEngine, MPC_PADS_CONFIG } from './midiEngine.js';
+
 const API_BASE = window.location.hostname === "localhost" 
   ? "http://localhost:5000/api" 
   : "https://dangling-dice-studios.com/api";
-
-const officialStations = [
-  {
-    id: "lofi-drive",
-    title: "Dangling Beats • Lo-Fi Drive",
-    subtitle: "Official Lo-Fi & Cyberpunk Focus Radio",
-    badge: "Lo-Fi",
-    emoji: "🌙",
-    videoId: "2J-U0EUATHs",
-    url: "https://www.youtube-nocookie.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Late-night chillhop, dusty Rhodes piano, and mellow drum loops crafted for deep coding focus and flow state."
-  },
-  {
-    id: "dreamcore",
-    title: "Dangling Beats • Dreamcore",
-    subtitle: "Ethereal Ambient Soundscapes",
-    badge: "Dreamcore",
-    emoji: "☁️",
-    videoId: "BGW1y-9bVJc",
-    url: "https://www.youtube-nocookie.com/embed/BGW1y-9bVJc?list=PLByFVPrF7p0s&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Floating reverb pads, lush textures, and nostalgic frequencies designed for immersive daydreaming and relaxed productivity."
-  },
-  {
-    id: "relaxing-jazz",
-    title: "Dangling Beats • Relaxing Jazz",
-    subtitle: "Smooth Rhodes & Jazzy Vibes",
-    badge: "Jazz",
-    emoji: "🎷",
-    videoId: "0YknzKYiDXo",
-    url: "https://www.youtube-nocookie.com/embed/0YknzKYiDXo?list=PLZzyR4Y8j_gA&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Warm upright bass, gentle brushes, and vintage jazz chords recorded in our studio sound lab."
-  },
-  {
-    id: "jk-pop",
-    title: "Dangling Beats • J/K Pop Background",
-    subtitle: "Upbeat Coding & Creative Rhythm",
-    badge: "Pop",
-    emoji: "⚡",
-    videoId: "8Z0e3VIb-4U",
-    url: "https://www.youtube-nocookie.com/embed/8Z0e3VIb-4U?list=PLUOqd5Jfm3gw&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Bouncy synths, syncopated melodies, and clean creative grooves for daytime designing and rapid engineering."
-  },
-  {
-    id: "yacht-rock",
-    title: "Dangling Beats • Yacht Rock",
-    subtitle: "Classic Sunset Grooves",
-    badge: "Groove",
-    emoji: "⛵",
-    videoId: "2Onu8sRtlk8",
-    url: "https://www.youtube-nocookie.com/embed/2Onu8sRtlk8?list=PLOQPFjHz5Vs4&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Smooth 70s/80s California sunset grooves, warm brass, and harmonic rhythms."
-  },
-  {
-    id: "sleep-music",
-    title: "Dangling Beats • Sleep Music",
-    subtitle: "Deep Relaxation & Binaural Waves",
-    badge: "Sleep",
-    emoji: "😴",
-    videoId: "fdBVmykxMqE",
-    url: "https://www.youtube-nocookie.com/embed/fdBVmykxMqE?list=PLJL6dnrrRw-k&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Sub-bass binaural drones, delta-wave ambient harmonics, and peaceful meditative textures."
-  },
-  {
-    id: "music-albums",
-    title: "Dangling Beats • Music Albums",
-    subtitle: "Full Studio Album Catalog",
-    badge: "Albums",
-    emoji: "💿",
-    videoId: "YIaOzPji1Kk",
-    url: "https://www.youtube-nocookie.com/embed/YIaOzPji1Kk?list=PLR6uUDnIO7P0&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Complete conceptual instrumental albums released by Dangling Beats Studio."
-  },
-  {
-    id: "live-videos",
-    title: "Dangling Beats • Live Sessions",
-    subtitle: "Live Studio Broadcasts",
-    badge: "Live",
-    emoji: "🔴",
-    videoId: "YY8mKBKGM5o",
-    url: "https://www.youtube-nocookie.com/embed/YY8mKBKGM5o?list=PLFLqzwDKWUyQ&autoplay=1&enablejsapi=1&playsinline=1",
-    desc: "Multi-camera studio jam sessions, beat tape premieres, and live hardware sequencing."
-  }
-];
-
-let customStations = [];
-try {
-  customStations = JSON.parse(localStorage.getItem("customBeatsStations") || "[]");
-} catch (e) {
-  customStations = [];
-}
-
-let indieStations = [];
-let activeStationId = localStorage.getItem("activeBeatsStation") || "lofi-drive";
-let isPlaying = false;
-
-function getAllStations() {
-  return [...officialStations, ...customStations, ...indieStations];
-}
-
-function getActiveStation() {
-  const all = getAllStations();
-  return all.find((s) => s.id === activeStationId) || officialStations[0];
-}
 
 function showToast(msg, type = "info") {
   const existing = document.querySelector(".toast");
@@ -165,145 +64,201 @@ function showToast(msg, type = "info") {
   }, 3500);
 }
 
-function parseYouTubeEmbedUrl(rawUrl) {
-  if (!rawUrl) return null;
-  const str = rawUrl.trim();
-  const listMatch = str.match(/[?&]list=([^#&?]+)/);
-  if (listMatch) {
-    const listId = listMatch[1];
-    return `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(listId)}`;
-  }
-  let videoId = null;
-  if (str.includes("youtu.be/")) {
-    const parts = str.split("youtu.be/")[1];
-    videoId = parts ? parts.split(/[?#&]/)[0] : null;
-  } else if (str.includes("watch?v=")) {
-    const match = str.match(/[?&]v=([^#&]+)/);
-    videoId = match ? match[1] : null;
-  } else if (str.includes("/embed/")) {
-    const parts = str.split("/embed/")[1];
-    videoId = parts ? parts.split(/[?#&]/)[0] : null;
-  }
-  if (videoId) {
-    return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`;
-  }
-  return null;
-}
+// ============================================================================
+// Web MIDI API & Hardware Integration
+// ============================================================================
 
-function updateConsoleUI() {
-  const station = getActiveStation();
-  const titleEl = document.getElementById("consoleTrackTitle");
-  const subEl = document.getElementById("consoleTrackSub");
-  const badgeEl = document.getElementById("consoleBadge");
-  const playBtn = document.getElementById("consolePlayBtn");
-  const consoleEl = document.getElementById("playerConsole");
+async function requestMidiAccess() {
+  const result = await midiEngine.init();
+  updateMidiStatusUI(result);
 
-  if (titleEl) titleEl.textContent = station.title;
-  if (subEl) subEl.textContent = station.subtitle;
-  if (badgeEl) badgeEl.textContent = station.badge || "Station";
-
-  if (consoleEl) {
-    if (isPlaying) {
-      consoleEl.classList.add("playing");
-    } else {
-      consoleEl.classList.remove("playing");
-    }
-  }
-
-  if (playBtn) {
-    playBtn.textContent = isPlaying ? "⏸ Pause Radio" : "▶ Start Radio";
-  }
-
-  // Update active state in stations grid
-  document.querySelectorAll(".station-card").forEach((card) => {
-    if (card.dataset.id === station.id) {
-      card.classList.add("active");
-    } else {
-      card.classList.remove("active");
-    }
-  });
-}
-
-function playStation(stationId) {
-  activeStationId = stationId;
-  try {
-    localStorage.setItem("activeBeatsStation", stationId);
-  } catch (e) {}
-
-  const station = getActiveStation();
-  const iframe = document.getElementById("beatsIframe");
-
-  if (iframe) {
-    const origin = window.location.origin;
-    let url = station.url;
-    if (!url.includes("origin=")) {
-      url += (url.includes("?") ? "&" : "?") + `origin=${encodeURIComponent(origin)}`;
-    }
-    iframe.src = url;
-  }
-
-  isPlaying = true;
-  updateConsoleUI();
-  showToast(`▶ Now Playing: ${station.title}`, "success");
-}
-
-function togglePlay() {
-  const iframe = document.getElementById("beatsIframe");
-  const station = getActiveStation();
-
-  if (isPlaying) {
-    if (iframe) iframe.src = "";
-    isPlaying = false;
-    updateConsoleUI();
-    showToast("Radio Paused", "info");
+  if (result.connected) {
+    showToast(`🎹 Connected: ${result.deviceName}`, "success");
+  } else if (result.supported) {
+    showToast("Web MIDI active: Plug in any USB/Bluetooth MIDI keyboard", "info");
   } else {
-    playStation(station.id);
+    showToast(result.error || "Web MIDI not supported in this browser", "error");
   }
 }
 
-function nextStation() {
-  const all = getAllStations();
-  const currentIndex = all.findIndex((s) => s.id === activeStationId);
-  const nextIndex = (currentIndex + 1) % all.length;
-  playStation(all[nextIndex].id);
+function updateMidiStatusUI(status) {
+  const btn = document.getElementById("midiConnectBtn");
+  const text = document.getElementById("midiStatusText");
+  const deviceText = document.getElementById("activeMidiDeviceText");
+
+  if (!btn || !text) return;
+
+  if (status.connected && status.deviceName) {
+    btn.classList.add("connected");
+    text.textContent = `🟢 ${status.deviceName}`;
+    if (deviceText) deviceText.textContent = status.deviceName;
+  } else if (status.supported) {
+    btn.classList.remove("connected");
+    text.textContent = "🎹 Web MIDI Ready (Plug In)";
+    if (deviceText) deviceText.textContent = "Listening for USB...";
+  } else {
+    btn.classList.remove("connected");
+    text.textContent = "🎹 Web MIDI Not Supported";
+    if (deviceText) deviceText.textContent = "Unsupported Browser";
+  }
 }
 
-function prevStation() {
-  const all = getAllStations();
-  const currentIndex = all.findIndex((s) => s.id === activeStationId);
-  const prevIndex = (currentIndex - 1 + all.length) % all.length;
-  playStation(all[prevIndex].id);
+// Wire hardware MIDI note events to active studio instruments
+midiEngine.onNote(({ type, note, velocity }) => {
+  if (type === 'noteon') {
+    // 1. Play active chord/piano note
+    playSingleNote(note);
+
+    // 2. Highlight piano key if visible
+    const keyEl = document.querySelector(`[data-midi="${note}"]`);
+    if (keyEl) {
+      keyEl.classList.add('playing');
+      setTimeout(() => keyEl.classList.remove('playing'), 180);
+    }
+
+    // 3. Trigger 16-Pad MPC if within note range (36 to 51)
+    const padObj = MPC_PADS_CONFIG.find((p) => p.note === note);
+    if (padObj) {
+      handleMpcPadHit(padObj.pad, velocity);
+    }
+  }
+});
+
+midiEngine.onStatusChange((status) => {
+  updateMidiStatusUI(status);
+});
+
+// ============================================================================
+// Master Studio Clock & Tap Tempo
+// ============================================================================
+
+let tapTimes = [];
+
+function handleMasterBpmChange(val) {
+  const bpm = Math.max(40, Math.min(280, parseInt(val) || 120));
+  progressionBpm = bpm;
+
+  const progInput = document.getElementById('progressionBpmInput');
+  const calcInput = document.getElementById('calcBpmInput');
+  const masterInput = document.getElementById('masterBpmInput');
+
+  if (progInput) progInput.value = bpm;
+  if (calcInput) calcInput.value = bpm;
+  if (masterInput) masterInput.value = bpm;
+
+  updateDelayCalculations(bpm);
+  runPitchShiftCalc();
 }
 
-function renderStations() {
-  const grid = document.getElementById("stationsGrid");
+function tapTempo() {
+  const now = performance.now();
+  tapTimes.push(now);
+
+  if (tapTimes.length > 4) {
+    tapTimes.shift();
+  }
+
+  if (tapTimes.length >= 2) {
+    const diffs = [];
+    for (let i = 1; i < tapTimes.length; i++) {
+      diffs.push(tapTimes[i] - tapTimes[i - 1]);
+    }
+    const avgDiff = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    const computedBpm = Math.round(60000 / avgDiff);
+    handleMasterBpmChange(computedBpm);
+  }
+}
+
+// ============================================================================
+// Virtual 16-Pad MPC / Launchpad Controller
+// ============================================================================
+
+let mpcBankMode = 'drums';
+
+function renderMpcPads() {
+  const grid = document.getElementById('mpcPadGrid');
   if (!grid) return;
 
-  const all = getAllStations();
-  grid.innerHTML = all
-    .map((s) => {
-      const isActive = s.id === activeStationId;
-      return `
-        <div class="station-card ${isActive ? "active" : ""}" data-id="${s.id}" onclick="window.playStation('${s.id}')">
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="station-card-badge">${s.badge || "Radio"}</span>
-              <span style="font-size: 1.25rem;">${s.emoji || "🎵"}</span>
-            </div>
-            <h3 class="station-card-title">${s.title}</h3>
-            <p class="station-card-sub">${s.desc || s.subtitle}</p>
-          </div>
-          <div class="station-card-action">
-            <span>${isActive && isPlaying ? "🟢 Streaming Now" : "Stream Station"}</span>
-            <span style="font-size: 1.1rem;">${isActive && isPlaying ? "⏸" : "▶"}</span>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+  grid.innerHTML = MPC_PADS_CONFIG.map((p) => {
+    let padName = p.name;
+    if (mpcBankMode === 'slices') {
+      const sliceIdx = p.pad - 1;
+      padName = chopperSlices && sliceIdx < chopperSlices.length ? `Slice ${sliceIdx + 1}` : `Slice ${p.pad}`;
+    } else if (mpcBankMode === 'chords') {
+      const chordIdx = (p.pad - 1) % (progressionSequence.length || 1);
+      const chord = progressionSequence[chordIdx];
+      padName = chord ? chord.name : `Chord ${p.pad}`;
+    }
+
+    return `
+      <div 
+        class="mpc-pad" 
+        id="mpcPad_${p.pad}" 
+        onmousedown="window.handleMpcPadHit(${p.pad}, 0.95)"
+        title="Pad ${p.pad} • Key [${p.key}] • MIDI ${p.note}"
+      >
+        <div class="mpc-pad-key">[ ${p.key} ]</div>
+        <div class="mpc-pad-name" id="mpcPadName_${p.pad}">${padName}</div>
+        <div class="mpc-pad-note">Pad ${p.pad}</div>
+      </div>
+    `;
+  }).join('');
 }
 
-// Fetch Catalog Releases
+function handleMpcBankChange(val) {
+  mpcBankMode = val;
+  renderMpcPads();
+}
+
+function handleMpcPadHit(padNum, velocity = 0.9) {
+  const padEl = document.getElementById(`mpcPad_${padNum}`);
+  if (padEl) {
+    padEl.classList.add('active');
+    setTimeout(() => padEl.classList.remove('active'), 120);
+  }
+
+  if (mpcBankMode === 'drums') {
+    // Map pad to synthesized analog drum sounds
+    const padObj = MPC_PADS_CONFIG.find((p) => p.pad === padNum);
+    if (!padObj) return;
+
+    if ([1, 2].includes(padNum)) {
+      playSynthesizedDrum('kick');
+    } else if ([3, 4, 5].includes(padNum)) {
+      playSynthesizedDrum('snare');
+    } else if ([7, 9, 11].includes(padNum)) {
+      playSynthesizedDrum('hat');
+    } else {
+      playSynthesizedDrum('perc');
+    }
+  } else if (mpcBankMode === 'slices') {
+    const sliceIdx = padNum - 1;
+    if (chopperAudioBuffer && sliceIdx < chopperSlices.length) {
+      playSlice(sliceIdx);
+    } else {
+      playFullLoop();
+    }
+  } else if (mpcBankMode === 'chords') {
+    if (progressionSequence.length > 0) {
+      const chordIdx = (padNum - 1) % progressionSequence.length;
+      auditionProgressionChord(chordIdx);
+    }
+  }
+}
+
+// Global QWERTY Keyboard listener for 16 MPC Pads
+window.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+  const keyUpper = e.key.toUpperCase();
+  const padObj = MPC_PADS_CONFIG.find((p) => p.key.toUpperCase() === keyUpper);
+  if (padObj) {
+    e.preventDefault();
+    handleMpcPadHit(padObj.pad, 0.95);
+  }
+});
+
+// Fetch Studio Beat Releases Catalog
 async function fetchBeatCatalog() {
   const container = document.getElementById("beatCatalogGrid");
   if (!container) return;
@@ -317,7 +272,7 @@ async function fetchBeatCatalog() {
     if (items.length === 0) {
       container.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">
-          Studio instrumentals are streaming live in the player above.
+          Studio instrumentals and sound packs are loaded in the workstation above.
         </div>
       `;
       return;
@@ -332,11 +287,8 @@ async function fetchBeatCatalog() {
             <p class="station-card-sub">${item.description || "Original release from Dangling Beats Studio"}</p>
           </div>
           <div class="station-card-action">
-            <a href="${item.mediaUrl || 'https://www.youtube.com/@danglingdicestudios'}" target="_blank" rel="noopener noreferrer" style="color: #f472b6; text-decoration: none;">
-              Listen on YouTube ↗
-            </a>
-            <a href="https://media.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: none;">
-              Download MP3 ⚡
+            <a href="https://media.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: none; font-weight: 700;">
+              Download Stems &amp; Audio ⚡
             </a>
           </div>
         </div>
@@ -345,58 +297,6 @@ async function fetchBeatCatalog() {
   } catch (err) {
     console.warn("Could not fetch beat catalog:", err);
   }
-}
-
-// Custom Station Modal
-function openAddStationModal() {
-  const modal = document.getElementById("addStationModal");
-  if (modal) modal.style.display = "flex";
-}
-
-function closeAddStationModal() {
-  const modal = document.getElementById("addStationModal");
-  if (modal) modal.style.display = "none";
-}
-
-function handleAddCustomStation(e) {
-  e.preventDefault();
-  const titleInput = document.getElementById("customStationTitle");
-  const urlInput = document.getElementById("customStationUrl");
-  const title = titleInput?.value?.trim() || "";
-  const url = urlInput?.value?.trim() || "";
-
-  if (!url) {
-    showToast("Please enter a YouTube video or playlist link", "error");
-    return;
-  }
-
-  const embed = parseYouTubeEmbedUrl(url);
-  if (!embed) {
-    showToast("Invalid YouTube link format", "error");
-    return;
-  }
-
-  const newStation = {
-    id: "custom-" + Date.now(),
-    title: title || "Custom Beats Radio",
-    subtitle: "Custom YouTube Station",
-    badge: "Custom",
-    emoji: "📻",
-    url: `${embed}${embed.includes("?") ? "&" : "?"}autoplay=1&enablejsapi=1`,
-    desc: "Your personal YouTube stream running ad-free in Dangling Beats."
-  };
-
-  customStations.unshift(newStation);
-  try {
-    localStorage.setItem("customBeatsStations", JSON.stringify(customStations));
-  } catch (e) {}
-
-  if (titleInput) titleInput.value = "";
-  if (urlInput) urlInput.value = "";
-  closeAddStationModal();
-  renderStations();
-  playStation(newStation.id);
-  showToast(`✅ Added & streaming: ${newStation.title}`, "success");
 }
 
 // ============================================================================
@@ -1602,24 +1502,31 @@ window.update808Params = update808Params;
 window.audition808Sub = audition808Sub;
 window.downloadRendered808 = downloadRendered808;
 
-// Expose radio player globals
-window.playStation = playStation;
-window.togglePlay = togglePlay;
-window.nextStation = nextStation;
-window.prevStation = prevStation;
-window.openAddStationModal = openAddStationModal;
-window.closeAddStationModal = closeAddStationModal;
-window.handleAddCustomStation = handleAddCustomStation;
+// Web MIDI & MPC Surface Globals
+window.requestMidiAccess = requestMidiAccess;
+window.handleMasterBpmChange = handleMasterBpmChange;
+window.tapTempo = tapTempo;
+window.renderMpcPads = renderMpcPads;
+window.handleMpcBankChange = handleMpcBankChange;
+window.handleMpcPadHit = handleMpcPadHit;
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
-  renderStations();
-  updateConsoleUI();
+  renderMpcPads();
   fetchBeatCatalog();
   initTheoryTools();
   updateDelayCalculations(120);
   runPitchShiftCalc();
   runRoomModesCalc();
   init808Designer();
+
+  // Auto-listen if Web MIDI was previously granted
+  if (navigator.requestMIDIAccess) {
+    navigator.permissions?.query({ name: 'midi', sysex: false }).then((perm) => {
+      if (perm.state === 'granted') {
+        requestMidiAccess();
+      }
+    }).catch(() => {});
+  }
 });
 

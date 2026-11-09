@@ -1489,4 +1489,180 @@ footer a {
   padding: 0.75rem;
 }
 
+/* ========================================================
+   Web MIDI Hardware Pill & Master Studio Deck
+   ======================================================== */
+.midi-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(14, 19, 31, 0.85);
+  border: 1px solid rgba(236, 72, 153, 0.4);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.midi-status-pill:hover {
+  border-color: #ec4899;
+  background: rgba(236, 72, 153, 0.15);
+  transform: translateY(-1px);
+}
+
+.midi-status-pill.connected {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.midi-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  display: inline-block;
+}
+
+.midi-status-pill.connected .midi-dot {
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+.studio-master-deck {
+  background: linear-gradient(180deg, rgba(14, 19, 31, 0.9) 0%, rgba(9, 13, 22, 0.95) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+.studio-deck-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.studio-master-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.4rem;
+}
+
+.studio-master-sub {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 680px;
+  line-height: 1.5;
+}
+
+.studio-transport-box {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: #06090e;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.25rem;
+  flex-wrap: wrap;
+}
+
+.transport-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.transport-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+/* ========================================================
+   Virtual 16-Pad MPC Surface
+   ======================================================== */
+.mpc-surface-deck {
+  background: rgba(14, 19, 31, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.mpc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  max-width: 600px;
+  margin: 1rem auto 0 auto;
+}
+
+.mpc-pad {
+  background: #090e17;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.65rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.08s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.mpc-pad:hover {
+  border-color: rgba(236, 72, 153, 0.5);
+  background: rgba(236, 72, 153, 0.06);
+}
+
+.mpc-pad:active,
+.mpc-pad.active {
+  background: rgba(236, 72, 153, 0.35) !important;
+  border-color: #ec4899 !important;
+  transform: scale(0.95);
+  box-shadow: 0 0 20px rgba(236, 72, 153, 0.7);
+}
+
+.mpc-pad-key {
+  font-size: 0.68rem;
+  font-family: monospace;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  align-self: flex-start;
+}
+
+.mpc-pad-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #67e8f9;
+  text-align: center;
+}
+
+.mpc-pad-note {
+  font-size: 0.65rem;
+  font-family: monospace;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+
 
