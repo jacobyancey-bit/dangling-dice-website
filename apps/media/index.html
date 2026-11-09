@@ -456,6 +456,67 @@ console.log("Audio Stream:", data.downloadUrl);</code></pre>
     </p>
   </footer>
 
+  <!-- Download Progress & Buy Me a Coffee Overlay Modal -->
+  <div id="downloadOverlay" class="download-overlay" style="display: none;">
+    <div class="download-modal-card">
+      <div class="download-modal-header">
+        <div class="modal-track-preview">
+          <img id="modalTrackThumb" src="/images/banner.jpg" alt="Track Thumbnail" class="modal-track-thumb" />
+          <div class="modal-track-info">
+            <h3 id="modalTrackTitle" class="modal-track-title">Downloading Media Track...</h3>
+            <div class="modal-track-sub">
+              <span id="modalTrackAuthor" style="color: var(--text-muted);">Creator</span>
+              <span id="modalTrackFormat" class="format-badge" style="background: rgba(236, 72, 153, 0.2); color: var(--neon-pink);">MP3 320kbps</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="closeOverlayBtn" class="modal-close-btn" title="Close" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Live Download Progress Section -->
+      <div class="modal-progress-section">
+        <div class="modal-progress-labels">
+          <span id="modalStatusText" class="modal-status-text">⏳ Initializing stream connection...</span>
+          <span id="modalPercentText" class="modal-percent-text">15%</span>
+        </div>
+        <div class="modal-progress-bar-bg">
+          <div id="modalProgressBarFill" class="modal-progress-bar-fill" style="width: 15%;"></div>
+        </div>
+        <div id="modalSubstatus" class="modal-substatus-text">
+          Transcoding and streaming directly to your local Downloads folder
+        </div>
+      </div>
+
+      <!-- Buy Me A Coffee Support Card -->
+      <div class="modal-coffee-card">
+        <div class="modal-coffee-left">
+          <div class="coffee-icon-bounce">☕</div>
+          <div>
+            <div class="modal-coffee-title">Love our 100% Ad-Free Converter?</div>
+            <p class="modal-coffee-sub">
+              Help us keep Dangling Dice free with zero ads or tracking. Buy us a coffee to support bandwidth!
+            </p>
+          </div>
+        </div>
+        <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-coffee" style="padding: 0.65rem 1.25rem; font-size: 0.88rem; flex-shrink: 0;">
+          ☕ Buy Me a Coffee
+        </a>
+      </div>
+
+      <!-- Modal Footer / Convert Again Action -->
+      <div class="modal-action-footer">
+        <button type="button" id="modalConvertAgainBtn" class="btn btn-primary btn-action-large" style="display: none; width: 100%;">
+          🔄 Convert Another Song
+        </button>
+        <div id="modalDoneControls" style="display: none; margin-top: 0.5rem; text-align: center;">
+          <a id="modalDirectDownloadLink" href="#" style="font-size: 0.74rem; color: var(--neon-cyan); text-decoration: underline;">
+            Need to save again? Click here
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 

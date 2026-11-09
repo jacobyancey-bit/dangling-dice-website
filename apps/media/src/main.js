@@ -56,6 +56,7 @@ if (pasteBtn && mediaUrlInput) {
       const text = await navigator.clipboard.readText();
       if (text) {
         mediaUrlInput.value = text.trim();
+        resetConversionState();
         showToast('URL pasted from clipboard!', 'success');
         mediaUrlInput.focus();
       }
@@ -110,24 +111,7 @@ function formatDuration(sec) {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-// Trigger direct browser download into Downloads folder using standard HTML5 anchor element
-function triggerBrowserDownload(downloadUrl, filename = '') {
-  try {
-    const tempLink = document.createElement('a');
-    tempLink.href = downloadUrl;
-    if (filename) tempLink.setAttribute('download', filename);
-    tempLink.style.display = 'none';
-    document.body.appendChild(tempLink);
-    tempLink.click();
-    setTimeout(() => {
-      if (tempLink.parentNode) tempLink.parentNode.removeChild(tempLink);
-    }, 1500);
-  } catch (err) {
-    console.warn('[Auto-Download Notice]', err);
-  }
-}
-
-// 1-Click Convert & Download Action
+// DOM Elements
 const convertBtn = document.getElementById('convertBtn');
 const fairUseCheckbox = document.getElementById('fairUseCheckbox');
 const progressContainer = document.getElementById('progressContainer');
@@ -146,6 +130,23 @@ const downloadNotice = document.getElementById('downloadNotice');
 const downloadStatusText = document.getElementById('downloadStatusText');
 const fallbackDownloadLink = document.getElementById('fallbackDownloadLink');
 const convertAnotherBtn = document.getElementById('convertAnotherBtn');
+
+// Modal Elements
+const downloadOverlay = document.getElementById('downloadOverlay');
+const closeOverlayBtn = document.getElementById('closeOverlayBtn');
+const modalTrackThumb = document.getElementById('modalTrackThumb');
+const modalTrackTitle = document.getElementById('modalTrackTitle');
+const modalTrackAuthor = document.getElementById('modalTrackAuthor');
+const modalTrackFormat = document.getElementById('modalTrackFormat');
+const modalStatusText = document.getElementById('modalStatusText');
+const modalPercentText = document.getElementById('modalPercentText');
+const modalProgressBarFill = document.getElementById('modalProgressBarFill');
+const modalSubstatus = document.getElementById('modalSubstatus');
+const modalConvertAgainBtn = document.getElementById('modalConvertAgainBtn');
+const modalDoneControls = document.getElementById('modalDoneControls');
+const modalDirectDownloadLink = document.getElementById('modalDirectDownloadLink');
+
+let currentActiveMedia = null;
 
 function resetConversionState() {
   if (resultBox) resultBox.style.display = 'none';
@@ -171,6 +172,137 @@ if (convertAnotherBtn) {
   });
 }
 
+if (closeOverlayBtn) {
+  closeOverlayBtn.addEventListener('click', () => {
+    if (downloadOverlay) downloadOverlay.style.display = 'none';
+  });
+}
+
+if (modalConvertAgainBtn) {
+  modalConvertAgainBtn.addEventListener('click', () => {
+    if (downloadOverlay) downloadOverlay.style.display = 'none';
+    if (mediaUrlInput) {
+      mediaUrlInput.value = '';
+      mediaUrlInput.focus();
+    }
+    resetConversionState();
+    showToast('Ready for your next track! Paste any YouTube link.', 'info');
+  });
+}
+
+// In-Browser Blob Download Engine (Prevents "Site Unavailable" and navigations)
+async function startDownloadWithOverlay(media) {
+  if (!media || !media.downloadUrl) return;
+  currentActiveMedia = media;
+
+  if (downloadOverlay) {
+    downloadOverlay.style.display = 'flex';
+  }
+
+  // Populate Track Details in Modal
+  if (modalTrackThumb) modalTrackThumb.src = media.thumbnail || '/images/banner.jpg';
+  if (modalTrackTitle) modalTrackTitle.textContent = media.title || media.cleanTitle;
+  if (modalTrackAuthor) modalTrackAuthor.textContent = `By ${media.author || 'Creator'}`;
+  if (modalTrackFormat) {
+    modalTrackFormat.textContent = selectedFormat.toUpperCase().replace('-', ' ');
+  }
+
+  // Reset Modal Progress
+  if (modalProgressBarFill) {
+    modalProgressBarFill.style.background = 'linear-gradient(90deg, #ec4899, #06b6d4, #10b981)';
+    modalProgressBarFill.style.width = '15%';
+  }
+  if (modalPercentText) modalPercentText.textContent = '15%';
+  if (modalStatusText) modalStatusText.textContent = '⏳ Connecting to audio stream pipeline...';
+  if (modalSubstatus) modalSubstatus.textContent = 'Transcoding & streaming directly to your device';
+  if (modalConvertAgainBtn) modalConvertAgainBtn.style.display = 'none';
+  if (modalDoneControls) modalDoneControls.style.display = 'none';
+
+  // Incremental visual progress ticker
+  let currentPct = 15;
+  const progressTimer = setInterval(() => {
+    if (currentPct < 85) {
+      currentPct += (85 - currentPct) * 0.15;
+      const rounded = Math.round(currentPct);
+      if (modalProgressBarFill) modalProgressBarFill.style.width = `${rounded}%`;
+      if (modalPercentText) modalPercentText.textContent = `${rounded}%`;
+      if (rounded > 40 && rounded < 70 && modalStatusText) {
+        modalStatusText.textContent = '⚡ Transcoding master audio stream...';
+      } else if (rounded >= 70 && modalStatusText) {
+        modalStatusText.textContent = '📦 Packaging file for Downloads folder...';
+      }
+    }
+  }, 400);
+
+  const freshDownloadUrl = media.downloadUrl.includes('&_t=')
+    ? media.downloadUrl.replace(/&_t=\d+/, `&_t=${Date.now()}`)
+    : `${media.downloadUrl}&_t=${Date.now()}`;
+
+  try {
+    const res = await fetch(freshDownloadUrl);
+    clearInterval(progressTimer);
+
+    if (!res.ok) {
+      throw new Error(`Media stream error (HTTP ${res.status}). Server could not extract this video.`);
+    }
+
+    if (modalProgressBarFill) modalProgressBarFill.style.width = '95%';
+    if (modalPercentText) modalPercentText.textContent = '95%';
+    if (modalStatusText) modalStatusText.textContent = '💾 Saving to Downloads folder...';
+
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Trigger local browser file download
+    const tempLink = document.createElement('a');
+    tempLink.href = blobUrl;
+    tempLink.setAttribute('download', media.cleanTitle);
+    document.body.appendChild(tempLink);
+    tempLink.click();
+
+    setTimeout(() => {
+      tempLink.remove();
+    }, 2000);
+
+    // 100% Complete & Reveal Convert Again Button
+    if (modalProgressBarFill) modalProgressBarFill.style.width = '100%';
+    if (modalPercentText) modalPercentText.textContent = '100%';
+    if (modalStatusText) modalStatusText.textContent = '✅ Download Complete!';
+    if (modalSubstatus) modalSubstatus.textContent = `Saved: ${media.cleanTitle} in your Downloads folder`;
+
+    if (modalConvertAgainBtn) {
+      modalConvertAgainBtn.style.display = 'block';
+    }
+    if (modalDoneControls) {
+      modalDoneControls.style.display = 'block';
+    }
+    if (modalDirectDownloadLink) {
+      modalDirectDownloadLink.href = blobUrl;
+      modalDirectDownloadLink.setAttribute('download', media.cleanTitle);
+    }
+
+    showToast(`✅ Downloaded ${media.cleanTitle}!`, 'success');
+  } catch (err) {
+    clearInterval(progressTimer);
+    console.error('[Download Stream Error]', err);
+
+    if (modalProgressBarFill) {
+      modalProgressBarFill.style.background = '#ef4444';
+      modalProgressBarFill.style.width = '100%';
+    }
+    if (modalPercentText) modalPercentText.textContent = 'ERR';
+    if (modalStatusText) modalStatusText.textContent = '⚠️ Stream interrupted';
+    if (modalSubstatus) modalSubstatus.textContent = err.message || 'Please verify the URL or try another track';
+
+    if (modalConvertAgainBtn) {
+      modalConvertAgainBtn.textContent = '🔄 Try Another Track';
+      modalConvertAgainBtn.style.display = 'block';
+    }
+    showToast(err.message || 'Download failed', 'error');
+  }
+}
+
+// 1-Click Convert & Download Action
 if (convertBtn) {
   convertBtn.addEventListener('click', async () => {
     const rawUrl = mediaUrlInput?.value;
@@ -190,27 +322,18 @@ if (convertBtn) {
 
     // Lock UI and show active progress
     convertBtn.disabled = true;
-    convertBtn.textContent = '⏳ Converting & Routing to Downloads...';
+    convertBtn.textContent = '⏳ Resolving & Preparing Download...';
     if (progressContainer) progressContainer.style.display = 'block';
     if (resultBox) resultBox.style.display = 'none';
 
     try {
-      if (progressBarFill) progressBarFill.style.width = '25%';
-      if (progressPercent) progressPercent.textContent = '25%';
+      if (progressBarFill) progressBarFill.style.width = '35%';
+      if (progressPercent) progressPercent.textContent = '35%';
       if (progressStatusText) progressStatusText.textContent = 'Resolving media track...';
       if (engineLog) engineLog.textContent = 'Stream Resolver: Handshake established';
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 35000);
-
-      let progressVal = 30;
-      const ticker = setInterval(() => {
-        if (progressVal < 80) {
-          progressVal += 10;
-          if (progressBarFill) progressBarFill.style.width = `${progressVal}%`;
-          if (progressPercent) progressPercent.textContent = `${progressVal}%`;
-        }
-      }, 500);
 
       let response;
       try {
@@ -224,13 +347,11 @@ if (convertBtn) {
           signal: controller.signal,
         });
       } catch (fetchErr) {
-        clearInterval(ticker);
         if (fetchErr.name === 'AbortError') {
           throw new Error('Stream resolution timed out. The provider took too long to respond.');
         }
         throw new Error(`Connection error (${fetchErr.message}). Check your network connection.`);
       } finally {
-        clearInterval(ticker);
         clearTimeout(timeoutId);
       }
 
@@ -245,12 +366,10 @@ if (convertBtn) {
       // Finalizing & 100% Ready
       if (progressBarFill) progressBarFill.style.width = '100%';
       if (progressPercent) progressPercent.textContent = '100%';
-      if (progressStatusText) progressStatusText.textContent = 'Track ready! Downloading now...';
+      if (progressStatusText) progressStatusText.textContent = 'Track ready! Launching download...';
       if (engineLog) engineLog.textContent = 'Status: Direct download stream dispatched';
 
-      const downloadEndpoint = media.downloadUrl;
-
-      // Populate Result Card with genuine title (No rename editing friction)
+      // Populate Result Card with genuine title
       if (resultThumb && media.thumbnail) {
         resultThumb.src = media.thumbnail;
       }
@@ -267,42 +386,31 @@ if (convertBtn) {
         resultMeta.textContent = `Format: ${selectedFormat.toUpperCase()}`;
       }
 
-      // Automatically trigger download directly into user's Downloads folder
-      triggerBrowserDownload(downloadEndpoint, media.cleanTitle);
-
       if (downloadBtn) {
-        downloadBtn.href = downloadEndpoint;
-        downloadBtn.setAttribute('download', media.cleanTitle);
-        downloadBtn.innerHTML = '📥 Download Now';
-        // Allow the browser to natively follow the link and manage the download stream
-        downloadBtn.onclick = () => {
-          // Always ensure the download link uses a fresh timestamp so the browser never serves a cached response
-          const freshUrl = downloadEndpoint.includes('&_t=')
-            ? downloadEndpoint.replace(/&_t=\d+/, `&_t=${Date.now()}`)
-            : `${downloadEndpoint}&_t=${Date.now()}`;
-          downloadBtn.href = freshUrl;
-          downloadBtn.innerHTML = '⏳ Downloading...';
-          showToast(`Downloading ${media.cleanTitle}! Check your browser downloads bar.`, 'success');
-          setTimeout(() => {
-            downloadBtn.innerHTML = '📥 Download Again';
-          }, 3500);
+        downloadBtn.onclick = (e) => {
+          e.preventDefault();
+          startDownloadWithOverlay(media);
         };
       }
 
       if (fallbackDownloadLink) {
-        fallbackDownloadLink.href = downloadEndpoint;
-        fallbackDownloadLink.setAttribute('download', media.cleanTitle);
+        fallbackDownloadLink.onclick = (e) => {
+          e.preventDefault();
+          startDownloadWithOverlay(media);
+        };
       }
 
       if (downloadNotice) {
         downloadNotice.style.display = 'block';
         if (downloadStatusText) {
-          downloadStatusText.textContent = `✅ ${media.cleanTitle} sent to your Downloads folder!`;
+          downloadStatusText.textContent = `✅ Ready to download: ${media.cleanTitle}`;
         }
       }
 
       if (resultBox) resultBox.style.display = 'block';
-      showToast(`✅ Download started: ${media.title || 'Media File'}!`, 'success');
+
+      // Automatically launch download modal overlay & stream immediately!
+      startDownloadWithOverlay(media);
     } catch (err) {
       console.error(err);
       if (progressContainer) progressContainer.style.display = 'none';

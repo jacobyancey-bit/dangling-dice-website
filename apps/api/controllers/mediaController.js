@@ -717,72 +717,107 @@ export const streamMediaDownload = async (req, res) => {
     } else {
       // Genuine LAME MP3 Transcoding Pipeline with ID3v2 metadata
       const bitrate = format === 'mp3-192' ? '192k' : '320k';
-      const audioStream = ytdl.download(targetUrl, {
-        quality: Quality.HighestAudio,
-        filter: { hasAudio: true },
-      });
+      try {
+        const info = await ytdl.getInfo(targetUrl);
+        const audioFormats = info.formats.filter((f) => f.hasAudio);
+        audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
+        const bestAudio = audioFormats.find((f) => f.container === 'mp4') || audioFormats[0];
 
-      const ffmpeg = spawn(ffmpegPath, [
-        '-i', 'pipe:0',
-        '-vn',
-        '-acodec', 'libmp3lame',
-        '-b:a', bitrate,
-        '-compression_level', '0',
-        '-threads', '0',
-        '-id3v2_version', '3',
-        '-write_id3v1', '1',
-        '-flush_packets', '1',
-        '-f', 'mp3',
-        'pipe:1',
-      ]);
+        let ffmpeg;
+        let audioStream = null;
 
-      const mp3Timeout = setTimeout(() => {
-        if (!headersSent) {
+        if (bestAudio?.url) {
+          ffmpeg = spawn(ffmpegPath, [
+            '-reconnect', '1',
+            '-reconnect_streamed', '1',
+            '-reconnect_delay_max', '5',
+            '-i', bestAudio.url,
+            '-vn',
+            '-acodec', 'libmp3lame',
+            '-b:a', bitrate,
+            '-compression_level', '0',
+            '-threads', '0',
+            '-id3v2_version', '3',
+            '-write_id3v1', '1',
+            '-flush_packets', '1',
+            '-f', 'mp3',
+            'pipe:1',
+          ]);
+        } else {
+          audioStream = ytdl.download(targetUrl, {
+            quality: Quality.HighestAudio,
+            filter: { hasAudio: true },
+          });
+
+          ffmpeg = spawn(ffmpegPath, [
+            '-i', 'pipe:0',
+            '-vn',
+            '-acodec', 'libmp3lame',
+            '-b:a', bitrate,
+            '-compression_level', '0',
+            '-threads', '0',
+            '-id3v2_version', '3',
+            '-write_id3v1', '1',
+            '-flush_packets', '1',
+            '-f', 'mp3',
+            'pipe:1',
+          ]);
+
+          audioStream.pipe(ffmpeg.stdin);
+          audioStream.on('error', (err) => {
+            console.error('[Audio Stream Error]', err.message);
+            try { ffmpeg.kill(); } catch (e) {}
+            if (!headersSent) {
+              res.status(502).send('YouTube stream blocked or restricted by provider for this track');
+            } else {
+              res.end();
+            }
+          });
+        }
+
+        const mp3Timeout = setTimeout(() => {
+          if (!headersSent) {
+            try { ffmpeg.kill(); } catch (e) {}
+            if (audioStream) try { audioStream.destroy(); } catch (e) {}
+            res.status(504).send('Audio extraction timed out from provider. Please try again.');
+          }
+        }, 25000);
+
+        ffmpeg.stdout.once('data', () => {
+          clearTimeout(mp3Timeout);
+          sendDownloadHeaders();
+        });
+        ffmpeg.stdout.pipe(res);
+
+        req.on('close', () => {
+          clearTimeout(mp3Timeout);
+          if (audioStream && !audioStream.destroyed) audioStream.destroy();
           try { ffmpeg.kill(); } catch (e) {}
-          try { audioStream.destroy(); } catch (e) {}
-          res.status(504).send('Audio extraction timed out from provider. Please try again.');
-        }
-      }, 25000);
+        });
 
-      ffmpeg.stdout.once('data', () => {
-        clearTimeout(mp3Timeout);
-        sendDownloadHeaders();
-      });
-      audioStream.pipe(ffmpeg.stdin);
-      ffmpeg.stdout.pipe(res);
+        res.on('finish', () => {
+          clearTimeout(mp3Timeout);
+          if (audioStream && !audioStream.destroyed) audioStream.destroy();
+          try { ffmpeg.kill(); } catch (e) {}
+        });
 
-      req.on('close', () => {
-        clearTimeout(mp3Timeout);
-        if (!audioStream.destroyed) audioStream.destroy();
-        try { ffmpeg.kill(); } catch (e) {}
-      });
-
-      res.on('finish', () => {
-        clearTimeout(mp3Timeout);
-        if (!audioStream.destroyed) audioStream.destroy();
-        try { ffmpeg.kill(); } catch (e) {}
-      });
-
-      audioStream.on('error', (err) => {
-        clearTimeout(mp3Timeout);
-        console.error('[Audio Stream Error]', err.message);
-        try { ffmpeg.kill(); } catch (e) {}
+        ffmpeg.on('error', (err) => {
+          clearTimeout(mp3Timeout);
+          console.error('[FFmpeg Error]', err.message);
+          if (!headersSent) {
+            res.status(500).send('Transcoding pipeline error');
+          } else {
+            res.end();
+          }
+        });
+      } catch (audioErr) {
+        console.error('[MP3 Resolution Error]', audioErr.message);
         if (!headersSent) {
-          res.status(502).send('YouTube stream blocked or restricted by provider for this track');
+          res.status(502).send('Failed to resolve audio stream from provider');
         } else {
           res.end();
         }
-      });
-
-      ffmpeg.on('error', (err) => {
-        clearTimeout(mp3Timeout);
-        console.error('[FFmpeg Error]', err.message);
-        if (!headersSent) {
-          res.status(500).send('Transcoding pipeline error');
-        } else {
-          res.end();
-        }
-      });
+      }
     }
   } catch (err) {
     console.error('[MediaController Download Error]', err.message);
