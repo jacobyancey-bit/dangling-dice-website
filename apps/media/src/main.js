@@ -145,6 +145,10 @@ const modalSubstatus = document.getElementById('modalSubstatus');
 const modalConvertAgainBtn = document.getElementById('modalConvertAgainBtn');
 const modalDoneControls = document.getElementById('modalDoneControls');
 const modalDirectDownloadLink = document.getElementById('modalDirectDownloadLink');
+const modalWarningCard = document.getElementById('modalWarningCard');
+const modalWarningMessage = document.getElementById('modalWarningMessage');
+const modalRetryBtn = document.getElementById('modalRetryBtn');
+const modalTryAnotherBtn = document.getElementById('modalTryAnotherBtn');
 
 let currentActiveMedia = null;
 
@@ -154,6 +158,7 @@ function resetConversionState() {
   if (progressContainer) progressContainer.style.display = 'none';
   if (progressBarFill) progressBarFill.style.width = '0%';
   if (progressPercent) progressPercent.textContent = '0%';
+  if (modalWarningCard) modalWarningCard.style.display = 'none';
   if (downloadBtn) {
     downloadBtn.removeAttribute('href');
     downloadBtn.removeAttribute('download');
@@ -215,8 +220,12 @@ async function startDownloadWithOverlay(media) {
   if (modalPercentText) modalPercentText.textContent = '15%';
   if (modalStatusText) modalStatusText.textContent = '⏳ Connecting to audio stream pipeline...';
   if (modalSubstatus) modalSubstatus.textContent = 'Transcoding & streaming directly to your device';
-  if (modalConvertAgainBtn) modalConvertAgainBtn.style.display = 'none';
+  if (modalConvertAgainBtn) {
+    modalConvertAgainBtn.textContent = '✨ Convert Another Track';
+    modalConvertAgainBtn.style.display = 'none';
+  }
   if (modalDoneControls) modalDoneControls.style.display = 'none';
+  if (modalWarningCard) modalWarningCard.style.display = 'none';
 
   // Incremental visual progress ticker
   let currentPct = 15;
@@ -251,6 +260,9 @@ async function startDownloadWithOverlay(media) {
     if (modalStatusText) modalStatusText.textContent = '💾 Saving to Downloads folder...';
 
     const blob = await res.blob();
+    if (!blob || blob.size < 2048) {
+      throw new Error('Downloaded file was incomplete or empty (0 bytes received from provider).');
+    }
     const blobUrl = URL.createObjectURL(blob);
 
     // Trigger local browser file download
@@ -265,12 +277,17 @@ async function startDownloadWithOverlay(media) {
     }, 2000);
 
     // 100% Complete & Reveal Convert Again Button
-    if (modalProgressBarFill) modalProgressBarFill.style.width = '100%';
+    if (modalProgressBarFill) {
+      modalProgressBarFill.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
+      modalProgressBarFill.style.width = '100%';
+    }
     if (modalPercentText) modalPercentText.textContent = '100%';
     if (modalStatusText) modalStatusText.textContent = '✅ Download Complete!';
     if (modalSubstatus) modalSubstatus.textContent = `Saved: ${media.cleanTitle} in your Downloads folder`;
+    if (modalWarningCard) modalWarningCard.style.display = 'none';
 
     if (modalConvertAgainBtn) {
+      modalConvertAgainBtn.textContent = '✨ Convert Another Track';
       modalConvertAgainBtn.style.display = 'block';
     }
     if (modalDoneControls) {
@@ -290,15 +307,40 @@ async function startDownloadWithOverlay(media) {
       modalProgressBarFill.style.background = '#ef4444';
       modalProgressBarFill.style.width = '100%';
     }
-    if (modalPercentText) modalPercentText.textContent = 'ERR';
-    if (modalStatusText) modalStatusText.textContent = '⚠️ Stream interrupted';
-    if (modalSubstatus) modalSubstatus.textContent = err.message || 'Please verify the URL or try another track';
+    if (modalPercentText) modalPercentText.textContent = 'FAILED';
+    if (modalStatusText) modalStatusText.textContent = '⚠️ Download Incomplete — File Not Saved';
+    if (modalSubstatus) modalSubstatus.textContent = 'The track could not be saved to your Downloads folder';
+
+    if (modalWarningCard) {
+      modalWarningCard.style.display = 'flex';
+    }
+    if (modalWarningMessage) {
+      modalWarningMessage.textContent = `Warning: The download failed (${err.message || 'connection interrupted'}). The upstream provider may have temporarily throttled this stream. Please try again.`;
+    }
+
+    if (modalRetryBtn) {
+      modalRetryBtn.onclick = () => {
+        showToast('Retrying download...', 'info');
+        startDownloadWithOverlay(media);
+      };
+    }
+
+    if (modalTryAnotherBtn) {
+      modalTryAnotherBtn.onclick = () => {
+        if (downloadOverlay) downloadOverlay.style.display = 'none';
+        if (mediaUrlInput) {
+          mediaUrlInput.value = '';
+          mediaUrlInput.focus();
+        }
+        resetConversionState();
+      };
+    }
 
     if (modalConvertAgainBtn) {
       modalConvertAgainBtn.textContent = '🔄 Try Another Track';
       modalConvertAgainBtn.style.display = 'block';
     }
-    showToast(err.message || 'Download failed', 'error');
+    showToast(err.message || 'Download failed — please try again', 'error');
   }
 }
 

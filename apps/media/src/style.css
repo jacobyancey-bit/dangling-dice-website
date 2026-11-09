@@ -912,3 +912,46 @@ header {
   flex-direction: column;
   gap: 0.4rem;
 }
+
+/* Download Warning Card */
+.modal-warning-card {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-warning-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.warning-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.modal-warning-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #fca5a5;
+  line-height: 1.25;
+}
+
+.modal-warning-text {
+  font-size: 0.76rem;
+  color: #e2e8f0;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.modal-warning-actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}

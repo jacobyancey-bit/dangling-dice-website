@@ -487,6 +487,27 @@ console.log("Audio Stream:", data.downloadUrl);</code></pre>
         </div>
       </div>
 
+      <!-- Download Failure Warning Card -->
+      <div id="modalWarningCard" class="modal-warning-card" style="display: none;">
+        <div class="modal-warning-header">
+          <span class="warning-icon">⚠️</span>
+          <div>
+            <h4 class="modal-warning-title">Download Incomplete — File Not Saved</h4>
+            <p id="modalWarningMessage" class="modal-warning-text">
+              The media stream was interrupted and could not be written to your Downloads folder. Please try again.
+            </p>
+          </div>
+        </div>
+        <div class="modal-warning-actions">
+          <button type="button" id="modalRetryBtn" class="btn btn-amber btn-sm" style="font-weight: 800;">
+            🔄 Try Download Again
+          </button>
+          <button type="button" id="modalTryAnotherBtn" class="btn btn-secondary btn-sm">
+            Paste Another Link
+          </button>
+        </div>
+      </div>
+
       <!-- Buy Me A Coffee Support Card -->
       <div class="modal-coffee-card">
         <div class="modal-coffee-left">
