@@ -127,5 +127,19 @@ describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
     assert.ok(responseHtml.includes('meta name="api:https" content="true"'));
     assert.ok(responseHtml.includes('meta name="api:pricing" content="Free"'));
   });
+
+  it('DISC-07: OpenAPI specification designates api.dangling-dice-studios.com as primary gateway', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const specRaw = fs.readFileSync(path.join(__dirname, '..', 'public', 'openapi.json'), 'utf8');
+    const spec = JSON.parse(specRaw);
+
+    assert.ok(Array.isArray(spec.servers), 'Expected servers array in OpenAPI spec');
+    const primaryServer = spec.servers[0];
+    assert.strictEqual(primaryServer.url, 'https://api.dangling-dice-studios.com');
+    assert.ok(primaryServer.description.includes('Dedicated API Gateway'));
+  });
 });
 

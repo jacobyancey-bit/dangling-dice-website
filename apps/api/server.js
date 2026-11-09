@@ -216,9 +216,26 @@ app.use((req, res, next) => {
   }
 
   const hostname = (req.hostname || '').toLowerCase();
+  const isApiSubdomain = hostname.startsWith('api.') || req.query.subdomain === 'api';
   const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media' || req.path === '/media' || req.path.startsWith('/media/');
   const isBeatsSubdomain = hostname.startsWith('beats.') || hostname.startsWith('music.') || hostname.startsWith('radio.') || req.query.subdomain === 'beats' || req.path === '/beats' || req.path.startsWith('/beats/');
   const isDevSubdomain = hostname.startsWith('dev.') || hostname.startsWith('api-docs.') || req.query.subdomain === 'dev' || req.path === '/dev' || req.path.startsWith('/dev/');
+
+  // Dedicated Machine API Gateway (Subdomain: api.dangling-dice-studios.com)
+  // Ensures machine clients receive pure JSON payloads with zero HTML/CSS overhead
+  if (isApiSubdomain) {
+    if (req.path === '/' || req.path === '/api') {
+      req.url = '/';
+      return apiRoutes(req, res, next);
+    }
+    return res.status(404).json({
+      success: false,
+      service: 'Dangling Dice Studios™ API Gateway',
+      error: `Endpoint '${req.path}' not found on api.dangling-dice-studios.com`,
+      documentation: 'https://dev.dangling-dice-studios.com',
+      openapi: 'https://api.dangling-dice-studios.com/openapi.json',
+    });
+  }
 
   if (isDevSubdomain && fs.existsSync(devDistPath)) {
     return express.static(devDistPath)(req, res, () => {

@@ -16,6 +16,10 @@
   },
   "servers": [
     {
+      "url": "https://api.dangling-dice-studios.com",
+      "description": "Production Dedicated API Gateway"
+    },
+    {
       "url": "https://dangling-dice-studios.com",
       "description": "Production Direct Gateway"
     },
