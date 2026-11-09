@@ -93,6 +93,30 @@
           </div>
 
           <div class="transport-stat">
+            <span class="transport-label">Studio Instrument</span>
+            <select id="masterInstrumentSelect" class="theory-select" style="font-weight: 700; max-width: 210px;" onchange="window.handleGlobalInstrumentChange(this.value)">
+              <optgroup label="🎸 Guitars &amp; Strings">
+                <option value="classical_guitar">🎸 Classical Guitar (Nylon)</option>
+                <option value="steel_acoustic">🎸 Steel Acoustic Guitar</option>
+                <option value="electric_clean">🎸 Clean Electric (Strat)</option>
+                <option value="rock_overdrive">🎸 Rock Overdrive Guitar</option>
+                <option value="palm_mute">🎸 Palm-Muted Rock Chug</option>
+                <option value="mandolin">🪕 Mandolin (Double-Course)</option>
+                <option value="electric_bass">🎸 Electric Bass (Finger/Slap)</option>
+              </optgroup>
+              <optgroup label="🎹 Pianos &amp; Keyboards">
+                <option value="grand_piano" selected>🎹 Concert Grand Piano</option>
+                <option value="upright_piano">🎹 Vintage Upright / Saloon</option>
+                <option value="rhodes_mark1">🎹 Fender Rhodes Mark I</option>
+                <option value="wurlitzer_200a">🎹 Wurlitzer 200A Electric</option>
+                <option value="harpsichord">🎹 Baroque Harpsichord</option>
+                <option value="toy_piano">🎹 Toy / Lofi Glass Piano</option>
+                <option value="church_organ">⛪ Cathedral Pipe Organ</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="transport-stat">
             <span class="transport-label">MIDI Controller</span>
             <span id="activeMidiDeviceText" style="font-size: 0.78rem; font-family: monospace; color: #67e8f9; font-weight: 700;">
               No USB Device
@@ -113,14 +137,27 @@
           </p>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <label class="theory-ctrl-label" for="mpcBankMode">Pad Bank:</label>
-          <select id="mpcBankMode" class="theory-select" onchange="window.handleMpcBankChange(this.value)">
-            <option value="drums" selected>Analog &amp; 808 Drums</option>
-            <option value="slices">Active Drum Break Slices</option>
-            <option value="chords">Progression Chords</option>
-            <option value="sampler">Chromatic Sampler</option>
-          </select>
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <label class="theory-ctrl-label" for="mpcBankMode">Pad Bank:</label>
+            <select id="mpcBankMode" class="theory-select" onchange="window.handleMpcBankChange(this.value)">
+              <option value="drums" selected>Analog &amp; 808 Drums</option>
+              <option value="slices">Active Drum Break Slices</option>
+              <option value="chords">Progression Chords</option>
+              <option value="sampler">Chromatic Sampler</option>
+            </select>
+          </div>
+
+          <div id="mpcDrumKitGroup" style="display: flex; align-items: center; gap: 0.4rem;">
+            <label class="theory-ctrl-label" for="mpcDrumKitSelect">Drum Kit:</label>
+            <select id="mpcDrumKitSelect" class="theory-select" onchange="window.handleDrumKitChange(this.value)">
+              <option value="studio_acoustic" selected>🥁 Studio Acoustic Kit</option>
+              <option value="trap_808">⚡ 808 Trap &amp; Drill Kit</option>
+              <option value="dance_909">🎛️ 909 Dance &amp; House Kit</option>
+              <option value="lofi_vinyl">📻 Lofi Vinyl &amp; Hip-Hop Kit</option>
+              <option value="latin_perc">🪘 Latin &amp; World Percussion</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -292,6 +329,30 @@
               <option value="double_harmonic">Double Harmonic (Byzantine)</option>
               <option value="minor_pentatonic">Minor Pentatonic (Blues &amp; Soloing)</option>
               <option value="major_pentatonic">Major Pentatonic (Soulful Toplines)</option>
+            </select>
+          </div>
+
+          <div class="theory-ctrl-group">
+            <label class="theory-ctrl-label" for="theoryInstrumentSelect">Instrument:</label>
+            <select id="theoryInstrumentSelect" class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
+              <optgroup label="🎸 Guitars &amp; Strings">
+                <option value="classical_guitar">🎸 Classical Guitar (Nylon)</option>
+                <option value="steel_acoustic">🎸 Steel Acoustic Guitar</option>
+                <option value="electric_clean">🎸 Clean Electric (Strat)</option>
+                <option value="rock_overdrive">🎸 Rock Overdrive Guitar</option>
+                <option value="palm_mute">🎸 Palm-Muted Rock Chug</option>
+                <option value="mandolin">🪕 Mandolin (Double-Course)</option>
+                <option value="electric_bass">🎸 Electric Bass (Finger/Slap)</option>
+              </optgroup>
+              <optgroup label="🎹 Pianos &amp; Keyboards">
+                <option value="grand_piano" selected>🎹 Concert Grand Piano</option>
+                <option value="upright_piano">🎹 Vintage Upright / Saloon</option>
+                <option value="rhodes_mark1">🎹 Fender Rhodes Mark I</option>
+                <option value="wurlitzer_200a">🎹 Wurlitzer 200A Electric</option>
+                <option value="harpsichord">🎹 Baroque Harpsichord</option>
+                <option value="toy_piano">🎹 Toy / Lofi Glass Piano</option>
+                <option value="church_organ">⛪ Cathedral Pipe Organ</option>
+              </optgroup>
             </select>
           </div>
 
@@ -722,12 +783,28 @@
             <!-- Starter Presets & Root Note Row -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; background: #070a10; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Starter Preset:</span>
-                <button type="button" class="preset-pill active" onclick="window.loadSamplerPreset('grand-piano')">🎹 Grand Piano</button>
-                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('rhodes-bell')">🔔 Rhodes Bell</button>
-                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('vocal-chop')">🗣️ Vocal Ooh</button>
-                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('kalimba')">🎶 Kalimba</button>
-                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('808-sub')">💥 808 Sub Boom</button>
+                <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Instrument Sample:</span>
+                <select id="samplerPresetSelect" class="theory-select" style="font-weight: 700; max-width: 250px;" onchange="window.loadSamplerPreset(this.value)">
+                  <optgroup label="🎹 Pianos &amp; Keys">
+                    <option value="grand-piano" selected>🎹 Concert Grand Piano (C4)</option>
+                    <option value="upright-piano">🎹 Vintage Upright Piano (C4)</option>
+                    <option value="rhodes-bell">🔔 Rhodes Bell Electric (C4)</option>
+                    <option value="harpsichord">🏛️ Baroque Harpsichord (C4)</option>
+                    <option value="church-organ">⛪ Cathedral Pipe Organ (C4)</option>
+                    <option value="kalimba">🎶 Lofi Kalimba (C4)</option>
+                  </optgroup>
+                  <optgroup label="🎸 Guitars &amp; Strings">
+                    <option value="classical-guitar">🎸 Classical Guitar Nylon (E3)</option>
+                    <option value="steel-acoustic">🎸 Steel Acoustic Guitar (E3)</option>
+                    <option value="rock-overdrive">🔥 Rock Overdrive Guitar (E3)</option>
+                    <option value="mandolin">🪕 Acoustic Mandolin (G4)</option>
+                    <option value="electric-bass">🔊 Slap Electric Bass (E1)</option>
+                  </optgroup>
+                  <optgroup label="🎙️ Vocals &amp; Synth">
+                    <option value="vocal-chop">🗣️ Vocal Ooh Formant (F3)</option>
+                    <option value="808-sub">💥 808 Sub Boom Drop (C1)</option>
+                  </optgroup>
+                </select>
               </div>
 
               <div style="display: flex; align-items: center; gap: 0.5rem;">

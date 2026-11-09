@@ -338,6 +338,150 @@ class SamplerEngine {
         r[i] = val;
       }
       return this.loadBuffer(buffer, 'Lofi Kalimba (C4)', 60);
+    } else if (type === 'classical-guitar') {
+      const dur = 2.4;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 164.81; // E3 (Standard guitar acoustic range)
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        const s1 = Math.sin(2 * Math.PI * f0 * t) * Math.exp(-t * 2.0);
+        const s2 = Math.sin(2 * Math.PI * f0 * 2 * t) * Math.exp(-t * 3.8) * 0.45;
+        const s3 = Math.sin(2 * Math.PI * f0 * 3 * t) * Math.exp(-t * 6.0) * 0.2;
+        const nail = (Math.random() * 2 - 1) * Math.exp(-t * 120) * 0.25;
+        const body = Math.sin(2 * Math.PI * 110 * t) * Math.exp(-t * 4.0) * 0.15;
+        const val = (s1 + s2 + s3 + nail + body) * 0.75;
+        l[i] = val;
+        r[i] = val;
+      }
+      return this.loadBuffer(buffer, 'Classical Guitar Nylon (E3)', 52);
+    } else if (type === 'steel-acoustic') {
+      const dur = 2.6;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 164.81; // E3
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        const s1 = Math.sin(2 * Math.PI * f0 * t) * Math.exp(-t * 1.6);
+        const s2 = Math.sin(2 * Math.PI * f0 * 2 * t) * Math.exp(-t * 2.5) * 0.55;
+        const s3 = Math.sin(2 * Math.PI * f0 * 3 * t) * Math.exp(-t * 4.0) * 0.35;
+        const s4 = Math.sin(2 * Math.PI * f0 * 4 * t) * Math.exp(-t * 6.5) * 0.25;
+        const pick = (Math.random() * 2 - 1) * Math.exp(-t * 200) * 0.35;
+        const val = (s1 + s2 + s3 + s4 + pick) * 0.7;
+        l[i] = val;
+        r[i] = val;
+      }
+      return this.loadBuffer(buffer, 'Steel Acoustic Guitar (E3)', 52);
+    } else if (type === 'rock-overdrive') {
+      const dur = 2.2;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 164.81; // E3
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        const raw = Math.sin(2 * Math.PI * f0 * t) + 0.6 * Math.sin(2 * Math.PI * f0 * 2 * t) + 0.3 * Math.sin(2 * Math.PI * f0 * 3 * t);
+        // Soft clipping distortion tanh
+        const clipped = Math.tanh(raw * 3.5) * Math.exp(-t * 1.5);
+        l[i] = clipped * 0.7;
+        r[i] = clipped * 0.7;
+      }
+      return this.loadBuffer(buffer, 'Rock Overdrive Guitar (E3)', 52);
+    } else if (type === 'mandolin') {
+      const dur = 1.8;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 392.0; // G4 Mandolin Open G
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        // 2 unison strings with 1.5Hz chorusing beat
+        const strA = Math.sin(2 * Math.PI * f0 * t) * Math.exp(-t * 3.5);
+        const strB = Math.sin(2 * Math.PI * (f0 + 1.5) * t) * Math.exp(-t * 3.5);
+        const pluck = (Math.random() * 2 - 1) * Math.exp(-t * 250) * 0.3;
+        const val = (strA * 0.5 + strB * 0.5 + pluck) * 0.8;
+        l[i] = val;
+        r[i] = val;
+      }
+      return this.loadBuffer(buffer, 'Mandolin (G4)', 67);
+    } else if (type === 'electric-bass') {
+      const dur = 2.2;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 41.2; // E1 (Standard Bass Low E)
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        const sub = Math.sin(2 * Math.PI * f0 * t) * Math.exp(-t * 1.2);
+        const growl = Math.sin(2 * Math.PI * f0 * 2 * t) * Math.exp(-t * 2.2) * 0.45;
+        const snap = (Math.random() * 2 - 1) * Math.exp(-t * 150) * 0.25;
+        const val = (sub + growl + snap) * 0.85;
+        l[i] = val;
+        r[i] = val;
+      }
+      return this.loadBuffer(buffer, 'Electric Bass (E1)', 28);
+    } else if (type === 'upright-piano') {
+      const dur = 2.4;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 261.63; // C4
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        const s1 = Math.sin(2 * Math.PI * f0 * 0.998 * t) * Math.exp(-t * 2.4) * 0.5;
+        const s2 = Math.sin(2 * Math.PI * f0 * 1.002 * t) * Math.exp(-t * 2.4) * 0.5;
+        const thud = Math.sin(2 * Math.PI * 180 * t) * Math.exp(-t * 40) * 0.2;
+        const val = (s1 + s2 + thud) * 0.75;
+        l[i] = val;
+        r[i] = val;
+      }
+      return this.loadBuffer(buffer, 'Vintage Upright Piano (C4)', 60);
+    } else if (type === 'harpsichord') {
+      const dur = 1.8;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 261.63; // C4
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        // Buzz rich harmonic series
+        let val = 0;
+        for (let h = 1; h <= 8; h++) {
+          val += (Math.sin(2 * Math.PI * f0 * h * t) / h) * Math.exp(-t * (1.8 + h * 0.5));
+        }
+        l[i] = val * 0.6;
+        r[i] = val * 0.6;
+      }
+      return this.loadBuffer(buffer, 'Baroque Harpsichord (C4)', 60);
+    } else if (type === 'church-organ') {
+      const dur = 3.0;
+      const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);
+      const l = buffer.getChannelData(0);
+      const r = buffer.getChannelData(1);
+      const f0 = 261.63; // C4
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        // Multi-pipe stops (16', 8', 4', 2')
+        const p16 = Math.sin(2 * Math.PI * f0 * 0.5 * t) * 0.35;
+        const p8 = Math.sin(2 * Math.PI * f0 * t) * 0.45;
+        const p4 = Math.sin(2 * Math.PI * f0 * 2 * t) * 0.25;
+        const p2 = Math.sin(2 * Math.PI * f0 * 4 * t) * 0.15;
+        const env = Math.min(1, t * 10) * Math.exp(-t * 0.3);
+        const val = (p16 + p8 + p4 + p2) * env * 0.7;
+        l[i] = val;
+        r[i] = val;
+      }
+      return this.loadBuffer(buffer, 'Cathedral Pipe Organ (C4)', 60);
     } else if (type === '808-sub') {
       const dur = 2.0;
       const buffer = ctx.createBuffer(2, Math.floor(sampleRate * dur), sampleRate);

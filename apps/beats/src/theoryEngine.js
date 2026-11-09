@@ -232,97 +232,33 @@ export function resolveChordMidiNotes(chordDef, baseOctave = 3) {
  * Web Audio Polyphonic Electric Piano / Rhodes Synthesizer
  * ============================================================================
  */
+import { instrumentEngine } from './instrumentEngine.js';
+
 class StudioAudioEngine {
   constructor() {
-    this.ctx = null;
-    this.masterGain = null;
-    this.filter = null;
-    this.isInitialized = false;
+    this.engine = instrumentEngine;
   }
 
   init() {
-    if (this.isInitialized) return;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    this.ctx = new AudioContext();
-
-    // Master bus chain: filter -> gain -> compressor -> destination
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
-
-    this.filter = this.ctx.createBiquadFilter();
-    this.filter.type = 'lowpass';
-    this.filter.frequency.setValueAtTime(4500, this.ctx.currentTime);
-    this.filter.Q.setValueAtTime(1.2, this.ctx.currentTime);
-
-    const comp = this.ctx.createDynamicsCompressor();
-    comp.threshold.setValueAtTime(-14, this.ctx.currentTime);
-    comp.knee.setValueAtTime(8, this.ctx.currentTime);
-    comp.ratio.setValueAtTime(3, this.ctx.currentTime);
-    comp.attack.setValueAtTime(0.003, this.ctx.currentTime);
-    comp.release.setValueAtTime(0.25, this.ctx.currentTime);
-
-    this.filter.connect(this.masterGain);
-    this.masterGain.connect(comp);
-    comp.connect(this.ctx.destination);
-
-    this.isInitialized = true;
+    this.engine.getAudioContext();
   }
 
   resume() {
-    if (!this.ctx) this.init();
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+    this.engine.getAudioContext();
   }
 
   /**
-   * Plays a polyphonic chord via Web Audio API with a warm Rhodes electric piano envelope
+   * Plays a polyphonic chord via Web Audio physical modeling instrument engine
    */
   playChord(midiNotes, durationSec = 1.6) {
-    this.resume();
-    if (!this.ctx) return;
-
-    const now = this.ctx.currentTime;
-    midiNotes.forEach((midi, i) => {
-      const freq = midiToFreq(midi);
-      const osc = this.ctx.createOscillator();
-      const subOsc = this.ctx.createOscillator();
-      const gainNode = this.ctx.createGain();
-
-      // Rhodes-style warmth: triangle main tone with subtle detuned sub harmonic
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now);
-
-      subOsc.type = 'sine';
-      subOsc.frequency.setValueAtTime(freq * 0.998, now); // micro-chorus detune
-
-      // Individual velocity / staggered strum (15ms delay per note)
-      const strumOffset = i * 0.015;
-      const noteStart = now + strumOffset;
-
-      // ADSR Envelope
-      gainNode.gain.setValueAtTime(0.0001, noteStart);
-      gainNode.gain.exponentialRampToValueAtTime(0.4 / Math.sqrt(midiNotes.length), noteStart + 0.02);
-      gainNode.gain.exponentialRampToValueAtTime(0.18 / Math.sqrt(midiNotes.length), noteStart + 0.35);
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, noteStart + durationSec);
-
-      osc.connect(gainNode);
-      subOsc.connect(gainNode);
-      gainNode.connect(this.filter);
-
-      osc.start(noteStart);
-      subOsc.start(noteStart);
-      osc.stop(noteStart + durationSec + 0.05);
-      subOsc.stop(noteStart + durationSec + 0.05);
-    });
+    this.engine.playChord(midiNotes, durationSec);
   }
 
   /**
-   * Auditions a single note (used by Fretboard & Keyboard visualizer)
+   * Auditions a single note with the active instrument
    */
   playSingleNote(midi, durationSec = 0.9) {
-    this.playChord([midi], durationSec);
+    this.engine.playNote(midi, durationSec);
   }
 }
 

@@ -44,6 +44,7 @@ import {
 
 import { midiEngine, MPC_PADS_CONFIG } from './midiEngine.js';
 import { samplerEngine } from './samplerEngine.js';
+import { instrumentEngine, INSTRUMENT_CATALOG, DRUM_KITS } from './instrumentEngine.js';
 
 const API_BASE = window.location.hostname === "localhost" 
   ? "http://localhost:5000/api" 
@@ -180,6 +181,39 @@ function tapTempo() {
 }
 
 // ============================================================================
+// Global Instrument & Drum Kit Management
+// ============================================================================
+
+function handleGlobalInstrumentChange(instId) {
+  instrumentEngine.setInstrument(instId);
+  const inst = instrumentEngine.getInstrument();
+
+  // Synchronize both Master Console & Music Theory dropdowns
+  const masterSelect = document.getElementById('masterInstrumentSelect');
+  const theorySelect = document.getElementById('theoryInstrumentSelect');
+  if (masterSelect && masterSelect.value !== instId) masterSelect.value = instId;
+  if (theorySelect && theorySelect.value !== instId) theorySelect.value = instId;
+
+  // Auto-adapt visualizer tuning if electric bass is selected
+  if (instId === 'electric_bass') {
+    handleTuningChange('bass_standard');
+    const tuningSelect = document.getElementById('guitarTuningSelect');
+    if (tuningSelect) tuningSelect.value = 'bass_standard';
+  }
+
+  showToast(`Active Instrument: ${inst.name}`, 'success');
+}
+
+function handleDrumKitChange(kitId) {
+  instrumentEngine.setDrumKit(kitId);
+  const kit = instrumentEngine.getDrumKit();
+  const select = document.getElementById('mpcDrumKitSelect');
+  if (select && select.value !== kitId) select.value = kitId;
+  renderMpcPads();
+  showToast(`Drum Kit: ${kit.name}`, 'success');
+}
+
+// ============================================================================
 // Virtual 16-Pad MPC / Launchpad Controller
 // ============================================================================
 
@@ -191,7 +225,12 @@ function renderMpcPads() {
 
   grid.innerHTML = MPC_PADS_CONFIG.map((p) => {
     let padName = p.name;
-    if (mpcBankMode === 'slices') {
+    if (mpcBankMode === 'drums') {
+      const kit = instrumentEngine.getDrumKit();
+      if (kit && kit.pads[p.pad]) {
+        padName = kit.pads[p.pad].name;
+      }
+    } else if (mpcBankMode === 'slices') {
       const sliceIdx = p.pad - 1;
       padName = chopperSlices && sliceIdx < chopperSlices.length ? `Slice ${sliceIdx + 1}` : `Slice ${p.pad}`;
     } else if (mpcBankMode === 'chords') {
@@ -223,6 +262,10 @@ function renderMpcPads() {
 
 function handleMpcBankChange(val) {
   mpcBankMode = val;
+  const drumGroup = document.getElementById('mpcDrumKitGroup');
+  if (drumGroup) {
+    drumGroup.style.display = val === 'drums' ? 'flex' : 'none';
+  }
   renderMpcPads();
 }
 
@@ -234,19 +277,8 @@ function handleMpcPadHit(padNum, velocity = 0.9) {
   }
 
   if (mpcBankMode === 'drums') {
-    // Map pad to synthesized analog drum sounds
-    const padObj = MPC_PADS_CONFIG.find((p) => p.pad === padNum);
-    if (!padObj) return;
-
-    if ([1, 2].includes(padNum)) {
-      playSynthesizedDrum('kick');
-    } else if ([3, 4, 5].includes(padNum)) {
-      playSynthesizedDrum('snare');
-    } else if ([7, 9, 11].includes(padNum)) {
-      playSynthesizedDrum('hat');
-    } else {
-      playSynthesizedDrum('perc');
-    }
+    // Trigger authentic multi-piece kit drum sound
+    instrumentEngine.playDrumPad(padNum, velocity);
   } else if (mpcBankMode === 'slices') {
     const sliceIdx = padNum - 1;
     if (chopperAudioBuffer && sliceIdx < chopperSlices.length) {
@@ -1571,6 +1603,11 @@ function loadSamplerPreset(type) {
   const rootSelect = document.getElementById('samplerRootSelect');
   if (rootSelect) rootSelect.value = samplerEngine.rootMidi;
 
+  const presetSelect = document.getElementById('samplerPresetSelect');
+  if (presetSelect && presetSelect.value !== type) {
+    presetSelect.value = type;
+  }
+
   document.querySelectorAll('#samplerView .preset-pill').forEach((pill) => {
     const text = pill.textContent.toLowerCase();
     pill.classList.toggle('active', text.includes(type.replace('-', ' ')));
@@ -1837,6 +1874,8 @@ window.samplerNoteOff = samplerNoteOff;
 window.requestMidiAccess = requestMidiAccess;
 window.handleMasterBpmChange = handleMasterBpmChange;
 window.tapTempo = tapTempo;
+window.handleGlobalInstrumentChange = handleGlobalInstrumentChange;
+window.handleDrumKitChange = handleDrumKitChange;
 window.renderMpcPads = renderMpcPads;
 window.handleMpcBankChange = handleMpcBankChange;
 window.handleMpcPadHit = handleMpcPadHit;
