@@ -112,26 +112,30 @@ midiEngine.onNote(({ type, note, velocity }) => {
       samplerEngine.noteOn(note, velocity);
       highlightSamplerKey(note);
     } else {
-      playSingleNote(note);
-    }
-
-    // Highlight piano key if visible
-    const keyEl = document.querySelector(`[data-midi="${note}"]`);
-    if (keyEl) {
-      keyEl.classList.add('playing');
-      setTimeout(() => keyEl.classList.remove('playing'), 180);
+      instrumentNoteOn(note, velocity);
     }
 
     // Trigger 16-Pad MPC if within note range (36 to 51)
     const padObj = MPC_PADS_CONFIG.find((p) => p.note === note);
-    if (padObj) {
+    if (padObj && mpcBankMode === 'drums') {
       handleMpcPadHit(padObj.pad, velocity);
     }
   } else if (type === 'noteoff') {
     if (currentTheoryTab === 'sampler' || mpcBankMode === 'sampler') {
       samplerEngine.noteOff(note);
       unhighlightSamplerKey(note);
+    } else {
+      instrumentNoteOff(note);
     }
+  }
+});
+
+// Wire hardware MIDI Control Change (CC) messages (e.g. Sustain Pedal CC 64)
+midiEngine.onControl(({ controller, value }) => {
+  if (controller === 64) {
+    const isDown = value >= 64;
+    instrumentEngine.setSustainPedal(isDown);
+    updateSustainPedalUI(isDown);
   }
 });
 
@@ -200,6 +204,9 @@ function handleGlobalInstrumentChange(instId) {
     const tuningSelect = document.getElementById('guitarTuningSelect');
     if (tuningSelect) tuningSelect.value = 'bass_standard';
   }
+
+  // Update instrument settings rack controls (guitars vs pianos)
+  renderInstrumentSettingsRack();
 
   showToast(`Active Instrument: ${inst.name}`, 'success');
 }
@@ -363,31 +370,281 @@ function isTypingInField() {
   return ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || el.isContentEditable;
 }
 
-function playPianoKey(midi) {
-  const currentInst = instrumentEngine.getInstrument();
-  instrumentEngine.synthesizeInstrumentNote(currentInst.id, midi, 1.8, 0.95);
+// Active held keys for true press-to-sustain polyphony
+const activeHeldKeys = new Map();
+
+function instrumentNoteOn(midi, velocity = 0.95) {
+  instrumentEngine.noteOn(midi, velocity);
 
   // Visual highlight on 25-key piano
   const keyEl = document.querySelector(`.piano-key[data-midi="${midi}"]`);
-  if (keyEl) {
-    keyEl.classList.add('playing');
-    setTimeout(() => keyEl.classList.remove('playing'), 200);
+  if (keyEl) keyEl.classList.add('playing');
+
+  // Visual highlight on fretboard
+  const fretEl = document.querySelector(`.fret-cell[data-midi="${midi}"]`);
+  if (fretEl) fretEl.classList.add('playing');
+}
+
+function instrumentNoteOff(midi) {
+  instrumentEngine.noteOff(midi);
+
+  // Remove visual highlight from 25-key piano
+  const keyEl = document.querySelector(`.piano-key[data-midi="${midi}"]`);
+  if (keyEl) keyEl.classList.remove('playing');
+
+  // Remove visual highlight from fretboard
+  const fretEl = document.querySelector(`.fret-cell[data-midi="${midi}"]`);
+  if (fretEl) fretEl.classList.remove('playing');
+}
+
+function toggleSustainPedal() {
+  const newState = !instrumentEngine.settings.sustainPedal;
+  instrumentEngine.setSustainPedal(newState);
+  updateSustainPedalUI(newState);
+  showToast(newState ? '🦶 Sustain Pedal: ON (Holding notes)' : '🦶 Sustain Pedal: OFF', 'info');
+}
+
+function updateSustainPedalUI(isDown) {
+  const masterBtn = document.getElementById('masterSustainBtn');
+  if (masterBtn) {
+    masterBtn.classList.toggle('active', isDown);
+    masterBtn.innerHTML = `<span class="sustain-pedal-led ${isDown ? 'led-on' : ''}"></span> 🦶 PEDAL: ${isDown ? 'ON' : 'OFF'}`;
+  }
+  const rackPedalBtn = document.getElementById('rackSustainBtn');
+  if (rackPedalBtn) {
+    rackPedalBtn.classList.toggle('active-pedal', isDown);
+    rackPedalBtn.innerHTML = `<span class="sustain-pedal-led ${isDown ? 'led-on' : ''}"></span> ${isDown ? '🦶 SUSTAIN PEDAL: ON' : '🦶 SUSTAIN PEDAL: OFF'}`;
   }
 }
 
-function playGuitarKey(action) {
-  const currentInst = instrumentEngine.getInstrument();
-  const guitarType = currentInst.category === 'guitar' ? currentInst.id : 'steel_acoustic';
+function toggleLegatoMode() {
+  const newMode = instrumentEngine.settings.playMode === 'legato' ? 'poly' : 'legato';
+  instrumentEngine.setPlayMode(newMode);
+  updateLegatoUI(newMode);
+  showToast(newMode === 'legato' ? '🌊 Mono Legato Mode (Smooth note glide)' : '🎹 Polyphonic Mode (Full chords)', 'info');
+}
 
-  if (action.type === 'string') {
-    instrumentEngine.synthesizeInstrumentNote(guitarType, action.midi, 2.0, 0.95);
+function updateLegatoUI(mode) {
+  const badge = document.getElementById('masterLegatoBadge');
+  if (badge) {
+    badge.textContent = mode === 'legato' ? '🌊 LEGATO' : '🎹 POLY';
+  }
+  renderInstrumentSettingsRack();
+}
 
-    // Visual highlight on fretboard
-    const fretEl = document.querySelector(`.fret-cell[data-midi="${action.midi}"]`);
-    if (fretEl) {
-      fretEl.classList.add('playing');
-      setTimeout(() => fretEl.classList.remove('playing'), 200);
+function updateEngineSetting(key, val, unit = '') {
+  const num = parseFloat(val);
+  instrumentEngine.setSetting(key, num);
+
+  const displayEl = document.getElementById(`val_${key}`);
+  if (displayEl) {
+    if (unit === 's') {
+      displayEl.textContent = `${num.toFixed(1)}s`;
+    } else if (unit === 'ms_sec') {
+      displayEl.textContent = `${Math.round(num * 1000)}ms`;
+    } else if (unit === '%') {
+      displayEl.textContent = `${Math.round(num * 100)}%`;
+    } else if (unit === 'Hz') {
+      displayEl.textContent = `${Math.round(num)}Hz`;
+    } else {
+      displayEl.textContent = `${num}`;
     }
+  }
+}
+
+function renderInstrumentSettingsRack() {
+  const container = document.getElementById('instrumentSettingsRack');
+  if (!container) return;
+
+  const inst = instrumentEngine.getInstrument();
+  const settings = instrumentEngine.settings;
+  const isGuitar = inst.category === 'guitar';
+  const isPiano = inst.category === 'piano';
+
+  let html = `
+    <div class="settings-rack-card">
+      <div class="settings-rack-header">
+        <div class="settings-rack-title">
+          <span style="font-size: 1.15rem;">🎛️</span>
+          <span><strong>${inst.name}</strong> Articulation &amp; Performance Controls</span>
+        </div>
+        <div class="settings-rack-actions">
+          <button 
+            type="button" 
+            id="rackSustainBtn"
+            class="rack-btn ${settings.sustainPedal ? 'active-pedal' : ''}" 
+            onclick="window.toggleSustainPedal()"
+            title="Damper / Sustain Pedal (Keyboard shortcut: Shift key)"
+          >
+            <span class="sustain-pedal-led ${settings.sustainPedal ? 'led-on' : ''}"></span>
+            ${settings.sustainPedal ? '🦶 SUSTAIN PEDAL: ON' : '🦶 SUSTAIN PEDAL: OFF'}
+          </button>
+
+          <button 
+            type="button" 
+            class="rack-btn ${settings.playMode === 'legato' ? 'active-legato' : ''}" 
+            onclick="window.toggleLegatoMode()"
+            title="Switch between Polyphonic chords and Monophonic smooth legato slides"
+          >
+            ${settings.playMode === 'legato' ? '🌊 MONO LEGATO' : '🎹 POLYPHONIC'}
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-rack-body">
+        <!-- Universal Envelope & Articulation Controls -->
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Sustain Hold Decay</span>
+            <span class="rack-slider-val" id="val_sustainDecay">${Number(settings.sustainDecay).toFixed(1)}s</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="0.5" 
+            max="8.0" 
+            step="0.1" 
+            value="${settings.sustainDecay}"
+            oninput="window.updateEngineSetting('sustainDecay', this.value, 's')"
+          />
+        </div>
+
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Key Release Damping</span>
+            <span class="rack-slider-val" id="val_releaseTime">${Math.round(settings.releaseTime * 1000)}ms</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="0.04" 
+            max="1.2" 
+            step="0.02" 
+            value="${settings.releaseTime}"
+            oninput="window.updateEngineSetting('releaseTime', this.value, 'ms_sec')"
+          />
+        </div>
+
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Legato Portamento Glide</span>
+            <span class="rack-slider-val" id="val_glideTime">${Math.round(settings.glideTime * 1000)}ms</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="0" 
+            max="0.25" 
+            step="0.005" 
+            value="${settings.glideTime}"
+            oninput="window.updateEngineSetting('glideTime', this.value, 'ms_sec')"
+          />
+        </div>
+  `;
+
+  if (isGuitar) {
+    html += `
+        <!-- Guitar Specific Controls -->
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Palm Mute / String Damp</span>
+            <span class="rack-slider-val" id="val_guitarDamp">${Math.round(settings.guitarDamp * 100)}%</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="0" 
+            max="0.9" 
+            step="0.05" 
+            value="${settings.guitarDamp}"
+            oninput="window.updateEngineSetting('guitarDamp', this.value, '%')"
+          />
+        </div>
+
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Overdrive / Drive Gain</span>
+            <span class="rack-slider-val" id="val_driveGain">${settings.driveGain}</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="0" 
+            max="100" 
+            step="1" 
+            value="${settings.driveGain}"
+            oninput="window.updateEngineSetting('driveGain', this.value, '')"
+          />
+        </div>
+
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Guitar Tone (Presence)</span>
+            <span class="rack-slider-val" id="val_guitarTone">${settings.guitarTone}Hz</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="1000" 
+            max="9000" 
+            step="100" 
+            value="${settings.guitarTone}"
+            oninput="window.updateEngineSetting('guitarTone', this.value, 'Hz')"
+          />
+        </div>
+    `;
+  } else if (isPiano) {
+    html += `
+        <!-- Piano / Keyboard Specific Controls -->
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Hammer Felt Attack</span>
+            <span class="rack-slider-val" id="val_hammerHardness">${Math.round(settings.hammerHardness * 100)}%</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="0.1" 
+            max="1.0" 
+            step="0.05" 
+            value="${settings.hammerHardness}"
+            oninput="window.updateEngineSetting('hammerHardness', this.value, '%')"
+          />
+        </div>
+
+        <div class="rack-slider-group">
+          <div class="rack-slider-header">
+            <span class="rack-slider-label">Stereo Chorus / Detune</span>
+            <span class="rack-slider-val" id="val_chorusDepth">${Math.round(settings.chorusDepth * 100)}%</span>
+          </div>
+          <input 
+            type="range" 
+            class="rack-range" 
+            min="0" 
+            max="1.0" 
+            step="0.05" 
+            value="${settings.chorusDepth}"
+            oninput="window.updateEngineSetting('chorusDepth', this.value, '%')"
+          />
+        </div>
+    `;
+  }
+
+  html += `
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+function playPianoKey(midi) {
+  instrumentNoteOn(midi, 0.95);
+}
+
+function playGuitarKey(action) {
+  if (action.type === 'string') {
+    instrumentNoteOn(action.midi, 0.95);
   } else if (action.type === 'chord') {
     if (progressionSequence && progressionSequence.length > action.idx) {
       const chord = progressionSequence[action.idx];
@@ -424,6 +681,18 @@ window.addEventListener('keydown', (e) => {
   const keyUpper = e.key.toUpperCase();
   const rawKey = e.key;
 
+  // Sustain Pedal Momentary Hold via Shift key
+  if (e.key === 'Shift') {
+    if (!instrumentEngine.settings.sustainPedal) {
+      instrumentEngine.setSustainPedal(true);
+      updateSustainPedalUI(true);
+    }
+    return;
+  }
+
+  // Prevent browser auto-repeat from stuttering note attacks while key is held down!
+  if (e.repeat) return;
+
   // 1. DRUMS (1-4, Q-R, A-F, Z-V)
   const padObj = MPC_PADS_CONFIG.find((p) => p.key.toUpperCase() === keyUpper);
   if (padObj) {
@@ -436,7 +705,8 @@ window.addEventListener('keydown', (e) => {
   if (PIANO_KEY_MAP[keyUpper] !== undefined || PIANO_KEY_MAP[rawKey] !== undefined) {
     e.preventDefault();
     const midi = PIANO_KEY_MAP[keyUpper] !== undefined ? PIANO_KEY_MAP[keyUpper] : PIANO_KEY_MAP[rawKey];
-    playPianoKey(midi);
+    activeHeldKeys.set(keyUpper, { type: 'piano', midi });
+    instrumentNoteOn(midi, 0.95);
     return;
   }
 
@@ -444,8 +714,34 @@ window.addEventListener('keydown', (e) => {
   const guitarAction = GUITAR_KEY_MAP[keyUpper] || GUITAR_KEY_MAP[rawKey];
   if (guitarAction) {
     e.preventDefault();
-    playGuitarKey(guitarAction);
+    if (guitarAction.type === 'string') {
+      activeHeldKeys.set(keyUpper, { type: 'guitar_string', midi: guitarAction.midi });
+      instrumentNoteOn(guitarAction.midi, 0.95);
+    } else {
+      playGuitarKey(guitarAction);
+    }
     return;
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (isTypingInField()) return;
+
+  const keyUpper = e.key.toUpperCase();
+
+  // Sustain pedal release via Shift key
+  if (e.key === 'Shift') {
+    instrumentEngine.setSustainPedal(false);
+    updateSustainPedalUI(false);
+    return;
+  }
+
+  const held = activeHeldKeys.get(keyUpper);
+  if (held) {
+    activeHeldKeys.delete(keyUpper);
+    if (held.midi !== undefined) {
+      instrumentNoteOff(held.midi);
+    }
   }
 });
 
@@ -928,7 +1224,11 @@ function renderPianoKeyboard(container, rootSemi, scaleDef) {
       <div 
         class="piano-key ${keyClass}" 
         data-midi="${midi}"
-        onclick="window.playSingleNote(${midi})"
+        onmousedown="window.instrumentNoteOn(${midi}); event.preventDefault();"
+        onmouseup="window.instrumentNoteOff(${midi}); event.preventDefault();"
+        onmouseleave="window.instrumentNoteOff(${midi})"
+        ontouchstart="window.instrumentNoteOn(${midi}); event.preventDefault();"
+        ontouchend="window.instrumentNoteOff(${midi}); event.preventDefault();"
         title="${noteName} (${midi})${kbdChar ? ` • Key [${kbdChar}]` : ''}"
       >
         ${degreeBadge}
@@ -986,7 +1286,11 @@ function renderGuitarFretboard(container, rootSemi, scaleDef) {
         <div 
           class="fret-cell ${fret === 0 ? 'fret-nut' : ''}" 
           data-midi="${midi}"
-          onclick="window.playSingleNote(${midi})"
+          onmousedown="window.instrumentNoteOn(${midi}); event.preventDefault();"
+          onmouseup="window.instrumentNoteOff(${midi}); event.preventDefault();"
+          onmouseleave="window.instrumentNoteOff(${midi})"
+          ontouchstart="window.instrumentNoteOn(${midi}); event.preventDefault();"
+          ontouchend="window.instrumentNoteOff(${midi}); event.preventDefault();"
           title="${NOTE_NAMES[semi]} (Fret ${fret})${fret === 0 && stringKeyChar ? ` • Key [${stringKeyChar}]` : ''}"
         >
           ${markerHtml}
@@ -2028,12 +2332,19 @@ window.handleDrumKitChange = handleDrumKitChange;
 window.renderMpcPads = renderMpcPads;
 window.handleMpcBankChange = handleMpcBankChange;
 window.handleMpcPadHit = handleMpcPadHit;
+window.instrumentNoteOn = instrumentNoteOn;
+window.instrumentNoteOff = instrumentNoteOff;
+window.toggleSustainPedal = toggleSustainPedal;
+window.toggleLegatoMode = toggleLegatoMode;
+window.updateEngineSetting = updateEngineSetting;
+window.renderInstrumentSettingsRack = renderInstrumentSettingsRack;
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
   renderMpcPads();
   fetchBeatCatalog();
   initTheoryTools();
+  renderInstrumentSettingsRack();
   updateDelayCalculations(120);
   runPitchShiftCalc();
   runRoomModesCalc();

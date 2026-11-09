@@ -117,6 +117,20 @@
           </div>
 
           <div class="transport-stat">
+            <span class="transport-label">Sustain Pedal</span>
+            <button id="masterSustainBtn" type="button" class="btn btn-secondary btn-sm sustain-pedal-btn" onclick="window.toggleSustainPedal()" title="Damper / Sustain Pedal (Hold Shift or Click)">
+              <span id="masterSustainLed" class="sustain-pedal-led"></span> 🦶 PEDAL: OFF
+            </button>
+          </div>
+
+          <div class="transport-stat">
+            <span class="transport-label">Articulation</span>
+            <button id="masterLegatoBtn" type="button" class="btn btn-secondary btn-sm legato-mode-btn" onclick="window.toggleLegatoMode()" title="Toggle Polyphonic vs Mono Legato Glide">
+              <span id="masterLegatoBadge">🎹 POLY</span>
+            </button>
+          </div>
+
+          <div class="transport-stat">
             <span class="transport-label">MIDI Controller</span>
             <span id="activeMidiDeviceText" style="font-size: 0.78rem; font-family: monospace; color: #67e8f9; font-weight: 700;">
               No USB Device
@@ -426,6 +440,11 @@
           <p id="scaleCharDesc" class="scale-char-desc">
             Smooth, Jazzy, Sophisticated (Neo-Soul &amp; Chillhop staple).
           </p>
+        </div>
+
+        <!-- Live Instrument Articulation & Performance Settings -->
+        <div id="instrumentSettingsRack" class="instrument-settings-rack">
+          <!-- Dynamically populated by renderInstrumentSettingsRack() -->
         </div>
 
         <!-- Interactive Visualizer Surface -->

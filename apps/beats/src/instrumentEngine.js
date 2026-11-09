@@ -254,6 +254,767 @@ export const DRUM_KITS = {
 // MASTER INSTRUMENT & DSP SYNTHESIS ENGINE
 // ============================================================================
 
+
+/**
+ * ============================================================================
+ * Polyphonic Instrument Voice with Hold Sustain, Legato Glide & ADSR Damping
+ * ============================================================================
+ */
+export class InstrumentVoice {
+  constructor(ctx, midiNote, instId, velocity, destination, settings, engine) {
+    this.ctx = ctx;
+    this.midiNote = midiNote;
+    this.instId = instId;
+    this.velocity = Math.max(0.05, Math.min(1.0, velocity));
+    this.destination = destination;
+    this.settings = settings;
+    this.engine = engine;
+
+    this.f0 = midiToFreq(midiNote);
+    this.oscillators = [];
+    this.filters = [];
+    this.nodesToDisconnect = [];
+    this.gainNode = ctx.createGain();
+    this.gainNode.connect(destination);
+
+    this.isReleased = false;
+    this.sustainedByPedal = false;
+    this.keyHeld = true;
+    this.customReleaseTime = settings.releaseTime || 0.22;
+
+    this.initVoice();
+  }
+
+  glideTo(newMidi, glideTime = 0.05) {
+    const now = this.ctx.currentTime;
+    const newFreq = midiToFreq(newMidi);
+    this.midiNote = newMidi;
+    this.f0 = newFreq;
+
+    const glide = Math.max(0.001, glideTime);
+    this.oscillators.forEach((osc) => {
+      if (osc.frequency) {
+        const ratio = osc._ratio || 1.0;
+        osc.frequency.cancelScheduledValues(now);
+        osc.frequency.setValueAtTime(osc.frequency.value, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(10, newFreq * ratio), now + glide);
+      }
+    });
+
+    this.filters.forEach((flt) => {
+      if (flt._trackRatio) {
+        flt.frequency.cancelScheduledValues(now);
+        flt.frequency.setValueAtTime(flt.frequency.value, now);
+        flt.frequency.exponentialRampToValueAtTime(Math.max(50, newFreq * flt._trackRatio), now + glide);
+      }
+    });
+  }
+
+  release(releaseTime = null) {
+    this.keyHeld = false;
+    if (this.isReleased) return;
+
+    // If damper pedal is active, sustain through pedal hold
+    if (this.engine.settings.sustainPedal) {
+      this.sustainedByPedal = true;
+      return;
+    }
+
+    this.performRelease(releaseTime);
+  }
+
+  performRelease(releaseTime = null) {
+    if (this.isReleased) return;
+    this.isReleased = true;
+    this.sustainedByPedal = false;
+
+    const now = this.ctx.currentTime;
+    const rel = releaseTime || this.customReleaseTime || this.engine.settings.releaseTime || 0.22;
+
+    this.gainNode.gain.cancelScheduledValues(now);
+    this.gainNode.gain.setValueAtTime(Math.max(0.0001, this.gainNode.gain.value), now);
+    this.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + rel);
+
+    const cleanupDelayMs = (rel + 0.06) * 1000;
+    setTimeout(() => {
+      this.cleanup();
+    }, cleanupDelayMs);
+  }
+
+  cleanup() {
+    this.oscillators.forEach((osc) => {
+      try { osc.stop(); } catch (e) {}
+      try { osc.disconnect(); } catch (e) {}
+    });
+    this.nodesToDisconnect.forEach((n) => {
+      try { n.disconnect(); } catch (e) {}
+    });
+    try { this.gainNode.disconnect(); } catch (e) {}
+    this.engine.removeActiveVoice(this.midiNote, this);
+  }
+
+  initVoice() {
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    const f0 = this.f0;
+    const vel = this.velocity;
+    const gain = this.gainNode;
+
+    switch (this.instId) {
+      // 1. CLASSICAL GUITAR (Nylon string + soundboard body)
+      case 'classical_guitar': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const bodyFilter = ctx.createBiquadFilter();
+        const dampFilter = ctx.createBiquadFilter();
+
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(f0 * 2.001, t);
+        osc2._ratio = 2.001;
+
+        bodyFilter.type = 'peaking';
+        bodyFilter.frequency.setValueAtTime(110, t);
+        bodyFilter.Q.setValueAtTime(2.0, t);
+        bodyFilter.gain.setValueAtTime(5.0, t);
+
+        const damp = this.settings.guitarDamp || 0;
+        dampFilter.type = 'lowpass';
+        const startCutoff = Math.max(300, 2800 * vel * (1.0 - damp * 0.7));
+        dampFilter.frequency.setValueAtTime(startCutoff, t);
+        dampFilter.frequency.exponentialRampToValueAtTime(Math.max(120, 320 * (1.0 - damp * 0.5)), t + 0.7);
+        dampFilter._trackRatio = 4.0;
+
+        const peakGain = 0.38 * vel;
+        const sustainGain = peakGain * 0.35 * (1.0 - damp * 0.6);
+        const holdDecay = (this.settings.sustainDecay || 3.5) * (1.0 - damp * 0.75);
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.012);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(dampFilter);
+        osc2.connect(dampFilter);
+        dampFilter.connect(bodyFilter);
+        bodyFilter.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(dampFilter, bodyFilter);
+        this.customReleaseTime = 0.16;
+        break;
+      }
+
+      // 2. STEEL-STRING ACOUSTIC GUITAR
+      case 'steel_acoustic': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const pickNoise = ctx.createBufferSource();
+        const pickGain = ctx.createGain();
+        const pickFilter = ctx.createBiquadFilter();
+        const toneFilter = ctx.createBiquadFilter();
+        const bodyFilter = ctx.createBiquadFilter();
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(f0 * 1.002, t);
+        osc2._ratio = 1.002;
+
+        const noiseLen = Math.floor(ctx.sampleRate * 0.025);
+        const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
+        const noiseData = noiseBuf.getChannelData(0);
+        for (let i = 0; i < noiseLen; i++) {
+          noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (noiseLen * 0.25));
+        }
+        pickNoise.buffer = noiseBuf;
+
+        pickFilter.type = 'bandpass';
+        pickFilter.frequency.setValueAtTime(3200, t);
+        pickFilter.Q.setValueAtTime(1.5, t);
+
+        pickGain.gain.setValueAtTime(0.18 * vel, t);
+        pickGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.025);
+
+        pickNoise.connect(pickFilter);
+        pickFilter.connect(pickGain);
+        pickGain.connect(gain);
+
+        const damp = this.settings.guitarDamp || 0;
+        toneFilter.type = 'lowpass';
+        toneFilter.frequency.setValueAtTime(Math.max(500, (this.settings.guitarTone || 4500) * (1.0 - damp * 0.6)), t);
+        toneFilter._trackRatio = 5.5;
+
+        bodyFilter.type = 'peaking';
+        bodyFilter.frequency.setValueAtTime(180, t);
+        bodyFilter.Q.setValueAtTime(1.8, t);
+        bodyFilter.gain.setValueAtTime(4.0, t);
+
+        const peakGain = 0.42 * vel;
+        const sustainGain = peakGain * 0.38 * (1.0 - damp * 0.65);
+        const holdDecay = (this.settings.sustainDecay || 4.0) * (1.0 - damp * 0.75);
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.008);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(toneFilter);
+        osc2.connect(toneFilter);
+        toneFilter.connect(bodyFilter);
+        bodyFilter.connect(gain);
+
+        pickNoise.start(t);
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(toneFilter, bodyFilter);
+        this.nodesToDisconnect.push(pickGain, pickFilter);
+        this.customReleaseTime = 0.18;
+        break;
+      }
+
+      // 3. CLEAN ELECTRIC GUITAR (Fender Strat Style)
+      case 'electric_clean': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const stratPickup = ctx.createBiquadFilter();
+        const cabFilter = ctx.createBiquadFilter();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(f0 * 1.0015, t);
+        osc2._ratio = 1.0015;
+
+        stratPickup.type = 'peaking';
+        stratPickup.frequency.setValueAtTime(2400, t);
+        stratPickup.Q.setValueAtTime(2.2, t);
+        stratPickup.gain.setValueAtTime(4.5, t);
+
+        cabFilter.type = 'lowpass';
+        cabFilter.frequency.setValueAtTime(this.settings.guitarTone || 4800, t);
+
+        const peakGain = 0.40 * vel;
+        const sustainGain = peakGain * 0.42;
+        const holdDecay = this.settings.sustainDecay || 4.5;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.007);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.22);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(stratPickup);
+        osc2.connect(stratPickup);
+        stratPickup.connect(cabFilter);
+        cabFilter.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(stratPickup, cabFilter);
+        this.customReleaseTime = 0.20;
+        break;
+      }
+
+      // 4. ROCK OVERDRIVE GUITAR (Crunched humbucker + cabinet)
+      case 'rock_overdrive': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const preDistFilter = ctx.createBiquadFilter();
+        const shaper = ctx.createWaveShaper();
+        const cabFilter = ctx.createBiquadFilter();
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(f0 * 0.5, t);
+        osc2._ratio = 0.5;
+
+        preDistFilter.type = 'peaking';
+        preDistFilter.frequency.setValueAtTime(1400, t);
+        preDistFilter.gain.setValueAtTime(6.0, t);
+
+        shaper.curve = this.engine.makeDistortionCurve(this.settings.driveGain || 45);
+        shaper.oversample = '4x';
+
+        cabFilter.type = 'lowpass';
+        cabFilter.frequency.setValueAtTime(Math.min(5000, Math.max(1200, this.settings.guitarTone || 3400)), t);
+        cabFilter.Q.setValueAtTime(2.2, t);
+
+        const peakGain = 0.35 * vel;
+        const sustainGain = peakGain * 0.48;
+        const holdDecay = this.settings.sustainDecay || 5.0;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.006);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(preDistFilter);
+        osc2.connect(preDistFilter);
+        preDistFilter.connect(shaper);
+        shaper.connect(cabFilter);
+        cabFilter.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(preDistFilter, cabFilter);
+        this.nodesToDisconnect.push(shaper);
+        this.customReleaseTime = 0.22;
+        break;
+      }
+
+      // 5. PALM-MUTED ROCK CHUG
+      case 'palm_mute': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const lowpass = ctx.createBiquadFilter();
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(f0 * 0.5, t);
+        osc2._ratio = 0.5;
+
+        lowpass.type = 'lowpass';
+        lowpass.frequency.setValueAtTime(650, t);
+        lowpass.Q.setValueAtTime(3.0, t);
+
+        const peakGain = 0.48 * vel;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+
+        osc1.connect(lowpass);
+        osc2.connect(lowpass);
+        lowpass.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(lowpass);
+        this.customReleaseTime = 0.07;
+        break;
+      }
+
+      // 6. MANDOLIN (Double-course strings + wooden teardrop bowl)
+      case 'mandolin': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const osc3 = ctx.createOscillator();
+        const body1 = ctx.createBiquadFilter();
+        const body2 = ctx.createBiquadFilter();
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(f0 * 0.998, t);
+        osc1._ratio = 0.998;
+
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(f0 * 1.002, t);
+        osc2._ratio = 1.002;
+
+        osc3.type = 'triangle';
+        osc3.frequency.setValueAtTime(f0 * 2.0, t);
+        osc3._ratio = 2.0;
+
+        body1.type = 'peaking';
+        body1.frequency.setValueAtTime(420, t);
+        body1.Q.setValueAtTime(3.0, t);
+        body1.gain.setValueAtTime(6.0, t);
+
+        body2.type = 'peaking';
+        body2.frequency.setValueAtTime(850, t);
+        body2.Q.setValueAtTime(2.5, t);
+        body2.gain.setValueAtTime(4.0, t);
+
+        const peakGain = 0.38 * vel;
+        const sustainGain = peakGain * 0.28;
+        const holdDecay = this.settings.sustainDecay || 3.0;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.005);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.14);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(body1);
+        osc2.connect(body1);
+        osc3.connect(body1);
+        body1.connect(body2);
+        body2.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc3.start(t);
+        this.oscillators.push(osc1, osc2, osc3);
+        this.filters.push(body1, body2);
+        this.customReleaseTime = 0.14;
+        break;
+      }
+
+      // 7. ELECTRIC BASS (Finger / Slap)
+      case 'electric_bass': {
+        const oscSub = ctx.createOscillator();
+        const oscSaw = ctx.createOscillator();
+        const punchFilter = ctx.createBiquadFilter();
+        const toneFilter = ctx.createBiquadFilter();
+
+        oscSub.type = 'sine';
+        oscSub.frequency.setValueAtTime(f0, t);
+        oscSub._ratio = 1.0;
+
+        oscSaw.type = 'sawtooth';
+        oscSaw.frequency.setValueAtTime(f0, t);
+        oscSaw._ratio = 1.0;
+
+        punchFilter.type = 'peaking';
+        punchFilter.frequency.setValueAtTime(80, t);
+        punchFilter.Q.setValueAtTime(1.5, t);
+        punchFilter.gain.setValueAtTime(6.0, t);
+
+        toneFilter.type = 'lowpass';
+        toneFilter.frequency.setValueAtTime(Math.min(3500, Math.max(400, this.settings.guitarTone || 1200)), t);
+
+        const peakGain = 0.52 * vel;
+        const sustainGain = peakGain * 0.44;
+        const holdDecay = this.settings.sustainDecay || 4.2;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.006);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        oscSub.connect(punchFilter);
+        oscSaw.connect(punchFilter);
+        punchFilter.connect(toneFilter);
+        toneFilter.connect(gain);
+
+        oscSub.start(t);
+        oscSaw.start(t);
+        this.oscillators.push(oscSub, oscSaw);
+        this.filters.push(punchFilter, toneFilter);
+        this.customReleaseTime = 0.18;
+        break;
+      }
+
+      // 8. CONCERT GRAND PIANO (Triple unisons + soundboard resonance)
+      case 'grand_piano': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const osc3 = ctx.createOscillator();
+        const body1 = ctx.createBiquadFilter();
+        const body2 = ctx.createBiquadFilter();
+
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(f0 * 0.9985, t);
+        osc1._ratio = 0.9985;
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(f0, t);
+        osc2._ratio = 1.0;
+
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(f0 * 1.0015, t);
+        osc3._ratio = 1.0015;
+
+        body1.type = 'peaking';
+        body1.frequency.setValueAtTime(220, t);
+        body1.Q.setValueAtTime(1.8, t);
+        body1.gain.setValueAtTime(4.0, t);
+
+        body2.type = 'peaking';
+        body2.frequency.setValueAtTime(880, t);
+        body2.Q.setValueAtTime(2.2, t);
+        body2.gain.setValueAtTime(3.0, t);
+
+        const hammerH = this.settings.hammerHardness || 0.6;
+        const peakGain = (0.40 + hammerH * 0.12) * vel;
+        const sustainGain = peakGain * 0.38;
+        const holdDecay = this.settings.sustainDecay || 5.0;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.005);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.24);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(body1);
+        osc2.connect(body1);
+        osc3.connect(body1);
+        body1.connect(body2);
+        body2.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc3.start(t);
+        this.oscillators.push(osc1, osc2, osc3);
+        this.filters.push(body1, body2);
+        this.customReleaseTime = this.settings.releaseTime || 0.22;
+        break;
+      }
+
+      // 9. VINTAGE UPRIGHT / SALOON PIANO
+      case 'upright_piano': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const bodyFilter = ctx.createBiquadFilter();
+
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(f0 * 0.996, t);
+        osc1._ratio = 0.996;
+
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(f0 * 1.004, t);
+        osc2._ratio = 1.004;
+
+        bodyFilter.type = 'peaking';
+        bodyFilter.frequency.setValueAtTime(440, t);
+        bodyFilter.Q.setValueAtTime(1.5, t);
+        bodyFilter.gain.setValueAtTime(3.5, t);
+
+        const peakGain = 0.44 * vel;
+        const sustainGain = peakGain * 0.36;
+        const holdDecay = this.settings.sustainDecay || 4.2;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.006);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.22);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(bodyFilter);
+        osc2.connect(bodyFilter);
+        bodyFilter.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(bodyFilter);
+        this.customReleaseTime = this.settings.releaseTime || 0.22;
+        break;
+      }
+
+      // 10. FENDER RHODES MARK I
+      case 'rhodes_mark1': {
+        const oscFund = ctx.createOscillator();
+        const oscTine = ctx.createOscillator();
+        const tineGain = ctx.createGain();
+        const tremolo = ctx.createGain();
+
+        oscFund.type = 'sine';
+        oscFund.frequency.setValueAtTime(f0, t);
+        oscFund._ratio = 1.0;
+
+        oscTine.type = 'sine';
+        oscTine.frequency.setValueAtTime(f0 * 3.98, t);
+        oscTine._ratio = 3.98;
+
+        tineGain.gain.setValueAtTime(0.35 * vel, t);
+        tineGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+
+        tremolo.gain.setValueAtTime(1.0, t);
+
+        const peakGain = 0.42 * vel;
+        const sustainGain = peakGain * 0.40;
+        const holdDecay = this.settings.sustainDecay || 5.5;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.008);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.35);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        oscFund.connect(tremolo);
+        oscTine.connect(tineGain);
+        tineGain.connect(tremolo);
+        tremolo.connect(gain);
+
+        oscFund.start(t);
+        oscTine.start(t);
+        this.oscillators.push(oscFund, oscTine);
+        this.nodesToDisconnect.push(tineGain, tremolo);
+        this.customReleaseTime = 0.25;
+        break;
+      }
+
+      // 11. WURLITZER 200A ELECTRIC PIANO
+      case 'wurlitzer_200a': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+
+        osc1.type = 'square';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(f0, t);
+        osc2._ratio = 1.0;
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1800, t);
+        filter.Q.setValueAtTime(1.8, t);
+
+        const peakGain = 0.40 * vel;
+        const sustainGain = peakGain * 0.36;
+        const holdDecay = this.settings.sustainDecay || 4.5;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.007);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.28);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(filter);
+        this.customReleaseTime = 0.22;
+        break;
+      }
+
+      // 12. BAROQUE HARPSICHORD
+      case 'harpsichord': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const brightFilter = ctx.createBiquadFilter();
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(f0 * 2.0, t);
+        osc2._ratio = 2.0;
+
+        brightFilter.type = 'highpass';
+        brightFilter.frequency.setValueAtTime(120, t);
+
+        const peakGain = 0.38 * vel;
+        const sustainGain = peakGain * 0.25;
+        const holdDecay = this.settings.sustainDecay || 3.0;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.004);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(brightFilter);
+        osc2.connect(brightFilter);
+        brightFilter.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        this.oscillators.push(osc1, osc2);
+        this.filters.push(brightFilter);
+        this.customReleaseTime = 0.12;
+        break;
+      }
+
+      // 13. TOY / GLASS PIANO
+      case 'toy_piano': {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const osc3 = ctx.createOscillator();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(f0, t);
+        osc1._ratio = 1.0;
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(f0 * 2.76, t);
+        osc2._ratio = 2.76;
+
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(f0 * 5.4, t);
+        osc3._ratio = 5.4;
+
+        const peakGain = 0.36 * vel;
+        const sustainGain = peakGain * 0.22;
+        const holdDecay = this.settings.sustainDecay || 3.2;
+
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.004);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustainGain), t + 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        osc3.connect(gain);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc3.start(t);
+        this.oscillators.push(osc1, osc2, osc3);
+        this.customReleaseTime = 0.18;
+        break;
+      }
+
+      // 14. CATHEDRAL PIPE ORGAN (Continuous, endless air column sustain)
+      case 'church_organ': {
+        const ranks = [
+          { mult: 1.0, gain: 0.35 },
+          { mult: 2.0, gain: 0.25 },
+          { mult: 3.0, gain: 0.15 },
+          { mult: 4.0, gain: 0.12 },
+          { mult: 5.0, gain: 0.08 },
+        ];
+
+        ranks.forEach((r) => {
+          const osc = ctx.createOscillator();
+          const rGain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f0 * r.mult, t);
+          osc._ratio = r.mult;
+          rGain.gain.setValueAtTime(r.gain, t);
+          osc.connect(rGain);
+          rGain.connect(gain);
+          osc.start(t);
+          this.oscillators.push(osc);
+          this.nodesToDisconnect.push(rGain);
+        });
+
+        // Endless pipe organ sustain: remains singing indefinitely until key release
+        const peakGain = 0.45 * vel;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.04);
+
+        this.customReleaseTime = 0.35;
+        break;
+      }
+
+      default: {
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f0, t);
+        osc._ratio = 1.0;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(0.4 * vel, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + (this.settings.sustainDecay || 3.5));
+        osc.connect(gain);
+        osc.start(t);
+        this.oscillators.push(osc);
+        this.customReleaseTime = 0.2;
+        break;
+      }
+    }
+  }
+}
+
 class InstrumentEngine {
   constructor() {
     this.ctx = null;
@@ -262,6 +1023,34 @@ class InstrumentEngine {
     this.activeInstrumentId = 'grand_piano';
     this.activeDrumKitId = 'studio_acoustic';
     this.distortionCurve = this.makeDistortionCurve(50);
+
+    // Active voice tracking for polyphonic sustain & legato portamento
+    this.activeVoices = new Map(); // midiNote -> InstrumentVoice
+    this.lastPlayedMidi = null;
+
+    // Studio Instrument Performance & Articulation Settings
+    this.settings = {
+      // Sustain / Damper Pedal
+      sustainPedal: false,
+      sustainDecay: 4.0,   // seconds of natural acoustic decay when held or pedaled
+      releaseTime: 0.22,   // seconds to dampen string/reed on key release without pedal
+
+      // Articulation & Legato
+      playMode: 'poly',    // 'poly' or 'legato'
+      glideTime: 0.055,    // portamento slide time in seconds (0.0 to 0.25)
+
+      // Guitar / String controls
+      guitarDamp: 0.0,     // 0.0 (open ringing) to 0.9 (palm mute chug)
+      driveGain: 25,       // Overdrive distortion amount (0 to 100)
+      guitarTone: 4500,    // Tone filter cutoff in Hz (1000 to 10000)
+      vibratoDepth: 0.0,   // Vibrato depth (0.0 to 1.0)
+      vibratoRate: 5.5,    // Vibrato speed in Hz
+
+      // Keyboard / Piano controls
+      hammerHardness: 0.6, // Attack brightness / hardness (0.1 soft felt to 1.0 bright)
+      chorusDepth: 0.0,    // Stereo chorus / detune shimmer (0.0 to 1.0)
+      reverbWet: 0.25,     // Ambience
+    };
   }
 
   getAudioContext() {
@@ -328,13 +1117,96 @@ class InstrumentEngine {
   }
 
   // -------------------------------------------------------------
+  // SUSTAIN PEDAL & ARTICULATION SETTINGS
+  // -------------------------------------------------------------
+
+  setSustainPedal(val) {
+    this.settings.sustainPedal = !!val;
+    if (!this.settings.sustainPedal) {
+      // Damper pedal lifted: immediately release any voices whose keys are no longer held
+      this.activeVoices.forEach((voice) => {
+        if (!voice.keyHeld && !voice.isReleased) {
+          voice.performRelease();
+        }
+      });
+    }
+  }
+
+  setPlayMode(mode) {
+    this.settings.playMode = mode === 'legato' ? 'legato' : 'poly';
+  }
+
+  setGlideTime(seconds) {
+    this.settings.glideTime = Math.max(0, Math.min(0.3, Number(seconds) || 0.055));
+  }
+
+  setSetting(key, val) {
+    if (this.settings.hasOwnProperty(key)) {
+      this.settings[key] = val;
+    }
+  }
+
+  removeActiveVoice(midiNote, voice) {
+    if (this.activeVoices.get(midiNote) === voice) {
+      this.activeVoices.delete(midiNote);
+    }
+  }
+
+  // -------------------------------------------------------------
   // INSTRUMENT PLAYBACK ROUTERS
   // -------------------------------------------------------------
 
-  playNote(midiNote, duration = null, velocity = 0.85) {
+  /**
+   * Starts a note that sustains continuously for as long as key is held
+   */
+  noteOn(midiNote, velocity = 0.85) {
+    const ctx = this.getAudioContext();
     const inst = this.getInstrument();
-    const dur = duration || inst.defaultDuration;
-    this.synthesizeInstrumentNote(inst.id, midiNote, dur, velocity);
+
+    // Legato check: In mono legato mode with an active voice, slide pitch seamlessly!
+    if (this.settings.playMode === 'legato' && this.activeVoices.size > 0) {
+      const activeVoice = Array.from(this.activeVoices.values())[0];
+      if (activeVoice && !activeVoice.isReleased) {
+        activeVoice.glideTo(midiNote, this.settings.glideTime);
+        activeVoice.keyHeld = true;
+        this.lastPlayedMidi = midiNote;
+        return activeVoice;
+      }
+    }
+
+    // Polyphonic: Release any previous voice on this exact pitch
+    if (this.activeVoices.has(midiNote)) {
+      const existing = this.activeVoices.get(midiNote);
+      existing.performRelease(0.04);
+    }
+
+    const voice = new InstrumentVoice(ctx, midiNote, inst.id, velocity, this.masterGain, this.settings, this);
+    this.activeVoices.set(midiNote, voice);
+    this.lastPlayedMidi = midiNote;
+    return voice;
+  }
+
+  /**
+   * Releases a note (dampens unless sustain pedal is held)
+   */
+  noteOff(midiNote) {
+    const voice = this.activeVoices.get(midiNote);
+    if (voice) {
+      voice.release();
+    }
+  }
+
+  /**
+   * Plays a note for a set duration (convenience wrapper for sequencer / preview)
+   */
+  playNote(midiNote, duration = null, velocity = 0.85) {
+    const voice = this.noteOn(midiNote, velocity);
+    const dur = duration || this.getInstrument().defaultDuration;
+    setTimeout(() => {
+      if (voice && !voice.isReleased && voice.keyHeld) {
+        voice.release();
+      }
+    }, dur * 1000);
   }
 
   playChord(midiNotes, duration = null, velocity = 0.85) {
@@ -346,622 +1218,20 @@ class InstrumentEngine {
     midiNotes.forEach((midi, i) => {
       const delay = i * strumSpeed;
       setTimeout(() => {
-        this.synthesizeInstrumentNote(inst.id, midi, dur, velocity * (0.9 + Math.random() * 0.15));
+        this.playNote(midi, dur, velocity * (0.9 + Math.random() * 0.15));
       }, delay * 1000);
     });
   }
 
-  // -------------------------------------------------------------
-  // PHYSICAL MODELING SYNTHESIS BY INSTRUMENT
-  // -------------------------------------------------------------
-
   synthesizeInstrumentNote(instId, midiNote, duration = 2.0, velocity = 0.85) {
     const ctx = this.getAudioContext();
-    const t = ctx.currentTime;
-    const f0 = midiToFreq(midiNote);
-    const vel = Math.max(0.1, Math.min(1.0, velocity));
-
-    switch (instId) {
-      // 1. CLASSICAL GUITAR (Nylon string + soundboard body)
-      case 'classical_guitar': {
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const bodyFilter = ctx.createBiquadFilter();
-        const dampFilter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        osc1.type = 'triangle';
-        osc1.frequency.setValueAtTime(f0, t);
-
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(f0 * 2.001, t);
-
-        bodyFilter.type = 'peaking';
-        bodyFilter.frequency.setValueAtTime(110, t);
-        bodyFilter.Q.setValueAtTime(2.0, t);
-        bodyFilter.gain.setValueAtTime(5.0, t);
-
-        dampFilter.type = 'lowpass';
-        dampFilter.frequency.setValueAtTime(2800 * vel, t);
-        dampFilter.frequency.exponentialRampToValueAtTime(320, t + Math.min(duration, 0.7));
-
-        const peakGain = 0.38 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.012);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.4, t + 0.15);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        osc1.connect(dampFilter);
-        osc2.connect(dampFilter);
-        dampFilter.connect(bodyFilter);
-        bodyFilter.connect(gain);
-        gain.connect(this.masterGain);
-
-        osc1.start(t);
-        osc2.start(t);
-        osc1.stop(t + duration + 0.05);
-        osc2.stop(t + duration + 0.05);
-        break;
+    const voice = new InstrumentVoice(ctx, midiNote, instId, velocity, this.masterGain, this.settings, this);
+    setTimeout(() => {
+      if (voice && !voice.isReleased) {
+        voice.performRelease();
       }
-
-      // 2. STEEL-STRING ACOUSTIC GUITAR
-      case 'steel_acoustic': {
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const pickNoise = ctx.createBufferSource();
-        const pickGain = ctx.createGain();
-        const pickFilter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-        const toneFilter = ctx.createBiquadFilter();
-
-        osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(f0, t);
-
-        osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(f0 * 1.002, t);
-
-        const noiseLen = Math.floor(ctx.sampleRate * 0.025);
-        const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
-        const noiseData = noiseBuf.getChannelData(0);
-        for (let i = 0; i < noiseLen; i++) {
-          noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (noiseLen * 0.25));
-        }
-        pickNoise.buffer = noiseBuf;
-
-        pickFilter.type = 'bandpass';
-        pickFilter.frequency.setValueAtTime(5000, t);
-        pickFilter.Q.setValueAtTime(1.5, t);
-
-        pickGain.gain.setValueAtTime(0.45 * vel, t);
-        pickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
-
-        pickNoise.connect(pickFilter);
-        pickFilter.connect(pickGain);
-        pickGain.connect(gain);
-
-        toneFilter.type = 'lowpass';
-        toneFilter.frequency.setValueAtTime(6200 * vel, t);
-        toneFilter.frequency.exponentialRampToValueAtTime(600, t + duration * 0.7);
-
-        const peakGain = 0.32 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.008);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.35, t + 0.25);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        osc1.connect(toneFilter);
-        osc2.connect(toneFilter);
-        toneFilter.connect(gain);
-        gain.connect(this.masterGain);
-
-        osc1.start(t);
-        osc2.start(t);
-        pickNoise.start(t);
-        osc1.stop(t + duration + 0.05);
-        osc2.stop(t + duration + 0.05);
-        break;
-      }
-
-      // 3. CLEAN ELECTRIC GUITAR (Fender Stratocaster)
-      case 'electric_clean': {
-        const osc = ctx.createOscillator();
-        const sub = ctx.createOscillator();
-        const pickupFilter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(f0, t);
-
-        sub.type = 'sine';
-        sub.frequency.setValueAtTime(f0 * 2, t);
-
-        pickupFilter.type = 'peaking';
-        pickupFilter.frequency.setValueAtTime(3200, t);
-        pickupFilter.gain.setValueAtTime(4.5, t);
-        pickupFilter.Q.setValueAtTime(1.8, t);
-
-        const peakGain = 0.34 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.01);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.5, t + 0.3);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        osc.connect(pickupFilter);
-        sub.connect(pickupFilter);
-        pickupFilter.connect(gain);
-        gain.connect(this.masterGain);
-
-        osc.start(t);
-        sub.start(t);
-        osc.stop(t + duration + 0.05);
-        sub.stop(t + duration + 0.05);
-        break;
-      }
-
-      // 4. ROCK OVERDRIVE GUITAR (Crunch distortion + 4x12 cab)
-      case 'rock_overdrive': {
-        const osc = ctx.createOscillator();
-        const subOsc = ctx.createOscillator();
-        const driveGain = ctx.createGain();
-        const shaper = ctx.createWaveShaper();
-        const cabFilter = ctx.createBiquadFilter();
-        const cabResonance = ctx.createBiquadFilter();
-        const masterGainNode = ctx.createGain();
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(f0, t);
-
-        subOsc.type = 'sawtooth';
-        subOsc.frequency.setValueAtTime(f0 * 0.5, t);
-
-        driveGain.gain.setValueAtTime(4.2 * vel, t);
-        shaper.curve = this.distortionCurve;
-        shaper.oversample = '4x';
-
-        cabFilter.type = 'lowpass';
-        cabFilter.frequency.setValueAtTime(3600, t);
-        cabFilter.Q.setValueAtTime(2.2, t);
-
-        cabResonance.type = 'peaking';
-        cabResonance.frequency.setValueAtTime(120, t);
-        cabResonance.gain.setValueAtTime(6.0, t);
-
-        const peakGain = 0.3 * vel;
-        masterGainNode.gain.setValueAtTime(0.0001, t);
-        masterGainNode.gain.linearRampToValueAtTime(peakGain, t + 0.015);
-        masterGainNode.gain.exponentialRampToValueAtTime(peakGain * 0.7, t + 0.4);
-        masterGainNode.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        osc.connect(driveGain);
-        subOsc.connect(driveGain);
-        driveGain.connect(shaper);
-        shaper.connect(cabFilter);
-        cabFilter.connect(cabResonance);
-        cabResonance.connect(masterGainNode);
-        masterGainNode.connect(this.masterGain);
-
-        osc.start(t);
-        subOsc.start(t);
-        osc.stop(t + duration + 0.05);
-        subOsc.stop(t + duration + 0.05);
-        break;
-      }
-
-      // 5. PALM-MUTED ROCK CHUG
-      case 'palm_mute': {
-        const osc = ctx.createOscillator();
-        const shaper = ctx.createWaveShaper();
-        const muteFilter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(f0, t);
-
-        shaper.curve = this.distortionCurve;
-
-        muteFilter.type = 'lowpass';
-        muteFilter.frequency.setValueAtTime(1400, t);
-        muteFilter.frequency.exponentialRampToValueAtTime(200, t + 0.22);
-        muteFilter.Q.setValueAtTime(1.8, t);
-
-        const peakGain = 0.38 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.006);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(duration, 0.45));
-
-        osc.connect(shaper);
-        shaper.connect(muteFilter);
-        muteFilter.connect(gain);
-        gain.connect(this.masterGain);
-
-        osc.start(t);
-        osc.stop(t + 0.5);
-        break;
-      }
-
-      // 6. MANDOLIN (Dual-course acoustic strings)
-      case 'mandolin': {
-        const oscA = ctx.createOscillator();
-        const oscB = ctx.createOscillator();
-        const bodyFilter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        oscA.type = 'sawtooth';
-        oscA.frequency.setValueAtTime(f0, t);
-
-        oscB.type = 'sawtooth';
-        oscB.frequency.setValueAtTime(f0 * 1.0035, t);
-
-        bodyFilter.type = 'bandpass';
-        bodyFilter.frequency.setValueAtTime(1700, t);
-        bodyFilter.Q.setValueAtTime(1.4, t);
-
-        const peakGain = 0.3 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.006);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.25, t + 0.15);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(duration, 1.2));
-
-        oscA.connect(bodyFilter);
-        oscB.connect(bodyFilter);
-        bodyFilter.connect(gain);
-        gain.connect(this.masterGain);
-
-        oscA.start(t);
-        oscB.start(t);
-        oscA.stop(t + 1.3);
-        oscB.stop(t + 1.3);
-        break;
-      }
-
-      // 7. ELECTRIC BASS (Finger & Slap)
-      case 'electric_bass': {
-        const bassFreq = f0 > 150 ? f0 * 0.5 : f0;
-        const sub = ctx.createOscillator();
-        const saw = ctx.createOscillator();
-        const slapFilter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        sub.type = 'sine';
-        sub.frequency.setValueAtTime(bassFreq, t);
-
-        saw.type = 'sawtooth';
-        saw.frequency.setValueAtTime(bassFreq, t);
-
-        slapFilter.type = 'lowpass';
-        slapFilter.frequency.setValueAtTime(2800 * vel, t);
-        slapFilter.frequency.exponentialRampToValueAtTime(220, t + 0.35);
-
-        const peakGain = 0.44 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.01);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.5, t + 0.25);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        sub.connect(slapFilter);
-        saw.connect(slapFilter);
-        slapFilter.connect(gain);
-        gain.connect(this.masterGain);
-
-        sub.start(t);
-        saw.start(t);
-        sub.stop(t + duration + 0.05);
-        saw.stop(t + duration + 0.05);
-        break;
-      }
-
-      // 8. CONCERT GRAND PIANO (Steinway multi-harmonic hammer bloom)
-      case 'grand_piano': {
-        const h1 = ctx.createOscillator();
-        const h2 = ctx.createOscillator();
-        const h3 = ctx.createOscillator();
-        const h4 = ctx.createOscillator();
-        const hammerKnock = ctx.createOscillator();
-        const g1 = ctx.createGain();
-        const g2 = ctx.createGain();
-        const g3 = ctx.createGain();
-        const g4 = ctx.createGain();
-        const hammerGain = ctx.createGain();
-        const toneFilter = ctx.createBiquadFilter();
-
-        const B = 0.00035;
-        const f1 = f0 * Math.sqrt(1 + B);
-        const f2 = 2 * f0 * Math.sqrt(1 + 4 * B);
-        const f3 = 3 * f0 * Math.sqrt(1 + 9 * B);
-        const f4 = 4 * f0 * Math.sqrt(1 + 16 * B);
-
-        h1.type = 'sine';
-        h1.frequency.setValueAtTime(f1, t);
-        h2.type = 'sine';
-        h2.frequency.setValueAtTime(f2, t);
-        h3.type = 'sine';
-        h3.frequency.setValueAtTime(f3, t);
-        h4.type = 'sine';
-        h4.frequency.setValueAtTime(f4, t);
-
-        hammerKnock.type = 'triangle';
-        hammerKnock.frequency.setValueAtTime(f0 * 0.5, t);
-        hammerGain.gain.setValueAtTime(0.25 * vel, t);
-        hammerGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-
-        g1.gain.setValueAtTime(0.35 * vel, t);
-        g1.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        g2.gain.setValueAtTime(0.2 * vel, t);
-        g2.gain.exponentialRampToValueAtTime(0.0001, t + duration * 0.75);
-
-        g3.gain.setValueAtTime(0.12 * vel, t);
-        g3.gain.exponentialRampToValueAtTime(0.0001, t + duration * 0.5);
-
-        g4.gain.setValueAtTime(0.07 * vel, t);
-        g4.gain.exponentialRampToValueAtTime(0.0001, t + duration * 0.35);
-
-        toneFilter.type = 'lowpass';
-        toneFilter.frequency.setValueAtTime(6500 * vel, t);
-
-        h1.connect(g1);
-        h2.connect(g2);
-        h3.connect(g3);
-        h4.connect(g4);
-        hammerKnock.connect(hammerGain);
-
-        g1.connect(toneFilter);
-        g2.connect(toneFilter);
-        g3.connect(toneFilter);
-        g4.connect(toneFilter);
-        hammerGain.connect(toneFilter);
-        toneFilter.connect(this.masterGain);
-
-        h1.start(t);
-        h2.start(t);
-        h3.start(t);
-        h4.start(t);
-        hammerKnock.start(t);
-
-        h1.stop(t + duration + 0.05);
-        h2.stop(t + duration + 0.05);
-        h3.stop(t + duration + 0.05);
-        h4.stop(t + duration + 0.05);
-        hammerKnock.stop(t + 0.05);
-        break;
-      }
-
-      // 9. VINTAGE UPRIGHT / SALOON PIANO
-      case 'upright_piano': {
-        const oscA = ctx.createOscillator();
-        const oscB = ctx.createOscillator();
-        const oscC = ctx.createOscillator();
-        const filter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        oscA.type = 'triangle';
-        oscA.frequency.setValueAtTime(f0 * 0.998, t);
-
-        oscB.type = 'triangle';
-        oscB.frequency.setValueAtTime(f0, t);
-
-        oscC.type = 'sine';
-        oscC.frequency.setValueAtTime(f0 * 1.0025, t);
-
-        filter.type = 'peaking';
-        filter.frequency.setValueAtTime(450, t);
-        filter.gain.setValueAtTime(4.0, t);
-
-        const peakGain = 0.34 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.012);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.35, t + 0.3);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        oscA.connect(filter);
-        oscB.connect(filter);
-        oscC.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.masterGain);
-
-        oscA.start(t);
-        oscB.start(t);
-        oscC.start(t);
-        oscA.stop(t + duration + 0.05);
-        oscB.stop(t + duration + 0.05);
-        oscC.stop(t + duration + 0.05);
-        break;
-      }
-
-      // 10. FENDER RHODES MARK I
-      case 'rhodes_mark1': {
-        const tine = ctx.createOscillator();
-        const bell = ctx.createOscillator();
-        const warmth = ctx.createOscillator();
-        const tineGain = ctx.createGain();
-        const bellGain = ctx.createGain();
-        const masterNoteGain = ctx.createGain();
-
-        tine.type = 'triangle';
-        tine.frequency.setValueAtTime(f0, t);
-
-        bell.type = 'sine';
-        bell.frequency.setValueAtTime(f0 * 4.02, t);
-
-        warmth.type = 'sine';
-        warmth.frequency.setValueAtTime(f0 * 0.999, t);
-
-        tineGain.gain.setValueAtTime(0.38 * vel, t);
-        tineGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        bellGain.gain.setValueAtTime(0.28 * vel, t);
-        bellGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-
-        tine.connect(tineGain);
-        bell.connect(bellGain);
-        warmth.connect(tineGain);
-
-        tineGain.connect(masterNoteGain);
-        bellGain.connect(masterNoteGain);
-        masterNoteGain.connect(this.masterGain);
-
-        tine.start(t);
-        bell.start(t);
-        warmth.start(t);
-        tine.stop(t + duration + 0.05);
-        bell.stop(t + 0.25);
-        warmth.stop(t + duration + 0.05);
-        break;
-      }
-
-      // 11. WURLITZER 200A
-      case 'wurlitzer_200a': {
-        const reed = ctx.createOscillator();
-        const bark = ctx.createOscillator();
-        const filter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        reed.type = 'sawtooth';
-        reed.frequency.setValueAtTime(f0, t);
-
-        bark.type = 'sine';
-        bark.frequency.setValueAtTime(f0 * 2.98, t);
-
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(1400 * vel, t);
-        filter.Q.setValueAtTime(1.2, t);
-
-        const peakGain = 0.32 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.008);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.4, t + 0.35);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-
-        reed.connect(filter);
-        bark.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.masterGain);
-
-        reed.start(t);
-        bark.start(t);
-        reed.stop(t + duration + 0.05);
-        bark.stop(t + duration + 0.05);
-        break;
-      }
-
-      // 12. BAROQUE HARPSICHORD
-      case 'harpsichord': {
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const buzzFilter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(f0, t);
-
-        osc2.type = 'sawtooth';
-        osc2.frequency.setValueAtTime(f0 * 2, t);
-
-        buzzFilter.type = 'peaking';
-        buzzFilter.frequency.setValueAtTime(3600, t);
-        buzzFilter.gain.setValueAtTime(6.0, t);
-        buzzFilter.Q.setValueAtTime(2.2, t);
-
-        const peakGain = 0.3;
-        gain.gain.setValueAtTime(peakGain, t);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.25, t + 0.2);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(duration, 1.4));
-
-        osc1.connect(buzzFilter);
-        osc2.connect(buzzFilter);
-        buzzFilter.connect(gain);
-        gain.connect(this.masterGain);
-
-        osc1.start(t);
-        osc2.start(t);
-        osc1.stop(t + 1.5);
-        osc2.stop(t + 1.5);
-        break;
-      }
-
-      // 13. TOY / LOFI GLASS PIANO
-      case 'toy_piano': {
-        const b1 = ctx.createOscillator();
-        const b2 = ctx.createOscillator();
-        const b3 = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        b1.type = 'sine';
-        b1.frequency.setValueAtTime(f0, t);
-
-        b2.type = 'sine';
-        b2.frequency.setValueAtTime(f0 * 2.76, t);
-
-        b3.type = 'sine';
-        b3.frequency.setValueAtTime(f0 * 5.4, t);
-
-        const peakGain = 0.3 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.004);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(duration, 1.6));
-
-        b1.connect(gain);
-        b2.connect(gain);
-        b3.connect(gain);
-        gain.connect(this.masterGain);
-
-        b1.start(t);
-        b2.start(t);
-        b3.start(t);
-        b1.stop(t + 1.7);
-        b2.stop(t + 1.7);
-        b3.stop(t + 1.7);
-        break;
-      }
-
-      // 14. CATHEDRAL PIPE ORGAN
-      case 'church_organ': {
-        const r16 = ctx.createOscillator();
-        const r8 = ctx.createOscillator();
-        const r4 = ctx.createOscillator();
-        const r2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        r16.type = 'sine';
-        r16.frequency.setValueAtTime(f0 * 0.5, t);
-
-        r8.type = 'triangle';
-        r8.frequency.setValueAtTime(f0, t);
-
-        r4.type = 'triangle';
-        r4.frequency.setValueAtTime(f0 * 2, t);
-
-        r2.type = 'sine';
-        r2.frequency.setValueAtTime(f0 * 4, t);
-
-        const peakGain = 0.3 * vel;
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.04);
-        gain.gain.setValueAtTime(peakGain * 0.85, t + duration * 0.85);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration + 0.2);
-
-        r16.connect(gain);
-        r8.connect(gain);
-        r4.connect(gain);
-        r2.connect(gain);
-        gain.connect(this.masterGain);
-
-        r16.start(t);
-        r8.start(t);
-        r4.start(t);
-        r2.start(t);
-        r16.stop(t + duration + 0.3);
-        r8.stop(t + duration + 0.3);
-        r4.stop(t + duration + 0.3);
-        r2.stop(t + duration + 0.3);
-        break;
-      }
-
-      default: {
-        this.synthesizeInstrumentNote('grand_piano', midiNote, duration, velocity);
-        break;
-      }
-    }
+    }, duration * 1000);
+    return voice;
   }
 
   // -------------------------------------------------------------

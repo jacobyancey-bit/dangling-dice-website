@@ -1847,5 +1847,182 @@ footer a {
   text-align: right;
 }
 
+/* ==========================================================================
+   Instrument Articulation & Performance Settings Rack
+   ========================================================================== */
+
+.sustain-pedal-btn {
+  font-weight: 800 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem !important;
+  transition: all 0.15s ease;
+}
+
+.sustain-pedal-btn.active {
+  background: rgba(236, 72, 153, 0.25) !important;
+  border-color: #ec4899 !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.5);
+}
+
+.sustain-pedal-led {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #374151;
+  transition: all 0.15s ease;
+}
+
+.sustain-pedal-led.led-on {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.legato-mode-btn {
+  font-weight: 800 !important;
+  padding: 0.35rem 0.75rem !important;
+}
+
+.instrument-settings-rack {
+  margin-bottom: 1.25rem;
+}
+
+.settings-rack-card {
+  background: rgba(13, 17, 28, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.settings-rack-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 1rem;
+}
+
+.settings-rack-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  color: #fff;
+}
+
+.settings-rack-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.rack-btn {
+  background: #1a2234;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.rack-btn:hover {
+  background: #242f48;
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.rack-btn.active-pedal {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.rack-btn.active-legato {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: #06b6d4;
+  color: #67e8f9;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+}
+
+.settings-rack-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem 1.5rem;
+}
+
+.rack-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rack-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.rack-slider-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rack-slider-val {
+  color: #67e8f9;
+  font-family: monospace;
+}
+
+.rack-range {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #1e293b;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.rack-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ec4899;
+  box-shadow: 0 0 8px rgba(236, 72, 153, 0.8);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.rack-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.rack-range::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ec4899;
+  box-shadow: 0 0 8px rgba(236, 72, 153, 0.8);
+  cursor: pointer;
+}
+
 
 
