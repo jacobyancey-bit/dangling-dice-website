@@ -858,11 +858,11 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
               <div>
-                <label style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">Input Payload (Editable JSON)</label>
+                <label for="sandboxInput" style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 0.35rem; display: block;">Input Payload (Editable JSON)</label>
                 <textarea id="sandboxInput" rows="7" style="font-family: var(--font-mono); font-size: 0.76rem; background: #030509; color: #e2e8f0; border: 1px solid var(--border-subtle); width: 100%; border-radius: var(--radius-sm); padding: 0.75rem;"></textarea>
               </div>
               <div>
-                <label id="sandboxOutputLabel" style="font-size: 0.74rem; color: #34d399; margin-bottom: 0.35rem; display: block;">Live Engine Output</label>
+                <span id="sandboxOutputLabel" role="status" aria-live="polite" style="font-size: 0.74rem; color: #34d399; margin-bottom: 0.35rem; display: block;">Live Engine Output</span>
                 <pre id="sandboxOutput" style="margin: 0; height: 158px; overflow: auto; font-family: var(--font-mono); font-size: 0.75rem; background: #030509; color: #67e8f9; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.75rem;">Click "▶ Run Live Engine" to execute...</pre>
               </div>
             </div>
