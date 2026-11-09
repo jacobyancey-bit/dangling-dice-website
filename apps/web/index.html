@@ -990,6 +990,63 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
     </div>
   </div>
 
+  <!-- Privacy, Cookie Policy & Compliance Modal (GDPR, CCPA, YouTube NoCookie) -->
+  <div id="privacyModal" style="display: none; position: fixed; inset: 0; z-index: 1050; background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: #0e131f; border: 1px solid var(--border-glow); border-radius: var(--radius-lg); width: 100%; max-width: 780px; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.9); display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-subtle); background: #07090e; position: sticky; top: 0; z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.25rem;">🛡️</span>
+          <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff;">Privacy Policy &amp; Cookie Compliance</h3>
+        </div>
+        <button onclick="closePrivacyModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.75rem; cursor: pointer; padding: 0.1rem 0.5rem; line-height: 1;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+      </div>
+      <div style="padding: 1.5rem; color: var(--text-main); font-size: 0.88rem; line-height: 1.6; display: flex; flex-direction: column; gap: 1.25rem;">
+        <div>
+          <h4 style="font-size: 0.98rem; font-weight: 700; color: #fbbf24; margin-bottom: 0.4rem;">1. Zero Invasive Trackers &amp; Data Ethics</h4>
+          <p style="color: var(--text-muted);">
+            Dangling Dice Studios™ respects developer and creator privacy. We do not sell, rent, or trade personal data to third-party data brokers. We do not embed behavioral retargeting pixels (such as Meta/Facebook Pixel or TikTok Pixel) or invasive cross-site ad networks.
+          </p>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.98rem; font-weight: 700; color: #f472b6; margin-bottom: 0.4rem;">2. Privacy-Enhanced YouTube Embedded Media</h4>
+          <p style="color: var(--text-muted);">
+            Our floating studio beats dock and video drawers stream via Google YouTube’s <strong>Privacy-Enhanced Mode</strong> (<code>https://www.youtube-nocookie.com</code>). In this mode, YouTube will not set tracking or advertising cookies on your browser simply for viewing our pages, and will only process necessary stream delivery once you actively hit Play.
+          </p>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.98rem; font-weight: 700; color: #34d399; margin-bottom: 0.4rem;">3. Essential First-Party Cookies &amp; Local Storage</h4>
+          <p style="color: var(--text-muted);">
+            We use strictly necessary first-party cookies and browser local storage for:
+          </p>
+          <ul style="padding-left: 1.25rem; margin-top: 0.4rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
+            <li><strong>Audio Dock State:</strong> Remembering your minimized/expanded audio preferences and chosen radio playlist station.</li>
+            <li><strong>Consent State:</strong> Remembering your acknowledgment of this privacy notice (<code>dds_cookie_consent</code>).</li>
+            <li><strong>Admin Authentication:</strong> Secure encrypted HTTP session tokens for authenticated administrative portal access.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.98rem; font-weight: 700; color: #67e8f9; margin-bottom: 0.4rem;">4. Affiliate Programs &amp; Commercial Transparency</h4>
+          <p style="color: var(--text-muted);">
+            Dangling Dice Studios™ participates in affiliate marketing programs, including Amazon Associates and Impact.com. Clicking partner recommendations uses clean, encrypted outbound referral links at zero additional cost to you.
+          </p>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.98rem; font-weight: 700; color: #c084fc; margin-bottom: 0.4rem;">5. GDPR (EU/UK) &amp; CCPA/CPRA (California) Rights</h4>
+          <p style="color: var(--text-muted);">
+            Under GDPR and CCPA, you have the right to request information on any data submitted through our forms (such as App Showcase submissions), or request immediate deletion by contacting our administrative team directly on Discord or via GitHub.
+          </p>
+        </div>
+      </div>
+      <div style="padding: 1rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem; background: #07090e; border-top: 1px solid var(--border-subtle); position: sticky; bottom: 0; z-index: 10;">
+        <button class="btn btn-primary btn-sm" onclick="closePrivacyModal()">I Understand &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==========================================================================
        Site Footer Section
        ========================================================================== -->
@@ -1011,17 +1068,45 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
         <span style="color: #ff0033;">▶</span> YouTube: @danglingdicestudios
       </a>
       <a href="https://github.com/jacobyancey-bit" target="_blank" rel="noopener noreferrer" class="footer-link">
-        <span>💻</span> GitHub: @jacobyancey-bit
+        <span style="color: #cbd5e1;">💻</span> GitHub: @jacobyancey-bit
       </a>
       <a href="https://www.linkedin.com/in/jacob-yancey-085151372" target="_blank" rel="noopener noreferrer" class="footer-link">
         <span style="color: #0a66c2;">💼</span> LinkedIn: Jacob Yancey
       </a>
     </div>
-    <p><strong>Dangling Dice Studios™</strong> &bull; Music Production, Coding Masterclasses, Phone Apps & Developer Tools &bull; Founded by Dangling Dice Studios™</p>
+    <div style="margin-top: 0.85rem; display: flex; justify-content: center; align-items: center; gap: 0.85rem; flex-wrap: wrap; font-size: 0.74rem;">
+      <a href="javascript:void(0)" onclick="openPrivacyModal()" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='#fbbf24'" onmouseout="this.style.color='var(--text-muted)'">🛡️ Privacy &amp; Cookie Policy</a>
+      <span style="color: var(--border-subtle);">&bull;</span>
+      <a href="javascript:void(0)" onclick="openPrivacyModal()" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='#fbbf24'" onmouseout="this.style.color='var(--text-muted)'">🍪 Cookie Preferences</a>
+      <span style="color: var(--border-subtle);">&bull;</span>
+      <a href="https://github.com/jacobyancey-bit/dangling-dice-website" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none;" onmouseover="this.style.color='#67e8f9'" onmouseout="this.style.color='var(--text-muted)'">Open Source Repository</a>
+    </div>
+    <p style="margin-top: 0.65rem;"><strong>Dangling Dice Studios™</strong> &bull; Music Production, Coding Masterclasses, Phone Apps & Developer Tools &bull; Founded by Dangling Dice Studios™</p>
     <p style="font-size: 0.72rem; color: var(--text-faint); margin-top: 0.65rem; max-width: 860px; margin-left: auto; margin-right: auto; line-height: 1.45;">
       <strong>Affiliate Disclosure:</strong> As an Amazon Associate I earn from qualifying purchases. Dangling Dice Studios™ participates in affiliate marketing programs, including Amazon Associates and Impact.com, earning referral commissions on qualifying gear, software, and subscriptions at zero additional cost to you.
     </p>
   </footer>
+
+  <!-- Lightweight, Non-Intrusive Cookie & Privacy Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-banner" style="display: none;">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.25rem;">🍪</span>
+        <strong style="font-size: 0.85rem; color: #fff;">Privacy &amp; Cookie Preferences</strong>
+      </div>
+      <button type="button" onclick="closeCookieBanner('essential')" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; line-height: 1;" title="Dismiss">&times;</button>
+    </div>
+    <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.45; margin: 0;">
+      We use essential first-party cookies for site security and privacy-enhanced YouTube audio streams (<code>youtube-nocookie.com</code>). We never sell your personal data or run intrusive cross-site ad trackers.
+    </p>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;">
+      <a href="javascript:void(0)" onclick="openPrivacyModal()" style="font-size: 0.72rem; color: #fbbf24; text-decoration: underline;">Privacy Policy &amp; Terms</a>
+      <div style="display: flex; gap: 0.4rem;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeCookieBanner('essential')" style="font-size: 0.7rem; padding: 0.25rem 0.6rem;">Essential Only</button>
+        <button type="button" class="btn btn-purple btn-sm" onclick="closeCookieBanner('accepted')" style="font-size: 0.7rem; padding: 0.25rem 0.75rem; font-weight: 700;">Accept &amp; Continue</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Backdrop for Mobile Bottom Sheet Station Drawer -->
   <div id="dockBackdrop" class="dock-backdrop" onclick="togglePlaylistDrawer()" style="display: none;"></div>

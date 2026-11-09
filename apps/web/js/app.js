@@ -10,29 +10,30 @@ const API_BASE =
     ? "http://localhost:5000/api"
     : window.location.origin + "/api";
 
-// YouTube Embed Helper (Supports single videos, playlists, shortlinks)
+// YouTube Embed Helper with Privacy-Enhanced Mode (youtube-nocookie.com)
 function getYouTubeEmbedUrl(url) {
   if (!url) return null;
   try {
     const vMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
     const playlistMatch = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
     
-    // If it has BOTH video and playlist (best for seamless playback):
+    // Privacy-Enhanced Mode (youtube-nocookie.com prevents tracking cookies until user plays):
     if (vMatch && playlistMatch) {
-      return `https://www.youtube.com/embed/${vMatch[1]}?list=${playlistMatch[1]}&autoplay=1`;
+      return `https://www.youtube-nocookie.com/embed/${vMatch[1]}?list=${playlistMatch[1]}&autoplay=1`;
     }
     if (playlistMatch) {
-      return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1`;
+      return `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1`;
     }
     const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
     if (shortMatch) {
-      return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`;
+      return `https://www.youtube-nocookie.com/embed/${shortMatch[1]}?autoplay=1`;
     }
     if (vMatch) {
-      return `https://www.youtube.com/embed/${vMatch[1]}?autoplay=1`;
+      return `https://www.youtube-nocookie.com/embed/${vMatch[1]}?autoplay=1`;
     }
-    if (url.includes("youtube.com/embed/")) {
-      return url.includes('autoplay=1') ? url : (url.includes('?') ? `${url}&autoplay=1` : `${url}?autoplay=1`);
+    if (url.includes("youtube.com/embed/") || url.includes("youtube-nocookie.com/embed/")) {
+      const sanitized = url.replace("www.youtube.com/embed/", "www.youtube-nocookie.com/embed/");
+      return sanitized.includes('autoplay=1') ? sanitized : (sanitized.includes('?') ? `${sanitized}&autoplay=1` : `${sanitized}?autoplay=1`);
     }
   } catch (e) {
     return null;
@@ -59,9 +60,9 @@ function openCinemaModal(title, urlOrEmbed) {
     isDockAudioActive = false;
   }
   
-  // Guarantee valid embed format (converts watch?v= into /embed/ automatically)
-  const embedUrl = (urlOrEmbed && urlOrEmbed.includes("youtube.com/embed/"))
-    ? urlOrEmbed
+  // Guarantee valid embed format in Privacy-Enhanced mode
+  let embedUrl = (urlOrEmbed && (urlOrEmbed.includes("youtube.com/embed/") || urlOrEmbed.includes("youtube-nocookie.com/embed/")))
+    ? urlOrEmbed.replace("www.youtube.com/embed/", "www.youtube-nocookie.com/embed/")
     : (getYouTubeEmbedUrl(urlOrEmbed) || urlOrEmbed);
 
   if (titleEl) titleEl.textContent = title;
@@ -563,7 +564,7 @@ window.copyWireGuardConfig = function () {
 let isDockAudioActive = false;
 let isPlaylistDrawerOpen = false;
 
-// 1. Official Dangling Beats Studio Stations (Wired with Starting Video IDs for Instant Autoplay)
+// 1. Official Dangling Beats Studio Stations (Privacy-Enhanced Mode via youtube-nocookie.com)
 const officialStations = [
   {
     id: "lofi-drive",
@@ -571,7 +572,7 @@ const officialStations = [
     subtitle: "Official Lo-Fi Focus Radio",
     badge: "Lo-Fi",
     videoId: "2J-U0EUATHs",
-    url: "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "dreamcore",
@@ -579,7 +580,7 @@ const officialStations = [
     subtitle: "Ethereal Ambient Soundscapes",
     badge: "Dreamcore",
     videoId: "BGW1y-9bVJc",
-    url: "https://www.youtube.com/embed/BGW1y-9bVJc?list=PLByFVPrF7p0s&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/BGW1y-9bVJc?list=PLByFVPrF7p0s&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "relaxing-jazz",
@@ -587,7 +588,7 @@ const officialStations = [
     subtitle: "Smooth Rhodes & Jazzy Vibes",
     badge: "Jazz",
     videoId: "0YknzKYiDXo",
-    url: "https://www.youtube.com/embed/0YknzKYiDXo?list=PLZzyR4Y8j_gA&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/0YknzKYiDXo?list=PLZzyR4Y8j_gA&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "jk-pop",
@@ -595,7 +596,7 @@ const officialStations = [
     subtitle: "Upbeat Coding & Creative Rhythm",
     badge: "Pop",
     videoId: "8Z0e3VIb-4U",
-    url: "https://www.youtube.com/embed/8Z0e3VIb-4U?list=PLUOqd5Jfm3gw&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/8Z0e3VIb-4U?list=PLUOqd5Jfm3gw&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "yacht-rock",
@@ -603,7 +604,7 @@ const officialStations = [
     subtitle: "Classic Sunset Grooves",
     badge: "Groove",
     videoId: "2Onu8sRtlk8",
-    url: "https://www.youtube.com/embed/2Onu8sRtlk8?list=PLOQPFjHz5Vs4&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/2Onu8sRtlk8?list=PLOQPFjHz5Vs4&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "sleep-music",
@@ -611,7 +612,7 @@ const officialStations = [
     subtitle: "Deep Relaxation & Binaural Waves",
     badge: "Sleep",
     videoId: "fdBVmykxMqE",
-    url: "https://www.youtube.com/embed/fdBVmykxMqE?list=PLJL6dnrrRw-k&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/fdBVmykxMqE?list=PLJL6dnrrRw-k&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "music-albums",
@@ -619,7 +620,7 @@ const officialStations = [
     subtitle: "Full Studio Album Catalog",
     badge: "Albums",
     videoId: "YIaOzPji1Kk",
-    url: "https://www.youtube.com/embed/YIaOzPji1Kk?list=PLR6uUDnIO7P0&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/YIaOzPji1Kk?list=PLR6uUDnIO7P0&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "live-videos",
@@ -627,7 +628,7 @@ const officialStations = [
     subtitle: "Live Studio Broadcasts",
     badge: "Live",
     videoId: "YY8mKBKGM5o",
-    url: "https://www.youtube.com/embed/YY8mKBKGM5o?list=PLFLqzwDKWUyQ&autoplay=1&enablejsapi=1&playsinline=1",
+    url: "https://www.youtube-nocookie.com/embed/YY8mKBKGM5o?list=PLFLqzwDKWUyQ&autoplay=1&enablejsapi=1&playsinline=1",
   },
 ];
 
@@ -1448,14 +1449,57 @@ async function handleDevSubmission(e) {
   }
 }
 
+// Privacy Policy & Cookie Preferences Controls
+function openPrivacyModal() {
+  const modal = document.getElementById("privacyModal");
+  if (modal) modal.style.display = "flex";
+}
+
+function closePrivacyModal() {
+  const modal = document.getElementById("privacyModal");
+  if (modal) modal.style.display = "none";
+}
+
+function closeCookieBanner(preference) {
+  try {
+    localStorage.setItem("dds_cookie_consent", preference || "accepted");
+  } catch (e) {}
+  const banner = document.getElementById("cookieConsentBanner");
+  if (banner) {
+    banner.style.opacity = "0";
+    banner.style.transform = "translateY(15px)";
+    setTimeout(() => {
+      banner.style.display = "none";
+    }, 250);
+  }
+}
+
+function initCookieConsent() {
+  try {
+    const consent = localStorage.getItem("dds_cookie_consent");
+    if (!consent) {
+      const banner = document.getElementById("cookieConsentBanner");
+      if (banner) {
+        setTimeout(() => {
+          banner.style.display = "flex";
+        }, 800);
+      }
+    }
+  } catch (e) {}
+}
+
 // Window bindings
 window.openDevSubmissionModal = openDevSubmissionModal;
 window.closeDevSubmissionModal = closeDevSubmissionModal;
 window.handleDevSubmission = handleDevSubmission;
+window.openPrivacyModal = openPrivacyModal;
+window.closePrivacyModal = closePrivacyModal;
+window.closeCookieBanner = closeCookieBanner;
 
 // Startup
 window.addEventListener("DOMContentLoaded", async () => {
   initDockState();
+  initCookieConsent();
   await checkHealth();
   await fetchResources();
   await fetchTechStack();
