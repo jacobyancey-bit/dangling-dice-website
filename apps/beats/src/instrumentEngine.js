@@ -142,7 +142,7 @@ export const DRUM_KITS = {
       2: { name: 'Side Stick / Rim', sound: 'sidestick' },
       3: { name: 'Maple Snare', sound: 'snare_acoustic' },
       4: { name: 'Room Clap', sound: 'clap_acoustic' },
-      5: { name: 'Snare Ring', sound: 'snare_rim' },
+      5: { name: 'Snare Rimshot', sound: 'snare_rim' },
       6: { name: 'Floor Tom', sound: 'tom_floor' },
       7: { name: 'Closed Hat', sound: 'hat_closed' },
       8: { name: 'Mid Tom', sound: 'tom_mid' },
@@ -259,10 +259,9 @@ class InstrumentEngine {
     this.ctx = null;
     this.masterGain = null;
     this.compressor = null;
-    this.reverbConvolver = null;
     this.activeInstrumentId = 'grand_piano';
     this.activeDrumKitId = 'studio_acoustic';
-    this.distortionCurve = this.makeDistortionCurve(40);
+    this.distortionCurve = this.makeDistortionCurve(50);
   }
 
   getAudioContext() {
@@ -280,10 +279,10 @@ class InstrumentEngine {
   setupMasterBus() {
     const ctx = this.ctx;
     this.masterGain = ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.7, ctx.currentTime);
+    this.masterGain.gain.setValueAtTime(0.75, ctx.currentTime);
 
     this.compressor = ctx.createDynamicsCompressor();
-    this.compressor.threshold.setValueAtTime(-12, ctx.currentTime);
+    this.compressor.threshold.setValueAtTime(-14, ctx.currentTime);
     this.compressor.knee.setValueAtTime(6, ctx.currentTime);
     this.compressor.ratio.setValueAtTime(3.5, ctx.currentTime);
     this.compressor.attack.setValueAtTime(0.003, ctx.currentTime);
@@ -317,7 +316,7 @@ class InstrumentEngine {
     return DRUM_KITS[this.activeDrumKitId] || DRUM_KITS.studio_acoustic;
   }
 
-  makeDistortionCurve(amount = 25) {
+  makeDistortionCurve(amount = 50) {
     const n_samples = 44100;
     const curve = new Float32Array(n_samples);
     const deg = Math.PI / 180;
@@ -332,23 +331,17 @@ class InstrumentEngine {
   // INSTRUMENT PLAYBACK ROUTERS
   // -------------------------------------------------------------
 
-  /**
-   * Plays a single note with the currently selected instrument
-   */
   playNote(midiNote, duration = null, velocity = 0.85) {
     const inst = this.getInstrument();
     const dur = duration || inst.defaultDuration;
     this.synthesizeInstrumentNote(inst.id, midiNote, dur, velocity);
   }
 
-  /**
-   * Plays a polyphonic chord with realistic strumming and acoustic spreading
-   */
   playChord(midiNotes, duration = null, velocity = 0.85) {
     const inst = this.getInstrument();
     const dur = duration || inst.defaultDuration;
     const isGuitar = inst.category === 'guitar';
-    const strumSpeed = isGuitar ? 0.024 : 0.012; // Guitars strum down across strings
+    const strumSpeed = isGuitar ? 0.024 : 0.012;
 
     midiNotes.forEach((midi, i) => {
       const delay = i * strumSpeed;
@@ -369,9 +362,7 @@ class InstrumentEngine {
     const vel = Math.max(0.1, Math.min(1.0, velocity));
 
     switch (instId) {
-      // ---------------------------------------------------------
       // 1. CLASSICAL GUITAR (Nylon string + soundboard body)
-      // ---------------------------------------------------------
       case 'classical_guitar': {
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
@@ -379,29 +370,25 @@ class InstrumentEngine {
         const dampFilter = ctx.createBiquadFilter();
         const gain = ctx.createGain();
 
-        // Warm nylon string harmonics (triangle + subtle sine octave)
         osc1.type = 'triangle';
         osc1.frequency.setValueAtTime(f0, t);
 
         osc2.type = 'sine';
         osc2.frequency.setValueAtTime(f0 * 2.001, t);
 
-        // Acoustic guitar body formant resonance (110Hz body cavity + 220Hz top soundboard)
         bodyFilter.type = 'peaking';
         bodyFilter.frequency.setValueAtTime(110, t);
         bodyFilter.Q.setValueAtTime(2.0, t);
-        bodyFilter.gain.setValueAtTime(4.5, t);
+        bodyFilter.gain.setValueAtTime(5.0, t);
 
-        // Dynamic nail/pluck damping (highs drop rapidly)
         dampFilter.type = 'lowpass';
-        dampFilter.frequency.setValueAtTime(3200 * vel, t);
-        dampFilter.frequency.exponentialRampToValueAtTime(350, t + Math.min(duration, 0.8));
+        dampFilter.frequency.setValueAtTime(2800 * vel, t);
+        dampFilter.frequency.exponentialRampToValueAtTime(320, t + Math.min(duration, 0.7));
 
-        // Soft nylon pluck envelope
-        const peakGain = 0.35 * vel;
+        const peakGain = 0.38 * vel;
         gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.linearRampToValueAtTime(peakGain, t + 0.015);
-        gain.gain.exponentialRampToValueAtTime(peakGain * 0.45, t + 0.18);
+        gain.gain.linearRampToValueAtTime(peakGain, t + 0.012);
+        gain.gain.exponentialRampToValueAtTime(peakGain * 0.4, t + 0.15);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
 
         osc1.connect(dampFilter);
@@ -417,9 +404,7 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
-      // 2. STEEL-STRING ACOUSTIC GUITAR (Bright metallic pick + dreadnought body)
-      // ---------------------------------------------------------
+      // 2. STEEL-STRING ACOUSTIC GUITAR
       case 'steel_acoustic': {
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
@@ -429,14 +414,12 @@ class InstrumentEngine {
         const gain = ctx.createGain();
         const toneFilter = ctx.createBiquadFilter();
 
-        // Metallic steel string: sawtooth blended with triangle
         osc1.type = 'sawtooth';
         osc1.frequency.setValueAtTime(f0, t);
 
         osc2.type = 'triangle';
         osc2.frequency.setValueAtTime(f0 * 1.002, t);
 
-        // Plectrum pick noise transient (first 18ms)
         const noiseLen = Math.floor(ctx.sampleRate * 0.025);
         const noiseBuf = ctx.createBuffer(1, noiseLen, ctx.sampleRate);
         const noiseData = noiseBuf.getChannelData(0);
@@ -446,22 +429,21 @@ class InstrumentEngine {
         pickNoise.buffer = noiseBuf;
 
         pickFilter.type = 'bandpass';
-        pickFilter.frequency.setValueAtTime(4500, t);
+        pickFilter.frequency.setValueAtTime(5000, t);
         pickFilter.Q.setValueAtTime(1.5, t);
 
-        pickGain.gain.setValueAtTime(0.4 * vel, t);
+        pickGain.gain.setValueAtTime(0.45 * vel, t);
         pickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
 
         pickNoise.connect(pickFilter);
         pickFilter.connect(pickGain);
         pickGain.connect(gain);
 
-        // Acoustic dreadnought body filter
         toneFilter.type = 'lowpass';
-        toneFilter.frequency.setValueAtTime(5800 * vel, t);
-        toneFilter.frequency.exponentialRampToValueAtTime(650, t + duration * 0.7);
+        toneFilter.frequency.setValueAtTime(6200 * vel, t);
+        toneFilter.frequency.exponentialRampToValueAtTime(600, t + duration * 0.7);
 
-        const peakGain = 0.3 * vel;
+        const peakGain = 0.32 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.008);
         gain.gain.exponentialRampToValueAtTime(peakGain * 0.35, t + 0.25);
@@ -480,9 +462,7 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
       // 3. CLEAN ELECTRIC GUITAR (Fender Stratocaster)
-      // ---------------------------------------------------------
       case 'electric_clean': {
         const osc = ctx.createOscillator();
         const sub = ctx.createOscillator();
@@ -495,13 +475,12 @@ class InstrumentEngine {
         sub.type = 'sine';
         sub.frequency.setValueAtTime(f0 * 2, t);
 
-        // Stratocaster single-coil pickup chime (boost at 3.2kHz, cut at 500Hz)
         pickupFilter.type = 'peaking';
         pickupFilter.frequency.setValueAtTime(3200, t);
-        pickupFilter.gain.setValueAtTime(4.0, t);
+        pickupFilter.gain.setValueAtTime(4.5, t);
         pickupFilter.Q.setValueAtTime(1.8, t);
 
-        const peakGain = 0.32 * vel;
+        const peakGain = 0.34 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.01);
         gain.gain.exponentialRampToValueAtTime(peakGain * 0.5, t + 0.3);
@@ -519,9 +498,7 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
-      // 4. ROCK OVERDRIVE GUITAR (High gain distortion + 4x12 cab)
-      // ---------------------------------------------------------
+      // 4. ROCK OVERDRIVE GUITAR (Crunch distortion + 4x12 cab)
       case 'rock_overdrive': {
         const osc = ctx.createOscillator();
         const subOsc = ctx.createOscillator();
@@ -531,34 +508,28 @@ class InstrumentEngine {
         const cabResonance = ctx.createBiquadFilter();
         const masterGainNode = ctx.createGain();
 
-        // Sawtooth wave for harmonic density
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(f0, t);
 
-        // Sub octave power-chord thickness
         subOsc.type = 'sawtooth';
         subOsc.frequency.setValueAtTime(f0 * 0.5, t);
 
-        // Drive stage: push into nonlinear clipping
-        driveGain.gain.setValueAtTime(3.8 * vel, t);
+        driveGain.gain.setValueAtTime(4.2 * vel, t);
         shaper.curve = this.distortionCurve;
         shaper.oversample = '4x';
 
-        // 4x12 Guitar Speaker Cabinet Simulation:
-        // Sharp roll-off above 4.2kHz (Celestion speaker cutoff)
         cabFilter.type = 'lowpass';
-        cabFilter.frequency.setValueAtTime(3800, t);
-        cabFilter.Q.setValueAtTime(2.0, t);
+        cabFilter.frequency.setValueAtTime(3600, t);
+        cabFilter.Q.setValueAtTime(2.2, t);
 
-        // Low-end cabinet thump at 115Hz
         cabResonance.type = 'peaking';
-        cabResonance.frequency.setValueAtTime(115, t);
-        cabResonance.gain.setValueAtTime(5.0, t);
+        cabResonance.frequency.setValueAtTime(120, t);
+        cabResonance.gain.setValueAtTime(6.0, t);
 
-        const peakGain = 0.28 * vel;
+        const peakGain = 0.3 * vel;
         masterGainNode.gain.setValueAtTime(0.0001, t);
         masterGainNode.gain.linearRampToValueAtTime(peakGain, t + 0.015);
-        masterGainNode.gain.exponentialRampToValueAtTime(peakGain * 0.65, t + 0.4);
+        masterGainNode.gain.exponentialRampToValueAtTime(peakGain * 0.7, t + 0.4);
         masterGainNode.gain.exponentialRampToValueAtTime(0.0001, t + duration);
 
         osc.connect(driveGain);
@@ -576,9 +547,7 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
       // 5. PALM-MUTED ROCK CHUG
-      // ---------------------------------------------------------
       case 'palm_mute': {
         const osc = ctx.createOscillator();
         const shaper = ctx.createWaveShaper();
@@ -590,13 +559,12 @@ class InstrumentEngine {
 
         shaper.curve = this.distortionCurve;
 
-        // Tight low-pass filter mimicking palm on bridge
         muteFilter.type = 'lowpass';
         muteFilter.frequency.setValueAtTime(1400, t);
-        muteFilter.frequency.exponentialRampToValueAtTime(220, t + 0.25);
-        muteFilter.Q.setValueAtTime(1.5, t);
+        muteFilter.frequency.exponentialRampToValueAtTime(200, t + 0.22);
+        muteFilter.Q.setValueAtTime(1.8, t);
 
-        const peakGain = 0.35 * vel;
+        const peakGain = 0.38 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.006);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(duration, 0.45));
@@ -611,28 +579,24 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
       // 6. MANDOLIN (Dual-course acoustic strings)
-      // ---------------------------------------------------------
       case 'mandolin': {
         const oscA = ctx.createOscillator();
         const oscB = ctx.createOscillator();
         const bodyFilter = ctx.createBiquadFilter();
         const gain = ctx.createGain();
 
-        // 2 strings in unison with slight 0.25% chorusing detune
         oscA.type = 'sawtooth';
         oscA.frequency.setValueAtTime(f0, t);
 
         oscB.type = 'sawtooth';
         oscB.frequency.setValueAtTime(f0 * 1.0035, t);
 
-        // Mandolin pear-shaped acoustic body resonance (peaks at 620Hz and 1.8kHz)
         bodyFilter.type = 'bandpass';
-        bodyFilter.frequency.setValueAtTime(1600, t);
-        bodyFilter.Q.setValueAtTime(1.2, t);
+        bodyFilter.frequency.setValueAtTime(1700, t);
+        bodyFilter.Q.setValueAtTime(1.4, t);
 
-        const peakGain = 0.28 * vel;
+        const peakGain = 0.3 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.006);
         gain.gain.exponentialRampToValueAtTime(peakGain * 0.25, t + 0.15);
@@ -646,14 +610,13 @@ class InstrumentEngine {
         oscA.start(t);
         oscB.start(t);
         oscA.stop(t + 1.3);
+        oscB.stop(t + 1.3);
         break;
       }
 
-      // ---------------------------------------------------------
       // 7. ELECTRIC BASS (Finger & Slap)
-      // ---------------------------------------------------------
       case 'electric_bass': {
-        const bassFreq = f0 > 150 ? f0 * 0.5 : f0; // Lock to deep bass register
+        const bassFreq = f0 > 150 ? f0 * 0.5 : f0;
         const sub = ctx.createOscillator();
         const saw = ctx.createOscillator();
         const slapFilter = ctx.createBiquadFilter();
@@ -665,12 +628,11 @@ class InstrumentEngine {
         saw.type = 'sawtooth';
         saw.frequency.setValueAtTime(bassFreq, t);
 
-        // Slap click filter (snap transient)
         slapFilter.type = 'lowpass';
         slapFilter.frequency.setValueAtTime(2800 * vel, t);
         slapFilter.frequency.exponentialRampToValueAtTime(220, t + 0.35);
 
-        const peakGain = 0.42 * vel;
+        const peakGain = 0.44 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.01);
         gain.gain.exponentialRampToValueAtTime(peakGain * 0.5, t + 0.25);
@@ -688,14 +650,12 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
       // 8. CONCERT GRAND PIANO (Steinway multi-harmonic hammer bloom)
-      // ---------------------------------------------------------
       case 'grand_piano': {
-        const h1 = ctx.createOscillator(); // Fundamental
-        const h2 = ctx.createOscillator(); // Octave
-        const h3 = ctx.createOscillator(); // 12th
-        const h4 = ctx.createOscillator(); // 15th
+        const h1 = ctx.createOscillator();
+        const h2 = ctx.createOscillator();
+        const h3 = ctx.createOscillator();
+        const h4 = ctx.createOscillator();
         const hammerKnock = ctx.createOscillator();
         const g1 = ctx.createGain();
         const g2 = ctx.createGain();
@@ -704,7 +664,6 @@ class InstrumentEngine {
         const hammerGain = ctx.createGain();
         const toneFilter = ctx.createBiquadFilter();
 
-        // Inharmonic string stiffness: fn = n*f0 * sqrt(1 + B*n^2)
         const B = 0.00035;
         const f1 = f0 * Math.sqrt(1 + B);
         const f2 = 2 * f0 * Math.sqrt(1 + 4 * B);
@@ -720,13 +679,11 @@ class InstrumentEngine {
         h4.type = 'sine';
         h4.frequency.setValueAtTime(f4, t);
 
-        // Hammer strike knock (short thud transient)
         hammerKnock.type = 'triangle';
         hammerKnock.frequency.setValueAtTime(f0 * 0.5, t);
         hammerGain.gain.setValueAtTime(0.25 * vel, t);
         hammerGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
 
-        // Natural harmonic decay envelopes
         g1.gain.setValueAtTime(0.35 * vel, t);
         g1.gain.exponentialRampToValueAtTime(0.0001, t + duration);
 
@@ -753,7 +710,6 @@ class InstrumentEngine {
         g3.connect(toneFilter);
         g4.connect(toneFilter);
         hammerGain.connect(toneFilter);
-
         toneFilter.connect(this.masterGain);
 
         h1.start(t);
@@ -770,9 +726,7 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
       // 9. VINTAGE UPRIGHT / SALOON PIANO
-      // ---------------------------------------------------------
       case 'upright_piano': {
         const oscA = ctx.createOscillator();
         const oscB = ctx.createOscillator();
@@ -780,7 +734,6 @@ class InstrumentEngine {
         const filter = ctx.createBiquadFilter();
         const gain = ctx.createGain();
 
-        // 3 detuned unisons for that authentic saloon/upright character
         oscA.type = 'triangle';
         oscA.frequency.setValueAtTime(f0 * 0.998, t);
 
@@ -790,12 +743,11 @@ class InstrumentEngine {
         oscC.type = 'sine';
         oscC.frequency.setValueAtTime(f0 * 1.0025, t);
 
-        // Woody soundboard filter
         filter.type = 'peaking';
         filter.frequency.setValueAtTime(450, t);
-        filter.gain.setValueAtTime(3.5, t);
+        filter.gain.setValueAtTime(4.0, t);
 
-        const peakGain = 0.32 * vel;
+        const peakGain = 0.34 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.012);
         gain.gain.exponentialRampToValueAtTime(peakGain * 0.35, t + 0.3);
@@ -816,9 +768,7 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
-      // 10. FENDER RHODES MARK I ELECTRIC PIANO
-      // ---------------------------------------------------------
+      // 10. FENDER RHODES MARK I
       case 'rhodes_mark1': {
         const tine = ctx.createOscillator();
         const bell = ctx.createOscillator();
@@ -827,23 +777,19 @@ class InstrumentEngine {
         const bellGain = ctx.createGain();
         const masterNoteGain = ctx.createGain();
 
-        // Tine main body
         tine.type = 'triangle';
         tine.frequency.setValueAtTime(f0, t);
 
-        // High bell metallic harmonic
         bell.type = 'sine';
         bell.frequency.setValueAtTime(f0 * 4.02, t);
 
-        // Warm sub foundation
         warmth.type = 'sine';
         warmth.frequency.setValueAtTime(f0 * 0.999, t);
 
-        tineGain.gain.setValueAtTime(0.35 * vel, t);
+        tineGain.gain.setValueAtTime(0.38 * vel, t);
         tineGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
 
-        // Bell strike dies very quickly
-        bellGain.gain.setValueAtTime(0.25 * vel, t);
+        bellGain.gain.setValueAtTime(0.28 * vel, t);
         bellGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
 
         tine.connect(tineGain);
@@ -863,28 +809,24 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
-      // 11. WURLITZER 200A ELECTRIC PIANO
-      // ---------------------------------------------------------
+      // 11. WURLITZER 200A
       case 'wurlitzer_200a': {
         const reed = ctx.createOscillator();
         const bark = ctx.createOscillator();
         const filter = ctx.createBiquadFilter();
         const gain = ctx.createGain();
 
-        // Vibrating steel reed (square wave softened by filter)
         reed.type = 'sawtooth';
         reed.frequency.setValueAtTime(f0, t);
 
-        // Mid-range dynamic reed bark
         bark.type = 'sine';
         bark.frequency.setValueAtTime(f0 * 2.98, t);
 
         filter.type = 'bandpass';
         filter.frequency.setValueAtTime(1400 * vel, t);
-        filter.Q.setValueAtTime(1.1, t);
+        filter.Q.setValueAtTime(1.2, t);
 
-        const peakGain = 0.3 * vel;
+        const peakGain = 0.32 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.008);
         gain.gain.exponentialRampToValueAtTime(peakGain * 0.4, t + 0.35);
@@ -902,29 +844,24 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
-      // 12. BAROQUE HARPSICHORD (Quill plectrum pluck)
-      // ---------------------------------------------------------
+      // 12. BAROQUE HARPSICHORD
       case 'harpsichord': {
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const buzzFilter = ctx.createBiquadFilter();
         const gain = ctx.createGain();
 
-        // Narrow pulse/sawtooth wave for rich baroque string buzzing
         osc1.type = 'sawtooth';
         osc1.frequency.setValueAtTime(f0, t);
 
         osc2.type = 'sawtooth';
         osc2.frequency.setValueAtTime(f0 * 2, t);
 
-        // High frequency quill pluck buzz
         buzzFilter.type = 'peaking';
         buzzFilter.frequency.setValueAtTime(3600, t);
         buzzFilter.gain.setValueAtTime(6.0, t);
         buzzFilter.Q.setValueAtTime(2.2, t);
 
-        // Historical harpsichords have zero velocity dynamics and instant key drop attack!
         const peakGain = 0.3;
         gain.gain.setValueAtTime(peakGain, t);
         gain.gain.exponentialRampToValueAtTime(peakGain * 0.25, t + 0.2);
@@ -942,16 +879,13 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
       // 13. TOY / LOFI GLASS PIANO
-      // ---------------------------------------------------------
       case 'toy_piano': {
         const b1 = ctx.createOscillator();
         const b2 = ctx.createOscillator();
         const b3 = ctx.createOscillator();
         const gain = ctx.createGain();
 
-        // Inharmonic bell ratios for tuned steel tines: 1.0, 2.76, 5.40
         b1.type = 'sine';
         b1.frequency.setValueAtTime(f0, t);
 
@@ -961,7 +895,7 @@ class InstrumentEngine {
         b3.type = 'sine';
         b3.frequency.setValueAtTime(f0 * 5.4, t);
 
-        const peakGain = 0.28 * vel;
+        const peakGain = 0.3 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.004);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(duration, 1.6));
@@ -980,14 +914,12 @@ class InstrumentEngine {
         break;
       }
 
-      // ---------------------------------------------------------
-      // 14. CATHEDRAL PIPE ORGAN (Multi-rank additive stops)
-      // ---------------------------------------------------------
+      // 14. CATHEDRAL PIPE ORGAN
       case 'church_organ': {
-        const r16 = ctx.createOscillator(); // 16' Bourdon
-        const r8 = ctx.createOscillator();  // 8' Principal
-        const r4 = ctx.createOscillator();  // 4' Octave
-        const r2 = ctx.createOscillator();  // 2' Flute
+        const r16 = ctx.createOscillator();
+        const r8 = ctx.createOscillator();
+        const r4 = ctx.createOscillator();
+        const r2 = ctx.createOscillator();
         const gain = ctx.createGain();
 
         r16.type = 'sine';
@@ -1002,8 +934,7 @@ class InstrumentEngine {
         r2.type = 'sine';
         r2.frequency.setValueAtTime(f0 * 4, t);
 
-        // Infinite majestic church organ sustain
-        const peakGain = 0.28 * vel;
+        const peakGain = 0.3 * vel;
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.linearRampToValueAtTime(peakGain, t + 0.04);
         gain.gain.setValueAtTime(peakGain * 0.85, t + duration * 0.85);
@@ -1027,7 +958,6 @@ class InstrumentEngine {
       }
 
       default: {
-        // Fallback clean acoustic piano
         this.synthesizeInstrumentNote('grand_piano', midiNote, duration, velocity);
         break;
       }
@@ -1035,7 +965,7 @@ class InstrumentEngine {
   }
 
   // -------------------------------------------------------------
-  // REALISTIC DRUM KIT SYNTHESIS
+  // REALISTIC DRUM KIT SYNTHESIS (Every Single Pad Authentically Modeled)
   // -------------------------------------------------------------
 
   playDrumPad(padNumber, velocity = 0.9) {
@@ -1053,8 +983,23 @@ class InstrumentEngine {
     const t = ctx.currentTime;
     const vel = Math.max(0.1, Math.min(1.0, velocity));
 
+    // Helper: Generate White Noise Buffer
+    const makeNoise = (durationSec) => {
+      const len = Math.floor(ctx.sampleRate * durationSec);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      return src;
+    };
+
     switch (soundKey) {
-      // --- ACOUSTIC KIT SOUNDS ---
+      // =========================================================
+      // ACOUSTIC DRUM KIT
+      // =========================================================
+
+      // 1. Kick: Heavy pitch sweep + beater click
       case 'kick_acoustic': {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -1062,24 +1007,57 @@ class InstrumentEngine {
         osc.frequency.exponentialRampToValueAtTime(45, t + 0.08);
 
         gain.gain.setValueAtTime(0.95 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        // Click transient
+        const click = makeNoise(0.015);
+        const cFilter = ctx.createBiquadFilter();
+        cFilter.type = 'bandpass';
+        cFilter.frequency.setValueAtTime(1400, t);
+        const cGain = ctx.createGain();
+        cGain.gain.setValueAtTime(0.4 * vel, t);
+        cGain.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+
+        click.connect(cFilter);
+        cFilter.connect(cGain);
+        cGain.connect(this.masterGain);
+        click.start(t);
 
         osc.connect(gain);
         gain.connect(this.masterGain);
         osc.start(t);
-        osc.stop(t + 0.28);
+        osc.stop(t + 0.3);
         break;
       }
 
-      case 'snare_acoustic': {
-        // Dual layer: wooden body tone + snare rattle noise
+      // 2. Sidestick: Clean wooden stick-on-metal rim crack
+      case 'sidestick':
+      case 'lofi_rim': {
         const tone = ctx.createOscillator();
         const toneGain = ctx.createGain();
         tone.type = 'triangle';
-        tone.frequency.setValueAtTime(185, t);
-        tone.frequency.exponentialRampToValueAtTime(120, t + 0.08);
+        tone.frequency.setValueAtTime(1800, t);
+        tone.frequency.exponentialRampToValueAtTime(450, t + 0.018);
 
-        toneGain.gain.setValueAtTime(0.55 * vel, t);
+        toneGain.gain.setValueAtTime(0.85 * vel, t);
+        toneGain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+
+        tone.connect(toneGain);
+        toneGain.connect(this.masterGain);
+        tone.start(t);
+        tone.stop(t + 0.03);
+        break;
+      }
+
+      // 3. Maple Snare: Dual layer (shell tone + snare wire rattle)
+      case 'snare_acoustic': {
+        const tone = ctx.createOscillator();
+        const toneGain = ctx.createGain();
+        tone.type = 'triangle';
+        tone.frequency.setValueAtTime(190, t);
+        tone.frequency.exponentialRampToValueAtTime(125, t + 0.08);
+
+        toneGain.gain.setValueAtTime(0.6 * vel, t);
         toneGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
 
         tone.connect(toneGain);
@@ -1087,18 +1065,13 @@ class InstrumentEngine {
         tone.start(t);
         tone.stop(t + 0.18);
 
-        const noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.22), ctx.sampleRate);
-        const out = noiseBuf.getChannelData(0);
-        for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
-
-        const noise = ctx.createBufferSource();
-        noise.buffer = noiseBuf;
+        const noise = makeNoise(0.22);
         const filter = ctx.createBiquadFilter();
         filter.type = 'highpass';
-        filter.frequency.setValueAtTime(1200, t);
+        filter.frequency.setValueAtTime(1400, t);
 
         const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.48 * vel, t);
+        noiseGain.gain.setValueAtTime(0.55 * vel, t);
         noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
 
         noise.connect(filter);
@@ -1108,169 +1081,62 @@ class InstrumentEngine {
         break;
       }
 
-      case 'hat_closed':
-      case '808_hat_closed':
-      case '909_hat_closed': {
-        const noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.045), ctx.sampleRate);
-        const out = noiseBuf.getChannelData(0);
-        for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
+      // 4. Snare Rimshot: Piercing rimshot crack with high ring (distinct from normal snare)
+      case 'snare_rim':
+      case '808_rim':
+      case '909_rim': {
+        const rimTone = ctx.createOscillator();
+        const rimGain = ctx.createGain();
+        rimTone.type = 'triangle';
+        rimTone.frequency.setValueAtTime(450, t);
+        rimTone.frequency.exponentialRampToValueAtTime(260, t + 0.04);
 
-        const noise = ctx.createBufferSource();
-        noise.buffer = noiseBuf;
+        rimGain.gain.setValueAtTime(0.75 * vel, t);
+        rimGain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
 
+        rimTone.connect(rimGain);
+        rimGain.connect(this.masterGain);
+        rimTone.start(t);
+        rimTone.stop(t + 0.1);
+
+        const crackNoise = makeNoise(0.06);
         const hp = ctx.createBiquadFilter();
         hp.type = 'highpass';
-        hp.frequency.setValueAtTime(8000, t);
-
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.35 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
-
-        noise.connect(hp);
-        hp.connect(gain);
-        gain.connect(this.masterGain);
-        noise.start(t);
-        break;
-      }
-
-      case 'hat_open':
-      case '808_hat_open':
-      case '909_hat_open': {
-        const noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.35), ctx.sampleRate);
-        const out = noiseBuf.getChannelData(0);
-        for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
-
-        const noise = ctx.createBufferSource();
-        noise.buffer = noiseBuf;
-
-        const bp = ctx.createBiquadFilter();
-        bp.type = 'bandpass';
-        bp.frequency.setValueAtTime(9500, t);
-        bp.Q.setValueAtTime(1.5, t);
-
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.4 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-
-        noise.connect(bp);
-        bp.connect(gain);
-        gain.connect(this.masterGain);
-        noise.start(t);
-        break;
-      }
-
-      // --- 808 TRAP SUB BASS BOOM ---
-      case '808_sub': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(130, t);
-        osc.frequency.exponentialRampToValueAtTime(36, t + 0.12);
-
-        gain.gain.setValueAtTime(0.95 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
-
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        osc.start(t);
-        osc.stop(t + 1.25);
-        break;
-      }
-
-      case '808_snare': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(260, t);
-        osc.frequency.exponentialRampToValueAtTime(140, t + 0.06);
-
-        gain.gain.setValueAtTime(0.6 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        osc.start(t);
-        osc.stop(t + 0.15);
-
-        const noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.18), ctx.sampleRate);
-        const out = noiseBuf.getChannelData(0);
-        for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
-
-        const noise = ctx.createBufferSource();
-        noise.buffer = noiseBuf;
-        const hp = ctx.createBiquadFilter();
-        hp.type = 'highpass';
-        hp.frequency.setValueAtTime(3500, t);
+        hp.frequency.setValueAtTime(3200, t);
 
         const nGain = ctx.createGain();
-        nGain.gain.setValueAtTime(0.55 * vel, t);
-        nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        nGain.gain.setValueAtTime(0.65 * vel, t);
+        nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
 
-        noise.connect(hp);
+        crackNoise.connect(hp);
         hp.connect(nGain);
         nGain.connect(this.masterGain);
-        noise.start(t);
+        crackNoise.start(t);
         break;
       }
 
-      case '808_cowbell': {
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const bp = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-
-        osc1.type = 'square';
-        osc1.frequency.setValueAtTime(540, t);
-        osc2.type = 'square';
-        osc2.frequency.setValueAtTime(800, t);
-
-        bp.type = 'bandpass';
-        bp.frequency.setValueAtTime(840, t);
-        bp.Q.setValueAtTime(4.0, t);
-
-        gain.gain.setValueAtTime(0.45 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-
-        osc1.connect(bp);
-        osc2.connect(bp);
-        bp.connect(gain);
-        gain.connect(this.masterGain);
-
-        osc1.start(t);
-        osc2.start(t);
-        osc1.stop(t + 0.38);
-        osc2.stop(t + 0.38);
-        break;
-      }
-
+      // 5. Acoustic Room Clap: Multi-burst claps with natural room delay
+      case 'clap_acoustic':
       case '808_clap':
       case '909_clap': {
-        // Multi-trigger clap (3 micro-bursts followed by sustained reverb tail)
         const times = [0, 0.012, 0.024];
         times.forEach((offset) => {
-          const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.015), ctx.sampleRate);
-          const out = buf.getChannelData(0);
-          for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
-          const src = ctx.createBufferSource();
-          src.buffer = buf;
+          const src = makeNoise(0.018);
           const g = ctx.createGain();
-          g.gain.setValueAtTime(0.35 * vel, t + offset);
+          g.gain.setValueAtTime(0.38 * vel, t + offset);
           src.connect(g);
           g.connect(this.masterGain);
           src.start(t + offset);
         });
 
-        // Sustained tail
-        const tailBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.2), ctx.sampleRate);
-        const out = tailBuf.getChannelData(0);
-        for (let i = 0; i < out.length; i++) out[i] = Math.random() * 2 - 1;
-        const tail = ctx.createBufferSource();
-        tail.buffer = tailBuf;
+        const tail = makeNoise(0.24);
         const bp = ctx.createBiquadFilter();
         bp.type = 'bandpass';
-        bp.frequency.setValueAtTime(1200, t);
+        bp.frequency.setValueAtTime(1150, t);
         const tailGain = ctx.createGain();
-        tailGain.gain.setValueAtTime(0.5 * vel, t + 0.03);
-        tailGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        tailGain.gain.setValueAtTime(0.55 * vel, t + 0.03);
+        tailGain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+
         tail.connect(bp);
         bp.connect(tailGain);
         tailGain.connect(this.masterGain);
@@ -1278,14 +1144,59 @@ class InstrumentEngine {
         break;
       }
 
-      // --- 909 PUNCH KICK ---
-      case '909_kick': {
+      // 6. Floor Tom (16" Deep Floor Tom, boomy 65Hz)
+      case 'tom_floor':
+      case '808_tom_low':
+      case '909_tom_low':
+      case 'lofi_tom_low': {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(190, t);
-        osc.frequency.exponentialRampToValueAtTime(52, t + 0.06);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(110, t);
+        osc.frequency.exponentialRampToValueAtTime(65, t + 0.16);
 
-        gain.gain.setValueAtTime(0.95 * vel, t);
+        gain.gain.setValueAtTime(0.85 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.35);
+        break;
+      }
+
+      // 7. Mid Tom (12" Rack Tom, warm 95Hz)
+      case 'tom_mid':
+      case '808_tom_mid':
+      case '909_tom_mid': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(155, t);
+        osc.frequency.exponentialRampToValueAtTime(95, t + 0.14);
+
+        gain.gain.setValueAtTime(0.8 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.3);
+        break;
+      }
+
+      // 8. High Tom (10" Rack Tom, snappy 140Hz)
+      case 'tom_high':
+      case '808_tom_hi':
+      case '909_tom_hi':
+      case 'lofi_tom_hi': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(215, t);
+        osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
+
+        gain.gain.setValueAtTime(0.75 * vel, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
 
         osc.connect(gain);
@@ -1295,18 +1206,570 @@ class InstrumentEngine {
         break;
       }
 
-      // --- LATIN PERCUSSION ---
-      case 'conga_high':
+      // 9. Closed Hi-Hat: Tight metallic brass choke (9.5kHz)
+      case 'hat_closed':
+      case '808_hat_closed':
+      case '909_hat_closed':
+      case 'lofi_hat_closed': {
+        const noise = makeNoise(0.045);
+        const hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(8500, t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.42 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+
+        noise.connect(hp);
+        hp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      // 10. Pedal Hat: Dark foot "chick" (bandpass at 5.5kHz, soft attack)
+      case 'hat_pedal':
+      case '909_hat_pedal': {
+        const noise = makeNoise(0.06);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(5500, t);
+        bp.Q.setValueAtTime(2.0, t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.35 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+
+        noise.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      // 11. Open Hi-Hat: Long sizzling brass wash (450ms)
+      case 'hat_open':
+      case '808_hat_open':
+      case '909_hat_open':
+      case 'lofi_hat_open': {
+        const noise = makeNoise(0.45);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(9000, t);
+        bp.Q.setValueAtTime(1.8, t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.45 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+
+        noise.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      // 12. Ride Bell: High metallic ping on heavy cymbal bell (1850Hz & 3200Hz)
+      case 'ride_bell':
+      case '909_ride': {
+        const b1 = ctx.createOscillator();
+        const b2 = ctx.createOscillator();
+        const bGain = ctx.createGain();
+
+        b1.type = 'sine';
+        b1.frequency.setValueAtTime(1850, t);
+        b2.type = 'sine';
+        b2.frequency.setValueAtTime(3200, t);
+
+        bGain.gain.setValueAtTime(0.6 * vel, t);
+        bGain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+
+        b1.connect(bGain);
+        b2.connect(bGain);
+        bGain.connect(this.masterGain);
+
+        b1.start(t);
+        b2.start(t);
+        b1.stop(t + 0.7);
+        b2.stop(t + 0.7);
+        break;
+      }
+
+      // 13. Crash Cymbal: 16" explosive shimmering brass wash (1.4s)
+      case 'crash_acoustic':
+      case '808_crash':
+      case '909_crash': {
+        const noise = makeNoise(1.4);
+        const hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(4500, t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.65 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 1.4);
+
+        noise.connect(hp);
+        hp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      // 14. Ride Cymbal: Stick ping + sustained brass shimmer
+      case 'ride_acoustic': {
+        const ping = ctx.createOscillator();
+        const pGain = ctx.createGain();
+        ping.type = 'triangle';
+        ping.frequency.setValueAtTime(2600, t);
+        pGain.gain.setValueAtTime(0.4 * vel, t);
+        pGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        ping.connect(pGain);
+        pGain.connect(this.masterGain);
+        ping.start(t);
+        ping.stop(t + 0.15);
+
+        const shimmer = makeNoise(1.1);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(6500, t);
+        bp.Q.setValueAtTime(1.5, t);
+        const sGain = ctx.createGain();
+        sGain.gain.setValueAtTime(0.35 * vel, t);
+        sGain.gain.exponentialRampToValueAtTime(0.001, t + 1.1);
+        shimmer.connect(bp);
+        bp.connect(sGain);
+        sGain.connect(this.masterGain);
+        shimmer.start(t);
+        break;
+      }
+
+      // 15. Cowbell: Latin metal cowbell (560Hz & 845Hz)
+      case 'cowbell_real':
+      case '808_cowbell':
+      case 'club_cowbell': {
+        const o1 = ctx.createOscillator();
+        const o2 = ctx.createOscillator();
+        const bp = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+
+        o1.type = 'square';
+        o1.frequency.setValueAtTime(560, t);
+        o2.type = 'square';
+        o2.frequency.setValueAtTime(845, t);
+
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(800, t);
+        bp.Q.setValueAtTime(4.5, t);
+
+        gain.gain.setValueAtTime(0.55 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+
+        o1.connect(bp);
+        o2.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+
+        o1.start(t);
+        o2.start(t);
+        o1.stop(t + 0.35);
+        o2.stop(t + 0.35);
+        break;
+      }
+
+      // 16. Tambourine: Multi-burst jingle cluster (7kHz-12kHz)
+      case 'tambourine':
+      case '808_shaker':
+      case 'house_shaker':
+      case 'lofi_shaker':
+      case 'maracas': {
+        const n1 = makeNoise(0.025);
+        const g1 = ctx.createGain();
+        g1.gain.setValueAtTime(0.35 * vel, t);
+        n1.connect(g1);
+        g1.connect(this.masterGain);
+        n1.start(t);
+
+        const n2 = makeNoise(0.08);
+        const hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(7500, t);
+        const g2 = ctx.createGain();
+        g2.gain.setValueAtTime(0.5 * vel, t + 0.012);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+
+        n2.connect(hp);
+        hp.connect(g2);
+        g2.connect(this.masterGain);
+        n2.start(t + 0.012);
+        break;
+      }
+
+      // =========================================================
+      // 808 TRAP & DRILL SOUNDS
+      // =========================================================
+
+      case '808_sub': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(135, t);
+        osc.frequency.exponentialRampToValueAtTime(36, t + 0.12);
+
+        gain.gain.setValueAtTime(0.98 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 1.4);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 1.45);
+        break;
+      }
+
+      case '808_snare':
+      case '808_snare_hi': {
+        const isHi = soundKey === '808_snare_hi';
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(isHi ? 340 : 250, t);
+        osc.frequency.exponentialRampToValueAtTime(isHi ? 180 : 135, t + 0.06);
+
+        gain.gain.setValueAtTime(0.65 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.15);
+
+        const noise = makeNoise(0.18);
+        const hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(isHi ? 4500 : 3200, t);
+        const nGain = ctx.createGain();
+        nGain.gain.setValueAtTime(0.6 * vel, t);
+        nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+
+        noise.connect(hp);
+        hp.connect(nGain);
+        nGain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      case '808_hat_roll': {
+        const rollTimes = [0, 0.025, 0.05];
+        rollTimes.forEach((offset) => {
+          const noise = makeNoise(0.035);
+          const hp = ctx.createBiquadFilter();
+          hp.type = 'highpass';
+          hp.frequency.setValueAtTime(9500, t + offset);
+          const g = ctx.createGain();
+          g.gain.setValueAtTime(0.4 * vel, t + offset);
+          g.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.035);
+          noise.connect(hp);
+          hp.connect(g);
+          g.connect(this.masterGain);
+          noise.start(t + offset);
+        });
+        break;
+      }
+
+      case '808_reverse': {
+        const noise = makeNoise(0.6);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(7000, t);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.exponentialRampToValueAtTime(0.7 * vel, t + 0.55);
+        gain.gain.setValueAtTime(0.0001, t + 0.6);
+        noise.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      // =========================================================
+      // 909 DANCE & CLUB SOUNDS
+      // =========================================================
+
+      case '909_kick': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(200, t);
+        osc.frequency.exponentialRampToValueAtTime(52, t + 0.06);
+
+        gain.gain.setValueAtTime(0.98 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.28);
+        break;
+      }
+
+      case '909_snare': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, t);
+        osc.frequency.exponentialRampToValueAtTime(140, t + 0.07);
+        gain.gain.setValueAtTime(0.7 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.18);
+
+        const noise = makeNoise(0.24);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(2400, t);
+        bp.Q.setValueAtTime(1.2, t);
+        const nGain = ctx.createGain();
+        nGain.gain.setValueAtTime(0.65 * vel, t);
+        nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+        noise.connect(bp);
+        bp.connect(nGain);
+        nGain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      case 'synth_zap': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1800, t);
+        osc.frequency.exponentialRampToValueAtTime(160, t + 0.14);
+
+        gain.gain.setValueAtTime(0.6 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.16);
+        break;
+      }
+
+      case 'sub_drop': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(95, t);
+        osc.frequency.exponentialRampToValueAtTime(28, t + 0.7);
+
+        gain.gain.setValueAtTime(0.9 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.8);
+        break;
+      }
+
+      // =========================================================
+      // LOFI VINYL SOUNDS
+      // =========================================================
+
+      case 'lofi_kick': {
+        const osc = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+
+        osc.frequency.setValueAtTime(130, t);
+        osc.frequency.exponentialRampToValueAtTime(48, t + 0.09);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, t);
+
+        gain.gain.setValueAtTime(0.85 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.3);
+        break;
+      }
+
+      case 'lofi_snap': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1750, t);
+        osc.frequency.exponentialRampToValueAtTime(420, t + 0.02);
+
+        gain.gain.setValueAtTime(0.7 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.04);
+        break;
+      }
+
+      case 'lofi_snare': {
+        const noise = makeNoise(0.14);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1600, t);
+        filter.Q.setValueAtTime(1.8, t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.65 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      case 'lofi_brush': {
+        const noise = makeNoise(0.28);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(3200, t);
+        filter.Q.setValueAtTime(1.0, t);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.linearRampToValueAtTime(0.4 * vel, t + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      case 'lofi_kalimba': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, t); // C5
+
+        gain.gain.setValueAtTime(0.75 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.5);
+        break;
+      }
+
+      case 'lofi_bell': {
+        const b1 = ctx.createOscillator();
+        const b2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        b1.type = 'sine';
+        b1.frequency.setValueAtTime(880, t);
+        b2.type = 'sine';
+        b2.frequency.setValueAtTime(2430, t);
+
+        gain.gain.setValueAtTime(0.6 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+
+        b1.connect(gain);
+        b2.connect(gain);
+        gain.connect(this.masterGain);
+        b1.start(t);
+        b2.start(t);
+        b1.stop(t + 0.65);
+        b2.stop(t + 0.65);
+        break;
+      }
+
+      case 'water_drop': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(350, t);
+        osc.frequency.exponentialRampToValueAtTime(1250, t + 0.06);
+
+        gain.gain.setValueAtTime(0.85 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.14);
+        break;
+      }
+
+      case 'tape_stop': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(380, t);
+        osc.frequency.exponentialRampToValueAtTime(55, t + 0.35);
+
+        gain.gain.setValueAtTime(0.6 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.36);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.38);
+        break;
+      }
+
+      case 'vinyl_burst': {
+        const noise = makeNoise(0.08);
+        const hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(2500, t);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.45 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+
+        noise.connect(hp);
+        hp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      // =========================================================
+      // LATIN PERCUSSION SOUNDS
+      // =========================================================
+
       case 'conga_low': {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        const basePitch = soundKey === 'conga_high' ? 240 : 160;
-
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(basePitch * 1.3, t);
-        osc.frequency.exponentialRampToValueAtTime(basePitch, t + 0.04);
+        osc.frequency.setValueAtTime(200, t);
+        osc.frequency.exponentialRampToValueAtTime(155, t + 0.05);
 
-        gain.gain.setValueAtTime(0.65 * vel, t);
+        gain.gain.setValueAtTime(0.75 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.42);
+        break;
+      }
+
+      case 'conga_high': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(310, t);
+        osc.frequency.exponentialRampToValueAtTime(245, t + 0.04);
+
+        gain.gain.setValueAtTime(0.75 * vel, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
 
         osc.connect(gain);
@@ -1320,54 +1783,24 @@ class InstrumentEngine {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(450, t);
-        osc.frequency.exponentialRampToValueAtTime(190, t + 0.03);
+        osc.frequency.setValueAtTime(520, t);
+        osc.frequency.exponentialRampToValueAtTime(210, t + 0.025);
 
-        gain.gain.setValueAtTime(0.7 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        gain.gain.setValueAtTime(0.85 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
 
         osc.connect(gain);
         gain.connect(this.masterGain);
         osc.start(t);
-        osc.stop(t + 0.14);
+        osc.stop(t + 0.12);
         break;
       }
 
-      case 'timbale_high':
-      case 'timbale_low': {
+      case 'conga_mute': {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        const pitch = soundKey === 'timbale_high' ? 360 : 250;
-
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(pitch, t);
-
-        const bp = ctx.createBiquadFilter();
-        bp.type = 'bandpass';
-        bp.frequency.setValueAtTime(pitch, t);
-        bp.Q.setValueAtTime(6.0, t);
-
-        gain.gain.setValueAtTime(0.55 * vel, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
-
-        osc.connect(bp);
-        bp.connect(gain);
-        gain.connect(this.masterGain);
-        osc.start(t);
-        osc.stop(t + 0.3);
-        break;
-      }
-
-      case 'latin_clave':
-      case 'lofi_clave':
-      case 'woodblock': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const f = soundKey === 'woodblock' ? 820 : 2400;
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(f, t);
-
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(180, t);
         gain.gain.setValueAtTime(0.6 * vel, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
 
@@ -1378,8 +1811,195 @@ class InstrumentEngine {
         break;
       }
 
+      case 'bongo_low': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(260, t);
+        osc.frequency.exponentialRampToValueAtTime(195, t + 0.035);
+
+        gain.gain.setValueAtTime(0.7 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.3);
+        break;
+      }
+
+      case 'bongo_high': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.exponentialRampToValueAtTime(340, t + 0.03);
+
+        gain.gain.setValueAtTime(0.75 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.25);
+        break;
+      }
+
+      case 'timbale_low': {
+        const osc = ctx.createOscillator();
+        const bp = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(250, t);
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(250, t);
+        bp.Q.setValueAtTime(6.0, t);
+
+        gain.gain.setValueAtTime(0.65 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        osc.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.3);
+        break;
+      }
+
+      case 'timbale_high': {
+        const osc = ctx.createOscillator();
+        const bp = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(360, t);
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(360, t);
+        bp.Q.setValueAtTime(6.0, t);
+
+        gain.gain.setValueAtTime(0.65 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        osc.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.3);
+        break;
+      }
+
+      case 'timbale_rim': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(2800, t);
+
+        gain.gain.setValueAtTime(0.7 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.06);
+        break;
+      }
+
+      case 'guiro_short': {
+        const noise = makeNoise(0.06);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(2400, t);
+        bp.Q.setValueAtTime(3.0, t);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.6 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+
+        noise.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      case 'guiro_long': {
+        const noise = makeNoise(0.22);
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(2600, t);
+        bp.Q.setValueAtTime(2.5, t);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.55 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+        noise.connect(bp);
+        bp.connect(gain);
+        gain.connect(this.masterGain);
+        noise.start(t);
+        break;
+      }
+
+      case 'agogo_low': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(720, t);
+        gain.gain.setValueAtTime(0.7 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.38);
+        break;
+      }
+
+      case 'agogo_high': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1150, t);
+        gain.gain.setValueAtTime(0.7 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.35);
+        break;
+      }
+
+      case 'latin_clave':
+      case '808_clave':
+      case 'lofi_clave': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(2400, t);
+        gain.gain.setValueAtTime(0.75 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.06);
+        break;
+      }
+
+      case 'woodblock': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(820, t);
+        gain.gain.setValueAtTime(0.75 * vel, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.07);
+        break;
+      }
+
       default: {
-        // Fallback punch drum
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.frequency.setValueAtTime(140, t);
@@ -1397,4 +2017,3 @@ class InstrumentEngine {
 }
 
 export const instrumentEngine = new InstrumentEngine();
-

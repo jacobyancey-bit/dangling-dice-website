@@ -365,8 +365,7 @@ function isTypingInField() {
 
 function playPianoKey(midi) {
   const currentInst = instrumentEngine.getInstrument();
-  const pianoType = currentInst.category === 'piano' ? currentInst.id : 'grand_piano';
-  instrumentEngine.synthesizeInstrumentNote(pianoType, midi, 1.8, 0.95);
+  instrumentEngine.synthesizeInstrumentNote(currentInst.id, midi, 1.8, 0.95);
 
   // Visual highlight on 25-key piano
   const keyEl = document.querySelector(`.piano-key[data-midi="${midi}"]`);
