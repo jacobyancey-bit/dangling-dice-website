@@ -1287,8 +1287,7 @@ tr:hover td {
 
 .beats-dock.minimized .dock-video-drawer,
 .beats-dock.minimized .beats-dock-full,
-.beats-dock.minimized #dockCinemaBtn,
-.beats-dock.minimized #dockPlaylistBtn {
+.beats-dock.minimized #dockCinemaBtn {
   display: none !important;
 }
 
@@ -1752,23 +1751,14 @@ tr:hover td {
     font-size: 0.72rem !important;
   }
 
-  .dock-playlist-trigger-btn {
-    height: 30px;
-    padding: 0 0.45rem;
-  }
-
-  .dock-cinema-trigger-btn {
-    display: none !important; /* Cinema modal available from stations sheet on mobile */
-  }
-
   .dock-track-title {
-    font-size: 0.75rem;
-    max-width: 140px;
+    font-size: 0.78rem;
+    max-width: 100%;
   }
 
   .dock-track-subtitle {
     font-size: 0.68rem;
-    max-width: 140px;
+    max-width: 100%;
   }
 
   /* Minimized Phone Dock: Ultra-compact floating pill */
