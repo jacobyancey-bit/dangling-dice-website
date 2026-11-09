@@ -211,8 +211,8 @@ app.use((req, res, next) => {
   }
 
   const hostname = (req.hostname || '').toLowerCase();
-  const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media';
-  const isBeatsSubdomain = hostname.startsWith('beats.') || hostname.startsWith('music.') || hostname.startsWith('radio.') || req.query.subdomain === 'beats';
+  const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media' || req.path === '/media' || req.path.startsWith('/media/');
+  const isBeatsSubdomain = hostname.startsWith('beats.') || hostname.startsWith('music.') || hostname.startsWith('radio.') || req.query.subdomain === 'beats' || req.path === '/beats' || req.path.startsWith('/beats/');
 
   if (isBeatsSubdomain && fs.existsSync(beatsDistPath)) {
     return express.static(beatsDistPath)(req, res, () => {
