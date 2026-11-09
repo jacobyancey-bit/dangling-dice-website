@@ -1181,3 +1181,312 @@ footer a {
   flex: 0 0 45px;
 }
 
+/* ========================================================
+   Audio Engineering Calculators (Phase 2)
+   ======================================================== */
+.calc-panel {
+  background: rgba(14, 19, 31, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.calc-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.calc-panel-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  margin-bottom: 0.35rem;
+}
+
+.calc-panel-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.calc-panel-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.calc-form-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.calc-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: #06090e;
+}
+
+.calc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.calc-table th {
+  background: #090e17;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.calc-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.calc-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.reverb-spaces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.reverb-space-card {
+  background: #070a10;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.reverb-space-card .space-title {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #67e8f9;
+  margin-bottom: 0.25rem;
+}
+
+.reverb-space-card .space-timings {
+  font-size: 0.76rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.reverb-space-card .space-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.calc-result-box {
+  background: #070a10;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+}
+
+.room-modes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.5rem;
+}
+
+.room-mode-pill {
+  background: #090e17;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.room-mode-pill:hover {
+  border-color: #f59e0b;
+  transform: translateY(-2px);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.room-mode-hz {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #fbbf24;
+}
+
+.room-mode-note {
+  font-size: 0.75rem;
+  color: #67e8f9;
+}
+
+.room-mode-dim {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ========================================================
+   Sample Chopper & Pitch Tagger (Phase 3)
+   ======================================================== */
+.slice-pads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.5rem;
+}
+
+.slice-pad {
+  background: #090e17;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.1s;
+}
+
+.slice-pad:active,
+.slice-pad.active {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  transform: scale(0.96);
+}
+
+.slice-pad-key {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.slice-pad-label {
+  font-size: 0.72rem;
+  color: #67e8f9;
+  font-weight: 700;
+}
+
+.tagger-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.tagger-stat-box {
+  background: #070a10;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.tagger-stat-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.tagger-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+/* ========================================================
+   Euclidean Sequencer & 808 Synth (Phase 4)
+   ======================================================== */
+.euclidean-tracks-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.euclidean-track-card {
+  background: #070a10;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+  display: grid;
+  grid-template-columns: 140px 1fr 140px;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .euclidean-track-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.euclidean-steps-strip {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.euclidean-step {
+  flex: 1;
+  min-width: 14px;
+  height: 28px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.1s;
+}
+
+.euclidean-step.pulse {
+  background: #f472b6;
+  border-color: #f472b6;
+  box-shadow: 0 0 8px rgba(244, 114, 182, 0.4);
+}
+
+.euclidean-step.current {
+  border-color: #fff !important;
+  transform: scaleY(1.15);
+  filter: brightness(1.4);
+}
+
+.sub-designer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.sub-ctrl-cell {
+  background: #070a10;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+

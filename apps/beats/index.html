@@ -156,10 +156,19 @@
         <!-- Master Tool Switcher Tabs -->
         <div class="theory-tab-bar">
           <button type="button" class="theory-tab-btn active" id="tabProgressionBtn" onclick="window.switchTheoryTab('progression')">
-            <span>🎼</span> Chord Progression &amp; MIDI
+            <span>🎼</span> Chords &amp; MIDI
           </button>
           <button type="button" class="theory-tab-btn" id="tabVisualizerBtn" onclick="window.switchTheoryTab('visualizer')">
-            <span>🎸</span> Modal Scale &amp; Fretboard
+            <span>🎸</span> Scales &amp; Fretboard
+          </button>
+          <button type="button" class="theory-tab-btn" id="tabCalculatorsBtn" onclick="window.switchTheoryTab('calculators')">
+            <span>🎛️</span> Audio Calculators
+          </button>
+          <button type="button" class="theory-tab-btn" id="tabChopperBtn" onclick="window.switchTheoryTab('chopper')">
+            <span>✂️</span> Sample Chopper &amp; Key
+          </button>
+          <button type="button" class="theory-tab-btn" id="tabBeatmakerBtn" onclick="window.switchTheoryTab('beatmaker')">
+            <span>🥁</span> Euclidean &amp; 808
           </button>
         </div>
       </div>
@@ -333,6 +342,364 @@
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem; text-align: center;">
           💡 Tip: Click or tap any highlighted note to play its pitch through the Web Audio synthesizer.
         </p>
+      </div>
+
+      <!-- 3. Audio Engineering & Mixing Calculators View (Phase 2) -->
+      <div id="calculatorsView" style="display: none;">
+        <!-- Sub-tabs or 3 distinct calculation panels -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+          
+          <!-- Tool A: Delay & Reverb Timing Calculator -->
+          <div class="calc-panel">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge">Audio Engineering</span>
+                <h3 class="calc-panel-title">⏱️ Delay &amp; Reverb Timing</h3>
+                <p class="calc-panel-desc">Lock delay taps, pre-delays, and compressor releases directly to your project tempo.</p>
+              </div>
+            </div>
+
+            <div class="calc-form-row">
+              <label class="theory-ctrl-label" for="calcBpmInput">Project BPM:</label>
+              <input type="number" id="calcBpmInput" class="theory-select" value="120" min="20" max="300" style="width: 80px;" oninput="window.updateDelayCalculations(this.value)" />
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.syncBpmFromProgression()">Sync from Tracker</button>
+            </div>
+
+            <!-- Divisions Table -->
+            <div class="calc-table-wrap">
+              <table class="calc-table">
+                <thead>
+                  <tr>
+                    <th>Division</th>
+                    <th>Standard (ms)</th>
+                    <th>Dotted (ms)</th>
+                    <th>Triplet (ms)</th>
+                    <th>Hz (LFO)</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="delayTableBody">
+                  <!-- Dynamically populated via main.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Reverb Pre-Delay Recommendations -->
+            <div style="margin-top: 1.25rem;">
+              <span style="font-size: 0.8rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;">Recommended Reverb Spaces</span>
+              <div id="reverbSpacesGrid" class="reverb-spaces-grid" style="margin-top: 0.5rem;">
+                <!-- Populated via main.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool B: Sample Pitch-to-Tempo / Key-Shift Calculator -->
+          <div class="calc-panel">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; border-color: rgba(6, 182, 212, 0.3);">Sampling &amp; Resampling</span>
+                <h3 class="calc-panel-title">🎚️ Pitch &amp; Tempo Shift</h3>
+                <p class="calc-panel-desc">Classic tape/sampler algorithm: Calculate exact semitones, cents, and duration when repitching audio.</p>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+              <div>
+                <label class="theory-ctrl-label" for="pitchSourceBpm">Source BPM:</label>
+                <input type="number" id="pitchSourceBpm" class="theory-select" value="90" min="20" max="300" style="width: 100%; box-sizing: border-box;" oninput="window.runPitchShiftCalc()" />
+              </div>
+              <div>
+                <label class="theory-ctrl-label" for="pitchTargetBpm">Target BPM:</label>
+                <input type="number" id="pitchTargetBpm" class="theory-select" value="120" min="20" max="300" style="width: 100%; box-sizing: border-box;" oninput="window.runPitchShiftCalc()" />
+              </div>
+            </div>
+
+            <!-- Shift Results Card -->
+            <div class="calc-result-box" id="pitchShiftResultBox">
+              <!-- Populated via main.js -->
+            </div>
+
+            <!-- Length Estimator -->
+            <div style="margin-top: 1rem; padding: 0.75rem; background: #070a10; border-radius: 6px; border: 1px solid var(--border-subtle);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label class="theory-ctrl-label" for="sampleOrigDuration">Sample Length:</label>
+                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                  <input type="number" id="sampleOrigDuration" class="theory-select" value="8.0" step="0.5" min="0.1" style="width: 65px;" oninput="window.runPitchShiftCalc()" />
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">sec</span>
+                </div>
+              </div>
+              <div style="font-size: 0.8rem; color: #fff; display: flex; justify-content: space-between;">
+                <span>Repitched Length:</span>
+                <span id="repitchedDurationText" style="font-weight: 700; color: #10b981;">6.000 sec</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.auditionCurrentPitchShift()" style="flex: 1;">
+                🔊 Audition Shifted Pitch
+              </button>
+            </div>
+          </div>
+
+          <!-- Tool C: Sub-Bass & Room Acoustic Standing Wave Estimator -->
+          <div class="calc-panel" style="grid-column: 1 / -1;">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">Acoustic Physics</span>
+                <h3 class="calc-panel-title">📐 Sub-Bass &amp; Room Mode Standing Wave Estimator</h3>
+                <p class="calc-panel-desc">Calculates fundamental axial resonant room modes (20Hz–300Hz), musical note pitches, and flags danger zone modal stacking.</p>
+              </div>
+            </div>
+
+            <div class="calc-form-row" style="flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <label class="theory-ctrl-label" for="roomLength">Length:</label>
+                <input type="number" id="roomLength" class="theory-select" value="14.5" step="0.5" min="3" style="width: 70px;" oninput="window.runRoomModesCalc()" />
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <label class="theory-ctrl-label" for="roomWidth">Width:</label>
+                <input type="number" id="roomWidth" class="theory-select" value="11.0" step="0.5" min="3" style="width: 70px;" oninput="window.runRoomModesCalc()" />
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <label class="theory-ctrl-label" for="roomHeight">Height:</label>
+                <input type="number" id="roomHeight" class="theory-select" value="8.0" step="0.5" min="3" style="width: 70px;" oninput="window.runRoomModesCalc()" />
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.35rem;">
+                <label class="theory-ctrl-label" for="roomUnit">Unit:</label>
+                <select id="roomUnit" class="theory-select" onchange="window.runRoomModesCalc()">
+                  <option value="feet" selected>Feet (ft)</option>
+                  <option value="meters">Meters (m)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Danger Zone Alert Banner -->
+            <div id="roomAlertBanner" style="margin-top: 0.75rem; display: none;"></div>
+
+            <!-- Room Modes Matrix & Frequencies -->
+            <div style="margin-top: 1rem;">
+              <span style="font-size: 0.8rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;">Resonant Axial Modes (Click Any Mode to Audition Low Frequency Tone)</span>
+              <div id="roomModesPills" class="room-modes-grid" style="margin-top: 0.5rem;">
+                <!-- Populated via main.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Workflow & Sample Manipulation Utilities View (Phase 3) -->
+      <div id="chopperView" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+          
+          <!-- Drum Slicer & Loop Chopper -->
+          <div class="calc-panel" style="grid-column: 1 / -1;">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">Browser Audio Engine</span>
+                <h3 class="calc-panel-title">✂️ Audio-to-Transient Drum Slicer &amp; Loop Chopper</h3>
+                <p class="calc-panel-desc">Upload any breakbeat, drum loop, or melody. Slices peaks at transient energy points with instant keyboard playback (A, S, D, F...) and batch ZIP export.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.loadDemoBreakbeat()">🥁 Load Demo Break</button>
+                <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+                  📂 Open Audio File
+                  <input type="file" id="chopperFileInput" accept="audio/*" style="display: none;" onchange="window.handleChopperFileUpload(event)" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Slicer Waveform Canvas -->
+            <div style="position: relative; margin: 1rem 0; background: #070a10; border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;">
+              <canvas id="waveformCanvas" width="900" height="150" style="width: 100%; height: 150px; display: block;"></canvas>
+              <div id="waveformOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;"></div>
+            </div>
+
+            <!-- Slicer Controls & Sensitivity -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <label class="theory-ctrl-label" for="transientSensitivity">Sensitivity:</label>
+                <input type="range" id="transientSensitivity" min="0.1" max="0.9" step="0.05" value="0.5" oninput="window.handleSensitivityChange(this.value)" />
+                <span id="sensitivityValue" style="font-size: 0.8rem; color: #67e8f9; font-weight: 700;">50%</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.playFullLoop()">▶ Play Full Loop</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.downloadChoppedWavsZip()" style="background: linear-gradient(135deg, #10b981, #06b6d4); color: #000; font-weight: 800;">
+                  📦 Download Chopped WAVs (.ZIP)
+                </button>
+              </div>
+            </div>
+
+            <!-- Keyboard Pads Trigger Matrix -->
+            <div>
+              <span style="font-size: 0.8rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;">Keyboard Slice Pads (Press Keys A, S, D, F, G, H, J, K, L...)</span>
+              <div id="slicePadsGrid" class="slice-pads-grid" style="margin-top: 0.5rem;">
+                <!-- Populated via main.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Sample Pack Metadata Tagger & Pitch Key Detector -->
+          <div class="calc-panel" style="grid-column: 1 / -1;">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">Signal Processing</span>
+                <h3 class="calc-panel-title">🏷️ Sample Pack Metadata Tagger &amp; Key Detector</h3>
+                <p class="calc-panel-desc">Runs autocorrelation pitch detection across audio samples to detect root key, tuning cents, peak/RMS levels, and renames files deterministically.</p>
+              </div>
+              <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+                🔍 Analyze Sample
+                <input type="file" id="taggerFileInput" accept="audio/*" style="display: none;" onchange="window.handleTaggerFileUpload(event)" />
+              </label>
+            </div>
+
+            <div id="taggerResultContainer" style="display: none; margin-top: 1rem;">
+              <div class="tagger-stats-grid">
+                <div class="tagger-stat-box">
+                  <span class="tagger-stat-label">Detected Musical Key</span>
+                  <span id="taggerKeyText" class="tagger-stat-val" style="color: #f472b6;">C#1 (+4¢)</span>
+                </div>
+                <div class="tagger-stat-box">
+                  <span class="tagger-stat-label">Fundamental Pitch</span>
+                  <span id="taggerHzText" class="tagger-stat-val" style="color: #67e8f9;">34.6 Hz</span>
+                </div>
+                <div class="tagger-stat-box">
+                  <span class="tagger-stat-label">Sample Duration</span>
+                  <span id="taggerDurationText" class="tagger-stat-val" style="color: #fff;">1.85 sec</span>
+                </div>
+                <div class="tagger-stat-box">
+                  <span class="tagger-stat-label">Peak &amp; RMS Level</span>
+                  <span id="taggerLevelsText" class="tagger-stat-val" style="color: #10b981;">-0.2 dB / -14.1 dB</span>
+                </div>
+              </div>
+
+              <!-- Deterministic Renamer -->
+              <div style="margin-top: 1rem; padding: 1rem; background: #070a10; border-radius: 8px; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                  <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Deterministic Name:</span>
+                  <input type="text" id="taggerRenameInput" class="theory-select" style="width: 280px; margin-left: 0.5rem; font-family: monospace; font-size: 0.85rem;" value="Sample_C#1.wav" />
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.downloadRenamedSample()">
+                  📥 Download Renamed WAV
+                </button>
+              </div>
+            </div>
+
+            <div id="taggerEmptyPlaceholder" style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+              Drop or select any one-shot, kick, 808, or instrument sample to detect its root key and audio metrics.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Interactive Beatmaking & Idea Starters View (Phase 4) -->
+      <div id="beatmakerView" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+          
+          <!-- Euclidean Polyrhythm Sequencer -->
+          <div class="calc-panel" style="grid-column: 1 / -1;">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge" style="background: rgba(236, 72, 153, 0.15); color: #f472b6; border-color: rgba(236, 72, 153, 0.3);">Bjorklund Generative Math</span>
+                <h3 class="calc-panel-title">🌀 Euclidean Polyrhythm Sequencer</h3>
+                <p class="calc-panel-desc">Distribute pulses mathematically across rotating step loops (e.g. 5 hits in 16 steps). Synthesizes live analog drums with instant multi-track MIDI export.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button id="euclideanPlayBtn" type="button" class="btn btn-primary btn-sm" onclick="window.toggleEuclideanPlayback()">▶ Play Polyrhythm Loop</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.randomizeEuclidean()">🎲 Randomize</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.downloadEuclideanMidi()" style="background: linear-gradient(135deg, #10b981, #06b6d4); color: #000; font-weight: 800;">
+                  📥 Export .MID
+                </button>
+              </div>
+            </div>
+
+            <!-- Euclidean Track Strips -->
+            <div id="euclideanTracksContainer" class="euclidean-tracks-grid" style="margin-top: 1rem;">
+              <!-- Populated via main.js -->
+            </div>
+          </div>
+
+          <!-- 808 & Sub Synthesizer Designer -->
+          <div class="calc-panel" style="grid-column: 1 / -1;">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">Sound Design &amp; Synthesis</span>
+                <h3 class="calc-panel-title">💥 808 &amp; Sub Synthesizer Designer</h3>
+                <p class="calc-panel-desc">Design custom tuned 808 sub-basses with customizable pitch drop glide, saturation drive, and transient click. Renders straight to clean 44.1kHz .wav via OfflineAudioContext.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.audition808Sub()">🔊 Audition 808</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="window.downloadRendered808()" style="background: linear-gradient(135deg, #ec4899, #f59e0b); color: #000; font-weight: 800;">
+                  📥 Download Tuned 808 (.WAV)
+                </button>
+              </div>
+            </div>
+
+            <!-- 808 Controls Matrix -->
+            <div class="sub-designer-grid" style="margin-top: 1rem;">
+              <!-- Root Key -->
+              <div class="sub-ctrl-cell">
+                <label class="theory-ctrl-label" for="subRootSelect">Tuned Root Note:</label>
+                <select id="subRootSelect" class="theory-select" style="width: 100%;" onchange="window.update808Params()">
+                  <!-- Populated via main.js -->
+                </select>
+              </div>
+
+              <!-- Waveform -->
+              <div class="sub-ctrl-cell">
+                <label class="theory-ctrl-label" for="subWaveformSelect">Oscillator Waveform:</label>
+                <select id="subWaveformSelect" class="theory-select" style="width: 100%;" onchange="window.update808Params()">
+                  <option value="sine" selected>Clean Sine</option>
+                  <option value="triangle">Warm Triangle</option>
+                </select>
+              </div>
+
+              <!-- Pitch Drop Glide -->
+              <div class="sub-ctrl-cell">
+                <label class="theory-ctrl-label" for="subGlideSemitones">Pitch Drop (+Semitones):</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <input type="range" id="subGlideSemitones" min="12" max="36" value="24" style="flex: 1;" oninput="window.update808Params()" />
+                  <span id="subGlideVal" style="font-size: 0.8rem; font-weight: 700; color: #f472b6; width: 35px;">+24</span>
+                </div>
+              </div>
+
+              <!-- Glide Time (ms) -->
+              <div class="sub-ctrl-cell">
+                <label class="theory-ctrl-label" for="subGlideMs">Drop Time (ms):</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <input type="range" id="subGlideMs" min="10" max="150" value="45" style="flex: 1;" oninput="window.update808Params()" />
+                  <span id="subGlideMsVal" style="font-size: 0.8rem; font-weight: 700; color: #67e8f9; width: 45px;">45ms</span>
+                </div>
+              </div>
+
+              <!-- Saturation Drive -->
+              <div class="sub-ctrl-cell">
+                <label class="theory-ctrl-label" for="subDrive">Saturation / Drive:</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <input type="range" id="subDrive" min="0" max="1" step="0.05" value="0.35" style="flex: 1;" oninput="window.update808Params()" />
+                  <span id="subDriveVal" style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; width: 35px;">35%</span>
+                </div>
+              </div>
+
+              <!-- Transient Click -->
+              <div class="sub-ctrl-cell">
+                <label class="theory-ctrl-label" for="subClick">Transient Click:</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <input type="range" id="subClick" min="0" max="1" step="0.05" value="0.4" style="flex: 1;" oninput="window.update808Params()" />
+                  <span id="subClickVal" style="font-size: 0.8rem; font-weight: 700; color: #10b981; width: 35px;">40%</span>
+                </div>
+              </div>
+
+              <!-- Decay (sec) -->
+              <div class="sub-ctrl-cell" style="grid-column: span 2;">
+                <label class="theory-ctrl-label" for="subDecay">Decay Tail (seconds):</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <input type="range" id="subDecay" min="0.3" max="3.0" step="0.1" value="1.4" style="flex: 1;" oninput="window.update808Params()" />
+                  <span id="subDecayVal" style="font-size: 0.8rem; font-weight: 700; color: #c084fc; width: 45px;">1.4s</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

@@ -14,6 +14,34 @@ import {
   downloadMidiFile,
 } from './theoryEngine.js';
 
+import {
+  calculateDelayTimes,
+  calculateReverbTimings,
+  auditionDelayTick,
+  calculatePitchShiftByBpm,
+  calculateSampleLength,
+  auditionPitchShift,
+  calculateRoomModes,
+  auditionSubTone,
+} from './audioCalculators.js';
+
+import {
+  audioBufferToWav,
+  createZipArchive,
+  detectTransients,
+  generateDemoBreakbeat,
+  detectPitchAndKey,
+} from './sampleChopper.js';
+
+import {
+  calculateEuclideanPattern,
+  playSynthesizedDrum,
+  generateEuclideanMidi,
+  ROOT_SUB_NOTES,
+  play808Sub,
+  render808ToWav,
+} from './beatmaker808.js';
+
 const API_BASE = window.location.hostname === "localhost" 
   ? "http://localhost:5000/api" 
   : "https://dangling-dice-studios.com/api";
@@ -426,22 +454,43 @@ function initTheoryTools() {
 
 function switchTheoryTab(tab) {
   currentTheoryTab = tab;
-  const progressionView = document.getElementById('progressionView');
-  const visualizerView = document.getElementById('visualizerView');
-  const tabProgressionBtn = document.getElementById('tabProgressionBtn');
-  const tabVisualizerBtn = document.getElementById('tabVisualizerBtn');
+  const views = {
+    progression: document.getElementById('progressionView'),
+    visualizer: document.getElementById('visualizerView'),
+    calculators: document.getElementById('calculatorsView'),
+    chopper: document.getElementById('chopperView'),
+    beatmaker: document.getElementById('beatmakerView'),
+  };
 
-  if (tab === 'progression') {
-    if (progressionView) progressionView.style.display = 'block';
-    if (visualizerView) visualizerView.style.display = 'none';
-    if (tabProgressionBtn) tabProgressionBtn.classList.add('active');
-    if (tabVisualizerBtn) tabVisualizerBtn.classList.remove('active');
-  } else {
-    if (progressionView) progressionView.style.display = 'none';
-    if (visualizerView) visualizerView.style.display = 'block';
-    if (tabProgressionBtn) tabProgressionBtn.classList.remove('active');
-    if (tabVisualizerBtn) tabVisualizerBtn.classList.add('active');
+  const buttons = {
+    progression: document.getElementById('tabProgressionBtn'),
+    visualizer: document.getElementById('tabVisualizerBtn'),
+    calculators: document.getElementById('tabCalculatorsBtn'),
+    chopper: document.getElementById('tabChopperBtn'),
+    beatmaker: document.getElementById('tabBeatmakerBtn'),
+  };
+
+  Object.entries(views).forEach(([key, el]) => {
+    if (el) el.style.display = key === tab ? 'block' : 'none';
+  });
+
+  Object.entries(buttons).forEach(([key, btn]) => {
+    if (btn) btn.classList.toggle('active', key === tab);
+  });
+
+  if (tab === 'visualizer') {
     renderScaleVisualizer();
+  } else if (tab === 'calculators') {
+    updateDelayCalculations(document.getElementById('calcBpmInput')?.value || 120);
+    runPitchShiftCalc();
+    runRoomModesCalc();
+  } else if (tab === 'chopper') {
+    if (!chopperAudioBuffer) {
+      loadDemoBreakbeat();
+    }
+  } else if (tab === 'beatmaker') {
+    renderEuclideanTracks();
+    init808Designer();
   }
 }
 
@@ -862,6 +911,647 @@ function playSingleNote(midi) {
   studioAudio.playSingleNote(midi, 0.95);
 }
 
+// ============================================================================
+// Phase 2: Audio Engineering & Mixing Calculators
+// ============================================================================
+
+function updateDelayCalculations(bpm) {
+  const safeBpm = Math.max(20, Math.min(300, Number(bpm) || 120));
+  const divisions = calculateDelayTimes(safeBpm);
+  const tbody = document.getElementById('delayTableBody');
+
+  if (tbody) {
+    tbody.innerHTML = divisions
+      .map(
+        (d) => `
+        <tr>
+          <td style="font-weight: 700; color: #fff;">${d.name}</td>
+          <td><span style="color: #67e8f9;">${d.standard.ms}</span> ms</td>
+          <td><span style="color: #f472b6;">${d.dotted.ms}</span> ms</td>
+          <td><span style="color: #fbbf24;">${d.triplet.ms}</span> ms</td>
+          <td><span style="color: #10b981;">${d.standard.hz}</span> Hz</td>
+          <td>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.auditionDelayTick(${d.standard.ms})" style="padding: 2px 8px; font-size: 0.72rem;">
+              🔊 Click
+            </button>
+          </td>
+        </tr>
+      `
+      )
+      .join('');
+  }
+
+  // Reverb pre-delay and decay spaces
+  const reverbSpaces = calculateReverbTimings(safeBpm);
+  const spacesContainer = document.getElementById('reverbSpacesGrid');
+  if (spacesContainer) {
+    spacesContainer.innerHTML = reverbSpaces
+      .map(
+        (s) => `
+        <div class="reverb-space-card">
+          <div class="space-title">${s.type}</div>
+          <div class="space-timings">Pre-Delay: <span style="color: #67e8f9;">${s.preDelayMs}ms</span> | Decay: <span style="color: #f472b6;">${s.decayMs}ms</span></div>
+          <div class="space-desc">${s.desc}</div>
+        </div>
+      `
+      )
+      .join('');
+  }
+}
+
+function syncBpmFromProgression() {
+  const input = document.getElementById('calcBpmInput');
+  if (input) {
+    input.value = progressionBpm;
+    updateDelayCalculations(progressionBpm);
+  }
+}
+
+let currentPitchShiftData = null;
+
+function runPitchShiftCalc() {
+  const sBpm = document.getElementById('pitchSourceBpm')?.value || 90;
+  const tBpm = document.getElementById('pitchTargetBpm')?.value || 120;
+  const res = calculatePitchShiftByBpm(sBpm, tBpm);
+  currentPitchShiftData = res;
+
+  const resultBox = document.getElementById('pitchShiftResultBox');
+  if (resultBox) {
+    resultBox.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Required Semitone Shift</span>
+        <span style="font-size: 1.4rem; font-family: 'JetBrains Mono', monospace; font-weight: 800; color: ${res.semitones >= 0 ? '#10b981' : '#ef4444'};">
+          ${res.semitones >= 0 ? '+' : ''}${res.semitones} st
+        </span>
+      </div>
+      <div style="font-size: 0.8rem; color: #fff; margin-bottom: 0.35rem;">
+        Cents Detune: <span style="color: #67e8f9; font-family: monospace;">${res.cents >= 0 ? '+' : ''}${res.cents}¢</span> | Speed Ratio: <span style="color: #fbbf24; font-family: monospace;">${res.playbackPercent}%</span>
+      </div>
+      <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.3;">
+        ${res.summary}
+      </p>
+    `;
+  }
+
+  const origLen = document.getElementById('sampleOrigDuration')?.value || 8.0;
+  const repitchedLen = calculateSampleLength(origLen, sBpm, tBpm);
+  const repitchedText = document.getElementById('repitchedDurationText');
+  if (repitchedText) {
+    repitchedText.textContent = `${repitchedLen.toFixed(3)} sec`;
+  }
+}
+
+function auditionCurrentPitchShift() {
+  const semi = currentPitchShiftData ? currentPitchShiftData.semitones : 0;
+  auditionPitchShift(semi);
+}
+
+function runRoomModesCalc() {
+  const l = document.getElementById('roomLength')?.value || 14.5;
+  const w = document.getElementById('roomWidth')?.value || 11.0;
+  const h = document.getElementById('roomHeight')?.value || 8.0;
+  const unit = document.getElementById('roomUnit')?.value || 'feet';
+
+  const res = calculateRoomModes(l, w, h, unit);
+  const banner = document.getElementById('roomAlertBanner');
+
+  if (banner) {
+    if (res.dangerZones.length > 0 || res.assessment.startsWith('⚠️')) {
+      banner.style.display = 'block';
+      banner.className = 'calc-result-box';
+      banner.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      banner.style.background = 'rgba(239, 68, 68, 0.08)';
+      banner.innerHTML = `
+        <div style="font-size: 0.8rem; font-weight: 700; color: #ef4444; margin-bottom: 0.25rem;">
+          ${res.assessment}
+        </div>
+        ${res.dangerZones
+          .map(
+            (dz) => `
+          <div style="font-size: 0.74rem; color: #fca5a5; margin-top: 0.2rem;">
+            • ${dz.message} (${dz.source})
+          </div>
+        `
+          )
+          .join('')}
+      `;
+    } else {
+      banner.style.display = 'block';
+      banner.className = 'calc-result-box';
+      banner.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      banner.style.background = 'rgba(16, 185, 129, 0.08)';
+      banner.innerHTML = `
+        <div style="font-size: 0.8rem; font-weight: 700; color: #10b981;">
+          ✅ ${res.assessment} (Volume: ~${res.volumeCuFt} cu. ft)
+        </div>
+      `;
+    }
+  }
+
+  const pillsContainer = document.getElementById('roomModesPills');
+  if (pillsContainer) {
+    pillsContainer.innerHTML = res.modes
+      .map(
+        (m) => `
+        <div class="room-mode-pill" onclick="window.auditionRoomMode(${m.hz})" title="Click to hear ${m.hz}Hz sub-bass tone">
+          <div class="room-mode-hz">${m.hz} Hz</div>
+          <div class="room-mode-note">${m.note}</div>
+          <div class="room-mode-dim">${m.dimension} • ${m.harmonic}</div>
+        </div>
+      `
+      )
+      .join('');
+  }
+}
+
+function auditionRoomMode(hz) {
+  auditionSubTone(hz);
+}
+
+// ============================================================================
+// Phase 3: Sample Chopper & Pitch Key Detector
+// ============================================================================
+
+let chopperAudioBuffer = null;
+let chopperSlices = [0];
+const SLICE_KEY_MAP = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U'];
+let activeSliceSource = null;
+
+function loadDemoBreakbeat() {
+  chopperAudioBuffer = generateDemoBreakbeat();
+  runTransientDetection();
+  drawWaveform();
+}
+
+async function handleChopperFileUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const tempCtx = new AudioCtx();
+    chopperAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+    tempCtx.close();
+    runTransientDetection();
+    drawWaveform();
+  } catch (err) {
+    console.error('[Chopper Decode Error]', err);
+    alert('Failed to decode audio file. Please ensure it is a valid WAV, MP3, or OGG file.');
+  }
+}
+
+function handleSensitivityChange(val) {
+  const label = document.getElementById('sensitivityValue');
+  if (label) label.textContent = `${Math.round(val * 100)}%`;
+  if (chopperAudioBuffer) {
+    runTransientDetection();
+    drawWaveform();
+  }
+}
+
+function runTransientDetection() {
+  if (!chopperAudioBuffer) return;
+  const sens = parseFloat(document.getElementById('transientSensitivity')?.value || 0.5);
+  const result = detectTransients(chopperAudioBuffer, sens);
+  chopperSlices = result.slices;
+  renderSlicePads();
+}
+
+function drawWaveform() {
+  const canvas = document.getElementById('waveformCanvas');
+  if (!canvas || !chopperAudioBuffer) return;
+
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+
+  const channelData = chopperAudioBuffer.getChannelData(0);
+  const step = Math.ceil(channelData.length / width);
+  const amp = height / 2;
+
+  // Draw background grid lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, amp);
+  ctx.lineTo(width, amp);
+  ctx.stroke();
+
+  // Draw waveform
+  const gradient = ctx.createLinearGradient(0, 0, width, 0);
+  gradient.addColorStop(0, '#ec4899');
+  gradient.addColorStop(0.5, '#06b6d4');
+  gradient.addColorStop(1, '#10b981');
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+
+  for (let i = 0; i < width; i++) {
+    let min = 1.0;
+    let max = -1.0;
+    for (let j = 0; j < step; j++) {
+      const datum = channelData[i * step + j];
+      if (datum < min) min = datum;
+      if (datum > max) max = datum;
+    }
+    const y1 = (1 + min) * amp;
+    const y2 = Math.max(1, (max - min) * amp);
+    ctx.fillRect(i, y1, 1, y2);
+  }
+
+  // Draw vertical slice markers
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2;
+  const totalDuration = chopperAudioBuffer.duration;
+
+  chopperSlices.forEach((sec, idx) => {
+    const x = Math.floor((sec / totalDuration) * width);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+
+    // Marker badge
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText(`${idx + 1}`, x + 3, 14);
+  });
+}
+
+function renderSlicePads() {
+  const grid = document.getElementById('slicePadsGrid');
+  if (!grid || !chopperAudioBuffer) return;
+
+  const total = chopperSlices.length;
+  grid.innerHTML = chopperSlices
+    .map((sec, i) => {
+      const key = SLICE_KEY_MAP[i] || `${i + 1}`;
+      const nextSec = i < total - 1 ? chopperSlices[i + 1] : chopperAudioBuffer.duration;
+      const durationMs = Math.round((nextSec - sec) * 1000);
+
+      return `
+      <div 
+        class="slice-pad" 
+        id="slicePad_${i}" 
+        onmousedown="window.playSlice(${i})"
+        title="Slice ${i + 1} (${durationMs}ms)"
+      >
+        <span class="slice-pad-key">[ ${key} ]</span>
+        <div class="slice-pad-label">Slice ${i + 1}</div>
+        <div style="font-size: 0.65rem; color: var(--text-muted);">${durationMs}ms</div>
+      </div>
+    `;
+    })
+    .join('');
+}
+
+function playSlice(index) {
+  if (!chopperAudioBuffer || index < 0 || index >= chopperSlices.length) return;
+
+  try {
+    if (activeSliceSource) {
+      activeSliceSource.stop();
+      activeSliceSource.disconnect();
+    }
+  } catch (_) {}
+
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!chopperAudioCtx) chopperAudioCtx = new AudioCtx();
+  if (chopperAudioCtx.state === 'suspended') chopperAudioCtx.resume();
+
+  const startSec = chopperSlices[index];
+  const endSec = index < chopperSlices.length - 1 ? chopperSlices[index + 1] : chopperAudioBuffer.duration;
+  const duration = Math.max(0.01, endSec - startSec);
+
+  const source = chopperAudioCtx.createBufferSource();
+  source.buffer = chopperAudioBuffer;
+  source.connect(chopperAudioCtx.destination);
+  source.start(0, startSec, duration);
+  activeSliceSource = source;
+
+  // Visual pad pulse
+  const pad = document.getElementById(`slicePad_${index}`);
+  if (pad) {
+    pad.classList.add('active');
+    setTimeout(() => pad.classList.remove('active'), 140);
+  }
+}
+
+function playFullLoop() {
+  if (!chopperAudioBuffer) return;
+  try {
+    if (activeSliceSource) {
+      activeSliceSource.stop();
+      activeSliceSource.disconnect();
+    }
+  } catch (_) {}
+
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!chopperAudioCtx) chopperAudioCtx = new AudioCtx();
+  if (chopperAudioCtx.state === 'suspended') chopperAudioCtx.resume();
+
+  const source = chopperAudioCtx.createBufferSource();
+  source.buffer = chopperAudioBuffer;
+  source.connect(chopperAudioCtx.destination);
+  source.start();
+  activeSliceSource = source;
+}
+
+// Global Keyboard Trigger for Slices
+window.addEventListener('keydown', (e) => {
+  if (currentTheoryTab !== 'chopper') return;
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+  const keyUpper = e.key.toUpperCase();
+  const sliceIndex = SLICE_KEY_MAP.indexOf(keyUpper);
+  if (sliceIndex !== -1 && sliceIndex < chopperSlices.length) {
+    e.preventDefault();
+    playSlice(sliceIndex);
+  }
+});
+
+async function downloadChoppedWavsZip() {
+  if (!chopperAudioBuffer || chopperSlices.length === 0) return;
+
+  const files = [];
+  const total = chopperSlices.length;
+
+  for (let i = 0; i < total; i++) {
+    const startSec = chopperSlices[i];
+    const endSec = i < total - 1 ? chopperSlices[i + 1] : chopperAudioBuffer.duration;
+    const wavBlob = audioBufferToWav(chopperAudioBuffer, startSec, endSec);
+    const padNum = String(i + 1).padStart(2, '0');
+    files.push({
+      filename: `Slice_${padNum}.wav`,
+      blob: wavBlob,
+    });
+  }
+
+  const zipBlob = await createZipArchive(files);
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Dangling_Beats_Chopped_Slices_${Date.now()}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+// Sample Pack Metadata Tagger
+let taggerAudioBuffer = null;
+let taggerOriginalFilename = '';
+
+async function handleTaggerFileUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  taggerOriginalFilename = file.name;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const tempCtx = new AudioCtx();
+    taggerAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+    tempCtx.close();
+
+    const analysis = detectPitchAndKey(taggerAudioBuffer);
+
+    const emptyBox = document.getElementById('taggerEmptyPlaceholder');
+    const resultBox = document.getElementById('taggerResultContainer');
+    if (emptyBox) emptyBox.style.display = 'none';
+    if (resultBox) resultBox.style.display = 'block';
+
+    const keyText = document.getElementById('taggerKeyText');
+    const hzText = document.getElementById('taggerHzText');
+    const durText = document.getElementById('taggerDurationText');
+    const lvlText = document.getElementById('taggerLevelsText');
+    const renameInput = document.getElementById('taggerRenameInput');
+
+    if (keyText) keyText.textContent = analysis.noteInfo.formatted;
+    if (hzText) hzText.textContent = analysis.detectedHz > 0 ? `${analysis.detectedHz} Hz` : 'Transient Burst';
+    if (durText) durText.textContent = `${analysis.durationSec}s (${analysis.sampleRate}Hz)`;
+    if (lvlText) lvlText.textContent = `${analysis.peakDb} dB / ${analysis.rmsDb} dB`;
+
+    if (renameInput) {
+      const baseName = file.name.replace(/\.[^.]+$/, '');
+      const pitchTag = analysis.noteInfo.note !== 'Unknown' ? `_${analysis.noteInfo.note}${analysis.noteInfo.octave}` : '';
+      renameInput.value = `${baseName}${pitchTag}_Tuned.wav`;
+    }
+  } catch (err) {
+    console.error('[Tagger Error]', err);
+    alert('Could not decode sample file.');
+  }
+}
+
+function downloadRenamedSample() {
+  if (!taggerAudioBuffer) return;
+  const name = document.getElementById('taggerRenameInput')?.value || 'Renamed_Sample.wav';
+  const wavBlob = audioBufferToWav(taggerAudioBuffer);
+  const url = URL.createObjectURL(wavBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name.endsWith('.wav') ? name : `${name}.wav`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+// ============================================================================
+// Phase 4: Euclidean Polyrhythm Sequencer & 808 Sub Synthesizer
+// ============================================================================
+
+let euclideanTracks = [
+  { id: 'kick', name: 'Kick Drum', type: 'kick', steps: 16, pulses: 4, color: '#ec4899', pattern: [] },
+  { id: 'snare', name: 'Snare Drum', type: 'snare', steps: 16, pulses: 2, color: '#06b6d4', pattern: [] },
+  { id: 'hat', name: 'Closed Hat', type: 'hat', steps: 16, pulses: 7, color: '#f59e0b', pattern: [] },
+  { id: 'perc', name: 'Perc / Rim', type: 'perc', steps: 12, pulses: 5, color: '#10b981', pattern: [] },
+];
+
+let euclideanPlaying = false;
+let euclideanStepTimer = null;
+let euclideanCurrentStep = 0;
+
+function renderEuclideanTracks() {
+  const container = document.getElementById('euclideanTracksContainer');
+  if (!container) return;
+
+  euclideanTracks.forEach((tr) => {
+    tr.pattern = calculateEuclideanPattern(tr.steps, tr.pulses);
+  });
+
+  container.innerHTML = euclideanTracks
+    .map(
+      (tr) => `
+    <div class="euclidean-track-card">
+      <div>
+        <div style="font-size: 0.85rem; font-weight: 800; color: #fff;">${tr.name}</div>
+        <div style="font-size: 0.72rem; color: ${tr.color}; font-family: monospace;">
+          E(${tr.pulses}, ${tr.steps}) • ${Math.round((tr.pulses / tr.steps) * 100)}% density
+        </div>
+      </div>
+
+      <div class="euclidean-steps-strip" id="euclideanStrip_${tr.id}">
+        ${tr.pattern
+          .map(
+            (p, idx) => `
+          <div class="euclidean-step ${p === 1 ? 'pulse' : ''}" id="eStep_${tr.id}_${idx}" style="${p === 1 ? `background: ${tr.color}; border-color: ${tr.color};` : ''}"></div>
+        `
+          )
+          .join('')}
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <div style="flex: 1;">
+          <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Steps</label>
+          <input type="number" class="theory-select" value="${tr.steps}" min="4" max="32" style="width: 50px; padding: 2px 4px; font-size: 0.75rem;" onchange="window.updateEuclideanTrack('${tr.id}', this.value, null)" />
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Pulses</label>
+          <input type="number" class="theory-select" value="${tr.pulses}" min="0" max="${tr.steps}" style="width: 50px; padding: 2px 4px; font-size: 0.75rem;" onchange="window.updateEuclideanTrack('${tr.id}', null, this.value)" />
+        </div>
+      </div>
+    </div>
+  `
+    )
+    .join('');
+}
+
+function updateEuclideanTrack(trackId, steps, pulses) {
+  const tr = euclideanTracks.find((t) => t.id === trackId);
+  if (!tr) return;
+  if (steps !== null) tr.steps = Math.max(4, Math.min(32, parseInt(steps) || 16));
+  if (pulses !== null) tr.pulses = Math.max(0, Math.min(tr.steps, parseInt(pulses) || 0));
+  renderEuclideanTracks();
+}
+
+function toggleEuclideanPlayback() {
+  const btn = document.getElementById('euclideanPlayBtn');
+  if (euclideanPlaying) {
+    euclideanPlaying = false;
+    if (euclideanStepTimer) clearInterval(euclideanStepTimer);
+    euclideanStepTimer = null;
+    if (btn) btn.innerHTML = '▶ Play Polyrhythm Loop';
+    document.querySelectorAll('.euclidean-step.current').forEach((el) => el.classList.remove('current'));
+    return;
+  }
+
+  euclideanPlaying = true;
+  if (btn) btn.innerHTML = '⏹ Stop Loop';
+
+  const bpm = progressionBpm || 120;
+  const sixteenthMs = (60000 / bpm) / 4;
+  euclideanCurrentStep = 0;
+
+  euclideanStepTimer = setInterval(() => {
+    // Fire sounds for matching pulses
+    euclideanTracks.forEach((tr) => {
+      const stepIdx = euclideanCurrentStep % tr.steps;
+      const isHit = tr.pattern[stepIdx] === 1;
+
+      // Update UI active step highlight
+      document.querySelectorAll(`[id^="eStep_${tr.id}_"]`).forEach((el) => el.classList.remove('current'));
+      const activeEl = document.getElementById(`eStep_${tr.id}_${stepIdx}`);
+      if (activeEl) activeEl.classList.add('current');
+
+      if (isHit) {
+        playSynthesizedDrum(tr.type);
+      }
+    });
+
+    euclideanCurrentStep++;
+  }, sixteenthMs);
+}
+
+function randomizeEuclidean() {
+  const randomOptions = [
+    [16, 4],
+    [16, 5],
+    [16, 7],
+    [16, 9],
+    [12, 5],
+    [12, 7],
+    [8, 3],
+    [8, 5],
+  ];
+
+  euclideanTracks.forEach((tr) => {
+    const choice = randomOptions[Math.floor(Math.random() * randomOptions.length)];
+    tr.steps = choice[0];
+    tr.pulses = choice[1];
+  });
+  renderEuclideanTracks();
+}
+
+function downloadEuclideanMidi() {
+  const bpm = progressionBpm || 120;
+  const midiBytes = generateEuclideanMidi(euclideanTracks, bpm);
+  downloadMidiFile(midiBytes, `Dangling_Euclidean_Polyrhythm_${bpm}BPM.mid`);
+}
+
+// 808 Sub Synthesizer Designer
+function init808Designer() {
+  const select = document.getElementById('subRootSelect');
+  if (!select || select.children.length > 0) return;
+
+  select.innerHTML = ROOT_SUB_NOTES.map(
+    (n) => `
+    <option value="${n.note}" ${n.note === 'F1' ? 'selected' : ''}>
+      ${n.note} (${n.freq} Hz) - MIDI ${n.midi}
+    </option>
+  `
+  ).join('');
+
+  update808Params();
+}
+
+function get808ParamsFromUI() {
+  return {
+    rootNote: document.getElementById('subRootSelect')?.value || 'F1',
+    waveform: document.getElementById('subWaveformSelect')?.value || 'sine',
+    glideSemitones: document.getElementById('subGlideSemitones')?.value || 24,
+    glideMs: document.getElementById('subGlideMs')?.value || 45,
+    drive: document.getElementById('subDrive')?.value || 0.35,
+    clickAmount: document.getElementById('subClick')?.value || 0.4,
+    attackSec: 0.005,
+    decaySec: document.getElementById('subDecay')?.value || 1.4,
+  };
+}
+
+function update808Params() {
+  const glideVal = document.getElementById('subGlideVal');
+  const glideMsVal = document.getElementById('subGlideMsVal');
+  const driveVal = document.getElementById('subDriveVal');
+  const clickVal = document.getElementById('subClickVal');
+  const decayVal = document.getElementById('subDecayVal');
+
+  if (glideVal) glideVal.textContent = `+${document.getElementById('subGlideSemitones')?.value || 24}`;
+  if (glideMsVal) glideMsVal.textContent = `${document.getElementById('subGlideMs')?.value || 45}ms`;
+  if (driveVal) driveVal.textContent = `${Math.round((document.getElementById('subDrive')?.value || 0.35) * 100)}%`;
+  if (clickVal) clickVal.textContent = `${Math.round((document.getElementById('subClick')?.value || 0.4) * 100)}%`;
+  if (decayVal) decayVal.textContent = `${document.getElementById('subDecay')?.value || 1.4}s`;
+}
+
+function audition808Sub() {
+  const params = get808ParamsFromUI();
+  play808Sub(params);
+}
+
+async function downloadRendered808() {
+  const params = get808ParamsFromUI();
+  const res = await render808ToWav(params);
+  const url = URL.createObjectURL(res.blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = res.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
 // Expose globals for HTML onclicks
 window.switchTheoryTab = switchTheoryTab;
 window.selectPreset = selectPreset;
@@ -882,6 +1572,36 @@ window.handleInstrumentViewChange = handleInstrumentViewChange;
 window.handleTuningChange = handleTuningChange;
 window.playSingleNote = playSingleNote;
 
+// Phase 2: Audio Engineering Calculators
+window.updateDelayCalculations = updateDelayCalculations;
+window.syncBpmFromProgression = syncBpmFromProgression;
+window.auditionDelayTick = auditionDelayTick;
+window.runPitchShiftCalc = runPitchShiftCalc;
+window.auditionCurrentPitchShift = auditionCurrentPitchShift;
+window.runRoomModesCalc = runRoomModesCalc;
+window.auditionRoomMode = auditionRoomMode;
+
+// Phase 3: Slicer & Tagger
+window.loadDemoBreakbeat = loadDemoBreakbeat;
+window.handleChopperFileUpload = handleChopperFileUpload;
+window.handleSensitivityChange = handleSensitivityChange;
+window.playSlice = playSlice;
+window.playFullLoop = playFullLoop;
+window.downloadChoppedWavsZip = downloadChoppedWavsZip;
+window.handleTaggerFileUpload = handleTaggerFileUpload;
+window.downloadRenamedSample = downloadRenamedSample;
+
+// Phase 4: Euclidean & 808
+window.renderEuclideanTracks = renderEuclideanTracks;
+window.updateEuclideanTrack = updateEuclideanTrack;
+window.toggleEuclideanPlayback = toggleEuclideanPlayback;
+window.randomizeEuclidean = randomizeEuclidean;
+window.downloadEuclideanMidi = downloadEuclideanMidi;
+window.init808Designer = init808Designer;
+window.update808Params = update808Params;
+window.audition808Sub = audition808Sub;
+window.downloadRendered808 = downloadRendered808;
+
 // Expose radio player globals
 window.playStation = playStation;
 window.togglePlay = togglePlay;
@@ -897,5 +1617,9 @@ document.addEventListener("DOMContentLoaded", () => {
   updateConsoleUI();
   fetchBeatCatalog();
   initTheoryTools();
+  updateDelayCalculations(120);
+  runPitchShiftCalc();
+  runRoomModesCalc();
+  init808Designer();
 });
 

@@ -334,14 +334,13 @@ export const studioAudio = new StudioAudioEngine();
  * Pure client-side ArrayBuffer encoder — zero npm dependencies
  * ============================================================================
  */
-export function buildMidiFile({ chords, bpm = 85, beatsPerChord = 4 }) {
+/**
+ * Generic Standard MIDI File (SMF 0) Encoder
+ */
+export function encodeStandardMidiFile(events, bpm = 120, trackName = 'Dangling Beats MIDI') {
   const TICKS_PER_BEAT = 480;
-  const chordDurationTicks = beatsPerChord * TICKS_PER_BEAT;
-
-  // Track event buffer (bytes)
   const trackBytes = [];
 
-  // Helper: Variable-length quantity encoder
   function writeVarInt(value) {
     let buffer = value & 0x7f;
     while ((value >>= 7)) {
@@ -355,53 +354,58 @@ export function buildMidiFile({ chords, bpm = 85, beatsPerChord = 4 }) {
     }
   }
 
-  // 1. Meta Event: Set Tempo (Delta time = 0)
-  // Microseconds per quarter note = 60,000,000 / BPM
+  // 1. Meta Event: Set Tempo
   const usPerBeat = Math.round(60000000 / bpm);
   trackBytes.push(0x00, 0xff, 0x51, 0x03);
   trackBytes.push((usPerBeat >> 16) & 0xff, (usPerBeat >> 8) & 0xff, usPerBeat & 0xff);
 
-  // 2. Meta Event: Track / Sequence Name
-  const trackName = 'Dangling Beats Progression';
-  trackBytes.push(0x00, 0xff, 0x03, trackName.length);
-  for (let i = 0; i < trackName.length; i++) {
-    trackBytes.push(trackName.charCodeAt(i));
+  // 2. Meta Event: Track Name
+  const safeName = String(trackName);
+  trackBytes.push(0x00, 0xff, 0x03, safeName.length);
+  for (let i = 0; i < safeName.length; i++) {
+    trackBytes.push(safeName.charCodeAt(i));
   }
 
-  // 3. Encode Chord Note-Ons & Note-Offs
-  chords.forEach((chord) => {
-    const midiNotes = resolveChordMidiNotes(chord);
+  // 3. Encode Note Events
+  let pendingDelta = 0;
+  events.forEach((ev) => {
+    const dur = ev.durationTicks || 120;
+    if (ev.pitches && ev.pitches.length > 0) {
+      // Note On for all pitches
+      ev.pitches.forEach((midi, idx) => {
+        writeVarInt(idx === 0 ? pendingDelta : 0);
+        trackBytes.push(0x90, midi, 0x5a); // 0x90 = Note On, Vel 90
+      });
+      pendingDelta = 0;
 
-    // Note On for all notes in chord (delta time 0 between simultaneous notes)
-    midiNotes.forEach((midi, idx) => {
-      writeVarInt(idx === 0 ? 0 : 0); // delta time
-      trackBytes.push(0x90, midi, 0x5a); // 0x90 = Note On, Ch 1, Velocity 90
-    });
-
-    // Note Off for all notes in chord after duration
-    midiNotes.forEach((midi, idx) => {
-      // First Note Off occurs after chordDurationTicks, subsequent at delta 0
-      writeVarInt(idx === 0 ? chordDurationTicks : 0);
-      trackBytes.push(0x80, midi, 0x00); // 0x80 = Note Off, Ch 1
-    });
+      // Note Off for all pitches
+      ev.pitches.forEach((midi, idx) => {
+        writeVarInt(idx === 0 ? dur : 0);
+        trackBytes.push(0x80, midi, 0x00); // 0x80 = Note Off
+      });
+    } else {
+      // Rest
+      pendingDelta += dur;
+    }
   });
 
-  // 4. Meta Event: End of Track (Delta time = 0)
-  trackBytes.push(0x00, 0xff, 0x2f, 0x00);
+  // 4. Meta Event: End of Track
+  writeVarInt(pendingDelta);
+  trackBytes.push(0xff, 0x2f, 0x00);
 
   // 5. Construct MThd (Header Chunk)
-  // Format 0, 1 track, 480 division
   const headerBytes = [
-    0x4d, 0x54, 0x68, 0x64, // 'MThd'
-    0x00, 0x00, 0x00, 0x06, // Chunk length (6 bytes)
-    0x00, 0x00,             // Format 0 (single track)
-    0x00, 0x01,             // 1 track
-    (TICKS_PER_BEAT >> 8) & 0xff, TICKS_PER_BEAT & 0xff, // Division
+    0x4d, 0x54, 0x68, 0x64,
+    0x00, 0x00, 0x00, 0x06,
+    0x00, 0x00, // Format 0
+    0x00, 0x01, // 1 track
+    (TICKS_PER_BEAT >> 8) & 0xff,
+    TICKS_PER_BEAT & 0xff,
   ];
 
   // 6. Construct MTrk (Track Chunk)
   const trackHeader = [
-    0x4d, 0x54, 0x72, 0x6b, // 'MTrk'
+    0x4d, 0x54, 0x72, 0x6b,
     (trackBytes.length >> 24) & 0xff,
     (trackBytes.length >> 16) & 0xff,
     (trackBytes.length >> 8) & 0xff,
@@ -414,6 +418,21 @@ export function buildMidiFile({ chords, bpm = 85, beatsPerChord = 4 }) {
   fullFile.set(trackBytes, headerBytes.length + trackHeader.length);
 
   return fullFile;
+}
+
+/**
+ * Encodes an array of chord progression objects into SMF 0
+ */
+export function buildMidiFile({ chords, bpm = 85, beatsPerChord = 4 }) {
+  const TICKS_PER_BEAT = 480;
+  const chordDurationTicks = beatsPerChord * TICKS_PER_BEAT;
+
+  const events = chords.map((chord) => ({
+    pitches: resolveChordMidiNotes(chord),
+    durationTicks: chordDurationTicks,
+  }));
+
+  return encodeStandardMidiFile(events, bpm, 'Dangling Beats Progression');
 }
 
 /**
