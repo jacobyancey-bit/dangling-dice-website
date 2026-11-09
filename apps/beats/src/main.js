@@ -46,6 +46,7 @@ import { midiEngine, MPC_PADS_CONFIG } from './midiEngine.js';
 import { samplerEngine } from './samplerEngine.js';
 import { sampleEngine } from './sampleEngine.js';
 import { instrumentEngine, INSTRUMENT_CATALOG, DRUM_KITS } from './instrumentEngine.js';
+import { studioRecorder } from './studioRecorder.js';
 
 const API_BASE = window.location.hostname === "localhost" 
   ? "http://localhost:5000/api" 
@@ -439,6 +440,179 @@ function updateLegatoUI(mode) {
   }
   renderInstrumentSettingsRack();
 }
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ============================================================================
+// Real-Time Studio Stem & Take Recorder Logic
+// ============================================================================
+let activeTake = null;
+
+function toggleStudioRecording() {
+  if (studioRecorder.isRecording) {
+    studioRecorder.stopRecording();
+  } else {
+    studioRecorder.startRecording();
+  }
+}
+
+function renderRecordedTakeShelf(take) {
+  const shelf = document.getElementById('recordedTakeShelf');
+  if (!shelf) return;
+  if (!take) {
+    shelf.style.display = 'none';
+    shelf.innerHTML = '';
+    return;
+  }
+
+  activeTake = take;
+  const isPlaying = studioRecorder.isPlayingPreview;
+
+  shelf.style.display = 'flex';
+  shelf.innerHTML = `
+    <div class="take-info-side">
+      <div class="take-header-row">
+        <span class="take-pill">🔴 Audio Take Ready</span>
+        <span class="take-filename">${escapeHtml(take.filename)}</span>
+      </div>
+      <div class="take-meta-sub">
+        <span>Instrument: <strong class="take-meta-highlight">${escapeHtml(take.instName)}</strong></span>
+        <span>Duration: <strong class="take-meta-highlight">${take.duration.toFixed(2)}s</strong></span>
+        <span>Format: <strong class="take-meta-highlight">16-bit 44.1kHz Stereo Broadcast WAV</strong></span>
+      </div>
+    </div>
+
+    <div class="take-actions-side">
+      <button 
+        type="button" 
+        id="takePreviewBtn" 
+        class="take-action-btn btn-preview ${isPlaying ? 'playing' : ''}" 
+        onclick="window.toggleTakePreview()" 
+        title="Audition recorded audio snippet"
+      >
+        ${isPlaying ? '⏹ Stop' : '▶ Audition'}
+      </button>
+
+      <button 
+        type="button" 
+        class="take-action-btn btn-download" 
+        onclick="window.downloadRecordedTake()" 
+        title="Download high-definition WAV file directly to your system"
+      >
+        💾 Download WAV
+      </button>
+
+      <button 
+        type="button" 
+        class="take-action-btn" 
+        onclick="window.sendTakeToSampler()" 
+        title="Send snippet directly into the Chromatic Sampler"
+      >
+        🎛️ To Sampler
+      </button>
+
+      <button 
+        type="button" 
+        class="take-action-btn" 
+        onclick="window.sendTakeToSlicer()" 
+        title="Send snippet directly into the Drum Break Transient Slicer"
+      >
+        ✂️ To Slicer
+      </button>
+
+      <button 
+        type="button" 
+        class="take-action-btn btn-dismiss" 
+        onclick="window.dismissRecordedTake()" 
+        title="Dismiss take"
+      >
+        ✖
+      </button>
+    </div>
+  `;
+}
+
+function toggleTakePreview() {
+  if (studioRecorder.isPlayingPreview) {
+    studioRecorder.stopTakePreview();
+  } else {
+    studioRecorder.playTakePreview();
+  }
+}
+
+function downloadRecordedTake() {
+  if (activeTake) {
+    studioRecorder.downloadTake(activeTake.filename);
+    showToast(`Saved ${activeTake.filename} to downloads!`, 'success');
+  }
+}
+
+function sendTakeToSampler() {
+  if (!activeTake || !activeTake.audioBuffer) return;
+  samplerEngine.loadBuffer(activeTake.audioBuffer, activeTake.filename);
+  switchTheoryTab('sampler');
+  initSamplerUI();
+  drawSamplerWaveform();
+  showToast('Loaded recorded take into Chromatic Sampler!', 'success');
+}
+
+function sendTakeToSlicer() {
+  if (!activeTake || !activeTake.audioBuffer) return;
+  chopperAudioBuffer = activeTake.audioBuffer;
+  runTransientDetection();
+  drawWaveform();
+  renderSlicePads();
+  renderMpcPads();
+  switchTheoryTab('chopper');
+  showToast('Loaded recorded take into Drum Break Slicer!', 'success');
+}
+
+function dismissRecordedTake() {
+  studioRecorder.stopTakePreview();
+  activeTake = null;
+  const shelf = document.getElementById('recordedTakeShelf');
+  if (shelf) {
+    shelf.style.display = 'none';
+    shelf.innerHTML = '';
+  }
+}
+
+// Studio Recorder State Subscription
+studioRecorder.onStateChange((event, data) => {
+  const recBtn = document.getElementById('masterRecBtn');
+  const recDot = document.getElementById('recDot');
+  const recLabel = document.getElementById('recBtnLabel');
+
+  if (event === 'start') {
+    if (recBtn) recBtn.classList.add('recording');
+    if (recDot) recDot.classList.add('pulsing');
+    if (recLabel) recLabel.textContent = '⏹ STOP (0.0s)';
+    showToast('🔴 Recording master audio take... Play your instrument or drums!', 'info');
+  } else if (event === 'timer') {
+    if (recLabel) recLabel.textContent = `⏹ STOP (${data.elapsed.toFixed(1)}s)`;
+  } else if (event === 'take_ready') {
+    if (recBtn) recBtn.classList.remove('recording');
+    if (recDot) recDot.classList.remove('pulsing');
+    if (recLabel) recLabel.textContent = '● REC TAKE';
+    renderRecordedTakeShelf(data);
+    showToast(`🎵 Studio Take Captured (${data.duration}s)! Ready to audition or download.`, 'success');
+  } else if (event === 'preview_started' || event === 'preview_ended') {
+    const previewBtn = document.getElementById('takePreviewBtn');
+    if (previewBtn) {
+      const isPlaying = studioRecorder.isPlayingPreview;
+      previewBtn.classList.toggle('playing', isPlaying);
+      previewBtn.textContent = isPlaying ? '⏹ Stop' : '▶ Audition';
+    }
+  }
+});
 
 function updateEngineSetting(key, val, unit = '') {
   const num = parseFloat(val);
@@ -2396,6 +2570,12 @@ window.toggleLegatoMode = toggleLegatoMode;
 window.updateEngineSetting = updateEngineSetting;
 window.renderInstrumentSettingsRack = renderInstrumentSettingsRack;
 window.toggleRealSamples = toggleRealSamples;
+window.toggleStudioRecording = toggleStudioRecording;
+window.toggleTakePreview = toggleTakePreview;
+window.downloadRecordedTake = downloadRecordedTake;
+window.sendTakeToSampler = sendTakeToSampler;
+window.sendTakeToSlicer = sendTakeToSlicer;
+window.dismissRecordedTake = dismissRecordedTake;
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {

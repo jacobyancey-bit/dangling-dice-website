@@ -136,8 +136,18 @@
               No USB Device
             </span>
           </div>
+
+          <div class="transport-stat">
+            <span class="transport-label">Take Recorder</span>
+            <button id="masterRecBtn" type="button" class="btn btn-secondary btn-sm studio-rec-btn" onclick="window.toggleStudioRecording()" title="Record Studio Take (WAV Audio Capture)">
+              <span id="recDot" class="rec-dot"></span> <span id="recBtnLabel">● REC TAKE</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      <!-- Recorded Take Shelf -->
+      <div id="recordedTakeShelf" class="recorded-take-shelf" style="display: none;"></div>
     </section>
 
     <!-- Virtual 16-Pad MPC / MIDI Controller Surface -->
