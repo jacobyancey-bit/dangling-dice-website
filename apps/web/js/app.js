@@ -798,11 +798,19 @@ window.removeCustomStation = function (stationId, event) {
   window.showToast("Station removed", "info");
 };
 
+function isMobileViewport() {
+  return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 window.togglePlaylistDrawer = function () {
   const drawer = document.getElementById("dockPlaylistDrawer");
+  const backdrop = document.getElementById("dockBackdrop");
   if (!drawer) return;
   isPlaylistDrawerOpen = !isPlaylistDrawerOpen;
   drawer.style.display = isPlaylistDrawerOpen ? "flex" : "none";
+  if (backdrop) {
+    backdrop.style.display = (isPlaylistDrawerOpen && isMobileViewport()) ? "block" : "none";
+  }
   if (isPlaylistDrawerOpen) {
     renderStationsList();
   }
@@ -825,11 +833,15 @@ window.selectStation = function (stationId) {
   const dock = document.getElementById("beatsDock");
   const btn = document.getElementById("dockPlayBtn");
 
-  // Ensure drawer is open, dock is active and marked as playing
-  if (drawer) drawer.style.display = "block";
+  // On desktop PC, show mini video drawer; on phone, stream background audio without blocking screen
+  if (drawer) {
+    drawer.style.display = isMobileViewport() ? "none" : "block";
+  }
   if (dock) {
     dock.classList.add("playing");
-    dock.classList.remove("minimized");
+    if (!isMobileViewport()) {
+      dock.classList.remove("minimized");
+    }
   }
   if (btn) btn.textContent = "⏸ Pause";
   isDockAudioActive = true;
@@ -844,10 +856,12 @@ window.selectStation = function (stationId) {
     iframe.src = url;
   }
 
-  // Close drawer after selection
+  // Close drawer and backdrop after selection
   isPlaylistDrawerOpen = false;
   const pDrawer = document.getElementById("dockPlaylistDrawer");
   if (pDrawer) pDrawer.style.display = "none";
+  const backdrop = document.getElementById("dockBackdrop");
+  if (backdrop) backdrop.style.display = "none";
 
   renderStationsList();
   window.showToast(`▶ Now Playing: ${station.title}`, "success");
@@ -872,13 +886,20 @@ window.toggleDockAudio = function () {
   if (isDockAudioActive) {
     if (dock) {
       dock.classList.add("playing");
-      dock.classList.remove("minimized");
+      if (!isMobileViewport()) {
+        dock.classList.remove("minimized");
+      }
     }
     const minBtn = dock?.querySelector(".beats-dock-min-btn");
-    if (minBtn) minBtn.textContent = "—";
+    if (minBtn && dock && !dock.classList.contains("minimized")) {
+      minBtn.textContent = "—";
+    }
 
     if (btn) btn.textContent = "⏸ Pause";
-    if (drawer) drawer.style.display = "block";
+    // On desktop, show video drawer; on mobile phone, keep hidden to save screen space
+    if (drawer) {
+      drawer.style.display = isMobileViewport() ? "none" : "block";
+    }
     if (iframe) {
       const origin = window.location.origin;
       let url = currentStation.url;
@@ -907,6 +928,8 @@ window.toggleDockMinimize = function () {
   if (isMin) {
     const drawer = document.getElementById("dockPlaylistDrawer");
     if (drawer) drawer.style.display = "none";
+    const backdrop = document.getElementById("dockBackdrop");
+    if (backdrop) backdrop.style.display = "none";
     isPlaylistDrawerOpen = false;
   }
 
@@ -916,10 +939,16 @@ window.toggleDockMinimize = function () {
 };
 
 function initDockState() {
+  const isMobile = isMobileViewport();
   try {
-    if (localStorage.getItem("beatsDockMinimized") === "true") {
-      const dock = document.getElementById("beatsDock");
-      const minBtn = dock?.querySelector(".beats-dock-min-btn");
+    const savedMin = localStorage.getItem("beatsDockMinimized");
+    const dock = document.getElementById("beatsDock");
+    const minBtn = dock?.querySelector(".beats-dock-min-btn");
+
+    // Phone vs PC separation:
+    // On mobile phone, start minimized by default so it never covers the screen.
+    // On desktop PC, start open unless the user previously minimized it.
+    if (savedMin === "true" || (savedMin === null && isMobile)) {
       if (dock) dock.classList.add("minimized");
       if (minBtn) minBtn.textContent = "+";
     }

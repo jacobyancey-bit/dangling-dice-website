@@ -362,6 +362,62 @@ export const getPublicShowcase = async (req, res) => {
   }
 };
 
+function sanitizeInput(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim();
+}
+
+function validateSafeUrl(rawUrl) {
+  if (typeof rawUrl !== 'string') {
+    return { valid: false, message: 'Please enter a valid live URL (including https://).' };
+  }
+  let parsed;
+  try {
+    parsed = new URL(rawUrl.trim());
+  } catch {
+    return { valid: false, message: 'Please enter a valid live URL (including https://).' };
+  }
+
+  // Enforce HTTPS or HTTP (disallow javascript:, data:, file:, ftp:, etc.)
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return { valid: false, message: 'Please enter a valid live URL (including https://).' };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+
+  // SSRF & Private Network Protection
+  const isPrivateIp =
+    host === 'localhost' ||
+    host === '0.0.0.0' ||
+    host === '127.0.0.1' ||
+    host === '[::1]' ||
+    host.endsWith('.local') ||
+    host.endsWith('.internal') ||
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
+    /^169\.254\./.test(host);
+
+  if (isPrivateIp) {
+    return { valid: false, message: 'Please enter a valid live URL (private or local network addresses are forbidden).' };
+  }
+
+  // Block dangerous executable/script file downloads
+  const pathname = parsed.pathname.toLowerCase();
+  const dangerousExts = /\.(exe|scr|bat|cmd|vbs|msi|ps1|apk|sh|bin|jar|pif|reg)$/i;
+  if (dangerousExts.test(pathname)) {
+    return { valid: false, message: 'Please enter a valid live URL (direct executable/binary links are forbidden).' };
+  }
+
+  return { valid: true, cleanUrl: parsed.toString() };
+}
+
 /**
  * @desc    Submit a new developer / creator project for review
  * @route   POST /api/showcase/submit
@@ -389,33 +445,42 @@ export const submitDevProject = async (req, res) => {
       });
     }
 
-    try {
-      new URL(appUrl);
-    } catch (e) {
+    const urlCheck = validateSafeUrl(appUrl);
+    if (!urlCheck.valid) {
       return res.status(400).json({
         success: false,
-        message: 'Please enter a valid live URL (including https://).',
+        message: urlCheck.message,
       });
+    }
+
+    if (githubUrl) {
+      const gitCheck = validateSafeUrl(githubUrl);
+      if (!gitCheck.valid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please enter a valid live URL for your GitHub repository.',
+        });
+      }
     }
 
     let parsedStack = ['JavaScript'];
     if (Array.isArray(techStack)) {
-      parsedStack = techStack.filter(Boolean);
+      parsedStack = techStack.map(s => sanitizeInput(String(s))).filter(Boolean);
     } else if (typeof techStack === 'string') {
-      parsedStack = techStack.split(',').map((s) => s.trim()).filter(Boolean);
+      parsedStack = techStack.split(',').map((s) => sanitizeInput(s.trim())).filter(Boolean);
     }
 
     const catGroup = resolveCategoryGroup(category);
 
     const project = await DevShowcase.create({
-      title,
-      tagline,
-      description,
-      appUrl,
-      githubUrl: githubUrl || '',
+      title: sanitizeInput(title),
+      tagline: sanitizeInput(tagline),
+      description: sanitizeInput(description),
+      appUrl: urlCheck.cleanUrl,
+      githubUrl: githubUrl ? githubUrl.trim() : '',
       imageUrl: imageUrl || 'https://dangling-dice-studios.com/images/banner.jpg',
-      authorName,
-      authorSocial: authorSocial || '',
+      authorName: sanitizeInput(authorName),
+      authorSocial: sanitizeInput(authorSocial || ''),
       category: category || 'Developer Tool',
       categoryGroup: catGroup,
       techStack: parsedStack.length > 0 ? parsedStack : ['JavaScript'],
