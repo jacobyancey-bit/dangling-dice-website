@@ -247,3 +247,4 @@ export function decodeJwt(tokenStr) {
     return { valid: false, error: `Malformed JWT base64 encoding: ${err.message}` };
   }
 }
+
