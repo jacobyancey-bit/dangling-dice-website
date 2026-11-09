@@ -5,6 +5,7 @@
  */
 
 import { midiToFreq, NOTE_NAMES } from './theoryEngine.js';
+import { sampleEngine } from './sampleEngine.js';
 
 // ============================================================================
 // INSTRUMENT CATALOG & DEFINITIONS
@@ -292,6 +293,17 @@ export class InstrumentVoice {
     this.f0 = newFreq;
 
     const glide = Math.max(0.001, glideTime);
+
+    // If real multi-sample voice, smoothly glide playbackRate!
+    if (this.isSampledVoice && this.sampleSource && this.sampleSource._rootMidi !== undefined) {
+      const rootMidi = this.sampleSource._rootMidi;
+      const targetRate = Math.pow(2, (newMidi - rootMidi) / 12);
+      this.sampleSource.playbackRate.cancelScheduledValues(now);
+      this.sampleSource.playbackRate.setValueAtTime(this.sampleSource.playbackRate.value, now);
+      this.sampleSource.playbackRate.exponentialRampToValueAtTime(Math.max(0.05, targetRate), now + glide);
+      return;
+    }
+
     this.oscillators.forEach((osc) => {
       if (osc.frequency) {
         const ratio = osc._ratio || 1.0;
@@ -359,6 +371,41 @@ export class InstrumentVoice {
     const f0 = this.f0;
     const vel = this.velocity;
     const gain = this.gainNode;
+
+    // Check for Real Studio Multi-Sample!
+    const sample = sampleEngine.getSampleForNote(this.instId, this.midiNote);
+    if (sample && sample.buffer) {
+      this.isSampledVoice = true;
+      const source = ctx.createBufferSource();
+      source.buffer = sample.buffer;
+      source.playbackRate.setValueAtTime(sample.playbackRate, t);
+      source._rootMidi = sample.rootMidi;
+      this.sampleSource = source;
+      this.oscillators.push(source);
+
+      // Route through tone & presence filters
+      const toneFilter = ctx.createBiquadFilter();
+      toneFilter.type = 'lowpass';
+      const damp = this.settings.guitarDamp || 0;
+      const baseTone = this.settings.guitarTone || 16000;
+      toneFilter.frequency.setValueAtTime(Math.max(450, baseTone * (1.0 - damp * 0.7)), t);
+      this.filters.push(toneFilter);
+
+      source.connect(toneFilter);
+      toneFilter.connect(gain);
+
+      // Authentic Acoustic Envelope & Hold Sustain:
+      const peakGain = 0.95 * vel;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(peakGain, t + 0.005);
+      // Ring naturally through sustain decay:
+      const holdDecay = (this.settings.sustainDecay || 5.0) * (1.0 - damp * 0.75);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
+
+      source.start(t);
+      this.customReleaseTime = this.settings.releaseTime || 0.22;
+      return;
+    }
 
     switch (this.instId) {
       // 1. CLASSICAL GUITAR (Nylon string + soundboard body)
@@ -1084,6 +1131,7 @@ class InstrumentEngine {
   setInstrument(id) {
     if (INSTRUMENT_CATALOG[id]) {
       this.activeInstrumentId = id;
+      sampleEngine.preloadInstrument(id);
       return true;
     }
     return false;
@@ -1252,6 +1300,19 @@ class InstrumentEngine {
     const ctx = this.getAudioContext();
     const t = ctx.currentTime;
     const vel = Math.max(0.1, Math.min(1.0, velocity));
+
+    // Check if real acoustic drum sample is available
+    const drumBuf = sampleEngine.getAcousticDrumSample(soundKey);
+    if (drumBuf) {
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer = drumBuf;
+      gain.gain.setValueAtTime(vel * 0.95, t);
+      src.connect(gain);
+      gain.connect(this.masterGain);
+      src.start(t);
+      return;
+    }
 
     // Helper: Generate White Noise Buffer
     const makeNoise = (durationSec) => {

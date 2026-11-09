@@ -1959,6 +1959,51 @@ footer a {
   box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
 }
 
+.rack-btn.active-sampled {
+  background: rgba(236, 72, 153, 0.2);
+  border-color: #ec4899;
+  color: #f472b6;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
+}
+
+.sample-engine-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #64748b;
+  transition: all 0.2s ease;
+}
+
+.sample-engine-dot.dot-ready {
+  background: #ec4899;
+  box-shadow: 0 0 8px #ec4899;
+}
+
+.sample-engine-dot.dot-off {
+  background: #64748b;
+}
+
+.sample-status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+}
+
+.sample-status-pill.pill-sampled {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+}
+
+.sample-status-pill.pill-synth {
+  background: rgba(6, 182, 212, 0.15);
+  color: #67e8f9;
+  border: 1px solid rgba(6, 182, 212, 0.35);
+}
+
 .settings-rack-body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

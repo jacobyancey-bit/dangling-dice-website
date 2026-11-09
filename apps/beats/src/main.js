@@ -44,6 +44,7 @@ import {
 
 import { midiEngine, MPC_PADS_CONFIG } from './midiEngine.js';
 import { samplerEngine } from './samplerEngine.js';
+import { sampleEngine } from './sampleEngine.js';
 import { instrumentEngine, INSTRUMENT_CATALOG, DRUM_KITS } from './instrumentEngine.js';
 
 const API_BASE = window.location.hostname === "localhost" 
@@ -452,6 +453,17 @@ function updateEngineSetting(key, val, unit = '') {
   }
 }
 
+function toggleRealSamples() {
+  sampleEngine.setUseRealSamples(!sampleEngine.useRealSamples);
+  renderInstrumentSettingsRack();
+  showToast(
+    sampleEngine.useRealSamples
+      ? '🎙️ Real Studio Multi-Samples Active'
+      : '⚡ Mathematical Synthesis Mode Active',
+    'info'
+  );
+}
+
 function renderInstrumentSettingsRack() {
   const container = document.getElementById('instrumentSettingsRack');
   if (!container) return;
@@ -460,6 +472,7 @@ function renderInstrumentSettingsRack() {
   const settings = instrumentEngine.settings;
   const isGuitar = inst.category === 'guitar';
   const isPiano = inst.category === 'piano';
+  const sampleStatus = sampleEngine.getInstrumentStatus(inst.id);
 
   let html = `
     <div class="settings-rack-card">
@@ -467,8 +480,21 @@ function renderInstrumentSettingsRack() {
         <div class="settings-rack-title">
           <span style="font-size: 1.15rem;">🎛️</span>
           <span><strong>${inst.name}</strong> Articulation &amp; Performance Controls</span>
+          <span class="sample-status-pill ${sampleEngine.useRealSamples ? 'pill-sampled' : 'pill-synth'}">
+            ${sampleEngine.useRealSamples ? (sampleStatus === 'loading' ? '⏳ Loading Studio Samples...' : '🎙️ Multi-Sample Bank Ready') : '⚡ Analog Synthesis Mode'}
+          </span>
         </div>
         <div class="settings-rack-actions">
+          <button 
+            type="button" 
+            class="rack-btn ${sampleEngine.useRealSamples ? 'active-sampled' : ''}" 
+            onclick="window.toggleRealSamples()"
+            title="Switch between Real Studio Multi-Samples (Recordings) and Mathematical Synthesis"
+          >
+            <span class="sample-engine-dot ${sampleEngine.useRealSamples ? 'dot-ready' : 'dot-off'}"></span>
+            ${sampleEngine.useRealSamples ? '🎙️ REAL SAMPLES' : '⚡ SYNTHESIS'}
+          </button>
+
           <button 
             type="button" 
             id="rackSustainBtn"
@@ -2338,6 +2364,7 @@ window.toggleSustainPedal = toggleSustainPedal;
 window.toggleLegatoMode = toggleLegatoMode;
 window.updateEngineSetting = updateEngineSetting;
 window.renderInstrumentSettingsRack = renderInstrumentSettingsRack;
+window.toggleRealSamples = toggleRealSamples;
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
@@ -2345,6 +2372,14 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchBeatCatalog();
   initTheoryTools();
   renderInstrumentSettingsRack();
+
+  // Preload real studio multi-samples for active instrument & acoustic drum kit
+  sampleEngine.preloadInstrument(instrumentEngine.getInstrument().id);
+  sampleEngine.preloadAcousticDrums();
+  sampleEngine.onStatusChange(() => {
+    renderInstrumentSettingsRack();
+  });
+
   updateDelayCalculations(120);
   runPitchShiftCalc();
   runRoomModesCalc();
