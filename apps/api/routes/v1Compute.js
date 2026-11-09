@@ -65,6 +65,27 @@ function sendEngineSuccess(req, res, engine, startMs, data) {
   });
 }
 
+/**
+ * Health & Gateway Information for /v1 and /api/v1
+ */
+router.get(['/', '/health'], (req, res) => {
+  return res.status(200).json({
+    status: 'healthy',
+    service: 'Dangling Dice Studios™ Stateless Compute & Connected Ecosystem Gateway',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    channel: detectChannelSource(req),
+    engines: [
+      'finance (amortization, compound-interest, cashflow, extra-payments, project-scope)',
+      'schema (infer, sql-to-ts, inspect-uri)',
+      'geo (parcel-metrics, distance, point-in-polygon, wireguard-config, docscan-session)',
+      'privacy (redact, validate-luhn, mask-json, hipaa-scrub)',
+      'extract (scrape-job)',
+      'ai (leviathan-generate)',
+    ],
+  });
+});
+
 // =========================================================================
 // 1. Finance Engine (/v1/finance/*)
 // =========================================================================
