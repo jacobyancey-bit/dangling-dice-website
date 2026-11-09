@@ -101,5 +101,31 @@ describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
     assert.strictEqual(responseBody.success, false);
     assert.ok(responseBody.message.includes('requires at least a title or description'));
   });
+
+  it('DISC-06: API documentation endpoint serves compliant HTML with CORS, HTTPS, and auth metadata', async () => {
+    const apiModule = await import('../routes/api.js');
+    const router = apiModule.default;
+    assert.ok(router, 'API router should be exported');
+
+    // Find the /docs route layer
+    const docsLayer = router.stack.find(s => s.route && (s.route.path === '/docs' || (Array.isArray(s.route.path) && s.route.path.includes('/docs'))));
+    assert.ok(docsLayer, 'Expected /docs route to be registered on API router');
+
+    let responseHtml = '';
+    let responseStatus = 200;
+    const mockReq = { query: {}, headers: { accept: 'text/html' } };
+    const mockRes = {
+      status(code) { responseStatus = code; return this; },
+      setHeader() {},
+      send(html) { responseHtml = html; return this; }
+    };
+
+    docsLayer.route.stack[0].handle(mockReq, mockRes);
+    assert.strictEqual(responseStatus, 200);
+    assert.ok(responseHtml.includes('Dangling Dice Studios™ Developer API'));
+    assert.ok(responseHtml.includes('meta name="api:cors" content="true"'));
+    assert.ok(responseHtml.includes('meta name="api:https" content="true"'));
+    assert.ok(responseHtml.includes('meta name="api:pricing" content="Free"'));
+  });
 });
 

@@ -169,6 +169,10 @@ app.get(['/health', '/status'], apiLimiter, (req, res, next) => {
   req.url = '/health';
   apiRoutes(req, res, next);
 });
+app.get(['/docs', '/docs/', '/api-docs'], apiLimiter, (req, res, next) => {
+  req.url = '/docs';
+  apiRoutes(req, res, next);
+});
 app.use('/items', apiLimiter, itemRoutes);
 app.use('/media', apiLimiter, mediaRoutes);
 app.use('/affiliates', apiLimiter, affiliateRoutes);
