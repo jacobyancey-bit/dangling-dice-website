@@ -28,12 +28,51 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-image: 
-    radial-gradient(ellipse at top right, rgba(236, 72, 153, 0.15), transparent 50%),
-    radial-gradient(ellipse at bottom left, rgba(168, 85, 247, 0.12), transparent 50%),
-    radial-gradient(circle at 50% 30%, rgba(6, 182, 212, 0.05), transparent 40%);
-  background-attachment: fixed;
+  position: relative;
   overflow-x: hidden;
+}
+
+/* Studio Control Room Ambient Background (Pure CSS, GPU-Accelerated) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: #06080d;
+  background-image:
+    /* Layer 1: Focused Console Spotlights (Warm amber downlight + cool cyan rack gear glow) */
+    radial-gradient(ellipse 900px 380px at 50% -40px, rgba(245, 158, 11, 0.09) 0%, transparent 70%),
+    radial-gradient(ellipse 650px 420px at 85% 15%, rgba(6, 182, 212, 0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 650px 450px at 15% 85%, rgba(168, 85, 247, 0.06) 0%, transparent 70%),
+
+    /* Layer 2: Deep Studio Booth Vignette (Simulates dark sound-dampened control room walls) */
+    radial-gradient(ellipse at 50% 30%, transparent 35%, rgba(4, 6, 10, 0.75) 75%, rgba(1, 2, 4, 0.98) 100%),
+
+    /* Layer 3: Acoustic Wood Slat Panels (Sound diffuser wall pattern) */
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 28px,
+      rgba(0, 0, 0, 0.45) 28px,
+      rgba(0, 0, 0, 0.45) 36px
+    );
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 36px 100%;
+}
+
+/* Subtle Control Room Acoustic Ceiling & Rack Edge Lighting */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 5%, rgba(245, 158, 11, 0.4) 30%, rgba(236, 72, 153, 0.4) 50%, rgba(6, 182, 212, 0.4) 70%, transparent 95%);
+  z-index: 101;
+  pointer-events: none;
 }
 
 header {
