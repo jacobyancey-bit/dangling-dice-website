@@ -239,8 +239,8 @@
               </div>
             </div>
             <div>
-              <a id="downloadBtn" href="#" download class="btn btn-primary btn-sm">
-                📥 Download Again
+              <a id="downloadBtn" href="#" download class="btn btn-primary" style="font-weight: 700; font-size: 0.9rem; padding: 0.65rem 1.25rem; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
+                📥 Download Now
               </a>
             </div>
           </div>
@@ -455,9 +455,6 @@ console.log("Audio Stream:", data.downloadUrl);</code></pre>
 
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
-
-  <!-- Hidden Download Iframe (Guarantees Downloads Never Show "Page Cannot Be Reached") -->
-  <iframe id="mediaDownloadIframe" style="display:none;" title="Direct File Downloader"></iframe>
 
   <!-- Client Application Logic -->
   <script type="module" src="/src/main.js"></script>

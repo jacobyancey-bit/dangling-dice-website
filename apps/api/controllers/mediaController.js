@@ -135,8 +135,8 @@ async function fetchFromExtractionGateway(targetUrl, format) {
     }
   }
 
-  // Provider 2: RapidAPI YouTube-to-MP3 Gateway
-  if (process.env.RAPIDAPI_KEY) {
+  // Provider 2: RapidAPI YouTube-to-MP3 Gateway (Audio formats only)
+  if (!isMp4 && process.env.RAPIDAPI_KEY) {
     const key = process.env.RAPIDAPI_KEY.trim().replace(/^['"]|['"]$/g, '');
     const host = (process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com').trim().replace(/^['"]|['"]$/g, '');
     const ytid = extractYouTubeId(targetUrl);
@@ -255,17 +255,86 @@ async function transcodeMediaToFile(targetUrl, format, cleanName) {
     }, 25000);
 
     if (isMp4) {
-      stream = ytdl.download(targetUrl, {
-        quality: Quality.HighestVideo,
-        filter: { hasVideo: true, hasAudio: true },
-      });
-      proc = spawn(ffmpegPath, [
-        '-i', 'pipe:0',
-        '-c', 'copy',
-        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
-        '-y',
-        outPath,
-      ]);
+      (async () => {
+        try {
+          const info = await ytdl.getInfo(targetUrl);
+          const videoFormats = info.formats.filter((f) => f.hasVideo && !f.hasAudio);
+          videoFormats.sort((a, b) => (b.height || 0) - (a.height || 0));
+          const bestVideo = videoFormats.find((f) => f.container === 'mp4') || videoFormats[0];
+
+          const audioFormats = info.formats.filter((f) => f.hasAudio && !f.hasVideo);
+          audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
+          const bestAudio = audioFormats.find((f) => f.container === 'mp4') || audioFormats[0];
+
+          if (bestVideo?.url && bestAudio?.url) {
+            const isVideoMp4 = bestVideo.container === 'mp4';
+            const vArgs = isVideoMp4
+              ? ['-c:v', 'copy']
+              : ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23'];
+
+            proc = spawn(ffmpegPath, [
+              '-reconnect', '1',
+              '-reconnect_streamed', '1',
+              '-reconnect_delay_max', '5',
+              '-i', bestVideo.url,
+              '-reconnect', '1',
+              '-reconnect_streamed', '1',
+              '-reconnect_delay_max', '5',
+              '-i', bestAudio.url,
+              ...vArgs,
+              '-c:a', 'aac',
+              '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+              '-y',
+              outPath,
+            ]);
+          } else {
+            stream = ytdl.download(targetUrl, {
+              quality: Quality.HighestVideo,
+              filter: { hasVideo: true },
+            });
+            proc = spawn(ffmpegPath, [
+              '-i', 'pipe:0',
+              '-c', 'copy',
+              '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+              '-y',
+              outPath,
+            ]);
+            stream.pipe(proc.stdin);
+            stream.on('error', (err) => {
+              clearTimeout(timeout);
+              try { proc?.kill(); } catch (e) {}
+              reject(err);
+            });
+          }
+
+          proc.on('error', (err) => {
+            clearTimeout(timeout);
+            try { stream?.destroy(); } catch (e) {}
+            reject(err);
+          });
+
+          proc.on('close', (code) => {
+            clearTimeout(timeout);
+            if (code === 0 && fs.existsSync(outPath)) {
+              const stats = fs.statSync(outPath);
+              readyFiles.set(fileId, {
+                filePath: outPath,
+                fileName: `${cleanName}.${ext}`,
+                fileSize: stats.size,
+                mimeType: 'video/mp4',
+                createdAt: Date.now(),
+              });
+              resolve({ fileId, outPath, fileSize: stats.size });
+            } else {
+              reject(new Error(`FFmpeg exited with code ${code}`));
+            }
+          });
+        } catch (err) {
+          clearTimeout(timeout);
+          reject(err);
+        }
+      })();
+      return;
     } else {
       const bitrate = format === 'mp3-192' ? '192k' : '320k';
       stream = ytdl.download(targetUrl, {
@@ -535,48 +604,95 @@ export const streamMediaDownload = async (req, res) => {
     }
 
     if (isMp4) {
-      // MP4 Streaming Transcoding Pipeline (Fragmented MP4 with immediate packet flushing)
-      const videoStream = ytdl.download(targetUrl, {
-        quality: Quality.HighestVideo,
-        filter: { hasVideo: true, hasAudio: true },
-      });
+      // MP4 Streaming Transcoding Pipeline
+      // Merges high-definition video track with crystal-clear AAC audio
+      let ffmpeg;
+      try {
+        const info = await ytdl.getInfo(targetUrl);
+        const videoFormats = info.formats.filter((f) => f.hasVideo && !f.hasAudio);
+        videoFormats.sort((a, b) => (b.height || 0) - (a.height || 0));
+        const bestVideo = videoFormats.find((f) => f.container === 'mp4') || videoFormats[0];
 
-      const ffmpeg = spawn(ffmpegPath, [
-        '-i', 'pipe:0',
-        '-c', 'copy',
-        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
-        '-flush_packets', '1',
-        '-f', 'mp4',
-        'pipe:1',
-      ]);
+        const audioFormats = info.formats.filter((f) => f.hasAudio && !f.hasVideo);
+        audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
+        const bestAudio = audioFormats.find((f) => f.container === 'mp4') || audioFormats[0];
 
-      ffmpeg.stdout.once('data', () => sendDownloadHeaders());
-      videoStream.pipe(ffmpeg.stdin);
-      ffmpeg.stdout.pipe(res);
+        if (bestVideo?.url && bestAudio?.url) {
+          const isVideoMp4 = bestVideo.container === 'mp4';
+          const vArgs = isVideoMp4
+            ? ['-c:v', 'copy']
+            : ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23'];
 
-      req.on('close', () => {
-        if (!videoStream.destroyed) videoStream.destroy();
-        try { ffmpeg.kill(); } catch (e) {}
-      });
+          ffmpeg = spawn(ffmpegPath, [
+            '-reconnect', '1',
+            '-reconnect_streamed', '1',
+            '-reconnect_delay_max', '5',
+            '-i', bestVideo.url,
+            '-reconnect', '1',
+            '-reconnect_streamed', '1',
+            '-reconnect_delay_max', '5',
+            '-i', bestAudio.url,
+            ...vArgs,
+            '-c:a', 'aac',
+            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+            '-flush_packets', '1',
+            '-f', 'mp4',
+            'pipe:1',
+          ]);
+        } else {
+          // Fallback single stream
+          const videoStream = ytdl.download(targetUrl, {
+            quality: Quality.HighestVideo,
+            filter: { hasVideo: true },
+          });
 
-      videoStream.on('error', (err) => {
-        console.error('[Video Stream Error]', err.message);
-        try { ffmpeg.kill(); } catch (e) {}
+          ffmpeg = spawn(ffmpegPath, [
+            '-i', 'pipe:0',
+            '-c', 'copy',
+            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+            '-flush_packets', '1',
+            '-f', 'mp4',
+            'pipe:1',
+          ]);
+
+          videoStream.pipe(ffmpeg.stdin);
+          req.on('close', () => {
+            if (!videoStream.destroyed) videoStream.destroy();
+          });
+          videoStream.on('error', (err) => {
+            console.error('[Video Stream Error]', err.message);
+            try { ffmpeg.kill(); } catch (e) {}
+            if (!headersSent) {
+              res.status(502).send('YouTube stream unavailable for this video');
+            } else {
+              res.end();
+            }
+          });
+        }
+
+        ffmpeg.stdout.once('data', () => sendDownloadHeaders());
+        ffmpeg.stdout.pipe(res);
+
+        req.on('close', () => {
+          try { ffmpeg.kill(); } catch (e) {}
+        });
+
+        ffmpeg.on('error', (err) => {
+          console.error('[FFmpeg Error]', err.message);
+          if (!headersSent) {
+            res.status(500).send('Transcoding pipeline error');
+          } else {
+            res.end();
+          }
+        });
+      } catch (videoErr) {
+        console.error('[MP4 Resolution Error]', videoErr.message);
         if (!headersSent) {
-          res.status(502).send('YouTube stream unavailable for this video');
+          res.status(502).send('Failed to resolve video stream');
         } else {
           res.end();
         }
-      });
-
-      ffmpeg.on('error', (err) => {
-        console.error('[FFmpeg Error]', err.message);
-        if (!headersSent) {
-          res.status(500).send('Transcoding pipeline error');
-        } else {
-          res.end();
-        }
-      });
+      }
     } else {
       // Genuine LAME MP3 Transcoding Pipeline with ID3v2 metadata
       const bitrate = format === 'mp3-192' ? '192k' : '320k';

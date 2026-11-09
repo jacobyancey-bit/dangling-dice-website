@@ -105,18 +105,20 @@ function formatDuration(sec) {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-// Trigger background browser download directly into Downloads folder without navigating away
-function triggerBrowserDownload(downloadUrl) {
-  const downloadIframe = document.getElementById('mediaDownloadIframe');
-  if (downloadIframe) {
-    downloadIframe.src = downloadUrl;
-  } else {
+// Trigger direct browser download into Downloads folder using standard HTML5 anchor element
+function triggerBrowserDownload(downloadUrl, filename = '') {
+  try {
     const tempLink = document.createElement('a');
     tempLink.href = downloadUrl;
-    tempLink.setAttribute('download', '');
+    if (filename) tempLink.setAttribute('download', filename);
+    tempLink.style.display = 'none';
     document.body.appendChild(tempLink);
     tempLink.click();
-    document.body.removeChild(tempLink);
+    setTimeout(() => {
+      if (tempLink.parentNode) tempLink.parentNode.removeChild(tempLink);
+    }, 1500);
+  } catch (err) {
+    console.warn('[Auto-Download Notice]', err);
   }
 }
 
@@ -236,19 +238,19 @@ if (convertBtn) {
       }
 
       // Automatically trigger download directly into user's Downloads folder
-      triggerBrowserDownload(downloadEndpoint);
+      triggerBrowserDownload(downloadEndpoint, media.cleanTitle);
 
       if (downloadBtn) {
         downloadBtn.href = downloadEndpoint;
         downloadBtn.setAttribute('download', media.cleanTitle);
-        downloadBtn.onclick = (e) => {
-          e.preventDefault();
-          triggerBrowserDownload(downloadEndpoint);
+        downloadBtn.innerHTML = '📥 Download Now';
+        // Allow the browser to natively follow the link and manage the download stream
+        downloadBtn.onclick = () => {
           downloadBtn.innerHTML = '⏳ Downloading...';
-          showToast(`Re-downloading ${media.cleanTitle}!`, 'info');
+          showToast(`Downloading ${media.cleanTitle}! Check your browser downloads bar.`, 'success');
           setTimeout(() => {
             downloadBtn.innerHTML = '📥 Download Again';
-          }, 3000);
+          }, 3500);
         };
       }
 
