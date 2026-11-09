@@ -17,7 +17,11 @@
   "servers": [
     {
       "url": "https://dangling-dice-studios.com",
-      "description": "Production Central & Stateless Compute API Gateway"
+      "description": "Production Direct Gateway"
+    },
+    {
+      "url": "https://dangling-dice-studios.com/api",
+      "description": "Production Sub-Path Gateway (/api prefix)"
     },
     {
       "url": "http://localhost:4100",

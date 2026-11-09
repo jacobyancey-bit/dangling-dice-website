@@ -18,6 +18,11 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
 import v1ComputeRoutes from './routes/v1Compute.js';
+import itemRoutes from './routes/itemRoutes.js';
+import mediaRoutes from './routes/mediaRoutes.js';
+import affiliateRoutes from './routes/affiliateRoutes.js';
+import showcaseRoutes from './routes/showcaseRoutes.js';
+import { getOEmbed } from './controllers/oembedController.js';
 import { redirectPartner } from './controllers/affiliateController.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -140,13 +145,44 @@ app.use('/api', apiLimiter, apiRoutes);
 app.use('/v1', apiLimiter, v1ComputeRoutes);
 app.use('/api/v1', apiLimiter, v1ComputeRoutes);
 
+// Direct root aliases for OpenAPI, RapidAPI & developer convenience
+// Guarantees calls like GET /health, GET /items, POST /media/convert, GET /oembed succeed instantly with pure JSON
+app.get(['/health', '/status'], apiLimiter, (req, res, next) => {
+  req.url = '/health';
+  apiRoutes(req, res, next);
+});
+app.use('/items', apiLimiter, itemRoutes);
+app.use('/media', apiLimiter, mediaRoutes);
+app.use('/affiliates', apiLimiter, affiliateRoutes);
+app.use('/showcase', apiLimiter, showcaseRoutes);
+app.get('/oembed', apiLimiter, getOEmbed);
+app.get('/openapi.json', (req, res) => {
+  const specPath = path.join(__dirname, 'public', 'openapi.json');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(specPath);
+});
+
 // Frontend Static Files (Supports main domain and media subdomain)
 const webDistPath = path.join(__dirname, '..', 'web', 'dist');
 const mediaDistPath = path.join(__dirname, '..', 'media', 'dist');
 
 // Multi-tenant subdomain static server
 app.use((req, res, next) => {
-  if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/go')) {
+  const p = req.originalUrl || req.path;
+  if (
+    p.startsWith('/api') ||
+    p.startsWith('/v1') ||
+    p.startsWith('/go') ||
+    p.startsWith('/health') ||
+    p.startsWith('/status') ||
+    p.startsWith('/items') ||
+    p.startsWith('/media') ||
+    p.startsWith('/affiliates') ||
+    p.startsWith('/showcase') ||
+    p.startsWith('/oembed') ||
+    p.startsWith('/openapi.json')
+  ) {
     return next();
   }
 
