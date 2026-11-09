@@ -172,7 +172,8 @@
           <p>The sound lab behind Dangling Dice. Releasing original lofi, dark trap, synthwave, and chillhop instrumentals on YouTube. Ideal for late-night programming sessions and content creators.</p>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button class="btn btn-youtube btn-sm" onclick="toggleDockAudio()">▶ Stream Lo-Fi Radio</button>
+          <button class="btn btn-youtube btn-sm" onclick="toggleDockAudio()">▶ Stream Radio</button>
+          <button class="btn btn-secondary btn-sm" onclick="togglePlaylistDrawer()" style="border-color: rgba(236, 72, 153, 0.4); color: #f472b6;">📻 Switch Station ▾</button>
           <button class="btn btn-secondary btn-sm" onclick="filterCategory('Beats & Audio'); document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });">View Beat Catalog ↓</button>
         </div>
       </div>
@@ -1022,15 +1023,45 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
     </p>
   </footer>
 
-  <!-- Persistent Floating Audio Dock (Lofi Girl & Background Radio inspired) -->
+  <!-- Persistent Floating Audio Dock (Lofi Girl & Background Radio inspired with Station Selector) -->
   <div id="beatsDock" class="beats-dock">
+    <!-- Playlist & Station Drawer -->
+    <div id="dockPlaylistDrawer" class="dock-playlist-drawer" style="display: none;">
+      <div class="dock-playlist-header">
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          <span style="font-size: 1rem;">📻</span>
+          <span style="font-size: 0.82rem; font-weight: 800; color: #fff;">Radio Stations &amp; Playlists</span>
+        </div>
+        <button type="button" class="dock-close-btn" onclick="togglePlaylistDrawer()" title="Close stations">&times;</button>
+      </div>
+
+      <div class="dock-playlist-content">
+        <!-- Official Studio Stations -->
+        <div class="dock-playlist-section-label">🎧 Official Dangling Beats Stations</div>
+        <div id="officialStationsList" class="dock-stations-list">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Indie Music Producers -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; margin-bottom: 0.35rem;">
+          <span class="dock-playlist-section-label" style="margin: 0;">⭐ Featured Indie Music Producers</span>
+          <button type="button" onclick="openDevSubmissionModal('Audio &amp; Music'); togglePlaylistDrawer();" class="dock-submit-beat-btn">
+            + Submit Beats
+          </button>
+        </div>
+        <div id="indieStationsList" class="dock-stations-list">
+          <!-- Populated dynamically from /api/showcase -->
+        </div>
+      </div>
+    </div>
+
     <!-- Mini Video Drawer (Streams directly in corner while allowing full site usage) -->
     <div id="dockVideoDrawer" class="dock-video-drawer" style="display: none;">
       <iframe
         id="dockIframe"
         class="dock-iframe"
         src=""
-        title="Dangling Beats Lo-Fi Radio Player"
+        title="Dangling Beats Radio Player"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen>
       </iframe>
@@ -1044,13 +1075,20 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
         <span class="beats-bar"></span>
         <span class="beats-bar"></span>
       </div>
-      <div class="beats-dock-full">
-        <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Dangling Beats &bull; Lo-Fi Drive</div>
-        <div style="font-size: 0.72rem; color: var(--text-muted);">Lo-Fi Focus Radio</div>
+      <div class="beats-dock-full" style="cursor: pointer;" onclick="togglePlaylistDrawer()" title="Click to switch radio station">
+        <div id="dockTrackTitle" style="font-size: 0.82rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+          Dangling Beats &bull; Lo-Fi Drive
+        </div>
+        <div id="dockTrackSubtitle" style="font-size: 0.72rem; color: #f472b6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+          Lo-Fi Focus Radio
+        </div>
       </div>
       <div style="display: flex; align-items: center; gap: 0.35rem;">
+        <button id="dockPlaylistBtn" class="beats-dock-icon-btn" onclick="togglePlaylistDrawer()" title="Switch Playlist / Station" style="font-size: 0.72rem; padding: 0.3rem 0.5rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+          📻 <span>Stations</span> ▾
+        </button>
         <button id="dockPlayBtn" class="btn btn-purple btn-sm" onclick="toggleDockAudio()">▶ Play</button>
-        <button id="dockCinemaBtn" class="beats-dock-icon-btn" onclick="openCinemaModal('Dangling Beats • Lo-Fi Drive (Official YouTube Playlist)', 'https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1')" title="Open Full Cinema Mode">⛶</button>
+        <button id="dockCinemaBtn" class="beats-dock-icon-btn" onclick="openCurrentStationCinema()" title="Open Full Cinema Mode">⛶</button>
         <button class="beats-dock-min-btn" onclick="toggleDockMinimize()" title="Minimize / Expand">—</button>
       </div>
     </div>

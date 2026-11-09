@@ -557,8 +557,169 @@ window.copyWireGuardConfig = function () {
   }
 };
 
-// Floating Beats Audio Dock 
+// ============================================================================
+// Multi-Station Beats Audio Dock & Indie Music Radio Engine
+// ============================================================================
 let isDockAudioActive = false;
+let isPlaylistDrawerOpen = false;
+
+// 1. Official Dangling Beats Studio Stations
+const officialStations = [
+  {
+    id: "lofi-drive",
+    title: "Dangling Beats • Lo-Fi Drive",
+    subtitle: "Official Lo-Fi Focus Radio",
+    badge: "Official Lofi",
+    url: "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "dark-trap",
+    title: "Dangling Beats • Dark Trap & 808s",
+    subtitle: "Late-Night Coding & Heavy 808s",
+    badge: "Trap & 808s",
+    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "synthwave",
+    title: "Dangling Beats • Synthwave Cyber",
+    subtitle: "Retro Futuristic Instrumental Vault",
+    badge: "Synthwave",
+    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+  },
+  {
+    id: "chillhop",
+    title: "Dangling Beats • Chillhop Cafe",
+    subtitle: "Smooth Rhodes & Jazzy Beats",
+    badge: "Chillhop",
+    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+  },
+];
+
+// 2. Featured Indie Music Producer Stations (Dynamically expanded via /api/showcase)
+let indieStations = [
+  {
+    id: "beatforge-stems",
+    title: "BeatForge WebAudio Stem Player",
+    subtitle: "Producer: @indieaudio",
+    badge: "Indie Creator",
+    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+  },
+];
+
+let activeStationId = localStorage.getItem("activeBeatsStation") || "lofi-drive";
+
+function getActiveStation() {
+  return (
+    officialStations.find((s) => s.id === activeStationId) ||
+    indieStations.find((s) => s.id === activeStationId) ||
+    officialStations[0]
+  );
+}
+
+function renderStationsList() {
+  const officialContainer = document.getElementById("officialStationsList");
+  const indieContainer = document.getElementById("indieStationsList");
+
+  if (officialContainer) {
+    officialContainer.innerHTML = officialStations
+      .map(
+        (s) => `
+        <div class="dock-station-item ${s.id === activeStationId ? "active" : ""}" onclick="selectStation('${s.id}')">
+          <div class="dock-station-info">
+            <span class="dock-station-title">${s.title}</span>
+            <span class="dock-station-sub">${s.subtitle}</span>
+          </div>
+          <span style="font-size: 0.75rem; color: ${s.id === activeStationId ? "#f472b6" : "var(--text-muted)"};">
+            ${s.id === activeStationId ? "▶ Playing" : "▶"}
+          </span>
+        </div>
+      `
+      )
+      .join("");
+  }
+
+  if (indieContainer) {
+    if (indieStations.length === 0) {
+      indieContainer.innerHTML = `
+        <div style="font-size: 0.72rem; color: var(--text-muted); padding: 0.5rem; text-align: center;">
+          No community beats yet. Click <strong>+ Submit Beats</strong> above!
+        </div>
+      `;
+    } else {
+      indieContainer.innerHTML = indieStations
+        .map(
+          (s) => `
+          <div class="dock-station-item ${s.id === activeStationId ? "active" : ""}" onclick="selectStation('${s.id}')">
+            <div class="dock-station-info">
+              <span class="dock-station-title">${s.title}</span>
+              <span class="dock-station-sub" style="color: #67e8f9;">${s.subtitle}</span>
+            </div>
+            <span style="font-size: 0.75rem; color: ${s.id === activeStationId ? "#f472b6" : "var(--text-muted)"};">
+              ${s.id === activeStationId ? "▶ Playing" : "▶"}
+            </span>
+          </div>
+        `
+        )
+        .join("");
+    }
+  }
+}
+
+window.togglePlaylistDrawer = function () {
+  const drawer = document.getElementById("dockPlaylistDrawer");
+  if (!drawer) return;
+  isPlaylistDrawerOpen = !isPlaylistDrawerOpen;
+  drawer.style.display = isPlaylistDrawerOpen ? "flex" : "none";
+  if (isPlaylistDrawerOpen) {
+    renderStationsList();
+  }
+};
+
+window.selectStation = function (stationId) {
+  activeStationId = stationId;
+  try {
+    localStorage.setItem("activeBeatsStation", stationId);
+  } catch (e) {}
+
+  const station = getActiveStation();
+  const titleEl = document.getElementById("dockTrackTitle");
+  const subEl = document.getElementById("dockTrackSubtitle");
+  if (titleEl) titleEl.textContent = station.title;
+  if (subEl) subEl.textContent = station.subtitle;
+
+  const iframe = document.getElementById("dockIframe");
+  const drawer = document.getElementById("dockVideoDrawer");
+  const dock = document.getElementById("beatsDock");
+  const btn = document.getElementById("dockPlayBtn");
+
+  if (iframe) {
+    iframe.src = station.url;
+  }
+  if (!isDockAudioActive) {
+    isDockAudioActive = true;
+    if (dock) {
+      dock.classList.add("playing");
+      dock.classList.remove("minimized");
+    }
+    if (btn) btn.textContent = "⏸ Pause";
+    if (drawer) drawer.style.display = "block";
+  }
+
+  // Close drawer after selection
+  isPlaylistDrawerOpen = false;
+  const pDrawer = document.getElementById("dockPlaylistDrawer");
+  if (pDrawer) pDrawer.style.display = "none";
+
+  renderStationsList();
+  window.showToast(`▶ Station: ${station.title}`, "success");
+};
+
+window.openCurrentStationCinema = function () {
+  const station = getActiveStation();
+  if (window.openCinemaModal) {
+    window.openCinemaModal(station.title, station.url);
+  }
+};
 
 window.toggleDockAudio = function () {
   const dock = document.getElementById("beatsDock");
@@ -566,6 +727,8 @@ window.toggleDockAudio = function () {
   const drawer = document.getElementById("dockVideoDrawer");
   const iframe = document.getElementById("dockIframe");
   isDockAudioActive = !isDockAudioActive;
+
+  const currentStation = getActiveStation();
 
   if (isDockAudioActive) {
     if (dock) {
@@ -578,12 +741,11 @@ window.toggleDockAudio = function () {
     if (btn) btn.textContent = "⏸ Pause";
     if (drawer) drawer.style.display = "block";
     if (iframe) {
-      const targetSrc = "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1";
-      if (!iframe.src || !iframe.src.includes("2J-U0EUATHs")) {
-        iframe.src = targetSrc;
+      if (!iframe.src || !iframe.src.includes("autoplay=1")) {
+        iframe.src = currentStation.url;
       }
     }
-    window.showToast("▶ Streaming Lo-Fi Drive in background player", "success");
+    window.showToast(`▶ Streaming ${currentStation.title}`, "success");
   } else {
     if (dock) dock.classList.remove("playing");
     if (btn) btn.textContent = "▶ Play";
@@ -598,11 +760,17 @@ window.toggleDockMinimize = function () {
   if (!dock) return;
   const isMin = dock.classList.toggle("minimized");
   if (minBtn) minBtn.textContent = isMin ? "+" : "—";
+
+  // Hide playlist drawer if minimized
+  if (isMin) {
+    const drawer = document.getElementById("dockPlaylistDrawer");
+    if (drawer) drawer.style.display = "none";
+    isPlaylistDrawerOpen = false;
+  }
+
   try {
     localStorage.setItem("beatsDockMinimized", isMin ? "true" : "false");
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) {}
 };
 
 function initDockState() {
@@ -613,11 +781,16 @@ function initDockState() {
       if (dock) dock.classList.add("minimized");
       if (minBtn) minBtn.textContent = "+";
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) {}
 
-  // Explicit event listener to guarantee click triggers even across touch & deferred timing
+  const currentStation = getActiveStation();
+  const titleEl = document.getElementById("dockTrackTitle");
+  const subEl = document.getElementById("dockTrackSubtitle");
+  if (titleEl) titleEl.textContent = currentStation.title;
+  if (subEl) subEl.textContent = currentStation.subtitle;
+
+  renderStationsList();
+
   const dockPlayBtn = document.getElementById("dockPlayBtn");
   if (dockPlayBtn) {
     dockPlayBtn.onclick = function (e) {
@@ -903,6 +1076,23 @@ async function fetchDevShowcase() {
     populateCategorySpotlight("creator", spotlights.creator, "Social & Video");
     populateCategorySpotlight("music", spotlights.music, "Audio & Music");
     populateCategorySpotlight("developer", spotlights.developer, "Developer Tools");
+
+    // 1b. Update Dynamic Indie Music Producer Stations in Floating Beats Dock
+    if (Array.isArray(data.projects)) {
+      const musicProjects = data.projects.filter(
+        (p) => p.categoryGroup === "music" || p.category === "Audio & Music"
+      );
+      if (musicProjects.length > 0) {
+        indieStations = musicProjects.map((p) => ({
+          id: p._id,
+          title: p.title,
+          subtitle: `Producer: ${p.authorSocial || p.authorName}`,
+          badge: "Indie Producer",
+          url: getYouTubeEmbedUrl(p.appUrl) || p.appUrl,
+        }));
+        renderStationsList();
+      }
+    }
 
     // 2. Render App of the Week in Central Community Section
     const aotw = data.appOfTheWeek || spotlights.developer || spotlights.music || spotlights.creator;
