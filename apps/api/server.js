@@ -40,6 +40,20 @@ connectDB();
 
 const app = express();
 
+// Disable HTTP 304 ETag caching so all API endpoints return fresh 200 OK payloads
+app.set('etag', false);
+
+// Prevent dynamic API responses from being cached as 304 Not Modified
+app.use(
+  ['/api', '/v1', '/items', '/affiliates', '/health', '/showcase', '/media', '/orders', '/oembed'],
+  (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+  }
+);
+
 /**
  * ----------------------------------------------------
  * Enterprise Security & Hardening Middleware
