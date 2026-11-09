@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Dangling Dice Dev Suite™ | Serverless Compute &amp; Developer APIs</title>
+  <meta name="description" content="High-performance cloud utility microservices, interactive compute sandboxes, GIS land parcel calculators, schema transformers, and developer API gateway." />
+  <link rel="canonical" href="https://dev.dangling-dice-studios.com/" />
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="./src/style.css" />
+
+  <!-- Open Graph / Social SEO -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://dev.dangling-dice-studios.com/" />
+  <meta property="og:title" content="Dangling Dice Dev Suite™ | Developer Sandboxes &amp; REST Compute" />
+  <meta property="og:description" content="Sub-15ms REST API microservices, interactive code sandboxes, and developer tools powered by Dangling Dice Studios™." />
+  <meta property="og:image" content="https://dangling-dice-studios.com/images/banner.jpg" />
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="nav-container">
+      <a href="/" class="brand">
+        <img src="/images/logo.png" alt="Dangling Dice Dev Logo" />
+        <div class="brand-text">
+          <h1>Dangling Dice Dev Suite™</h1>
+          <p>Compute Gateway • Sandboxes • OpenAPI</p>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="https://dangling-dice-studios.com/" class="nav-link portal-link">
+          ← Central Studio Hub
+        </a>
+        <a href="https://beats.dangling-dice-studios.com/" class="nav-link" style="border-color: rgba(236, 72, 153, 0.4); color: #f472b6;">
+          📻 Lo-Fi Beats
+        </a>
+        <a href="https://media.dangling-dice-studios.com/" class="nav-link" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">
+          🎵 MP3 Transcoder
+        </a>
+        <a href="#sandboxes" class="nav-link">
+          &lt;/&gt; Sandboxes
+        </a>
+        <a href="#showcase" class="nav-link">
+          ★ Showcase
+        </a>
+        <a href="/openapi.json" target="_blank" rel="noopener noreferrer" class="nav-link" style="color: var(--neon-cyan); border-color: rgba(6, 182, 212, 0.4);">
+          ≡ OpenAPI Spec
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Master Hero Section -->
+    <section class="hero-deck">
+      <span class="hero-pill">• HIGH-PERFORMANCE REST COMPUTE • OPENAPI 3.0 • ZERO COLD-STARTS</span>
+      <h2 class="hero-title">Serverless Developer Sandboxes &amp; Cloud Gateway</h2>
+      <p class="hero-subtitle">
+        Sub-15ms microsecond-grade utility microservices. Test schema inferencing, GIS acreage polygons, PII log redactors, and financial amortization directly in your browser.
+      </p>
+
+      <div class="metrics-strip">
+        <div class="metric-item">
+          <span class="metric-val cyan">&lt; 15 ms</span>
+          <span class="metric-label">Average Gateway Latency</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-val emerald">21 Routes</span>
+          <span class="metric-label">Production REST Endpoints</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-val amber">4 Sandboxes</span>
+          <span class="metric-label">Interactive Live Runners</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-val">100% Free</span>
+          <span class="metric-label">OSS • No CC Required</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Live Compute Sandbox -->
+    <section id="sandboxes" class="sandbox-card">
+      <div class="sandbox-tabs">
+        <button type="button" class="tab-btn active" data-tab="schema">
+          <span>🧩</span> JSON &amp; Schema Infer
+        </button>
+        <button type="button" class="tab-btn" data-tab="geo">
+          <span>🗺️</span> GIS &amp; Parcel Acreage
+        </button>
+        <button type="button" class="tab-btn" data-tab="privacy">
+          <span>🛡️</span> PII &amp; Log Redactor
+        </button>
+        <button type="button" class="tab-btn" data-tab="finance">
+          <span>💰</span> Loan &amp; Amortization
+        </button>
+      </div>
+
+      <div class="sandbox-split">
+        <!-- Left: Input Editor -->
+        <div class="editor-box">
+          <div class="editor-header">
+            <span id="endpointDisplay">POST /v1/schema/infer</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" id="resetInputBtn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;">
+                Reset
+              </button>
+              <button type="button" id="copyCurlBtn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;">
+                Copy cURL
+              </button>
+            </div>
+          </div>
+          <textarea id="sandboxInput" class="editor-textarea" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Right: Output Console -->
+        <div class="editor-box">
+          <div class="editor-header">
+            <span>RESPONSE OUTPUT</span>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <span id="latencyBadge" style="font-size: 0.72rem; color: var(--neon-cyan); display: none;">-- ms</span>
+              <button type="button" id="copyOutputBtn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;">
+                Copy JSON
+              </button>
+            </div>
+          </div>
+          <pre id="sandboxOutput" class="editor-output">// Click "Run Compute Endpoint" to execute live request...</pre>
+        </div>
+      </div>
+
+      <div class="sandbox-action-bar">
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+          Targeting production cluster: <code style="color: var(--neon-cyan);">https://dangling-dice-studios.com</code>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" id="runEndpointBtn" class="btn btn-primary">
+            ▶ Run Compute Endpoint
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Developer Integrations & RapidAPI -->
+    <section class="sandbox-card" style="margin-bottom: 2.5rem;">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">
+            <span>🔌</span> Fast Integration • cURL, Node.js &amp; Python
+          </h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Integrate directly into Discord bots, CLI tools, automated GitHub Actions, or backend microservices.
+          </p>
+        </div>
+        <a href="/openapi.json" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="font-size: 0.78rem;">
+          Download openapi.json ↗
+        </a>
+      </div>
+
+      <div style="background: #04060a; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem;">
+        <pre style="color: #67e8f9; font-family: ui-monospace, monospace; font-size: 0.82rem; line-height: 1.6; overflow-x: auto;"><code><span style="color: #94a3b8;"># Infer TypeScript interface and JSON Schema in 1 command</span>
+curl -X POST https://dangling-dice-studios.com/v1/schema/infer \
+  -H "Content-Type: application/json" \
+  -d '{"rootName": "UserAccount", "jsonInput": {"id": "1", "name": "Studio Creator", "credits": 2500}}'</code></pre>
+      </div>
+    </section>
+
+    <!-- Verified Cloud Tooling & Partner Perks -->
+    <section id="tooling" style="margin-bottom: 2.5rem;">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">
+            <span>💻</span> Verified Cloud Infrastructure &amp; Tech Stack
+          </h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+            The battle-tested technologies and verified cloud providers powering Dangling Dice Studios™.
+          </p>
+        </div>
+      </div>
+      <div id="affiliatesGrid" class="showcase-grid">
+        <!-- Rendered dynamically from /api/affiliates -->
+      </div>
+    </section>
+
+    <!-- Community Developer Showcase -->
+    <section id="showcase">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">
+            <span>🚀</span> Developer App Showcase • Community Ecosystem
+          </h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Open source projects, SaaS tools, and applications built by creators in the Dangling Dice community.
+          </p>
+        </div>
+        <button type="button" id="openSubmitModalBtn" class="btn btn-amber">
+          + Submit Your Project
+        </button>
+      </div>
+
+      <div id="showcaseGrid" class="showcase-grid">
+        <!-- Rendered dynamically from /api/showcase -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Submit Project Modal -->
+  <div id="submitModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: #fff;">Submit Your App to Showcase</h3>
+        <button type="button" id="closeSubmitModalBtn" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <form id="submitAppForm">
+        <div class="form-group">
+          <label class="form-label" for="appTitle">Project Name *</label>
+          <input type="text" id="appTitle" class="form-input" placeholder="e.g. Acme Webhook Engine" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="appAuthor">Creator / Handle *</label>
+          <input type="text" id="appAuthor" class="form-input" placeholder="e.g. @developer_name" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="appDesc">Short Description *</label>
+          <textarea id="appDesc" class="form-input" style="height: 75px; resize: none;" placeholder="Explain what your app solves..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="appCategory">Category</label>
+          <select id="appCategory" class="form-input">
+            <option value="Developer Tool">Developer Tool</option>
+            <option value="SaaS">SaaS Platform</option>
+            <option value="AI / ML">AI &amp; Machine Learning</option>
+            <option value="Gaming">Gaming &amp; Bots</option>
+            <option value="Open Source">Open Source Library</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="appUrl">Live URL / Demo Link *</label>
+          <input type="url" id="appUrl" class="form-input" placeholder="https://myapp.com" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="appRepo">GitHub / Source Repo (Optional)</label>
+          <input type="url" id="appRepo" class="form-input" placeholder="https://github.com/org/repo" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="appTags">Tech Stack Tags (Comma separated)</label>
+          <input type="text" id="appTags" class="form-input" placeholder="TypeScript, React, Node.js" />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" id="cancelSubmitBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit for Verification</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" style="display: none;"></div>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; align-items: center;">
+      <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;">
+        <a href="https://dangling-dice-studios.com/">Central Studio Hub</a>
+        <a href="https://beats.dangling-dice-studios.com/">Dangling Beats Studio</a>
+        <a href="https://media.dangling-dice-studios.com/">Free MP3 Transcoder</a>
+        <a href="/openapi.json" target="_blank" rel="noopener noreferrer">OpenAPI Spec</a>
+        <a href="https://github.com/jacobyancey-bit" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+      <div>
+        &copy; 2026 Dangling Dice Studios™. All rights reserved. High-throughput distributed cloud services.
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

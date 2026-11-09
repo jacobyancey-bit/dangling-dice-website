@@ -181,10 +181,11 @@ app.get('/openapi.json', (req, res) => {
   res.sendFile(specPath);
 });
 
-// Frontend Static Files (Supports main domain, media, and beats subdomains)
+// Frontend Static Files (Supports main domain, media, beats, and dev subdomains)
 const webDistPath = path.join(__dirname, '..', 'web', 'dist');
 const mediaDistPath = path.join(__dirname, '..', 'media', 'dist');
 const beatsDistPath = path.join(__dirname, '..', 'beats', 'dist');
+const devDistPath = path.join(__dirname, '..', 'dev', 'dist');
 
 // Multi-tenant subdomain static server
 app.use((req, res, next) => {
@@ -213,6 +214,13 @@ app.use((req, res, next) => {
   const hostname = (req.hostname || '').toLowerCase();
   const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media' || req.path === '/media' || req.path.startsWith('/media/');
   const isBeatsSubdomain = hostname.startsWith('beats.') || hostname.startsWith('music.') || hostname.startsWith('radio.') || req.query.subdomain === 'beats' || req.path === '/beats' || req.path.startsWith('/beats/');
+  const isDevSubdomain = hostname.startsWith('dev.') || hostname.startsWith('api-docs.') || req.query.subdomain === 'dev' || req.path === '/dev' || req.path.startsWith('/dev/');
+
+  if (isDevSubdomain && fs.existsSync(devDistPath)) {
+    return express.static(devDistPath)(req, res, () => {
+      res.sendFile(path.join(devDistPath, 'index.html'));
+    });
+  }
 
   if (isBeatsSubdomain && fs.existsSync(beatsDistPath)) {
     return express.static(beatsDistPath)(req, res, () => {

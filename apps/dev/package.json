@@ -1,0 +1,15 @@
+{
+  "name": "@dangling-dice/dev",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3003",
+    "build": "vite build",
+    "preview": "vite preview --port 3003"
+  },
+  "dependencies": {
+    "@dangling-dice/shared": "*",
+    "vite": "^6.4.4"
+  }
+}
