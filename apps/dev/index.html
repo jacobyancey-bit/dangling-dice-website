@@ -82,88 +82,341 @@
       </div>
     </section>
 
-    <!-- Interactive Live Compute Sandbox -->
-    <section id="sandboxes" class="sandbox-card">
-      <div class="sandbox-tabs">
-        <button type="button" class="tab-btn active" data-tab="schema">
-          <span>🧩</span> JSON &amp; Schema Infer
-        </button>
-        <button type="button" class="tab-btn" data-tab="geo">
-          <span>🗺️</span> GIS &amp; Parcel Acreage
-        </button>
-        <button type="button" class="tab-btn" data-tab="privacy">
-          <span>🛡️</span> PII &amp; Log Redactor
-        </button>
-        <button type="button" class="tab-btn" data-tab="finance">
-          <span>💰</span> Loan &amp; Amortization
-        </button>
+    <!-- Master Educational Hub Navigation Strip -->
+    <div class="hub-nav-strip">
+      <button type="button" class="hub-tab-btn active" id="hubApiStudioBtn" onclick="window.switchDevSection('apiStudio')">
+        <span>⚡</span> 1. API Studio (Glass-Box Playground)
+      </button>
+      <button type="button" class="hub-tab-btn" id="hubDataTypesBtn" onclick="window.switchDevSection('dataTypes')">
+        <span>🧩</span> 2. Data &amp; Types Studio
+      </button>
+      <button type="button" class="hub-tab-btn" id="hubSystemSimBtn" onclick="window.switchDevSection('systemSim')">
+        <span>🪣</span> 3. System Sandbox (Networking &amp; Limits)
+      </button>
+      <button type="button" class="hub-tab-btn" id="hubShowcaseBtn" onclick="window.switchDevSection('showcase')">
+        <span>★</span> 4. Community Showcase
+      </button>
+    </div>
+
+    <!-- ======================================================================
+         SECTION 1: API STUDIO (Glass-Box Runner, Code Gen & Webhook Inspector)
+         ====================================================================== -->
+    <section id="sectionApiStudio" class="sandbox-card">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">
+            <span>⚡</span> Glass-Box API Request Runner &amp; Multi-Language Code Generator
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Directly calls the machine API gateway at <code style="color: var(--neon-cyan);">https://api.dangling-dice-studios.com</code> across origins with live CORS headers.
+          </p>
+        </div>
+      </div>
+
+      <!-- Endpoint Selector Toolbar -->
+      <div class="theory-controls-bar" style="margin-bottom: 1.25rem;">
+        <div class="theory-ctrl-group">
+          <label class="theory-ctrl-label" for="endpointSelect">Select Endpoint:</label>
+          <select id="endpointSelect" class="theory-select" onchange="window.handleEndpointSelect(this.value)">
+            <!-- Populated via apiStudio.js -->
+          </select>
+        </div>
+        <div class="theory-ctrl-group" style="margin-left: auto;">
+          <button type="button" id="resetPayloadBtn" class="btn btn-secondary btn-sm" onclick="window.resetCurrentPayload()">
+            Reset Payload
+          </button>
+        </div>
       </div>
 
       <div class="sandbox-split">
-        <!-- Left: Input Editor -->
+        <!-- Left: Request Payload Editor -->
         <div class="editor-box">
           <div class="editor-header">
-            <span id="endpointDisplay">POST /v1/schema/infer</span>
-            <div style="display: flex; gap: 0.5rem;">
-              <button type="button" id="resetInputBtn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;">
-                Reset
-              </button>
-              <button type="button" id="copyCurlBtn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;">
-                Copy cURL
-              </button>
-            </div>
+            <span id="runnerEndpointDisplay">POST /v1/schema/infer</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">JSON Payload</span>
           </div>
-          <textarea id="sandboxInput" class="editor-textarea" spellcheck="false"></textarea>
+          <textarea id="runnerPayloadInput" class="editor-textarea" spellcheck="false"></textarea>
+          <div style="padding: 0.75rem 1rem; background: #0a0e18; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end;">
+            <button type="button" id="executeApiBtn" class="btn btn-primary" onclick="window.executeLiveApiCall()">
+              ▶ Send Request to API Gateway
+            </button>
+          </div>
         </div>
 
-        <!-- Right: Output Console -->
+        <!-- Right: Glass-Box Network & Response Inspector -->
         <div class="editor-box">
           <div class="editor-header">
-            <span>RESPONSE OUTPUT</span>
+            <span>NETWORK &amp; RESPONSE INSPECTOR</span>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <span id="latencyBadge" style="font-size: 0.72rem; color: var(--neon-cyan); display: none;">-- ms</span>
-              <button type="button" id="copyOutputBtn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;">
-                Copy JSON
-              </button>
+              <span id="runnerStatusBadge" class="glass-badge badge-status-ok" style="display: none;">200 OK</span>
+              <span id="runnerLatencyBadge" style="font-size: 0.72rem; color: var(--neon-cyan); display: none;">-- ms</span>
             </div>
           </div>
-          <pre id="sandboxOutput" class="editor-output">// Click "Run Compute Endpoint" to execute live request...</pre>
+          <pre id="runnerOutputConsole" class="editor-output">// Select an endpoint and click "Send Request to API Gateway" to view the live network transaction...</pre>
         </div>
       </div>
 
-      <div class="sandbox-action-bar">
-        <div style="font-size: 0.8rem; color: var(--text-muted);">
-          Targeting production cluster: <code style="color: var(--neon-cyan);">https://dangling-dice-studios.com</code>
-        </div>
-        <div style="display: flex; gap: 0.75rem;">
-          <button type="button" id="runEndpointBtn" class="btn btn-primary">
-            ▶ Run Compute Endpoint
+      <!-- Synchronized Multi-Language Code Snippets -->
+      <div class="glass-box-deck">
+        <div class="code-tabs-header">
+          <button type="button" class="code-tab-btn active" onclick="window.switchCodeTab('curl')">cURL</button>
+          <button type="button" class="code-tab-btn" onclick="window.switchCodeTab('node')">Node.js / TypeScript</button>
+          <button type="button" class="code-tab-btn" onclick="window.switchCodeTab('python')">Python (requests)</button>
+          <button type="button" class="code-tab-btn" onclick="window.switchCodeTab('dart')">Dart / Flutter</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.copyCurrentSnippet()" style="margin-left: auto; padding: 0.2rem 0.6rem; font-size: 0.72rem;">
+            Copy Snippet
           </button>
+        </div>
+        <pre id="codeSnippetPre" style="color: #67e8f9; font-family: ui-monospace, monospace; font-size: 0.8rem; line-height: 1.5; overflow-x: auto; max-height: 220px;"><code># Select endpoint to generate live code</code></pre>
+      </div>
+
+      <!-- Webhook Tester & HMAC Signature Inspector -->
+      <div class="glass-box-deck" style="margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+          <div>
+            <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🪝</span> Webhook Tester &amp; Cryptographic HMAC-SHA256 Inspector
+            </h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Teaches defensive webhook security. Compute <code style="color: #f472b6;">X-Signature-SHA256</code> signatures using timing-safe comparisons to prevent replay and spoofing attacks.
+            </p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.generateWebhookSignature()">
+            Recompute Signature
+          </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label class="theory-ctrl-label" for="webhookEventSelect">Webhook Event:</label>
+            <select id="webhookEventSelect" class="theory-select" style="width: 100%; margin-top: 0.35rem;" onchange="window.handleWebhookPreset(this.value)">
+              <option value="order_created">order.completed (E-Commerce Checkout)</option>
+              <option value="media_converted">media.converted (Transcoder Job Finished)</option>
+            </select>
+          </div>
+          <div>
+            <label class="theory-ctrl-label" for="webhookSecretInput">Signing Secret (Shared Key):</label>
+            <input type="text" id="webhookSecretInput" class="form-input" style="padding: 0.45rem 0.75rem; font-size: 0.85rem; font-family: monospace;" value="whsec_dangling_dice_live_secret_2026" oninput="window.generateWebhookSignature()" />
+          </div>
+        </div>
+
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Computed Signature Header (X-Signature-SHA256):</div>
+          <div id="webhookSigDisplay" style="font-family: ui-monospace, monospace; color: #34d399; font-size: 0.85rem; word-break: break-all; margin-top: 0.3rem;">
+            sha256=computing...
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.78rem; color: var(--text-muted);">
+            💡 <strong>Defensive Tip:</strong> Always verify signatures using constant-time string comparisons (<code style="color: var(--neon-cyan);">crypto.timingSafeEqual</code> in Node or <code style="color: var(--neon-cyan);">hmac.compare_digest</code> in Python) to prevent byte-by-byte timing attacks.
+          </span>
         </div>
       </div>
     </section>
 
-    <!-- Developer Integrations & RapidAPI -->
-    <section class="sandbox-card" style="margin-bottom: 2.5rem;">
+    <!-- ======================================================================
+         SECTION 2: DATA & TYPES STUDIO (JSON-to-Types, Regex, JWT Debugger)
+         ====================================================================== -->
+    <section id="sectionDataTypes" class="sandbox-card" style="display: none;">
       <div class="section-header">
         <div>
           <h3 class="section-title">
-            <span>🔌</span> Fast Integration • cURL, Node.js &amp; Python
+            <span>🧩</span> Data Transformation &amp; Strongly-Typed Schema Converters
           </h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
-            Integrate directly into Discord bots, CLI tools, automated GitHub Actions, or backend microservices.
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Convert raw API JSON into bulletproof TypeScript interfaces, Dart models, or Python Pydantic schemas in zero latency.
           </p>
         </div>
-        <a href="/openapi.json" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="font-size: 0.78rem;">
-          Download openapi.json ↗
-        </a>
       </div>
 
-      <div style="background: #04060a; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem;">
-        <pre style="color: #67e8f9; font-family: ui-monospace, monospace; font-size: 0.82rem; line-height: 1.6; overflow-x: auto;"><code><span style="color: #94a3b8;"># Infer TypeScript interface and JSON Schema in 1 command</span>
-curl -X POST https://api.dangling-dice-studios.com/v1/schema/infer \
-  -H "Content-Type: application/json" \
-  -d '{"rootName": "UserAccount", "jsonInput": {"id": "1", "name": "Studio Creator", "credits": 2500}}'</code></pre>
+      <!-- JSON to Type Converter -->
+      <div class="sandbox-split">
+        <div class="editor-box">
+          <div class="editor-header">
+            <span>RAW JSON INPUT</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.loadSampleConverterJson()">
+                Sample JSON
+              </button>
+            </div>
+          </div>
+          <textarea id="converterJsonInput" class="editor-textarea" spellcheck="false" placeholder="Paste any JSON object here..."></textarea>
+        </div>
+
+        <div class="editor-box">
+          <div class="editor-header">
+            <div style="display: flex; gap: 0.4rem;">
+              <button type="button" class="code-tab-btn active" id="btnTsType" onclick="window.switchTargetType('ts')">TypeScript</button>
+              <button type="button" class="code-tab-btn" id="btnDartType" onclick="window.switchTargetType('dart')">Dart / Flutter</button>
+              <button type="button" class="code-tab-btn" id="btnPydanticType" onclick="window.switchTargetType('pydantic')">Python Pydantic</button>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.copyGeneratedModel()">
+              Copy Code
+            </button>
+          </div>
+          <pre id="converterOutputPre" class="editor-output">// Strongly-typed model will appear here in real time...</pre>
+        </div>
+      </div>
+
+      <!-- Regex Visualizer & ReDoS Defense Bench -->
+      <div class="glass-box-deck" style="margin-top: 2rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🔍</span> Interactive Regex Test Bench &amp; ReDoS Vulnerability Scanner
+        </h4>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Test pattern matches, capture groups, and check for catastrophic backtracking antipatterns that cause denial of service.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+          <div>
+            <label class="theory-ctrl-label" for="regexPatternInput">Regular Expression Pattern:</label>
+            <input type="text" id="regexPatternInput" class="form-input" style="font-family: monospace;" value="([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})" oninput="window.runRegexEvaluation()" />
+          </div>
+          <div>
+            <label class="theory-ctrl-label" for="regexFlagsInput">Flags:</label>
+            <input type="text" id="regexFlagsInput" class="form-input" style="font-family: monospace;" value="g" oninput="window.runRegexEvaluation()" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 0.75rem;">
+          <label class="theory-ctrl-label" for="regexTestString">Test String:</label>
+          <textarea id="regexTestString" class="form-input" style="height: 65px; font-family: monospace; resize: none;" oninput="window.runRegexEvaluation()">Customer contact: admin@dangling-dice-studios.com and support@danglingdice.com.</textarea>
+        </div>
+
+        <div id="regexRedosAlert" style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.8rem; color: #34d399; margin-bottom: 0.75rem;">
+          🟢 ReDoS Check: Safe linear matching complexity O(n).
+        </div>
+
+        <div id="regexMatchesOutput" style="background: #04060a; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem; font-family: monospace; font-size: 0.82rem; color: #67e8f9; max-height: 140px; overflow-y: auto;">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- JWT & Bearer Token Inspector -->
+      <div class="glass-box-deck" style="margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🔐</span> JWT Token Decoder &amp; Expiry Inspector
+          </h4>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.loadSampleJwtToken()">
+            Load Sample Auth Token
+          </button>
+        </div>
+
+        <textarea id="jwtInputArea" class="form-input" style="font-family: monospace; font-size: 0.78rem; height: 75px; resize: none;" placeholder="Paste an Authorization: Bearer JWT token (header.payload.signature)..." oninput="window.runJwtDecode()"></textarea>
+
+        <div id="jwtColorDisplay" class="jwt-color-preview">
+          <!-- Decoded header, payload, and signature rendered here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 3: SYSTEM SANDBOX (Rate Limiting, CRON, HTTP Matrix)
+         ====================================================================== -->
+    <section id="sectionSystemSim" class="sandbox-card" style="display: none;">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">
+            <span>🪣</span> Distributed Systems Simulators &amp; Networking Tools
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Visual tools to master API rate limiting algorithms, background CRON scheduling, and HTTP status codes.
+          </p>
+        </div>
+      </div>
+
+      <!-- Token Bucket Rate Limiter Simulator -->
+      <div class="bucket-sim-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff;">
+            Token Bucket Rate Limiter Visualizer
+          </h4>
+          <span style="font-size: 0.78rem; color: var(--neon-cyan);">Simulates backend rateLimiter.js</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+          <div>
+            <label class="theory-ctrl-label">Capacity (Max Burst): <span id="bucketCapDisplay" style="color: #fff;">10 tokens</span></label>
+            <input type="range" id="bucketCapRange" min="5" max="25" value="10" style="width: 100%; margin-top: 0.5rem;" oninput="window.handleBucketConfig()" />
+          </div>
+          <div>
+            <label class="theory-ctrl-label">Refill Rate: <span id="bucketRateDisplay" style="color: #fff;">2 tokens / sec</span></label>
+            <input type="range" id="bucketRateRange" min="1" max="10" value="2" style="width: 100%; margin-top: 0.5rem;" oninput="window.handleBucketConfig()" />
+          </div>
+        </div>
+
+        <!-- Animated Water Fill Visualizer -->
+        <div class="bucket-visual-wrapper">
+          <div id="bucketWaterFill" class="bucket-water-fill" style="height: 100%;"></div>
+          <div id="bucketWaterLabel" class="bucket-water-label">10 / 10 Tokens</div>
+        </div>
+
+        <!-- Simulator Triggers -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.triggerBucketRequest(1)">
+            Send 1 Request
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="window.triggerBucketRequest(5)">
+            Burst 5 Requests
+          </button>
+          <button type="button" class="btn btn-amber btn-sm" onclick="window.triggerBucketRequest(15)">
+            ⚡ Spike 15 Requests (Simulate 429 Throttle)
+          </button>
+        </div>
+
+        <!-- Rate Limit Activity Log -->
+        <div id="bucketLogConsole" style="background: #000; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem; font-family: monospace; font-size: 0.78rem; color: #94a3b8; max-height: 130px; overflow-y: auto;">
+          // Activity log initialized. Ready for traffic bursts...
+        </div>
+      </div>
+
+      <!-- CRON Expression Builder & Translator -->
+      <div class="glass-box-deck" style="margin-top: 2rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem;">
+          ⏱️ CRON Expression Builder &amp; Natural English Translator
+        </h4>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Build cron schedules for background workers (BullMQ, Celery, Lambda) and calculate upcoming execution timestamps.
+        </p>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+          <input type="text" id="cronExpressionInput" class="form-input" style="width: 180px; font-family: monospace; font-weight: 700; font-size: 1rem; text-align: center;" value="*/15 * * * *" oninput="window.runCronTranslation()" />
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.setCronPreset('* * * * *')">Every Min</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.setCronPreset('*/15 * * * *')">Every 15m</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.setCronPreset('0 0 * * *')">Midnight</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.setCronPreset('0 9 * * 1-5')">Weekdays 9am</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.setCronPreset('0 0 1 * *')">Monthly 1st</button>
+          </div>
+        </div>
+
+        <div style="background: rgba(6, 182, 212, 0.08); border-left: 4px solid var(--neon-cyan); padding: 0.85rem 1.1rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 1rem;">
+          <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--neon-cyan); font-weight: 800;">Plain-English Schedule Translation:</div>
+          <div id="cronEnglishDesc" style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">
+            Runs every 15 minutes
+          </div>
+        </div>
+
+        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.4rem;">Next 5 Upcoming Execution Timestamps:</div>
+        <ul id="cronNextRunsList" style="list-style: none; font-family: monospace; font-size: 0.78rem; color: #67e8f9; display: flex; flex-direction: column; gap: 0.25rem;">
+          <!-- Populated dynamically -->
+        </ul>
+      </div>
+
+      <!-- HTTP Status Code & Header Explorer -->
+      <div class="glass-box-deck" style="margin-top: 2rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem;">
+          🌐 REST HTTP Status Code &amp; Header Matrix
+        </h4>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Concrete architectural guidelines for when to return status codes and configure CORS / caching headers.
+        </p>
+
+        <div id="httpStatusGrid" class="http-status-grid">
+          <!-- Populated dynamically via systemSimulators.js -->
+        </div>
       </div>
     </section>
 

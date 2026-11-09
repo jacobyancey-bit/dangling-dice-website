@@ -432,3 +432,4 @@ export function downloadMidiFile(midiUint8Array, filename = 'chord-progression.m
     URL.revokeObjectURL(url);
   }, 1000);
 }
+
