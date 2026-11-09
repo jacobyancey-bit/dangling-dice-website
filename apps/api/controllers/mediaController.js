@@ -72,8 +72,10 @@ function extractYouTubeId(urlStr) {
     if (parsed.hostname.includes('youtu.be')) {
       return parsed.pathname.slice(1).split('/')[0].split('?')[0];
     }
-    if (parsed.pathname.includes('/shorts/')) {
-      return parsed.pathname.split('/shorts/')[1].split('/')[0].split('?')[0];
+    for (const prefix of ['/shorts/', '/embed/', '/live/', '/v/']) {
+      if (parsed.pathname.includes(prefix)) {
+        return parsed.pathname.split(prefix)[1].split('/')[0].split('?')[0];
+      }
     }
     return parsed.searchParams.get('v');
   } catch {
@@ -433,7 +435,7 @@ export const resolveMediaInfo = async (req, res) => {
 
       const cleanTitle = sanitizeFilename(videoDetails.title);
       const thumbnail = videoDetails.thumbnails?.[videoDetails.thumbnails.length - 1]?.url || '';
-      const downloadUrl = `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
+      const downloadUrl = `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}&_t=${Date.now()}`;
 
       return res.status(200).json({
         success: true,
@@ -452,7 +454,7 @@ export const resolveMediaInfo = async (req, res) => {
     const oembed = ytid ? await fetchOEmbedMetadata(targetUrl) : null;
     if (oembed) {
       const cleanTitle = sanitizeFilename(oembed.title);
-      const downloadUrl = `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}`;
+      const downloadUrl = `/api/media/download?url=${encodeURIComponent(targetUrl)}&format=${encodeURIComponent(format)}&title=${encodeURIComponent(cleanTitle)}&_t=${Date.now()}`;
 
       return res.status(200).json({
         success: true,
@@ -562,7 +564,9 @@ export const streamMediaDownload = async (req, res) => {
         headersSent = true;
         res.setHeader('Content-Disposition', `attachment; filename="${cleanName}.${ext}"`);
         res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
-        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         res.setHeader('X-Accel-Buffering', 'no');
         res.flushHeaders();
       }
@@ -670,14 +674,31 @@ export const streamMediaDownload = async (req, res) => {
           });
         }
 
-        ffmpeg.stdout.once('data', () => sendDownloadHeaders());
+        const mp4Timeout = setTimeout(() => {
+          if (!headersSent) {
+            try { ffmpeg?.kill(); } catch (e) {}
+            res.status(504).send('Video stream timed out from provider. Please try again.');
+          }
+        }, 25000);
+
+        ffmpeg.stdout.once('data', () => {
+          clearTimeout(mp4Timeout);
+          sendDownloadHeaders();
+        });
         ffmpeg.stdout.pipe(res);
 
         req.on('close', () => {
+          clearTimeout(mp4Timeout);
+          try { ffmpeg.kill(); } catch (e) {}
+        });
+
+        res.on('finish', () => {
+          clearTimeout(mp4Timeout);
           try { ffmpeg.kill(); } catch (e) {}
         });
 
         ffmpeg.on('error', (err) => {
+          clearTimeout(mp4Timeout);
           console.error('[FFmpeg Error]', err.message);
           if (!headersSent) {
             res.status(500).send('Transcoding pipeline error');
@@ -715,16 +736,35 @@ export const streamMediaDownload = async (req, res) => {
         'pipe:1',
       ]);
 
-      ffmpeg.stdout.once('data', () => sendDownloadHeaders());
+      const mp3Timeout = setTimeout(() => {
+        if (!headersSent) {
+          try { ffmpeg.kill(); } catch (e) {}
+          try { audioStream.destroy(); } catch (e) {}
+          res.status(504).send('Audio extraction timed out from provider. Please try again.');
+        }
+      }, 25000);
+
+      ffmpeg.stdout.once('data', () => {
+        clearTimeout(mp3Timeout);
+        sendDownloadHeaders();
+      });
       audioStream.pipe(ffmpeg.stdin);
       ffmpeg.stdout.pipe(res);
 
       req.on('close', () => {
+        clearTimeout(mp3Timeout);
+        if (!audioStream.destroyed) audioStream.destroy();
+        try { ffmpeg.kill(); } catch (e) {}
+      });
+
+      res.on('finish', () => {
+        clearTimeout(mp3Timeout);
         if (!audioStream.destroyed) audioStream.destroy();
         try { ffmpeg.kill(); } catch (e) {}
       });
 
       audioStream.on('error', (err) => {
+        clearTimeout(mp3Timeout);
         console.error('[Audio Stream Error]', err.message);
         try { ffmpeg.kill(); } catch (e) {}
         if (!headersSent) {
@@ -735,6 +775,7 @@ export const streamMediaDownload = async (req, res) => {
       });
 
       ffmpeg.on('error', (err) => {
+        clearTimeout(mp3Timeout);
         console.error('[FFmpeg Error]', err.message);
         if (!headersSent) {
           res.status(500).send('Transcoding pipeline error');

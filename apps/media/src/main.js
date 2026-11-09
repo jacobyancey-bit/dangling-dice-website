@@ -74,6 +74,11 @@ if (mediaUrlInput) {
       document.getElementById('convertBtn')?.click();
     }
   });
+
+  // Automatically reset previous conversion results as soon as the user edits or inputs a new URL
+  mediaUrlInput.addEventListener('input', () => {
+    resetConversionState();
+  });
 }
 
 // URL Validation Guardrail
@@ -140,6 +145,31 @@ const downloadBtn = document.getElementById('downloadBtn');
 const downloadNotice = document.getElementById('downloadNotice');
 const downloadStatusText = document.getElementById('downloadStatusText');
 const fallbackDownloadLink = document.getElementById('fallbackDownloadLink');
+const convertAnotherBtn = document.getElementById('convertAnotherBtn');
+
+function resetConversionState() {
+  if (resultBox) resultBox.style.display = 'none';
+  if (downloadNotice) downloadNotice.style.display = 'none';
+  if (progressContainer) progressContainer.style.display = 'none';
+  if (progressBarFill) progressBarFill.style.width = '0%';
+  if (progressPercent) progressPercent.textContent = '0%';
+  if (downloadBtn) {
+    downloadBtn.removeAttribute('href');
+    downloadBtn.removeAttribute('download');
+    downloadBtn.innerHTML = '📥 Download Now';
+  }
+}
+
+if (convertAnotherBtn) {
+  convertAnotherBtn.addEventListener('click', () => {
+    if (mediaUrlInput) {
+      mediaUrlInput.value = '';
+      mediaUrlInput.focus();
+    }
+    resetConversionState();
+    showToast('Ready for your next track! Paste any YouTube link.', 'info');
+  });
+}
 
 if (convertBtn) {
   convertBtn.addEventListener('click', async () => {
@@ -246,6 +276,11 @@ if (convertBtn) {
         downloadBtn.innerHTML = '📥 Download Now';
         // Allow the browser to natively follow the link and manage the download stream
         downloadBtn.onclick = () => {
+          // Always ensure the download link uses a fresh timestamp so the browser never serves a cached response
+          const freshUrl = downloadEndpoint.includes('&_t=')
+            ? downloadEndpoint.replace(/&_t=\d+/, `&_t=${Date.now()}`)
+            : `${downloadEndpoint}&_t=${Date.now()}`;
+          downloadBtn.href = freshUrl;
           downloadBtn.innerHTML = '⏳ Downloading...';
           showToast(`Downloading ${media.cleanTitle}! Check your browser downloads bar.`, 'success');
           setTimeout(() => {
