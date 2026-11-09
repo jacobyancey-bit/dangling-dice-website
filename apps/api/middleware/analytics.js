@@ -133,6 +133,19 @@ function maskIp(ip = '') {
  */
 function isNonApiTraffic(req) {
   const p = (req.originalUrl || req.url || req.path || '').split('?')[0].toLowerCase();
+  const rawUa = (req.headers['user-agent'] || '').toLowerCase();
+
+  // If request carries RapidAPI or Postman identifiers, it is ALWAYS legitimate API traffic!
+  if (
+    req.headers['x-rapidapi-key'] ||
+    req.headers['x-rapidapi-host'] ||
+    req.headers['x-rapidapi-proxy-secret'] ||
+    rawUa.includes('rapidapi') ||
+    req.headers['postman-token'] ||
+    rawUa.includes('postman')
+  ) {
+    return false;
+  }
 
   // Ignore static files (images, CSS, JS bundles, fonts, favicons, source maps)
   if (
@@ -154,12 +167,27 @@ function isNonApiTraffic(req) {
 
   // Ignore automated Admin Portal polling (/api/health called from /admin)
   const referer = (req.headers['referer'] || '').toLowerCase();
-  if (p === '/api/health' && referer.includes('/admin')) {
+  if ((p === '/api/health' || p === '/health') && referer.includes('/admin')) {
     return true;
   }
 
-  // Only count legitimate API & partner routes (/api/*, /v1/*, /go/*)
-  if (!p.startsWith('/api') && !p.startsWith('/v1') && !p.startsWith('/go/')) {
+  // Dedicated API subdomain (api.dangling-dice-studios.com) routes are always API traffic
+  const host = (req.headers['host'] || req.hostname || '').toLowerCase();
+  if (host.startsWith('api.')) {
+    return false;
+  }
+
+  // Only count legitimate API & partner routes (/api/*, /v1/*, /go/*, /media/*, /items/*, /health)
+  if (
+    !p.startsWith('/api') &&
+    !p.startsWith('/v1') &&
+    !p.startsWith('/go/') &&
+    !p.startsWith('/media') &&
+    !p.startsWith('/items') &&
+    !p.startsWith('/health') &&
+    !p.startsWith('/showcase') &&
+    !p.startsWith('/auth')
+  ) {
     return true;
   }
 
