@@ -43,6 +43,7 @@ import {
 } from './beatmaker808.js';
 
 import { midiEngine, MPC_PADS_CONFIG } from './midiEngine.js';
+import { samplerEngine } from './samplerEngine.js';
 
 const API_BASE = window.location.hostname === "localhost" 
   ? "http://localhost:5000/api" 
@@ -106,20 +107,29 @@ function updateMidiStatusUI(status) {
 // Wire hardware MIDI note events to active studio instruments
 midiEngine.onNote(({ type, note, velocity }) => {
   if (type === 'noteon') {
-    // 1. Play active chord/piano note
-    playSingleNote(note);
+    if (currentTheoryTab === 'sampler' || mpcBankMode === 'sampler') {
+      samplerEngine.noteOn(note, velocity);
+      highlightSamplerKey(note);
+    } else {
+      playSingleNote(note);
+    }
 
-    // 2. Highlight piano key if visible
+    // Highlight piano key if visible
     const keyEl = document.querySelector(`[data-midi="${note}"]`);
     if (keyEl) {
       keyEl.classList.add('playing');
       setTimeout(() => keyEl.classList.remove('playing'), 180);
     }
 
-    // 3. Trigger 16-Pad MPC if within note range (36 to 51)
+    // Trigger 16-Pad MPC if within note range (36 to 51)
     const padObj = MPC_PADS_CONFIG.find((p) => p.note === note);
     if (padObj) {
       handleMpcPadHit(padObj.pad, velocity);
+    }
+  } else if (type === 'noteoff') {
+    if (currentTheoryTab === 'sampler' || mpcBankMode === 'sampler') {
+      samplerEngine.noteOff(note);
+      unhighlightSamplerKey(note);
     }
   }
 });
@@ -188,6 +198,12 @@ function renderMpcPads() {
       const chordIdx = (p.pad - 1) % (progressionSequence.length || 1);
       const chord = progressionSequence[chordIdx];
       padName = chord ? chord.name : `Chord ${p.pad}`;
+    } else if (mpcBankMode === 'sampler') {
+      const semitone = p.pad - 1;
+      const targetMidi = samplerEngine.rootMidi + semitone;
+      const noteName = NOTE_NAMES[targetMidi % 12];
+      const oct = Math.floor(targetMidi / 12) - 1;
+      padName = `${noteName}${oct} (+${semitone}st)`;
     }
 
     return `
@@ -243,6 +259,11 @@ function handleMpcPadHit(padNum, velocity = 0.9) {
       const chordIdx = (padNum - 1) % progressionSequence.length;
       auditionProgressionChord(chordIdx);
     }
+  } else if (mpcBankMode === 'sampler') {
+    const semitone = padNum - 1;
+    const targetMidi = samplerEngine.rootMidi + semitone;
+    samplerEngine.noteOn(targetMidi, velocity);
+    setTimeout(() => samplerEngine.noteOff(targetMidi), 400);
   }
 }
 
@@ -360,6 +381,7 @@ function switchTheoryTab(tab) {
     calculators: document.getElementById('calculatorsView'),
     chopper: document.getElementById('chopperView'),
     beatmaker: document.getElementById('beatmakerView'),
+    sampler: document.getElementById('samplerView'),
   };
 
   const buttons = {
@@ -368,6 +390,7 @@ function switchTheoryTab(tab) {
     calculators: document.getElementById('tabCalculatorsBtn'),
     chopper: document.getElementById('tabChopperBtn'),
     beatmaker: document.getElementById('tabBeatmakerBtn'),
+    sampler: document.getElementById('tabSamplerBtn'),
   };
 
   Object.entries(views).forEach(([key, el]) => {
@@ -391,6 +414,8 @@ function switchTheoryTab(tab) {
   } else if (tab === 'beatmaker') {
     renderEuclideanTracks();
     init808Designer();
+  } else if (tab === 'sampler') {
+    initSamplerUI();
   }
 }
 
@@ -1452,6 +1477,298 @@ async function downloadRendered808() {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+// ============================================================================
+// Phase 5: Chromatic Audio Sampler & Instrument Engine
+// ============================================================================
+
+let samplerInitialized = false;
+
+function initSamplerUI() {
+  if (!samplerInitialized) {
+    renderSamplerRootOptions();
+    renderSamplerKeyboard();
+    samplerEngine.generatePresetSample('grand-piano');
+    samplerInitialized = true;
+  }
+  drawSamplerWaveform();
+}
+
+function renderSamplerRootOptions() {
+  const select = document.getElementById('samplerRootSelect');
+  if (!select) return;
+
+  const options = [];
+  for (let octave = 1; octave <= 5; octave++) {
+    NOTE_NAMES.forEach((name, idx) => {
+      const midi = (octave + 1) * 12 + idx;
+      options.push({ midi, label: `${name}${octave} (MIDI ${midi})` });
+    });
+  }
+
+  select.innerHTML = options
+    .map((opt) => `<option value="${opt.midi}" ${opt.midi === 60 ? 'selected' : ''}>${opt.label}</option>`)
+    .join('');
+}
+
+function renderSamplerKeyboard() {
+  const container = document.getElementById('samplerKeyboardSurface');
+  if (!container) return;
+
+  // 25-key chromatic keyboard from C3 (MIDI 48) to C5 (MIDI 72)
+  const START_MIDI = 48; // C3
+  const TOTAL_KEYS = 25;
+  let html = '';
+
+  for (let i = 0; i < TOTAL_KEYS; i++) {
+    const midi = START_MIDI + i;
+    const semi = midi % 12;
+    const isBlack = [1, 3, 6, 8, 10].includes(semi);
+    const noteName = NOTE_NAMES[semi];
+    const octave = Math.floor(midi / 12) - 1;
+
+    html += `
+      <div 
+        class="piano-key ${isBlack ? 'black-key' : 'white-key'}" 
+        id="samplerKey_${midi}"
+        data-midi="${midi}"
+        onmousedown="window.samplerNoteOn(${midi})"
+        onmouseup="window.samplerNoteOff(${midi})"
+        onmouseleave="window.samplerNoteOff(${midi})"
+        ontouchstart="window.samplerNoteOn(${midi}); event.preventDefault();"
+        ontouchend="window.samplerNoteOff(${midi}); event.preventDefault();"
+        title="${noteName}${octave} (MIDI ${midi})"
+      >
+        <span class="piano-key-label" style="font-size: 0.62rem;">${noteName}${octave}</span>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+function samplerNoteOn(midi) {
+  samplerEngine.noteOn(midi, 0.9);
+  highlightSamplerKey(midi);
+}
+
+function samplerNoteOff(midi) {
+  samplerEngine.noteOff(midi);
+  unhighlightSamplerKey(midi);
+}
+
+function highlightSamplerKey(midi) {
+  const key = document.getElementById(`samplerKey_${midi}`);
+  if (key) key.classList.add('playing');
+}
+
+function unhighlightSamplerKey(midi) {
+  const key = document.getElementById(`samplerKey_${midi}`);
+  if (key) key.classList.remove('playing');
+}
+
+function loadSamplerPreset(type) {
+  samplerEngine.generatePresetSample(type);
+  const rootSelect = document.getElementById('samplerRootSelect');
+  if (rootSelect) rootSelect.value = samplerEngine.rootMidi;
+
+  document.querySelectorAll('#samplerView .preset-pill').forEach((pill) => {
+    const text = pill.textContent.toLowerCase();
+    pill.classList.toggle('active', text.includes(type.replace('-', ' ')));
+  });
+
+  drawSamplerWaveform();
+  showToast(`Loaded ${samplerEngine.sampleName} into Sampler!`, 'success');
+}
+
+function handleSamplerRootChange(val) {
+  samplerEngine.rootMidi = parseInt(val) || 60;
+  showToast(`Sampler Root mapped to MIDI ${samplerEngine.rootMidi}`, 'info');
+}
+
+async function toggleSamplerMicRecording() {
+  const btn = document.getElementById('samplerMicBtn');
+  if (!btn) return;
+
+  if (!samplerEngine.isRecording) {
+    const res = await samplerEngine.startMicRecording();
+    if (res.success) {
+      btn.textContent = '⏹️ Stop Recording';
+      btn.style.background = '#ef4444';
+      btn.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.6)';
+      showToast('🎙️ Recording live microphone audio...', 'info');
+    } else {
+      showToast(res.error || 'Microphone access denied', 'error');
+    }
+  } else {
+    btn.textContent = '⏳ Processing Mic...';
+    const rootSelect = document.getElementById('samplerRootSelect');
+    const rootMidi = parseInt(rootSelect?.value || 60);
+    const res = await samplerEngine.stopMicRecording(rootMidi);
+
+    btn.textContent = '🎙️ Record Mic';
+    btn.style.background = 'linear-gradient(135deg, #ef4444, #f43f5e)';
+    btn.style.boxShadow = 'none';
+
+    if (res && res.success) {
+      drawSamplerWaveform();
+      showToast('✅ Microphone recording mapped across keyboard!', 'success');
+    } else {
+      showToast(res?.error || 'Failed to capture recording', 'error');
+    }
+  }
+}
+
+async function handleSamplerFileUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const tempCtx = new AudioCtx();
+    const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+    tempCtx.close();
+
+    const rootSelect = document.getElementById('samplerRootSelect');
+    const rootMidi = parseInt(rootSelect?.value || 60);
+
+    samplerEngine.loadBuffer(audioBuffer, file.name, rootMidi);
+    drawSamplerWaveform();
+    showToast(`✅ Loaded ${file.name} across keyboard!`, 'success');
+  } catch (err) {
+    console.error('[Sampler File Error]', err);
+    showToast('Could not decode audio file', 'error');
+  }
+}
+
+function drawSamplerWaveform() {
+  const canvas = document.getElementById('samplerWaveformCanvas');
+  if (!canvas || !samplerEngine.activeBuffer) return;
+
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+
+  const buf = samplerEngine.isReversed && samplerEngine.reversedBuffer ? samplerEngine.reversedBuffer : samplerEngine.activeBuffer;
+  const channelData = buf.getChannelData(0);
+  const step = Math.ceil(channelData.length / width);
+  const amp = height / 2;
+
+  // Center zero line
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.beginPath();
+  ctx.moveTo(0, amp);
+  ctx.lineTo(width, amp);
+  ctx.stroke();
+
+  // Waveform gradient
+  const gradient = ctx.createLinearGradient(0, 0, width, 0);
+  gradient.addColorStop(0, '#f472b6');
+  gradient.addColorStop(0.5, '#67e8f9');
+  gradient.addColorStop(1, '#fbbf24');
+
+  ctx.fillStyle = gradient;
+  for (let i = 0; i < width; i++) {
+    let min = 1.0;
+    let max = -1.0;
+    for (let j = 0; j < step; j++) {
+      const datum = channelData[i * step + j];
+      if (datum < min) min = datum;
+      if (datum > max) max = datum;
+    }
+    const y1 = (1 + min) * amp;
+    const y2 = Math.max(1, (max - min) * amp);
+    ctx.fillRect(i, y1, 1, y2);
+  }
+
+  // Draw Trim Boundary overlays (Dimmed outside trim region)
+  const startX = Math.floor(samplerEngine.startRatio * width);
+  const endX = Math.floor(samplerEngine.endRatio * width);
+
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  if (startX > 0) ctx.fillRect(0, 0, startX, height);
+  if (endX < width) ctx.fillRect(endX, 0, width - endX, height);
+
+  // Start Line
+  ctx.strokeStyle = '#67e8f9';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(startX, 0);
+  ctx.lineTo(startX, height);
+  ctx.stroke();
+
+  // End Line
+  ctx.strokeStyle = '#f472b6';
+  ctx.beginPath();
+  ctx.moveTo(endX, 0);
+  ctx.lineTo(endX, height);
+  ctx.stroke();
+}
+
+function updateSamplerTrim() {
+  const startVal = parseFloat(document.getElementById('samplerStartTrim')?.value || 0);
+  const endVal = parseFloat(document.getElementById('samplerEndTrim')?.value || 1);
+
+  samplerEngine.startRatio = Math.min(startVal, endVal - 0.05);
+  samplerEngine.endRatio = Math.max(endVal, startVal + 0.05);
+
+  const startLabel = document.getElementById('samplerStartVal');
+  const endLabel = document.getElementById('samplerEndVal');
+  if (startLabel) startLabel.textContent = `${Math.round(samplerEngine.startRatio * 100)}%`;
+  if (endLabel) endLabel.textContent = `${Math.round(samplerEngine.endRatio * 100)}%`;
+
+  drawSamplerWaveform();
+}
+
+function toggleSamplerLoop() {
+  samplerEngine.isLooping = !samplerEngine.isLooping;
+  const btn = document.getElementById('samplerLoopBtn');
+  if (btn) {
+    btn.textContent = samplerEngine.isLooping ? '🔁 Loop: ON' : '🔁 Loop: OFF';
+    btn.style.color = samplerEngine.isLooping ? '#10b981' : '#fff';
+    btn.style.borderColor = samplerEngine.isLooping ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-subtle)';
+  }
+}
+
+function toggleSamplerReverse() {
+  samplerEngine.isReversed = !samplerEngine.isReversed;
+  const btn = document.getElementById('samplerReverseBtn');
+  if (btn) {
+    btn.textContent = samplerEngine.isReversed ? '⏪ Reverse: ON' : '⏪ Reverse: OFF';
+    btn.style.color = samplerEngine.isReversed ? '#f472b6' : '#fff';
+    btn.style.borderColor = samplerEngine.isReversed ? 'rgba(236, 72, 153, 0.4)' : 'var(--border-subtle)';
+  }
+  drawSamplerWaveform();
+}
+
+function updateSamplerAdsr() {
+  samplerEngine.attack = parseFloat(document.getElementById('samplerAttack')?.value || 0.01);
+  samplerEngine.decay = parseFloat(document.getElementById('samplerDecay')?.value || 0.3);
+  samplerEngine.sustain = parseFloat(document.getElementById('samplerSustain')?.value || 0.7);
+  samplerEngine.release = parseFloat(document.getElementById('samplerRelease')?.value || 0.4);
+
+  const aVal = document.getElementById('samplerAttackVal');
+  const dVal = document.getElementById('samplerDecayVal');
+  const sVal = document.getElementById('samplerSustainVal');
+  const rVal = document.getElementById('samplerReleaseVal');
+
+  if (aVal) aVal.textContent = `${Math.round(samplerEngine.attack * 1000)}ms`;
+  if (dVal) dVal.textContent = `${samplerEngine.decay.toFixed(2)}s`;
+  if (sVal) sVal.textContent = `${Math.round(samplerEngine.sustain * 100)}%`;
+  if (rVal) rVal.textContent = `${samplerEngine.release.toFixed(2)}s`;
+}
+
+function updateSamplerFilter() {
+  samplerEngine.filterCutoff = parseFloat(document.getElementById('samplerFilterCutoff')?.value || 18000);
+  samplerEngine.filterResonance = parseFloat(document.getElementById('samplerFilterQ')?.value || 1.0);
+
+  const cVal = document.getElementById('samplerCutoffVal');
+  const qVal = document.getElementById('samplerQVal');
+  if (cVal) cVal.textContent = `${Math.round(samplerEngine.filterCutoff)} Hz`;
+  if (qVal) qVal.textContent = `Q: ${samplerEngine.filterResonance.toFixed(1)}`;
+}
+
 // Expose globals for HTML onclicks
 window.switchTheoryTab = switchTheoryTab;
 window.selectPreset = selectPreset;
@@ -1502,6 +1819,20 @@ window.update808Params = update808Params;
 window.audition808Sub = audition808Sub;
 window.downloadRendered808 = downloadRendered808;
 
+// Phase 5: Chromatic Audio Sampler
+window.initSamplerUI = initSamplerUI;
+window.loadSamplerPreset = loadSamplerPreset;
+window.handleSamplerRootChange = handleSamplerRootChange;
+window.toggleSamplerMicRecording = toggleSamplerMicRecording;
+window.handleSamplerFileUpload = handleSamplerFileUpload;
+window.updateSamplerTrim = updateSamplerTrim;
+window.toggleSamplerLoop = toggleSamplerLoop;
+window.toggleSamplerReverse = toggleSamplerReverse;
+window.updateSamplerAdsr = updateSamplerAdsr;
+window.updateSamplerFilter = updateSamplerFilter;
+window.samplerNoteOn = samplerNoteOn;
+window.samplerNoteOff = samplerNoteOff;
+
 // Web MIDI & MPC Surface Globals
 window.requestMidiAccess = requestMidiAccess;
 window.handleMasterBpmChange = handleMasterBpmChange;
@@ -1519,6 +1850,7 @@ document.addEventListener("DOMContentLoaded", () => {
   runPitchShiftCalc();
   runRoomModesCalc();
   init808Designer();
+  initSamplerUI();
 
   // Auto-listen if Web MIDI was previously granted
   if (navigator.requestMIDIAccess) {

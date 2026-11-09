@@ -168,3 +168,4 @@ export const MPC_PADS_CONFIG = [
   { pad: 3, note: 38, name: 'Main Snare', key: 'C' },
   { pad: 4, note: 39, name: 'Clap', key: 'V' },
 ];
+

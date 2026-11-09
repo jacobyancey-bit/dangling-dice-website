@@ -119,6 +119,7 @@
             <option value="drums" selected>Analog &amp; 808 Drums</option>
             <option value="slices">Active Drum Break Slices</option>
             <option value="chords">Progression Chords</option>
+            <option value="sampler">Chromatic Sampler</option>
           </select>
         </div>
       </div>
@@ -159,6 +160,9 @@
           </button>
           <button type="button" class="theory-tab-btn" id="tabBeatmakerBtn" onclick="window.switchTheoryTab('beatmaker')">
             <span>🥁</span> Euclidean &amp; 808
+          </button>
+          <button type="button" class="theory-tab-btn" id="tabSamplerBtn" onclick="window.switchTheoryTab('sampler')">
+            <span>🎚️</span> Chromatic Sampler
           </button>
         </div>
       </div>
@@ -686,6 +690,145 @@
                   <input type="range" id="subDecay" min="0.3" max="3.0" step="0.1" value="1.4" style="flex: 1;" oninput="window.update808Params()" />
                   <span id="subDecayVal" style="font-size: 0.8rem; font-weight: 700; color: #c084fc; width: 45px;">1.4s</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Chromatic Audio Sampler View -->
+      <div id="samplerView" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+          
+          <!-- Sample Ingestion & Source Deck -->
+          <div class="calc-panel" style="grid-column: 1 / -1;">
+            <div class="calc-panel-header">
+              <div>
+                <span class="calc-panel-badge" style="background: rgba(236, 72, 153, 0.15); color: #f472b6; border-color: rgba(236, 72, 153, 0.3);">Audio Recording &amp; Instrument Engine</span>
+                <h3 class="calc-panel-title">🎚️ Chromatic Audio Sampler</h3>
+                <p class="calc-panel-desc">Turns any recorded audio, microphone capture, or sound into a playable polyphonic instrument across your MIDI keyboard, pads, and screen.</p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <button id="samplerMicBtn" type="button" class="btn btn-primary btn-sm" onclick="window.toggleSamplerMicRecording()" style="background: linear-gradient(135deg, #ef4444, #f43f5e); color: #fff; font-weight: 800;">
+                  🎙️ Record Mic
+                </button>
+                <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+                  📂 Open Sample File
+                  <input type="file" id="samplerFileInput" accept="audio/*" style="display: none;" onchange="window.handleSamplerFileUpload(event)" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Starter Presets & Root Note Row -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; background: #070a10; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Starter Preset:</span>
+                <button type="button" class="preset-pill active" onclick="window.loadSamplerPreset('grand-piano')">🎹 Grand Piano</button>
+                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('rhodes-bell')">🔔 Rhodes Bell</button>
+                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('vocal-chop')">🗣️ Vocal Ooh</button>
+                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('kalimba')">🎶 Kalimba</button>
+                <button type="button" class="preset-pill" onclick="window.loadSamplerPreset('808-sub')">💥 808 Sub Boom</button>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <label class="theory-ctrl-label" for="samplerRootSelect">Root Pitch:</label>
+                <select id="samplerRootSelect" class="theory-select" onchange="window.handleSamplerRootChange(this.value)">
+                  <!-- Populated via main.js with C0 to B5 -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Waveform Canvas & Trim Handles -->
+            <div style="position: relative; margin: 1rem 0; background: #070a10; border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;">
+              <canvas id="samplerWaveformCanvas" width="900" height="130" style="width: 100%; height: 130px; display: block;"></canvas>
+            </div>
+
+            <!-- Sample Edit Strip: Start, End, Loop, Reverse -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+              <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                  <label class="theory-ctrl-label" for="samplerStartTrim">Start Trim:</label>
+                  <input type="range" id="samplerStartTrim" min="0" max="0.9" step="0.01" value="0" oninput="window.updateSamplerTrim()" />
+                  <span id="samplerStartVal" style="font-size: 0.75rem; color: #67e8f9; width: 35px;">0%</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                  <label class="theory-ctrl-label" for="samplerEndTrim">End Trim:</label>
+                  <input type="range" id="samplerEndTrim" min="0.1" max="1" step="0.01" value="1" oninput="window.updateSamplerTrim()" />
+                  <span id="samplerEndVal" style="font-size: 0.75rem; color: #f472b6; width: 35px;">100%</span>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button id="samplerLoopBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.toggleSamplerLoop()">
+                  🔁 Loop: OFF
+                </button>
+                <button id="samplerReverseBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.toggleSamplerReverse()">
+                  ⏪ Reverse: OFF
+                </button>
+              </div>
+            </div>
+
+            <!-- Modulation & Sound Sculpting (ADSR + Resonant Filter) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; padding: 1rem; background: #070a10; border-radius: 8px; border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+              <!-- ADSR Envelope -->
+              <div>
+                <span style="font-size: 0.75rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">
+                  Amplitude ADSR Envelope
+                </span>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
+                  <div>
+                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Attack</label>
+                    <input type="range" id="samplerAttack" min="0.001" max="0.5" step="0.01" value="0.01" oninput="window.updateSamplerAdsr()" />
+                    <span id="samplerAttackVal" style="font-size: 0.7rem; color: #67e8f9;">10ms</span>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Decay</label>
+                    <input type="range" id="samplerDecay" min="0.05" max="2.0" step="0.05" value="0.3" oninput="window.updateSamplerAdsr()" />
+                    <span id="samplerDecayVal" style="font-size: 0.7rem; color: #f472b6;">0.3s</span>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Sustain</label>
+                    <input type="range" id="samplerSustain" min="0" max="1" step="0.05" value="0.7" oninput="window.updateSamplerAdsr()" />
+                    <span id="samplerSustainVal" style="font-size: 0.7rem; color: #fbbf24;">70%</span>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Release</label>
+                    <input type="range" id="samplerRelease" min="0.05" max="2.5" step="0.05" value="0.4" oninput="window.updateSamplerAdsr()" />
+                    <span id="samplerReleaseVal" style="font-size: 0.7rem; color: #10b981;">0.4s</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resonant Filter -->
+              <div>
+                <span style="font-size: 0.75rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem;">
+                  Resonant Tone Filter
+                </span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                  <div>
+                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Cutoff (Hz)</label>
+                    <input type="range" id="samplerFilterCutoff" min="200" max="20000" step="100" value="18000" oninput="window.updateSamplerFilter()" style="width: 100%;" />
+                    <span id="samplerCutoffVal" style="font-size: 0.7rem; color: #67e8f9;">18000 Hz</span>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Resonance (Q)</label>
+                    <input type="range" id="samplerFilterQ" min="0.5" max="15" step="0.5" value="1.0" oninput="window.updateSamplerFilter()" style="width: 100%;" />
+                    <span id="samplerQVal" style="font-size: 0.7rem; color: #c084fc;">Q: 1.0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chromatic 25-Key Playback Surface -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.8rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;">
+                  Chromatic Piano Keyboard (Click, Drag, or Play via USB MIDI / Keyboard)
+                </span>
+                <span style="font-size: 0.75rem; color: #67e8f9; font-family: monospace;">Octaves C3 – C5</span>
+              </div>
+              <div id="samplerKeyboardSurface" class="piano-keyboard" style="max-width: 100%;">
+                <!-- Populated via main.js -->
               </div>
             </div>
           </div>
