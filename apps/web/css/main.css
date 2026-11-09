@@ -1367,6 +1367,9 @@ tr:hover td {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.25rem;
+  margin-top: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tech-stack-card {
@@ -1378,6 +1381,7 @@ tr:hover td {
   flex-direction: column;
   justify-content: space-between;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
 .tech-stack-card:hover {
@@ -1455,6 +1459,170 @@ tr:hover td {
   background: rgba(236, 72, 153, 0.2);
   color: #f472b6;
   border-color: rgba(236, 72, 153, 0.4);
+}
+
+/* ==========================================================================
+   Spotlight Hero Cards (Creator Apps & Tools of the Week)
+   ========================================================================== */
+.spotlight-hero-card {
+  margin: 1.25rem 0 0;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+  width: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.spotlight-hero-purple {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.spotlight-hero-pink {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(168, 85, 247, 0.08));
+  border: 1px solid rgba(236, 72, 153, 0.4);
+}
+
+.spotlight-hero-amber {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(236, 72, 153, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.spotlight-hero-cyan {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(245, 158, 11, 0.08));
+  border: 1px solid rgba(6, 182, 212, 0.4);
+}
+
+.spotlight-hero-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.spotlight-hero-content {
+  flex: 1 1 300px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.spotlight-hero-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.spotlight-hero-trophy {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.spotlight-hero-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  white-space: normal;
+  display: inline-block;
+}
+
+.spotlight-hero-label-purple {
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.2);
+}
+
+.spotlight-hero-label-pink {
+  color: #f472b6;
+  background: rgba(236, 72, 153, 0.2);
+}
+
+.spotlight-hero-label-amber {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.spotlight-hero-label-cyan {
+  color: var(--neon-cyan);
+  background: rgba(6, 182, 212, 0.2);
+}
+
+.spotlight-hero-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.spotlight-hero-tagline {
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 0.45rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.spotlight-hero-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-bottom: 0.85rem;
+  max-width: 720px;
+}
+
+.spotlight-hero-stack {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.spotlight-hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  box-sizing: border-box;
+}
+
+.spotlight-hero-author {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+.spotlight-hero-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Developer REST APIs & Free In-Browser Sandbox Box */
+.compute-api-suite {
+  margin: 1.5rem 0 0;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.08), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.compute-engines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 /* ==========================================================================
@@ -1817,6 +1985,96 @@ tr:hover td {
     backdrop-filter: blur(5px);
     z-index: 1000;
     animation: fadeIn 0.2s ease-out;
+  }
+
+  /* Mobile Harmonization for Cards, Spotlight Boxes, Grids & Developer Engines */
+  .card {
+    padding: 1.15rem 0.95rem !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .card-header {
+    flex-wrap: wrap !important;
+    gap: 0.6rem !important;
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.65rem !important;
+  }
+
+  .spotlight-hero-card {
+    margin: 1rem 0 0 !important;
+    padding: 1rem 0.85rem !important;
+    border-radius: var(--radius-md) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .spotlight-hero-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+  }
+
+  .spotlight-hero-content {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .spotlight-hero-title {
+    font-size: 1.15rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .spotlight-hero-tagline {
+    font-size: 0.82rem !important;
+  }
+
+  .spotlight-hero-desc {
+    font-size: 0.78rem !important;
+    margin-bottom: 0.65rem !important;
+  }
+
+  .spotlight-hero-side {
+    width: 100% !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .spotlight-hero-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.45rem !important;
+  }
+
+  .spotlight-hero-actions .btn {
+    flex: 1 1 calc(50% - 0.45rem) !important;
+    min-width: 120px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 0.5rem 0.65rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .tech-stack-grid {
+    padding: 0 !important;
+    margin-top: 1rem !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+    width: 100% !important;
+  }
+
+  .compute-api-suite {
+    margin: 1rem 0 0 !important;
+    padding: 1rem 0.85rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .compute-engines-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
   }
 }
 
