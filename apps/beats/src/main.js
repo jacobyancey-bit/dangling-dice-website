@@ -299,15 +299,154 @@ function handleMpcPadHit(padNum, velocity = 0.9) {
   }
 }
 
-// Global QWERTY Keyboard listener for 16 MPC Pads
+// ============================================================================
+// Multi-Instrument QWERTY Mapping & Dispatcher
+// Allows simultaneous live performance across Drums, Piano, and Guitar
+// Automatically yields to native typing whenever any input field is focused
+// ============================================================================
+
+const PIANO_KEY_MAP = {
+  'T': 60, // C4
+  '5': 61, // C#4
+  'Y': 62, // D4
+  '6': 63, // D#4
+  'U': 64, // E4
+  'I': 65, // F4
+  '8': 66, // F#4
+  'O': 67, // G4
+  '9': 68, // G#4
+  'P': 69, // A4
+  '0': 70, // A#4
+  '[': 71, // B4
+  ']': 72, // C5
+};
+
+const MIDI_TO_PIANO_KEY = {
+  60: 'T',
+  61: '5',
+  62: 'Y',
+  63: '6',
+  64: 'U',
+  65: 'I',
+  66: '8',
+  67: 'O',
+  68: '9',
+  69: 'P',
+  70: '0',
+  71: '[',
+  72: ']',
+};
+
+const GUITAR_KEY_MAP = {
+  // Open strings (String 6 Low E to String 1 High E + High G)
+  'G': { type: 'string', midi: 40, name: 'String 6 (Low E)' },
+  'H': { type: 'string', midi: 45, name: 'String 5 (A)' },
+  'J': { type: 'string', midi: 50, name: 'String 4 (D)' },
+  'K': { type: 'string', midi: 55, name: 'String 3 (G)' },
+  'L': { type: 'string', midi: 59, name: 'String 2 (B)' },
+  ';': { type: 'string', midi: 64, name: 'String 1 (High E)' },
+  "'": { type: 'string', midi: 67, name: 'High G' },
+
+  // Bottom row: Strum Progression Chords
+  'B': { type: 'chord', idx: 0 },
+  'N': { type: 'chord', idx: 1 },
+  'M': { type: 'chord', idx: 2 },
+  ',': { type: 'chord', idx: 3 },
+  '.': { type: 'chord', idx: 4 },
+  '/': { type: 'chord', idx: 5 },
+};
+
+function isTypingInField() {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  return ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || el.isContentEditable;
+}
+
+function playPianoKey(midi) {
+  const currentInst = instrumentEngine.getInstrument();
+  const pianoType = currentInst.category === 'piano' ? currentInst.id : 'grand_piano';
+  instrumentEngine.synthesizeInstrumentNote(pianoType, midi, 1.8, 0.95);
+
+  // Visual highlight on 25-key piano
+  const keyEl = document.querySelector(`.piano-key[data-midi="${midi}"]`);
+  if (keyEl) {
+    keyEl.classList.add('playing');
+    setTimeout(() => keyEl.classList.remove('playing'), 200);
+  }
+}
+
+function playGuitarKey(action) {
+  const currentInst = instrumentEngine.getInstrument();
+  const guitarType = currentInst.category === 'guitar' ? currentInst.id : 'steel_acoustic';
+
+  if (action.type === 'string') {
+    instrumentEngine.synthesizeInstrumentNote(guitarType, action.midi, 2.0, 0.95);
+
+    // Visual highlight on fretboard
+    const fretEl = document.querySelector(`.fret-cell[data-midi="${action.midi}"]`);
+    if (fretEl) {
+      fretEl.classList.add('playing');
+      setTimeout(() => fretEl.classList.remove('playing'), 200);
+    }
+  } else if (action.type === 'chord') {
+    if (progressionSequence && progressionSequence.length > action.idx) {
+      const chord = progressionSequence[action.idx];
+      const midis = resolveChordMidiNotes(chord, 3);
+      instrumentEngine.playChord(midis, 1.8, 0.95);
+    } else {
+      // Default acoustic guitar open chord voicings
+      const defaultVoicings = [
+        [40, 47, 52, 55, 60, 64], // Em
+        [45, 52, 57, 60, 64],     // Am
+        [41, 48, 53, 57, 60],     // F
+        [43, 47, 50, 55, 59, 67], // G
+        [48, 52, 55, 60, 64],     // C
+        [50, 57, 62, 65],         // Dm
+      ];
+      const voicing = defaultVoicings[action.idx % defaultVoicings.length];
+      instrumentEngine.playChord(voicing, 1.8, 0.95);
+    }
+
+    // Highlight progression card if visible
+    const cardEl = document.getElementById(`progressionCard_${action.idx}`);
+    if (cardEl) {
+      cardEl.classList.add('playing');
+      setTimeout(() => cardEl.classList.remove('playing'), 250);
+    }
+  }
+}
+
+// Master Multi-Instrument QWERTY Keyboard Listener
 window.addEventListener('keydown', (e) => {
-  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+  // CRITICAL: Immediately yield to native browser typing if user is in an input, textarea, or dropdown!
+  if (isTypingInField() || e.ctrlKey || e.metaKey || e.altKey) return;
 
   const keyUpper = e.key.toUpperCase();
+  const rawKey = e.key;
+
+  // 1. DRUMS (1-4, Q-R, A-F, Z-V)
   const padObj = MPC_PADS_CONFIG.find((p) => p.key.toUpperCase() === keyUpper);
   if (padObj) {
     e.preventDefault();
     handleMpcPadHit(padObj.pad, 0.95);
+    return;
+  }
+
+  // 2. PIANO / KEYBOARD (T, 5, Y, 6, U, I, 8, O, 9, P, 0, [, ])
+  if (PIANO_KEY_MAP[keyUpper] !== undefined || PIANO_KEY_MAP[rawKey] !== undefined) {
+    e.preventDefault();
+    const midi = PIANO_KEY_MAP[keyUpper] !== undefined ? PIANO_KEY_MAP[keyUpper] : PIANO_KEY_MAP[rawKey];
+    playPianoKey(midi);
+    return;
+  }
+
+  // 3. GUITAR / STRINGS (G, H, J, K, L, ;, ', B, N, M, ,, ., /)
+  const guitarAction = GUITAR_KEY_MAP[keyUpper] || GUITAR_KEY_MAP[rawKey];
+  if (guitarAction) {
+    e.preventDefault();
+    playGuitarKey(guitarAction);
+    return;
   }
 });
 
@@ -778,6 +917,9 @@ function renderPianoKeyboard(container, rootSemi, scaleDef) {
       degreeBadge = `<span class="key-degree-pill ${isRoot ? 'key-degree-root' : 'key-degree-note'}">${degName}</span>`;
     }
 
+    const kbdChar = MIDI_TO_PIANO_KEY[midi];
+    const kbdBadge = kbdChar ? `<span class="piano-kbd-pill" title="Press '${kbdChar}' on computer keyboard">[${kbdChar}]</span>` : '';
+
     const noteName = NOTE_NAMES[semi];
     const keyClass = isWhite
       ? `white-key ${inScale ? 'in-scale' : ''} ${isRoot ? 'is-root' : ''}`
@@ -786,10 +928,12 @@ function renderPianoKeyboard(container, rootSemi, scaleDef) {
     keysHtml += `
       <div 
         class="piano-key ${keyClass}" 
+        data-midi="${midi}"
         onclick="window.playSingleNote(${midi})"
-        title="${noteName} (${midi})"
+        title="${noteName} (${midi})${kbdChar ? ` • Key [${kbdChar}]` : ''}"
       >
         ${degreeBadge}
+        ${kbdBadge}
         <span style="opacity: ${inScale ? 1 : 0.4}; margin-top: 2px;">${noteName}</span>
       </div>
     `;
@@ -804,6 +948,7 @@ function renderGuitarFretboard(container, rootSemi, scaleDef) {
   const stringOpenMidis = tuning.notes; // e.g. [64, 59, 55, 50, 45, 40]
   const TOTAL_FRETS = 24;
   const inlayFrets = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+  const GUITAR_STRING_KBD_MAP = [';', 'L', 'K', 'J', 'H', 'G'];
 
   let fretboardHtml = '<div class="fretboard-wrapper"><div class="fretboard">';
 
@@ -812,11 +957,13 @@ function renderGuitarFretboard(container, rootSemi, scaleDef) {
     fretboardHtml += '<div class="fret-string-row">';
     fretboardHtml += '<div class="fret-string-wire" style="height: ' + (1 + strIdx * 0.5) + 'px;"></div>';
 
+    const stringKeyChar = GUITAR_STRING_KBD_MAP[strIdx] || '';
+
     for (let fret = 0; fret <= TOTAL_FRETS; fret++) {
       const midi = openMidi + fret;
       const semi = midi % 12;
       const intervalFromRoot = ((semi - rootSemi) % 12 + 12) % 12;
-      const inScale = scaleDef.intervals.includes(intervalFromRoot);
+      const inScale = scaleIntervals.includes(intervalFromRoot);
       const isRoot = intervalFromRoot === 0;
       const isThird = intervalFromRoot === 3 || intervalFromRoot === 4;
       const isFifth = intervalFromRoot === 7;
@@ -832,13 +979,16 @@ function renderGuitarFretboard(container, rootSemi, scaleDef) {
         else if (isFifth) markerClass = 'marker-fifth';
 
         markerHtml = `<div class="fret-note-marker ${markerClass}">${degName}</div>`;
+      } else if (fret === 0 && stringKeyChar) {
+        markerHtml = `<div class="fret-nut-kbd">[${stringKeyChar}]</div>`;
       }
 
       fretboardHtml += `
         <div 
           class="fret-cell ${fret === 0 ? 'fret-nut' : ''}" 
+          data-midi="${midi}"
           onclick="window.playSingleNote(${midi})"
-          title="${NOTE_NAMES[semi]} (Fret ${fret})"
+          title="${NOTE_NAMES[semi]} (Fret ${fret})${fret === 0 && stringKeyChar ? ` • Key [${stringKeyChar}]` : ''}"
         >
           ${markerHtml}
         </div>
