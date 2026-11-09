@@ -270,6 +270,9 @@ function renderMpcPads() {
 
 function handleMpcBankChange(val) {
   mpcBankMode = val;
+  if (val === 'slices' && !chopperAudioBuffer) {
+    loadDemoBreakbeat();
+  }
   const drumGroup = document.getElementById('mpcDrumKitGroup');
   if (drumGroup) {
     drumGroup.style.display = val === 'drums' ? 'flex' : 'none';
@@ -288,6 +291,9 @@ function handleMpcPadHit(padNum, velocity = 0.9) {
     // Trigger authentic multi-piece kit drum sound
     instrumentEngine.playDrumPad(padNum, velocity);
   } else if (mpcBankMode === 'slices') {
+    if (!chopperAudioBuffer) {
+      loadDemoBreakbeat();
+    }
     const sliceIdx = padNum - 1;
     if (chopperAudioBuffer && sliceIdx < chopperSlices.length) {
       playSlice(sliceIdx);
@@ -373,6 +379,7 @@ function isTypingInField() {
 
 // Active held keys for true press-to-sustain polyphony
 const activeHeldKeys = new Map();
+const heldDrumKeys = new Set();
 
 function instrumentNoteOn(midi, velocity = 0.95) {
   instrumentEngine.noteOn(midi, velocity);
@@ -723,6 +730,9 @@ window.addEventListener('keydown', (e) => {
   const padObj = MPC_PADS_CONFIG.find((p) => p.key.toUpperCase() === keyUpper);
   if (padObj) {
     e.preventDefault();
+    // A single press & long press count as ONLY a single strike — never repeat through sustained press!
+    if (heldDrumKeys.has(keyUpper)) return;
+    heldDrumKeys.add(keyUpper);
     handleMpcPadHit(padObj.pad, 0.95);
     return;
   }
@@ -754,6 +764,11 @@ window.addEventListener('keyup', (e) => {
   if (isTypingInField()) return;
 
   const keyUpper = e.key.toUpperCase();
+
+  // Release held drum key so it can be triggered on the next stroke
+  if (heldDrumKeys.has(keyUpper)) {
+    heldDrumKeys.delete(keyUpper);
+  }
 
   // Sustain pedal release via Shift key
   if (e.key === 'Shift') {
@@ -1514,9 +1529,12 @@ const SLICE_KEY_MAP = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Q', 'W', 'E
 let activeSliceSource = null;
 
 function loadDemoBreakbeat() {
-  chopperAudioBuffer = generateDemoBreakbeat();
+  const ctx = instrumentEngine.getAudioContext();
+  chopperAudioBuffer = generateDemoBreakbeat(ctx);
   runTransientDetection();
   drawWaveform();
+  renderSlicePads();
+  renderMpcPads();
 }
 
 async function handleChopperFileUpload(event) {
@@ -1525,12 +1543,12 @@ async function handleChopperFileUpload(event) {
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const tempCtx = new AudioCtx();
-    chopperAudioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
-    tempCtx.close();
+    const ctx = instrumentEngine.getAudioContext();
+    chopperAudioBuffer = await ctx.decodeAudioData(arrayBuffer);
     runTransientDetection();
     drawWaveform();
+    renderSlicePads();
+    renderMpcPads();
   } catch (err) {
     console.error('[Chopper Decode Error]', err);
     alert('Failed to decode audio file. Please ensure it is a valid WAV, MP3, or OGG file.');
@@ -1644,7 +1662,13 @@ function renderSlicePads() {
 }
 
 function playSlice(index) {
+  if (!chopperAudioBuffer) {
+    loadDemoBreakbeat();
+  }
   if (!chopperAudioBuffer || index < 0 || index >= chopperSlices.length) return;
+
+  const ctx = instrumentEngine.getAudioContext();
+  if (ctx.state === 'suspended') ctx.resume();
 
   try {
     if (activeSliceSource) {
@@ -1652,31 +1676,41 @@ function playSlice(index) {
       activeSliceSource.disconnect();
     }
   } catch (_) {}
-
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!chopperAudioCtx) chopperAudioCtx = new AudioCtx();
-  if (chopperAudioCtx.state === 'suspended') chopperAudioCtx.resume();
 
   const startSec = chopperSlices[index];
   const endSec = index < chopperSlices.length - 1 ? chopperSlices[index + 1] : chopperAudioBuffer.duration;
   const duration = Math.max(0.01, endSec - startSec);
 
-  const source = chopperAudioCtx.createBufferSource();
+  const source = ctx.createBufferSource();
   source.buffer = chopperAudioBuffer;
-  source.connect(chopperAudioCtx.destination);
+  source.connect(instrumentEngine.masterGain || ctx.destination);
   source.start(0, startSec, duration);
   activeSliceSource = source;
 
-  // Visual pad pulse
+  // Visual pad pulse in Chopper Tab
   const pad = document.getElementById(`slicePad_${index}`);
   if (pad) {
     pad.classList.add('active');
     setTimeout(() => pad.classList.remove('active'), 140);
   }
+
+  // Visual pulse on MPC Deck pad if in Slices mode
+  const mpcPad = document.getElementById(`mpcPad_${index + 1}`);
+  if (mpcPad) {
+    mpcPad.classList.add('active');
+    setTimeout(() => mpcPad.classList.remove('active'), 140);
+  }
 }
 
 function playFullLoop() {
+  if (!chopperAudioBuffer) {
+    loadDemoBreakbeat();
+  }
   if (!chopperAudioBuffer) return;
+
+  const ctx = instrumentEngine.getAudioContext();
+  if (ctx.state === 'suspended') ctx.resume();
+
   try {
     if (activeSliceSource) {
       activeSliceSource.stop();
@@ -1684,13 +1718,9 @@ function playFullLoop() {
     }
   } catch (_) {}
 
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!chopperAudioCtx) chopperAudioCtx = new AudioCtx();
-  if (chopperAudioCtx.state === 'suspended') chopperAudioCtx.resume();
-
-  const source = chopperAudioCtx.createBufferSource();
+  const source = ctx.createBufferSource();
   source.buffer = chopperAudioBuffer;
-  source.connect(chopperAudioCtx.destination);
+  source.connect(instrumentEngine.masterGain || ctx.destination);
   source.start();
   activeSliceSource = source;
 }
@@ -1699,6 +1729,7 @@ function playFullLoop() {
 window.addEventListener('keydown', (e) => {
   if (currentTheoryTab !== 'chopper') return;
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+  if (e.repeat) return; // Prevent repeated triggers on sustained key press
 
   const keyUpper = e.key.toUpperCase();
   const sliceIndex = SLICE_KEY_MAP.indexOf(keyUpper);
@@ -2372,6 +2403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchBeatCatalog();
   initTheoryTools();
   renderInstrumentSettingsRack();
+  loadDemoBreakbeat(); // Pre-slice demo breakbeat for immediate Bank B slice auditioning
 
   // Preload real studio multi-samples for active instrument & acoustic drum kit
   sampleEngine.preloadInstrument(instrumentEngine.getInstrument().id);

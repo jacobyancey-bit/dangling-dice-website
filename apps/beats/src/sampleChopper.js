@@ -3,17 +3,10 @@
  * Phase 3: Audio-to-Transient Drum Slicer, Loop Chopper, Sample Pack Metadata Tagger & Key Detector
  */
 
-let chopperAudioCtx = null;
+import { instrumentEngine } from './instrumentEngine.js';
 
-function getChopperAudioContext() {
-  if (!chopperAudioCtx) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    chopperAudioCtx = new AudioCtx();
-  }
-  if (chopperAudioCtx.state === 'suspended') {
-    chopperAudioCtx.resume();
-  }
-  return chopperAudioCtx;
+export function getChopperAudioContext() {
+  return instrumentEngine.getAudioContext();
 }
 
 // -------------------------------------------------------------
@@ -285,8 +278,8 @@ export function detectTransients(audioBuffer, thresholdSensitivity = 0.45) {
  * Creates a clean synthesized funk/lofi breakbeat AudioBuffer
  * so users can test slicing even without uploading a file.
  */
-export function generateDemoBreakbeat() {
-  const ctx = getChopperAudioContext();
+export function generateDemoBreakbeat(providedCtx = null) {
+  const ctx = providedCtx || getChopperAudioContext();
   const sampleRate = ctx.sampleRate;
   const bpm = 90;
   const secondsPerBeat = 60 / bpm;
