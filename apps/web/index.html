@@ -1075,20 +1075,20 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
         <span class="beats-bar"></span>
         <span class="beats-bar"></span>
       </div>
-      <div class="beats-dock-full" style="cursor: pointer;" onclick="togglePlaylistDrawer()" title="Click to switch radio station">
-        <div id="dockTrackTitle" style="font-size: 0.82rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+      <div class="beats-dock-full" onclick="togglePlaylistDrawer()" title="Click to switch radio station">
+        <div id="dockTrackTitle" class="dock-track-title">
           Dangling Beats &bull; Lo-Fi Drive
         </div>
-        <div id="dockTrackSubtitle" style="font-size: 0.72rem; color: #f472b6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+        <div id="dockTrackSubtitle" class="dock-track-subtitle">
           Lo-Fi Focus Radio
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 0.35rem;">
-        <button id="dockPlaylistBtn" class="beats-dock-icon-btn" onclick="togglePlaylistDrawer()" title="Switch Playlist / Station" style="font-size: 0.72rem; padding: 0.3rem 0.5rem; display: inline-flex; align-items: center; gap: 0.25rem;">
-          📻 <span>Stations</span> ▾
+      <div class="dock-controls-actions">
+        <button id="dockPlaylistBtn" class="beats-dock-icon-btn dock-playlist-trigger-btn" onclick="togglePlaylistDrawer()" title="Switch Radio Station / Playlist">
+          📻 <span class="dock-btn-label">Stations</span> ▾
         </button>
-        <button id="dockPlayBtn" class="btn btn-purple btn-sm" onclick="toggleDockAudio()">▶ Play</button>
-        <button id="dockCinemaBtn" class="beats-dock-icon-btn" onclick="openCurrentStationCinema()" title="Open Full Cinema Mode">⛶</button>
+        <button id="dockPlayBtn" class="btn btn-purple btn-dock-play" onclick="toggleDockAudio()">▶ Play</button>
+        <button id="dockCinemaBtn" class="beats-dock-icon-btn dock-cinema-trigger-btn" onclick="openCurrentStationCinema()" title="Open Full Cinema Mode">⛶</button>
         <button class="beats-dock-min-btn" onclick="toggleDockMinimize()" title="Minimize / Expand">—</button>
       </div>
     </div>
