@@ -563,63 +563,71 @@ window.copyWireGuardConfig = function () {
 let isDockAudioActive = false;
 let isPlaylistDrawerOpen = false;
 
-// 1. Official Dangling Beats Studio Stations (All 8 Curated Channel Playlists)
+// 1. Official Dangling Beats Studio Stations (Wired with Starting Video IDs for Instant Autoplay)
 const officialStations = [
   {
     id: "lofi-drive",
     title: "Dangling Beats • Lo-Fi Drive",
     subtitle: "Official Lo-Fi Focus Radio",
     badge: "Lo-Fi",
-    url: "https://www.youtube.com/embed/videoseries?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1",
+    videoId: "2J-U0EUATHs",
+    url: "https://www.youtube.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "dreamcore",
     title: "Dangling Beats • Dreamcore",
     subtitle: "Ethereal Ambient Soundscapes",
     badge: "Dreamcore",
-    url: "https://www.youtube.com/embed/videoseries?list=PLByFVPrF7p0s&autoplay=1&enablejsapi=1",
+    videoId: "BGW1y-9bVJc",
+    url: "https://www.youtube.com/embed/BGW1y-9bVJc?list=PLByFVPrF7p0s&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "relaxing-jazz",
     title: "Dangling Beats • Relaxing Jazz",
     subtitle: "Smooth Rhodes & Jazzy Vibes",
     badge: "Jazz",
-    url: "https://www.youtube.com/embed/videoseries?list=PLZzyR4Y8j_gA&autoplay=1&enablejsapi=1",
+    videoId: "0YknzKYiDXo",
+    url: "https://www.youtube.com/embed/0YknzKYiDXo?list=PLZzyR4Y8j_gA&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "jk-pop",
     title: "Dangling Beats • J/K Pop Background",
     subtitle: "Upbeat Coding & Creative Rhythm",
     badge: "Pop",
-    url: "https://www.youtube.com/embed/videoseries?list=PLUOqd5Jfm3gw&autoplay=1&enablejsapi=1",
+    videoId: "8Z0e3VIb-4U",
+    url: "https://www.youtube.com/embed/8Z0e3VIb-4U?list=PLUOqd5Jfm3gw&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "yacht-rock",
     title: "Dangling Beats • Yacht Rock",
     subtitle: "Classic Sunset Grooves",
     badge: "Groove",
-    url: "https://www.youtube.com/embed/videoseries?list=PLOQPFjHz5Vs4&autoplay=1&enablejsapi=1",
+    videoId: "2Onu8sRtlk8",
+    url: "https://www.youtube.com/embed/2Onu8sRtlk8?list=PLOQPFjHz5Vs4&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "sleep-music",
     title: "Dangling Beats • Sleep Music",
     subtitle: "Deep Relaxation & Binaural Waves",
     badge: "Sleep",
-    url: "https://www.youtube.com/embed/videoseries?list=PLJL6dnrrRw-k&autoplay=1&enablejsapi=1",
+    videoId: "fdBVmykxMqE",
+    url: "https://www.youtube.com/embed/fdBVmykxMqE?list=PLJL6dnrrRw-k&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "music-albums",
     title: "Dangling Beats • Music Albums",
     subtitle: "Full Studio Album Catalog",
     badge: "Albums",
-    url: "https://www.youtube.com/embed/videoseries?list=PLR6uUDnIO7P0&autoplay=1&enablejsapi=1",
+    videoId: "YIaOzPji1Kk",
+    url: "https://www.youtube.com/embed/YIaOzPji1Kk?list=PLR6uUDnIO7P0&autoplay=1&enablejsapi=1&playsinline=1",
   },
   {
     id: "live-videos",
     title: "Dangling Beats • Live Sessions",
     subtitle: "Live Studio Broadcasts",
     badge: "Live",
-    url: "https://www.youtube.com/embed/videoseries?list=PLFLqzwDKWUyQ&autoplay=1&enablejsapi=1",
+    videoId: "YY8mKBKGM5o",
+    url: "https://www.youtube.com/embed/YY8mKBKGM5o?list=PLFLqzwDKWUyQ&autoplay=1&enablejsapi=1&playsinline=1",
   },
 ];
 
@@ -817,24 +825,24 @@ window.selectStation = function (stationId) {
   const dock = document.getElementById("beatsDock");
   const btn = document.getElementById("dockPlayBtn");
 
-  // Force clean iframe reload so YouTube starts playing the new playlist immediately
-  if (iframe) {
-    iframe.src = "";
-    setTimeout(() => {
-      const url = station.url.includes("autoplay=1")
-        ? station.url
-        : `${station.url}${station.url.includes("?") ? "&" : "?"}autoplay=1&enablejsapi=1`;
-      iframe.src = url;
-    }, 60);
-  }
-
-  isDockAudioActive = true;
+  // Ensure drawer is open, dock is active and marked as playing
+  if (drawer) drawer.style.display = "block";
   if (dock) {
     dock.classList.add("playing");
     dock.classList.remove("minimized");
   }
   if (btn) btn.textContent = "⏸ Pause";
-  if (drawer) drawer.style.display = "block";
+  isDockAudioActive = true;
+
+  // Set iframe src synchronously within the click event to preserve browser user activation
+  if (iframe) {
+    const origin = window.location.origin;
+    let url = station.url;
+    if (!url.includes("origin=")) {
+      url += (url.includes("?") ? "&" : "?") + `origin=${encodeURIComponent(origin)}`;
+    }
+    iframe.src = url;
+  }
 
   // Close drawer after selection
   isPlaylistDrawerOpen = false;
@@ -872,9 +880,12 @@ window.toggleDockAudio = function () {
     if (btn) btn.textContent = "⏸ Pause";
     if (drawer) drawer.style.display = "block";
     if (iframe) {
-      if (!iframe.src || !iframe.src.includes("autoplay=1")) {
-        iframe.src = currentStation.url;
+      const origin = window.location.origin;
+      let url = currentStation.url;
+      if (!url.includes("origin=")) {
+        url += (url.includes("?") ? "&" : "?") + `origin=${encodeURIComponent(origin)}`;
       }
+      iframe.src = url;
     }
     window.showToast(`▶ Streaming ${currentStation.title}`, "success");
   } else {
