@@ -32,45 +32,57 @@ body {
   overflow-x: hidden;
 }
 
-/* Studio Control Room Ambient Background (Pure CSS, GPU-Accelerated) */
+/* Studio Control Room Ambient Background with Warm Brown Acoustic Slats & Dual Light Beams (Pure CSS, GPU-Accelerated) */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-color: #06080d;
+  background-color: #120b07; /* Deep walnut studio base */
   background-image:
-    /* Layer 1: Focused Console Spotlights (Warm amber downlight + cool cyan rack gear glow) */
-    radial-gradient(ellipse 900px 380px at 50% -40px, rgba(245, 158, 11, 0.09) 0%, transparent 70%),
-    radial-gradient(ellipse 650px 420px at 85% 15%, rgba(6, 182, 212, 0.07) 0%, transparent 65%),
-    radial-gradient(ellipse 650px 450px at 15% 85%, rgba(168, 85, 247, 0.06) 0%, transparent 70%),
+    /* Layer 1: Left Soft Light Beam (Cascades down left side of central 1200px boxes) */
+    radial-gradient(ellipse 340px 1150px at calc(50% - 640px) -40px, rgba(254, 240, 199, 0.26) 0%, rgba(245, 158, 11, 0.15) 30%, rgba(217, 119, 6, 0.05) 55%, transparent 75%),
+    linear-gradient(168deg, transparent 0%, transparent calc(50% - 820px), rgba(254, 243, 199, 0.12) calc(50% - 640px), transparent calc(50% - 460px)),
 
-    /* Layer 2: Deep Studio Booth Vignette (Simulates dark sound-dampened control room walls) */
-    radial-gradient(ellipse at 50% 30%, transparent 35%, rgba(4, 6, 10, 0.75) 75%, rgba(1, 2, 4, 0.98) 100%),
+    /* Layer 2: Right Soft Light Beam (Cascades down right side of central 1200px boxes) */
+    radial-gradient(ellipse 340px 1150px at calc(50% + 640px) -40px, rgba(254, 240, 199, 0.26) 0%, rgba(245, 158, 11, 0.15) 30%, rgba(217, 119, 6, 0.05) 55%, transparent 75%),
+    linear-gradient(192deg, transparent 0%, transparent calc(50% + 460px), rgba(254, 243, 199, 0.12) calc(50% + 640px), transparent calc(50% + 820px)),
 
-    /* Layer 3: Acoustic Wood Slat Panels (Sound diffuser wall pattern) */
+    /* Layer 3: Central Ambient Console Glow (Gentle warm ceiling downlight) */
+    radial-gradient(ellipse 850px 320px at 50% -20px, rgba(254, 243, 199, 0.09) 0%, transparent 65%),
+
+    /* Layer 4: Deep Studio Booth Vignette (Gives depth to outer room edges) */
+    radial-gradient(ellipse at 50% 25%, transparent 35%, rgba(12, 8, 6, 0.6) 75%, rgba(7, 4, 3, 0.94) 100%),
+
+    /* Layer 5: Warm Brown Acoustic Wood Slats (Rich architectural walnut / oak diffuser wall) */
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.012) 0px,
-      rgba(255, 255, 255, 0.012) 1px,
-      transparent 1px,
-      transparent 28px,
-      rgba(0, 0, 0, 0.45) 28px,
-      rgba(0, 0, 0, 0.45) 36px
+      #4d3122 0px,
+      #5a3a28 2px,
+      #442a1b 20px,
+      #362014 26px,
+      #27160e 27px,
+      #0c0806 27px,
+      #0c0806 36px
     );
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 36px 100%;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 36px 100%;
 }
 
-/* Subtle Control Room Acoustic Ceiling & Rack Edge Lighting */
+/* Studio Ceiling Track & Overhead Spotlights for Side Beams */
 body::after {
   content: "";
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 5%, rgba(245, 158, 11, 0.4) 30%, rgba(236, 72, 153, 0.4) 50%, rgba(6, 182, 212, 0.4) 70%, transparent 95%);
+  height: 3px;
+  background: 
+    /* Dual spotlight fixtures above the two side beams */
+    radial-gradient(circle 120px at calc(50% - 640px) 0px, rgba(255, 251, 235, 0.8) 0%, rgba(245, 158, 11, 0.4) 40%, transparent 70%),
+    radial-gradient(circle 120px at calc(50% + 640px) 0px, rgba(255, 251, 235, 0.8) 0%, rgba(245, 158, 11, 0.4) 40%, transparent 70%),
+    /* Track runner line */
+    linear-gradient(90deg, transparent 5%, rgba(245, 158, 11, 0.4) 25%, rgba(254, 243, 199, 0.5) 50%, rgba(245, 158, 11, 0.4) 75%, transparent 95%);
   z-index: 101;
   pointer-events: none;
 }
