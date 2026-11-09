@@ -82,6 +82,7 @@ header {
   font-size: 1.05rem;
   background: linear-gradient(135deg, #fff, #f472b6);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -210,6 +211,7 @@ header {
 .hero-title span {
   background: linear-gradient(135deg, #f472b6, #ec4899, #06b6d4);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
