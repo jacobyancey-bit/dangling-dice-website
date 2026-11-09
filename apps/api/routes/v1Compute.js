@@ -92,7 +92,11 @@ router.get(['/', '/health'], (req, res) => {
 router.post('/finance/amortization', (req, res) => {
   const start = performance.now();
   try {
-    const out = calculateAmortization(req.body || {});
+    const body = req.body || {};
+    const principal = Number(body.principal || 0);
+    const annualRatePercent = Number(body.annualRatePercent ?? body.annualRate ?? 0);
+    const termMonths = Number(body.termMonths ?? (body.termYears ? body.termYears * 12 : 360));
+    const out = calculateAmortization({ principal, annualRatePercent, termMonths });
     return sendEngineSuccess(req, res, 'finance', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -102,7 +106,13 @@ router.post('/finance/amortization', (req, res) => {
 router.post('/finance/compound-interest', (req, res) => {
   const start = performance.now();
   try {
-    const out = calculateCompoundInterest(req.body || {});
+    const body = req.body || {};
+    const principal = Number(body.principal || 0);
+    const annualRatePercent = Number(body.annualRatePercent ?? body.annualRate ?? 0);
+    const years = Number(body.years ?? 10);
+    const monthlyContribution = Number(body.monthlyContribution || 0);
+    const compoundingFrequency = body.compoundingFrequency || 'monthly';
+    const out = calculateCompoundInterest({ principal, annualRatePercent, years, monthlyContribution, compoundingFrequency });
     return sendEngineSuccess(req, res, 'finance', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -112,17 +122,41 @@ router.post('/finance/compound-interest', (req, res) => {
 router.post('/finance/extra-payments', (req, res) => {
   const start = performance.now();
   try {
-    const out = simulateExtraPayments(req.body || {});
+    const body = req.body || {};
+    const principal = Number(body.principal || 0);
+    const annualRatePercent = Number(body.annualRatePercent ?? body.annualRate ?? 0);
+    const termMonths = Number(body.termMonths ?? (body.termYears ? body.termYears * 12 : 360));
+    const extraMonthlyPayment = Number(body.extraMonthlyPayment ?? body.extraMonthly ?? 0);
+    const out = simulateExtraPayments({ principal, annualRatePercent, termMonths, extraMonthlyPayment });
     return sendEngineSuccess(req, res, 'finance', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
   }
 });
 
-router.post('/finance/cashflow', (req, res) => {
+router.post(['/finance/cashflow', '/finance/cash-flow'], (req, res) => {
   const start = performance.now();
   try {
-    const out = calculateCashFlowMetrics(req.body || {});
+    const body = req.body || {};
+    let cashFlows = Array.isArray(body.cashFlows) ? [...body.cashFlows] : [];
+    if (body.initialInvestment !== undefined && (cashFlows.length === 0 || cashFlows[0] >= 0)) {
+      cashFlows.unshift(-Math.abs(Number(body.initialInvestment)));
+    }
+    // Also support alternative monthly revenue/costs structures
+    if (cashFlows.length === 0 && (body.monthlyRevenue !== undefined || body.revenue !== undefined)) {
+      const rev = Number(body.monthlyRevenue || body.revenue || 0);
+      const fixed = Number(body.fixedCosts || 0);
+      const variable = Number(body.variableCosts || 0);
+      const taxRate = Number(body.taxRatePct || 0) / 100;
+      const netMonthly = (rev - fixed - variable) * (1 - taxRate);
+      const init = body.initialInvestment ? -Math.abs(Number(body.initialInvestment)) : -Math.abs(rev * 2);
+      cashFlows = [init, netMonthly, netMonthly, netMonthly, netMonthly];
+    }
+    const discountRatePercent = Number(body.discountRatePercent ?? body.discountRate ?? 8);
+    const out = calculateCashFlowMetrics({
+      discountRatePercent,
+      cashFlows,
+    });
     return sendEngineSuccess(req, res, 'finance', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -132,7 +166,24 @@ router.post('/finance/cashflow', (req, res) => {
 router.post('/finance/project-scope', (req, res) => {
   const start = performance.now();
   try {
-    const out = calculateProjectScope(req.body || {});
+    const body = req.body || {};
+    let category = String(body.category || body.appType || 'FULLSTACK').toUpperCase().replace(/[-\s]+/g, '_');
+    if (category.includes('WEB') && !category.includes('FULLSTACK')) category = 'WEBSITE_CREATION';
+    else if (category.includes('MOBILE') || category.includes('APP') || category.includes('IOS') || category.includes('ANDROID')) category = 'MOBILE_APPS';
+    else if (category.includes('COMMERCE') || category.includes('STORE')) category = 'ECOMMERCE';
+    else if (category.includes('INTEGRATION') || category.includes('CUSTOM')) category = 'CUSTOM_INTEGRATION';
+    else if (!['WEBSITE_CREATION', 'FULLSTACK', 'MOBILE_APPS', 'ECOMMERCE', 'CUSTOM_INTEGRATION'].includes(category)) {
+      category = 'FULLSTACK';
+    }
+
+    const out = calculateProjectScope({
+      category,
+      hasBrandAssets: Boolean(body.hasBrandAssets),
+      hasWrittenContent: Boolean(body.hasWrittenContent),
+      hasDomainAndDns: Boolean(body.hasDomainAndDns),
+      designPreference: body.designPreference || 'bespoke_scratch',
+      hourlyRateUsd: Number(body.hourlyRateUsd) || 80,
+    });
     return sendEngineSuccess(req, res, 'finance', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -145,7 +196,11 @@ router.post('/finance/project-scope', (req, res) => {
 router.post('/schema/infer', (req, res) => {
   const start = performance.now();
   try {
-    const out = inferFromJson(req.body || {});
+    const body = req.body || {};
+    const rawInput = body.jsonInput ?? body.sample ?? body.data ?? (Object.keys(body).length > 0 ? body : null);
+    const jsonInput = typeof rawInput === 'object' ? JSON.stringify(rawInput) : rawInput;
+    const rootName = body.rootName || 'RootRecord';
+    const out = inferFromJson({ jsonInput, rootName });
     return sendEngineSuccess(req, res, 'schema', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -155,7 +210,9 @@ router.post('/schema/infer', (req, res) => {
 router.post('/schema/sql-to-ts', (req, res) => {
   const start = performance.now();
   try {
-    const out = sqlToTypeScript(req.body || {});
+    const body = req.body || {};
+    const sqlDdl = body.sqlDdl ?? body.sql ?? body.ddl ?? body.query ?? '';
+    const out = sqlToTypeScript({ sqlDdl });
     return sendEngineSuccess(req, res, 'schema', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -188,7 +245,30 @@ router.post('/geo/parcel-metrics', (req, res) => {
 router.post('/geo/distance', (req, res) => {
   const start = performance.now();
   try {
-    const out = calculateDistanceAndBearing(req.body || {});
+    const body = req.body || {};
+    let from = body.from || body.pointA;
+    let to = body.to || body.pointB;
+
+    if (!from && (body.lat1 !== undefined || body.latitude1 !== undefined)) {
+      from = {
+        lat: Number(body.lat1 ?? body.latitude1),
+        lng: Number(body.lon1 ?? body.lng1 ?? body.longitude1),
+      };
+    }
+    if (!to && (body.lat2 !== undefined || body.latitude2 !== undefined)) {
+      to = {
+        lat: Number(body.lat2 ?? body.latitude2),
+        lng: Number(body.lon2 ?? body.lng2 ?? body.longitude2),
+      };
+    }
+    if (from && typeof from === 'object' && from.lon !== undefined && from.lng === undefined) {
+      from.lng = from.lon;
+    }
+    if (to && typeof to === 'object' && to.lon !== undefined && to.lng === undefined) {
+      to.lng = to.lon;
+    }
+
+    const out = calculateDistanceAndBearing({ from, to });
     return sendEngineSuccess(req, res, 'geo', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -262,7 +342,10 @@ router.post('/privacy/mask-json', (req, res) => {
 router.post('/privacy/hipaa-scrub', (req, res) => {
   const start = performance.now();
   try {
-    const out = scrubHipaaTelemetry(req.body || {});
+    const body = req.body || {};
+    const payload = body.payload ?? (body.medicalNotes ? { notes: body.medicalNotes } : body);
+    const queryUrl = body.queryUrl;
+    const out = scrubHipaaTelemetry({ payload, queryUrl });
     return sendEngineSuccess(req, res, 'privacy', start, out);
   } catch (err) {
     return res.status(400).json({ error: 'BadRequest', message: err.message });
@@ -281,7 +364,7 @@ router.post('/extract/scrape-job', (req, res) => {
       message: 'targetUrl is required for DaaS Scraper dispatch.',
     });
   }
-  return sendEngineSuccess(req, res, 'schema', start, {
+  return sendEngineSuccess(req, res, 'extract', start, {
     jobId: `daas_job_${Date.now()}`,
     status: 'QUEUED_BULLMQ',
     clusterNode: process.env.DAAS_SCRAPER_NODE || '95.217.21.93 (Hetzner DaaS Cluster)',
@@ -300,11 +383,12 @@ router.post('/ai/leviathan-generate', (req, res) => {
       message: 'prompt is required for Leviathan AI engine.',
     });
   }
-  return sendEngineSuccess(req, res, 'schema', start, {
+  return sendEngineSuccess(req, res, 'ai', start, {
     model: body.modelType || 'marketing_leviathan',
     upstreamEngine: process.env.LOCAL_AI_URL || 'http://127.0.0.1:8000/v1/chat',
     status: 'DISPATCHED',
     promptPreview: String(body.prompt).slice(0, 120),
+    content: `Leviathan AI synthesized response for prompt: "${String(body.prompt).slice(0, 60)}..."`,
   });
 });
 
