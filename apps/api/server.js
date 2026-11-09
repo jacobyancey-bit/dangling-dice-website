@@ -181,9 +181,10 @@ app.get('/openapi.json', (req, res) => {
   res.sendFile(specPath);
 });
 
-// Frontend Static Files (Supports main domain and media subdomain)
+// Frontend Static Files (Supports main domain, media, and beats subdomains)
 const webDistPath = path.join(__dirname, '..', 'web', 'dist');
 const mediaDistPath = path.join(__dirname, '..', 'media', 'dist');
+const beatsDistPath = path.join(__dirname, '..', 'beats', 'dist');
 
 // Multi-tenant subdomain static server
 app.use((req, res, next) => {
@@ -211,6 +212,13 @@ app.use((req, res, next) => {
 
   const hostname = (req.hostname || '').toLowerCase();
   const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media';
+  const isBeatsSubdomain = hostname.startsWith('beats.') || hostname.startsWith('music.') || hostname.startsWith('radio.') || req.query.subdomain === 'beats';
+
+  if (isBeatsSubdomain && fs.existsSync(beatsDistPath)) {
+    return express.static(beatsDistPath)(req, res, () => {
+      res.sendFile(path.join(beatsDistPath, 'index.html'));
+    });
+  }
 
   if (isMediaSubdomain && fs.existsSync(mediaDistPath)) {
     return express.static(mediaDistPath)(req, res, () => {

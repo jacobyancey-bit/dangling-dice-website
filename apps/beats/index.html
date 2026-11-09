@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Dangling Beats Studio™ | 24/7 Lo-Fi, Trap & Synthwave Focus Radio</title>
+  <meta name="description" content="The sound lab of Dangling Dice Studios™. Stream 24/7 commercial-free lo-fi, synthwave, and trap beats for coding, studying, and focus. Extract 320kbps MP3 samples." />
+  <link rel="canonical" href="https://beats.dangling-dice-studios.com/" />
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="stylesheet" href="./src/style.css" />
+
+  <!-- Open Graph / Social SEO -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://beats.dangling-dice-studios.com/" />
+  <meta property="og:title" content="Dangling Beats Studio™ | 24/7 Focus Radio & Producer Beats" />
+  <meta property="og:description" content="Commercial-free lo-fi, dark trap, and synthwave radio crafted for late-night programming sessions and beatmakers." />
+  <meta property="og:image" content="https://dangling-dice-studios.com/images/banner.jpg" />
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="nav-container">
+      <a href="/" class="brand">
+        <img src="/images/logo.png" alt="Dangling Beats Studio Logo" />
+        <div class="brand-text">
+          <h1>Dangling Beats Studio™</h1>
+          <p>Lo-Fi, Trap &amp; Producer Radio</p>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="https://dangling-dice-studios.com/" class="nav-link portal-link">
+          ← Central Studio Hub
+        </a>
+        <a href="https://media.dangling-dice-studios.com/" class="nav-link" style="border-color: rgba(6, 182, 212, 0.4); color: var(--neon-cyan);">
+          🎵 Free MP3 Transcoder
+        </a>
+        <a href="#stations" class="nav-link">
+          📻 Radio Stations
+        </a>
+        <a href="#catalog" class="nav-link">
+          💿 Beat Catalog
+        </a>
+        <a href="https://www.youtube.com/@danglingdicestudios" target="_blank" rel="noopener noreferrer" class="nav-link" style="color: #ff4d4d; border-color: rgba(255, 77, 77, 0.4);">
+          ▶ YouTube Channel
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Master Radio Console Hero -->
+    <section class="hero-deck">
+      <div class="hero-header">
+        <div>
+          <div class="status-badge live-indicator">
+            24/7 Privacy-Enhanced Stream &bull; Zero Ads &bull; Pure Focus
+          </div>
+          <h2 class="hero-title">Soundtracks for Late-Night Coding &amp; Flow State</h2>
+          <p class="hero-subtitle">
+            Crafted in-house by Dangling Dice Studios™. Switch between lo-fi chillhop, ethereal dreamcore, 808 dark trap, and synthwave night drives.
+          </p>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="window.openAddStationModal()" style="border-color: rgba(236, 72, 153, 0.45); color: #f472b6;">
+          + Add Your Own Playlist
+        </button>
+      </div>
+
+      <!-- Live Player Deck -->
+      <div id="playerConsole" class="player-console">
+        <!-- 16:9 YouTube Stream Video/Audio -->
+        <div class="player-video-box">
+          <iframe 
+            id="beatsIframe" 
+            src="https://www.youtube-nocookie.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1&playsinline=1" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen
+            title="Dangling Beats Live Radio Player"
+          ></iframe>
+        </div>
+
+        <!-- Right Player Control Deck -->
+        <div class="player-controls-panel">
+          <div class="now-playing-header">
+            <span id="consoleBadge" class="now-playing-label">Lo-Fi</span>
+            <h3 id="consoleTrackTitle" class="now-playing-title">Dangling Beats • Lo-Fi Drive</h3>
+            <p id="consoleTrackSub" class="now-playing-sub">Official Lo-Fi &amp; Cyberpunk Focus Radio</p>
+          </div>
+
+          <!-- Pulsing Audio Wave Visualizer Bars -->
+          <div class="sound-bars">
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+          </div>
+
+          <!-- Master Control Buttons -->
+          <div class="deck-buttons">
+            <button type="button" class="btn btn-secondary" onclick="window.prevStation()" title="Previous Station" style="flex: 0 0 46px;">
+              ⏮
+            </button>
+            <button id="consolePlayBtn" type="button" class="btn btn-primary" onclick="window.togglePlay()" style="flex: 1;">
+              ⏸ Pause Radio
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="window.nextStation()" title="Next Station" style="flex: 0 0 46px;">
+              ⏭
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transcoder & Sample Converter Callout -->
+    <section class="producer-callout">
+      <div class="producer-callout-text">
+        <div class="status-badge" style="background: rgba(6, 182, 212, 0.2); color: var(--neon-cyan); border-color: rgba(6, 182, 212, 0.4); margin-bottom: 0.5rem;">
+          ⚡ In-House Beatmaker Tooling
+        </div>
+        <h3>Need Audio Samples or Reference Stems?</h3>
+        <p>
+          Use our standalone, ad-free <strong>Media Converter</strong> to extract true 320kbps MP3 audio tracks and drum loops directly into your DAW with zero tracking or popups.
+        </p>
+      </div>
+      <a href="https://media.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" class="btn btn-cyan">
+        Launch Media Converter ↗
+      </a>
+    </section>
+
+    <!-- Official Stations Section -->
+    <section id="stations" style="margin-bottom: 3rem;">
+      <div class="section-title-wrap">
+        <h2 class="section-title">
+          <span>📻</span> Curated Radio Stations
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Click any station to switch instantly</span>
+      </div>
+
+      <div id="stationsGrid" class="stations-grid">
+        <!-- Dynamically rendered via main.js -->
+      </div>
+    </section>
+
+    <!-- Beat Catalog Section -->
+    <section id="catalog" style="margin-bottom: 3rem;">
+      <div class="section-title-wrap">
+        <h2 class="section-title">
+          <span>💿</span> Studio Releases &amp; Instrumental Stems
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Live from MongoDB API</span>
+      </div>
+
+      <div id="beatCatalogGrid" class="stations-grid">
+        <!-- Dynamically rendered via main.js -->
+      </div>
+    </section>
+
+    <!-- Pro Audio Gear & Studio Deals -->
+    <section style="margin-bottom: 3rem;">
+      <div class="section-title-wrap">
+        <h2 class="section-title">
+          <span>🎛️</span> Pro Audio Hardware &amp; DAW Perks
+        </h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Verified producer tools used at Dangling Dice</span>
+      </div>
+
+      <div class="stations-grid">
+        <div class="station-card">
+          <div>
+            <span class="station-card-badge">7% Artist Discount</span>
+            <h3 class="station-card-title">DistroKid Music Distribution</h3>
+            <p class="station-card-sub">Upload unlimited beats and albums to Spotify, Apple Music, TikTok, and YouTube. Keep 100% of royalties.</p>
+          </div>
+          <div class="station-card-action">
+            <a href="https://distrokid.com/vip/seven/danglingdice" target="_blank" rel="noopener noreferrer" style="color: #f472b6; text-decoration: none;">
+              Claim 7% Off ↗
+            </a>
+          </div>
+        </div>
+
+        <div class="station-card">
+          <div>
+            <span class="station-card-badge">Industry DAWs</span>
+            <h3 class="station-card-title">FL Studio &amp; Ableton Live</h3>
+            <p class="station-card-sub">The flagship production suites used to produce Dangling Beats releases. Rapid piano rolls and multi-track sequencing.</p>
+          </div>
+          <div class="station-card-action">
+            <a href="https://www.image-line.com/" target="_blank" rel="noopener noreferrer" style="color: #67e8f9; text-decoration: none;">
+              Explore DAWs ↗
+            </a>
+          </div>
+        </div>
+
+        <div class="station-card">
+          <div>
+            <span class="station-card-badge">Samples &amp; Loops</span>
+            <h3 class="station-card-title">Splice Sounds &amp; Looperman</h3>
+            <p class="station-card-sub">Royalty-free one-shots, 808 basslines, and synth melodies cleared for commercial streaming monetization.</p>
+          </div>
+          <div class="station-card-action">
+            <a href="https://splice.com/" target="_blank" rel="noopener noreferrer" style="color: #fbbf24; text-decoration: none;">
+              Browse Sounds ↗
+            </a>
+          </div>
+        </div>
+
+        <div class="station-card">
+          <div>
+            <span class="station-card-badge">Pro Audio Mixing</span>
+            <h3 class="station-card-title">FabFilter &amp; Plugin Boutique</h3>
+            <p class="station-card-sub">Essential mastering plugins including FabFilter Pro-Q, RC-20 Retro Color, and virtual synth expansions.</p>
+          </div>
+          <div class="station-card-action">
+            <a href="https://www.pluginboutique.com/" target="_blank" rel="noopener noreferrer" style="color: #f472b6; text-decoration: none;">
+              View Plugins ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add Custom Playlist Modal -->
+  <div id="addStationModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff;">+ Add YouTube Station</h3>
+        <button type="button" onclick="window.closeAddStationModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <form onsubmit="window.handleAddCustomStation(event)">
+        <div class="form-group">
+          <label class="form-label" for="customStationTitle">Station / Playlist Name</label>
+          <input type="text" id="customStationTitle" class="form-input" placeholder="e.g. My Favorite Synthwave" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="customStationUrl">YouTube Playlist or Video URL *</label>
+          <input type="url" id="customStationUrl" class="form-input" placeholder="https://www.youtube.com/playlist?list=... or watch?v=..." required />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="window.closeAddStationModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Start Streaming</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.75rem;">
+      <p>
+        <strong>Dangling Beats Studio™</strong> &bull; A Division of <a href="https://dangling-dice-studios.com/">Dangling Dice Studios™</a>
+      </p>
+      <p style="font-size: 0.72rem; color: #64748b;">
+        Streaming in Google YouTube Privacy-Enhanced Mode (<code>youtube-nocookie.com</code>). Zero intrusive ad trackers.
+      </p>
+      <p style="font-size: 0.72rem; color: #64748b;">
+        <strong>Affiliate Notice:</strong> Dangling Dice Studios™ participates in affiliate marketing programs, earning referral commissions on qualifying gear and subscriptions at zero cost to you.
+      </p>
+    </div>
+  </footer>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
