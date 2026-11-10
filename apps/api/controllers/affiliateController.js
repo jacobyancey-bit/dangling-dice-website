@@ -220,8 +220,8 @@ export const redirectPartner = (req, res) => {
   target.searchParams.set('utm_medium', 'affiliate');
   target.searchParams.set('utm_campaign', cleanSource);
 
-  // Attach Amazon Associate Tracking Tag if configured in environment
-  const amazonTag = process.env.AMAZON_ASSOCIATE_TAG || process.env.AMAZON_AFFILIATE_TAG;
+  // Attach Amazon Associate Tracking Tag (Default: danglingdice-20)
+  const amazonTag = process.env.AMAZON_ASSOCIATE_TAG || process.env.AMAZON_AFFILIATE_TAG || 'danglingdice-20';
   if (target.hostname.includes('amazon.') && amazonTag) {
     target.searchParams.set('tag', amazonTag);
   }

@@ -81,6 +81,7 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     assert.match(redirectLocation, /amazon\.com/i);
     assert.match(redirectLocation, /utm_source=danglingdice/i);
     assert.match(redirectLocation, /utm_campaign=gaming_hub/i);
+    assert.match(redirectLocation, /tag=danglingdice-20/i, 'Must attach official Amazon Associate tag danglingdice-20');
   });
 
   it('AFF-02: Returns 404 for unrecognized partner slug', () => {
