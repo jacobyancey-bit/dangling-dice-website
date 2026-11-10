@@ -410,7 +410,10 @@ async function dispatchDiscordBroadcast() {
 
     const res = await fetch(`${API_BASE}/broadcast/discord`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
       body: JSON.stringify({ title, link, description, category })
     });
     const json = await res.json();
@@ -563,7 +566,10 @@ async function queueScheduledBroadcast() {
     logAdmin(`Queueing scheduled drop for ${scheduledDate.toLocaleString()}...`);
     const res = await fetch(`${API_BASE}/broadcast/scheduled`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
       body: JSON.stringify({
         title,
         link,
@@ -590,7 +596,11 @@ async function loadScheduledQueue() {
   if (!container) return;
 
   try {
-    const res = await fetch(`${API_BASE}/broadcast/scheduled`);
+    const res = await fetch(`${API_BASE}/broadcast/scheduled`, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
     const json = await res.json();
     if (!res.ok || !json.data || json.data.length === 0) {
       if (section) section.style.display = 'none';
@@ -607,17 +617,17 @@ async function loadScheduledQueue() {
         <div style="background: rgba(6, 9, 14, 0.85); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.65rem 0.85rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 0.6rem;">
             <span style="font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 3px; background: rgba(255,255,255,0.05); color: ${statusColor}; border: 1px solid ${statusColor}40;">
-              ${post.status}
+              ${escapeHtml(post.status)}
             </span>
             <div>
-              <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">${post.title}</div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">${escapeHtml(post.title)}</div>
               <div style="font-size: 0.72rem; color: var(--text-muted);">
-                Scheduled for: <strong style="color: var(--neon-cyan);">${scheduledTime}</strong> &bull; Category: ${post.category}
+                Scheduled for: <strong style="color: var(--neon-cyan);">${scheduledTime}</strong> &bull; Category: ${escapeHtml(post.category)}
               </div>
             </div>
           </div>
           <div>
-            ${isPending ? `<button class="btn btn-danger btn-sm" onclick="cancelScheduledPost('${post._id}')" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">Cancel Drop</button>` : `<span style="font-size: 0.72rem; color: #10b981;">✓ Delivered to #studio-drops</span>`}
+            ${isPending ? `<button class="btn btn-danger btn-sm" onclick="cancelScheduledPost('${escapeHtml(post._id)}')" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">Cancel Drop</button>` : `<span style="font-size: 0.72rem; color: #10b981;">✓ Delivered to #studio-drops</span>`}
           </div>
         </div>
       `;
@@ -630,8 +640,11 @@ async function loadScheduledQueue() {
 async function cancelScheduledPost(id) {
   if (!confirm('Are you sure you want to cancel this scheduled drop?')) return;
   try {
-    const res = await fetch(`${API_BASE}/broadcast/scheduled/${id}`, {
-      method: 'DELETE'
+    const res = await fetch(`${API_BASE}/broadcast/scheduled/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message);
@@ -671,48 +684,51 @@ async function loadShowcaseSubmissions() {
       const isPending = item.status === 'PENDING';
       const isAOTW = item.isAppOfTheWeek;
       const statusColor = isApproved ? 'var(--neon-emerald)' : isPending ? '#fbbf24' : 'var(--neon-red)';
+      const safeUrl = item.appUrl && (item.appUrl.startsWith('http://') || item.appUrl.startsWith('https://'))
+        ? encodeURI(item.appUrl)
+        : '#';
 
       return `
         <tr>
           <td>
-            <div style="font-weight: 700; color: #fff;">${item.title}</div>
-            <div style="font-size: 0.72rem; color: var(--neon-cyan);">${item.tagline}</div>
-            <a href="${item.appUrl}" target="_blank" rel="noopener noreferrer" style="font-size: 0.7rem; color: var(--text-muted); text-decoration: underline;">
-              ${item.appUrl} ↗
+            <div style="font-weight: 700; color: #fff;">${escapeHtml(item.title)}</div>
+            <div style="font-size: 0.72rem; color: var(--neon-cyan);">${escapeHtml(item.tagline)}</div>
+            <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="font-size: 0.7rem; color: var(--text-muted); text-decoration: underline;">
+              ${escapeHtml(item.appUrl)} ↗
             </a>
           </td>
           <td>
-            <div style="font-weight: 600; color: #fff; font-size: 0.8rem;">${item.authorName}</div>
-            <div style="font-size: 0.7rem; color: var(--text-muted);">${item.authorSocial || 'No social'}</div>
+            <div style="font-weight: 600; color: #fff; font-size: 0.8rem;">${escapeHtml(item.authorName)}</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">${escapeHtml(item.authorSocial || 'No social')}</div>
           </td>
           <td>
-            <span class="pill-tag pill-tag-cyan" style="font-size: 0.68rem; padding: 0.1rem 0.4rem;">${item.category}</span>
+            <span class="pill-tag pill-tag-cyan" style="font-size: 0.68rem; padding: 0.1rem 0.4rem;">${escapeHtml(item.category)}</span>
             <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.25rem;">
-              ${(item.techStack || []).join(', ')}
+              ${(item.techStack || []).map(escapeHtml).join(', ')}
             </div>
           </td>
           <td>
             <span style="font-size: 0.75rem; font-weight: 700; color: ${statusColor};">
-              ${item.status}
+              ${escapeHtml(item.status)}
             </span>
           </td>
           <td>
             ${isAOTW 
               ? `<span style="font-size: 0.75rem; font-weight: 800; color: #fbbf24; background: rgba(245, 158, 11, 0.2); padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.3rem;">⭐ Current AOTW</span>`
-              : `<button class="btn btn-primary btn-sm" onclick="setAppOfTheWeekAdmin('${item._id}')" style="font-size: 0.68rem; padding: 0.2rem 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 700;">Set AOTW ⭐</button>`
+              : `<button class="btn btn-primary btn-sm" onclick="setAppOfTheWeekAdmin('${escapeHtml(item._id)}')" style="font-size: 0.68rem; padding: 0.2rem 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 700;">Set AOTW ⭐</button>`
             }
           </td>
           <td>
             <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
               ${isPending ? `
-                <button class="btn btn-primary btn-sm" onclick="updateShowcaseStatus('${item._id}', 'APPROVED')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Approve</button>
-                <button class="btn btn-secondary btn-sm" onclick="updateShowcaseStatus('${item._id}', 'REJECTED')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Reject</button>
+                <button class="btn btn-primary btn-sm" onclick="updateShowcaseStatus('${escapeHtml(item._id)}', 'APPROVED')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Approve</button>
+                <button class="btn btn-secondary btn-sm" onclick="updateShowcaseStatus('${escapeHtml(item._id)}', 'REJECTED')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Reject</button>
               ` : `
-                <button class="btn btn-secondary btn-sm" onclick="updateShowcaseStatus('${item._id}', '${isApproved ? 'PENDING' : 'APPROVED'}')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">
+                <button class="btn btn-secondary btn-sm" onclick="updateShowcaseStatus('${escapeHtml(item._id)}', '${isApproved ? 'PENDING' : 'APPROVED'}')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">
                   ${isApproved ? 'Un-approve' : 'Re-approve'}
                 </button>
               `}
-              <button class="btn btn-danger btn-sm" onclick="deleteShowcaseItem('${item._id}')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Delete</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteShowcaseItem('${escapeHtml(item._id)}')" style="font-size: 0.68rem; padding: 0.2rem 0.45rem;">Delete</button>
             </div>
           </td>
         </tr>

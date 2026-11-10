@@ -134,11 +134,14 @@ export const handleWebhook = async (req, res, next) => {
 
   try {
     const stripe = getStripe();
-    if (webhookSecret && sig) {
+    if (process.env.NODE_ENV === 'production' || webhookSecret) {
+      if (!sig || !webhookSecret) {
+        return res.status(400).send('Webhook Error: Missing Stripe signature or webhook secret configuration');
+      }
       // Use raw body for cryptographic signature verification
       event = stripe.webhooks.constructEvent(req.rawBody || req.body, sig, webhookSecret);
     } else {
-      // Fallback for local testing or simulated events without webhook secret
+      // Local development / testing only without webhook secret
       event = req.body;
     }
   } catch (err) {
@@ -206,12 +209,18 @@ export const getOrderBySessionId = async (req, res, next) => {
  */
 export const getMyOrders = async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Not authorized: Authentication required to view orders' });
+    }
+
     const filter = {};
 
-    if (req.user && req.user.role !== 'admin') {
+    if (req.user.role === 'admin') {
+      if (req.query.email) {
+        filter.customerEmail = req.query.email.toLowerCase();
+      }
+    } else {
       filter.$or = [{ user: req.user._id }, { customerEmail: req.user.email.toLowerCase() }];
-    } else if (req.query.email) {
-      filter.customerEmail = req.query.email.toLowerCase();
     }
 
     const orders = await Order.find(filter).sort({ createdAt: -1 }).populate('item', 'title category');

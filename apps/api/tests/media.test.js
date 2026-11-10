@@ -69,5 +69,27 @@ describe('🎵 Media Converter & Audio Extraction Suite', () => {
     assert.equal(statusCode, 400);
     assert.match(sentMessage, /invalid/i);
   });
+
+  it('MED-04: Blocks SSRF attempts to RFC1918 Class B (172.16.x.x) and DNS rebinding hosts with 400', async () => {
+    let statusCode = null;
+    let jsonBody = null;
+
+    const req = { body: { url: 'http://172.16.0.5:9000/internal.mp3' } };
+    const res = {
+      status(code) {
+        statusCode = code;
+        return this;
+      },
+      json(data) {
+        jsonBody = data;
+        return this;
+      },
+    };
+
+    await resolveMediaInfo(req, res);
+
+    assert.equal(statusCode, 400);
+    assert.equal(jsonBody?.success, false);
+  });
 });
 

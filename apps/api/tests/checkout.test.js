@@ -144,7 +144,7 @@ describe('💳 Stripe Checkout & Monetization Engine Suite', () => {
       });
 
       try {
-        const req = { query: {} };
+        const req = { user: { _id: '679000000000000000000001', role: 'admin' }, query: {} };
         const res = {
           status(code) {
             statusCode = code;

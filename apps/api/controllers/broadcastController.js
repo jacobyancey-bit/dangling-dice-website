@@ -7,13 +7,14 @@
 
 import ScheduledPost from '../models/ScheduledPost.js';
 
-const DEFAULT_WEBHOOK_URL = 'https://discord.com/api/webhooks/1568692839745851473/XBozMpoKsI99j1DTg8iBkqK1gBkhU-obOyXZoaMrocS0t0vU6rzM7rAe6xY3zoGh3TLN';
-
 /**
  * Core helper to dispatch visual embed to Discord webhook
  */
 export async function executeDiscordBroadcast({ title, description, link, category, customImageUrl }) {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL || DEFAULT_WEBHOOK_URL;
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) {
+    throw new Error('DISCORD_WEBHOOK_URL is not configured in server environment');
+  }
   const targetLink = link || 'https://dangling-dice-studios.com';
 
   // Color theme based on category

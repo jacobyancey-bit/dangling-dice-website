@@ -174,5 +174,24 @@ describe('🔒 Security & Authorization Negative Regression Suite', () => {
         'Should return user-friendly sanitization instead of leaking Mongoose stack traces'
       );
     });
+
+    it('NEG-08: Rejects unauthenticated order retrieval with 401 Unauthorized (BOLA protection)', async () => {
+      const req = { headers: {} };
+      const { status, body } = await executeMiddleware(protect, req);
+
+      assert.equal(status, 401, 'Anonymous order query must be rejected with 401 Unauthorized');
+      assert.equal(body.success, false);
+      assert.match(body.message, /Not authorized/i);
+    });
+
+    it('NEG-09: Blocks non-admin users from broadcast endpoints with 403 Forbidden', async () => {
+      const req = {
+        user: { _id: '679000000000000000000002', role: 'user', email: 'creator@danglingdice.com' },
+      };
+      const { status, body } = await executeMiddleware(admin, req);
+
+      assert.equal(status, 403, 'Non-admin users must be blocked from broadcast routes');
+      assert.equal(body.success, false);
+    });
   });
 });

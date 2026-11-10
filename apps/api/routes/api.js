@@ -16,6 +16,7 @@ import {
   deleteScheduledPost
 } from '../controllers/broadcastController.js';
 import { getAnalyticsSummary } from '../middleware/analytics.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -216,9 +217,9 @@ router.use('/affiliates', affiliateRoutes);
 router.use('/media', mediaRoutes);
 router.use('/showcase', showcaseRoutes);
 router.use('/v1', v1ComputeRoutes);
-router.post('/broadcast/discord', sendDiscordBroadcast);
-router.get('/broadcast/scheduled', getScheduledPosts);
-router.post('/broadcast/scheduled', createScheduledPost);
-router.delete('/broadcast/scheduled/:id', deleteScheduledPost);
+router.post('/broadcast/discord', protect, admin, sendDiscordBroadcast);
+router.get('/broadcast/scheduled', protect, admin, getScheduledPosts);
+router.post('/broadcast/scheduled', protect, admin, createScheduledPost);
+router.delete('/broadcast/scheduled/:id', protect, admin, deleteScheduledPost);
 
 export default router;

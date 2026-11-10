@@ -1233,7 +1233,7 @@ function populateCategorySpotlight(prefix, app, defaultCategory) {
   if (stackEl && Array.isArray(app.techStack)) {
     const pillClass = prefix === "creator" ? "pill-tag-purple" : prefix === "music" ? "pill-tag-pink" : "pill-tag-cyan";
     stackEl.innerHTML = app.techStack
-      .map((tech) => `<span class="pill-tag ${pillClass}">${tech}</span>`)
+      .map((tech) => `<span class="pill-tag ${pillClass}">${escapeHtml(tech)}</span>`)
       .join("");
   }
 }
@@ -1300,7 +1300,7 @@ async function fetchDevShowcase() {
       if (categoryEl) categoryEl.textContent = aotw.category;
       if (stackEl && Array.isArray(aotw.techStack)) {
         stackEl.innerHTML = aotw.techStack
-          .map((tech) => `<span class="pill-tag pill-tag-cyan">${tech}</span>`)
+          .map((tech) => `<span class="pill-tag pill-tag-cyan">${escapeHtml(tech)}</span>`)
           .join("");
       }
     }
@@ -1323,8 +1323,12 @@ async function fetchDevShowcase() {
       .map((proj) => {
         const stackBadges = (proj.techStack || [])
           .slice(0, 3)
-          .map((t) => `<span class="pill-tag pill-tag-purple" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">${t}</span>`)
+          .map((t) => `<span class="pill-tag pill-tag-purple" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">${escapeHtml(t)}</span>`)
           .join(" ");
+
+        const safeAppUrl = proj.appUrl && (proj.appUrl.startsWith('http://') || proj.appUrl.startsWith('https://'))
+          ? encodeURI(proj.appUrl)
+          : '#';
 
         return `
           <div class="tech-stack-card" style="border-color: ${proj.isAppOfTheWeek ? 'rgba(245, 158, 11, 0.4)' : 'var(--border-subtle)'};">
@@ -1332,23 +1336,23 @@ async function fetchDevShowcase() {
               <div class="tech-card-header">
                 <span class="tech-card-icon">🚀</span>
                 <span class="tech-card-badge" style="color: ${proj.isAppOfTheWeek ? '#fbbf24' : 'var(--neon-cyan)'};">
-                  ${proj.isAppOfTheWeek ? '⭐ Active Spotlight' : proj.category}
+                  ${proj.isAppOfTheWeek ? '⭐ Active Spotlight' : escapeHtml(proj.category)}
                 </span>
               </div>
               <div style="margin-bottom: 0.4rem; display: flex; gap: 0.3rem; flex-wrap: wrap;">
                 ${stackBadges}
               </div>
-              <h3 class="tech-card-title">${proj.title}</h3>
+              <h3 class="tech-card-title">${escapeHtml(proj.title)}</h3>
               <p style="font-size: 0.78rem; font-weight: 600; color: var(--neon-cyan); margin-bottom: 0.4rem;">
-                ${proj.tagline}
+                ${escapeHtml(proj.tagline)}
               </p>
-              <p class="tech-card-desc">${proj.description.slice(0, 140)}${proj.description.length > 140 ? '...' : ''}</p>
+              <p class="tech-card-desc">${escapeHtml(proj.description.slice(0, 140))}${proj.description.length > 140 ? '...' : ''}</p>
             </div>
             <div class="tech-card-footer" style="padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.72rem; color: var(--text-muted);">
-                by <strong style="color: #fff;">${proj.authorName}</strong>
+                by <strong style="color: #fff;">${escapeHtml(proj.authorName)}</strong>
               </span>
-              <a href="${proj.appUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">
+              <a href="${safeAppUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">
                 Try App ↗
               </a>
             </div>

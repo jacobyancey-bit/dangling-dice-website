@@ -42,14 +42,31 @@ function isValidMediaUrl(urlStr) {
   if (!urlStr || typeof urlStr !== 'string') return false;
   try {
     const parsed = new URL(urlStr.trim());
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+
     const host = parsed.hostname.toLowerCase();
-    
-    // Check against localhost, internal IPs, and metadata endpoints
-    const forbidden = ['localhost', '127.0.0.1', '0.0.0.0', '169.254.169.254'];
-    if (forbidden.includes(host) || host.startsWith('192.168.') || host.startsWith('10.') || host.endsWith('.local')) {
+
+    // Comprehensive SSRF check against RFC 1918, loopbacks, IPv6, cloud metadata, and DNS rebinding
+    const isPrivateOrLocal =
+      host === 'localhost' ||
+      host === '0.0.0.0' ||
+      host === '127.0.0.1' ||
+      host === '[::1]' ||
+      host === '::1' ||
+      host.endsWith('.local') ||
+      host.endsWith('.internal') ||
+      /^127\./.test(host) ||
+      /^10\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
+      /^169\.254\./.test(host) ||
+      host.includes('nip.io') ||
+      host.includes('sslip.io');
+
+    if (isPrivateOrLocal) {
       return false;
     }
-    
+
     // Allow YouTube, SoundCloud, or direct audio/video links
     const isYouTube = host.includes('youtube.com') || host.includes('youtu.be');
     const isSoundCloud = host.includes('soundcloud.com');
