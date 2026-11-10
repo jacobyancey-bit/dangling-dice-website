@@ -172,107 +172,686 @@ export function beatEvents(bpm, stepList) {
   }));
 }
 
-// Drum Grooves & Fills Catalog (Dynamic sequenced drum fills, rolls, and breakbeat stems)
-export const DRUM_GROOVES_CATALOG = [
-  { 
-    id: 'dg_1', 
-    name: 'Heavy Downbeat Stomp', 
-    desc: 'Kick on 1 & 3 + Backbeat Snare + Ride Bell',
-    events: beatEvents(110, [[0, 'kick_acoustic'], [0, 'ride_bell', 0.8], [2, 'hat_closed', 0.6], [4, 'snare_rim'], [6, 'hat_closed', 0.6], [8, 'kick_acoustic'], [10, 'hat_open', 0.7], [12, 'snare_rim'], [14, 'hat_closed', 0.6]])
+// ============================================================================
+// DRUM SECTIONS: MAIN PARTS, 1-MEASURE FILLS, AND 4-MEASURE BUILDUPS
+// ============================================================================
+
+// 1. Foundational Main Parts (16 Core Grooves for Verses, Choruses, and Main Pockets)
+export const DRUM_MAIN_PARTS_CATALOG = [
+  {
+    id: 'mp_1',
+    name: 'Heavy Downbeat Pocket',
+    desc: 'Driving kick on 1 & 3, solid backbeat snare, 8th hi-hats',
+    category: 'main',
+    measures: 1,
+    bpm: 110,
+    events: beatEvents(110, [
+      [0, 'kick_acoustic', 1.0], [0, 'ride_bell', 0.8], [2, 'hat_closed', 0.65],
+      [4, 'snare_rim', 1.0], [6, 'hat_closed', 0.65],
+      [8, 'kick_acoustic', 0.95], [10, 'hat_open', 0.75],
+      [12, 'snare_rim', 1.0], [14, 'hat_closed', 0.65]
+    ])
   },
-  { 
-    id: 'dg_2', 
-    name: '16th Ghost Snare Roll', 
-    desc: 'Dynamic ghost-snare crescendo into accent crack',
-    events: beatEvents(112, [[0, 'snare_acoustic', 0.25], [1, 'snare_acoustic', 0.35], [2, 'snare_acoustic', 0.45], [3, 'snare_acoustic', 0.6], [4, 'snare_rim', 1.0], [5, 'kick_acoustic'], [6, 'snare_acoustic', 0.4], [7, 'crash_acoustic', 0.85]])
+  {
+    id: 'mp_2',
+    name: 'Driving 8th Rock Pocket',
+    desc: 'Steady 8th-note hat drive with punchy kick-snare backbeat',
+    category: 'main',
+    measures: 1,
+    bpm: 124,
+    events: beatEvents(124, [
+      [0, 'kick_acoustic', 1.0], [0, 'hat_closed', 0.7], [2, 'hat_closed', 0.7],
+      [4, 'snare_acoustic', 1.0], [4, 'hat_closed', 0.7], [6, 'kick_acoustic', 0.85], [6, 'hat_closed', 0.7],
+      [8, 'kick_acoustic', 0.95], [8, 'hat_closed', 0.7], [10, 'hat_closed', 0.7],
+      [12, 'snare_acoustic', 1.0], [12, 'hat_closed', 0.7], [14, 'hat_open', 0.8]
+    ])
   },
-  { 
-    id: 'dg_3', 
-    name: '808 Trap Stutter Fill', 
-    desc: '1/32 snare roll stutter into 808 sub boom',
-    events: beatEvents(140, [[0, '808_snare', 0.5], [0.5, '808_snare', 0.6], [1, '808_snare', 0.7], [1.5, '808_snare', 0.8], [2, '808_snare', 0.95], [3, '808_clap', 1.0], [4, '808_sub', 1.0], [6, '808_hat_closed']])
+  {
+    id: 'mp_3',
+    name: 'Syncopated Funk Pocket',
+    desc: 'Syncopated ghost snares, tight kicks, and 16th hat groove',
+    category: 'main',
+    measures: 1,
+    bpm: 105,
+    events: beatEvents(105, [
+      [0, 'kick_acoustic', 1.0], [1, 'hat_closed', 0.5], [2, 'hat_closed', 0.7], [3, 'snare_acoustic', 0.3],
+      [4, 'snare_rim', 1.0], [5, 'hat_closed', 0.5], [6, 'hat_closed', 0.7], [7, 'kick_acoustic', 0.9],
+      [8, 'hat_closed', 0.7], [9, 'snare_acoustic', 0.35], [10, 'kick_acoustic', 0.9], [11, 'hat_open', 0.75],
+      [12, 'snare_rim', 1.0], [13, 'hat_closed', 0.5], [14, 'hat_closed', 0.7], [15, 'snare_acoustic', 0.4]
+    ])
   },
-  { 
-    id: 'dg_4', 
-    name: 'Tom Cascade Flam', 
-    desc: 'High Tom -> Mid Tom -> Floor Tom flam crescendo',
-    events: beatEvents(115, [[0, 'tom_high', 0.85], [1, 'tom_high', 0.9], [2, 'tom_mid', 0.9], [3, 'tom_mid', 0.95], [4, 'tom_floor', 0.95], [5, 'tom_floor', 1.0], [6, 'snare_rim', 1.0], [7, 'crash_acoustic', 0.95]])
+  {
+    id: 'mp_4',
+    name: 'Trap 808 Main Drop',
+    desc: 'Deep 808 sub bass, rapid 16th hats, and snappy center clap',
+    category: 'main',
+    measures: 1,
+    bpm: 140,
+    events: beatEvents(140, [
+      [0, '808_sub', 1.0], [0, '808_hat_closed', 0.8], [1, '808_hat_closed', 0.6], [2, '808_hat_closed', 0.75], [3, '808_hat_closed', 0.6],
+      [4, '808_clap', 1.0], [4, '808_hat_closed', 0.8], [5, '808_hat_closed', 0.6], [6, '808_sub', 0.9], [6, '808_hat_closed', 0.75], [7, '808_hat_closed', 0.6],
+      [8, '808_hat_closed', 0.8], [9, '808_hat_closed', 0.6], [10, '808_sub', 0.95], [10, '808_hat_closed', 0.75], [11, '808_hat_closed', 0.6],
+      [12, '808_clap', 1.0], [12, '808_hat_closed', 0.8], [13, '808_hat_closed', 0.6], [14, '808_hat_open', 0.9], [15, '808_hat_closed', 0.6]
+    ])
   },
-  { 
-    id: 'dg_5', 
-    name: 'Half-Time Breakdown Stomp', 
-    desc: 'Deep sub kick on 1 with explosive clap on 3',
-    events: beatEvents(90, [[0, 'kick_acoustic', 1.0], [0, 'crash_acoustic', 0.8], [4, 'hat_closed', 0.6], [8, 'clap_acoustic', 1.0], [8, 'snare_rim', 0.9], [12, 'kick_acoustic', 0.85], [14, 'hat_open', 0.75]])
+  {
+    id: 'mp_5',
+    name: 'Boom-Bap Golden Era',
+    desc: 'Behind-the-grid swung kick and lazy acoustic snare pocket',
+    category: 'main',
+    measures: 1,
+    bpm: 88,
+    events: beatEvents(88, [
+      [0, 'kick_acoustic', 1.0], [2.2, 'hat_closed', 0.65],
+      [4.2, 'snare_acoustic', 1.0], [6.2, 'hat_closed', 0.65],
+      [7.2, 'kick_acoustic', 0.85], [8, 'kick_acoustic', 0.9], [10.2, 'hat_closed', 0.65],
+      [12.2, 'snare_acoustic', 1.0], [14.2, 'hat_open', 0.75]
+    ])
   },
-  { 
-    id: 'dg_6', 
-    name: 'Double-Bass Blast Run', 
-    desc: 'Rapid 16th double-kick bursts with crash cymbal',
-    events: beatEvents(150, [[0, 'kick_acoustic'], [0, 'crash_acoustic'], [1, 'kick_acoustic'], [2, 'snare_rim'], [3, 'kick_acoustic'], [4, 'kick_acoustic'], [5, 'snare_rim'], [6, 'kick_acoustic'], [7, 'crash_acoustic']])
+  {
+    id: 'mp_6',
+    name: 'Four-on-the-Floor Disco Funk',
+    desc: 'Constant 4-beat kick pulse with open hi-hat upbeats',
+    category: 'main',
+    measures: 1,
+    bpm: 122,
+    events: beatEvents(122, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_open', 0.85],
+      [4, 'kick_acoustic', 1.0], [4, 'snare_rim', 0.95], [4, 'clap_acoustic', 0.8], [6, 'hat_open', 0.85],
+      [8, 'kick_acoustic', 1.0], [10, 'hat_open', 0.85],
+      [12, 'kick_acoustic', 1.0], [12, 'snare_rim', 0.95], [12, 'clap_acoustic', 0.8], [14, 'hat_open', 0.85]
+    ])
   },
-  { 
-    id: 'dg_7', 
-    name: 'Funky Drummer 16th Comp', 
-    desc: 'Syncopated funk ghost notes & 16th hi-hat sizzle',
-    events: beatEvents(104, [[0, 'kick_acoustic'], [2, 'hat_closed', 0.7], [4, 'snare_rim', 1.0], [6, 'snare_acoustic', 0.35], [7, 'kick_acoustic'], [8, 'hat_open', 0.75], [10, 'kick_acoustic'], [12, 'snare_rim', 1.0], [14, 'hat_closed', 0.6]])
+  {
+    id: 'mp_7',
+    name: '909 House / Techno Drive',
+    desc: 'Heavy 909 kick punch, snappy club clap, and open hat groove',
+    category: 'main',
+    measures: 1,
+    bpm: 128,
+    events: beatEvents(128, [
+      [0, '909_kick', 1.0], [0, '909_hat_closed', 0.6], [2, '909_hat_open', 0.9],
+      [4, '909_kick', 1.0], [4, '909_clap', 1.0], [6, '909_hat_open', 0.9],
+      [8, '909_kick', 1.0], [10, '909_hat_open', 0.9],
+      [12, '909_kick', 1.0], [12, '909_clap', 1.0], [14, '909_hat_open', 0.9]
+    ])
   },
-  { 
-    id: 'dg_8', 
-    name: 'Latin Timbales & Conga Poly', 
-    desc: 'Syncopated conga slaps, woodblock, and rim clicks',
-    events: beatEvents(110, [[0, 'tom_mid', 0.9], [2, 'sidestick', 0.8], [3, 'tom_high', 0.75], [4, 'tom_mid', 0.9], [6, 'sidestick', 0.85], [7, 'tom_floor', 0.8], [8, 'tom_high', 0.95]])
+  {
+    id: 'mp_8',
+    name: 'Motown R&B Soul Stomp',
+    desc: 'Warm acoustic kick, rimshot on 2 & 4, and tambourine accents',
+    category: 'main',
+    measures: 1,
+    bpm: 116,
+    events: beatEvents(116, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.7],
+      [4, 'snare_rim', 1.0], [4, 'tambourine', 0.9], [6, 'kick_acoustic', 0.85],
+      [8, 'kick_acoustic', 0.95], [10, 'hat_closed', 0.7],
+      [12, 'snare_rim', 1.0], [12, 'tambourine', 0.9], [14, 'hat_open', 0.75]
+    ])
   },
-  { 
-    id: 'dg_9', 
-    name: 'Sizzle Hat Open-Choke', 
-    desc: 'Swung open hi-hat into instant foot choke',
-    events: beatEvents(108, [[0, 'kick_acoustic'], [2, 'hat_open', 0.9], [3, 'hat_pedal', 0.95], [4, 'snare_acoustic'], [6, 'hat_open', 0.9], [7, 'hat_pedal', 0.95], [8, 'kick_acoustic']])
+  {
+    id: 'mp_9',
+    name: 'Afrobeat Polyrhythm Main',
+    desc: 'Syncopated cross-stick pattern, conga thumps, and shaker drive',
+    category: 'main',
+    measures: 1,
+    bpm: 118,
+    events: beatEvents(118, [
+      [0, 'kick_acoustic', 1.0], [1, 'tambourine', 0.5], [2, 'sidestick', 0.85], [3, 'tambourine', 0.5],
+      [4, 'tom_mid', 0.8], [5, 'tambourine', 0.5], [6, 'kick_acoustic', 0.9], [7, 'sidestick', 0.9],
+      [8, 'tom_high', 0.8], [9, 'tambourine', 0.5], [10, 'kick_acoustic', 0.85], [11, 'tambourine', 0.5],
+      [12, 'sidestick', 0.95], [13, 'tambourine', 0.5], [14, 'tom_floor', 0.85], [15, 'tambourine', 0.5]
+    ])
   },
-  { 
-    id: 'dg_10', 
-    name: 'Afrobeat Shaker Roll', 
-    desc: 'Dynamic 16th shaker syncopation with rimshot accents',
-    events: beatEvents(116, [[0, 'tambourine', 0.8], [1, 'tambourine', 0.5], [2, 'tambourine', 0.7], [3, 'tambourine', 0.5], [4, 'sidestick', 0.9], [4, 'tambourine', 0.8], [6, 'kick_acoustic'], [8, 'tambourine', 0.8]])
+  {
+    id: 'mp_10',
+    name: 'Bebop Jazz Ride Swing',
+    desc: 'Classic spang-a-lang ride swing with feathered kick & pedal hat',
+    category: 'main',
+    measures: 1,
+    bpm: 132,
+    events: beatEvents(132, [
+      [0, 'ride_acoustic', 0.9], [0, 'kick_acoustic', 0.35],
+      [2.6, 'ride_acoustic', 0.7],
+      [4, 'ride_bell', 0.95], [4, 'hat_pedal', 0.9], [4, 'kick_acoustic', 0.3],
+      [6.6, 'ride_acoustic', 0.7], [7, 'snare_acoustic', 0.4],
+      [8, 'ride_acoustic', 0.9], [8, 'kick_acoustic', 0.35],
+      [10.6, 'ride_acoustic', 0.7],
+      [12, 'ride_bell', 0.95], [12, 'hat_pedal', 0.9], [12, 'kick_acoustic', 0.3],
+      [14.6, 'ride_acoustic', 0.7]
+    ])
   },
-  { 
-    id: 'dg_11', 
-    name: 'Boom-Bap Vinyl Drag', 
-    desc: 'Behind-the-grid lazy snare with vinyl crackle',
-    events: beatEvents(84, [[0, 'kick_acoustic', 1.0], [2.2, 'hat_closed', 0.6], [4.2, 'snare_acoustic', 0.95], [6.2, 'hat_closed', 0.6], [7.2, 'kick_acoustic', 0.8], [8.2, 'snare_acoustic', 0.4]])
+  {
+    id: 'mp_11',
+    name: 'Double-Bass Metal Drive',
+    desc: 'Galloping 16th double-bass kick wall with aggressive snare cracks',
+    category: 'main',
+    measures: 1,
+    bpm: 150,
+    events: beatEvents(150, [
+      [0, 'kick_acoustic', 1.0], [0, 'china_acoustic', 0.9], [1, 'kick_acoustic', 0.9],
+      [2, 'kick_acoustic', 0.9], [3, 'kick_acoustic', 0.9],
+      [4, 'snare_rim', 1.0], [5, 'kick_acoustic', 0.9],
+      [6, 'kick_acoustic', 0.9], [7, 'kick_acoustic', 0.9],
+      [8, 'kick_acoustic', 1.0], [8, 'crash_acoustic', 0.85], [9, 'kick_acoustic', 0.9],
+      [10, 'kick_acoustic', 0.9], [11, 'kick_acoustic', 0.9],
+      [12, 'snare_rim', 1.0], [13, 'kick_acoustic', 0.9],
+      [14, 'kick_acoustic', 0.9], [15, 'kick_acoustic', 0.9]
+    ])
   },
-  { 
-    id: 'dg_12', 
-    name: '909 Build & Drop Crescendo', 
-    desc: '909 snare roll accelerating into heavy kick drop',
-    events: beatEvents(128, [[0, 'snare_acoustic', 0.4], [1, 'snare_acoustic', 0.5], [2, 'snare_acoustic', 0.65], [3, 'snare_acoustic', 0.8], [4, 'snare_acoustic', 0.95], [5, 'snare_rim', 1.0], [6, 'kick_acoustic', 1.0], [6, 'crash_acoustic', 1.0]])
+  {
+    id: 'mp_12',
+    name: 'Latin Bossa Nova Main',
+    desc: 'Soft clave cross-stick with syncopated bass drum heartbeat',
+    category: 'main',
+    measures: 1,
+    bpm: 112,
+    events: beatEvents(112, [
+      [0, 'kick_acoustic', 0.8], [0, 'sidestick', 0.9], [2, 'hat_closed', 0.6],
+      [3, 'sidestick', 0.85], [4, 'hat_closed', 0.6],
+      [6, 'kick_acoustic', 0.75], [6, 'sidestick', 0.9],
+      [8, 'kick_acoustic', 0.8], [10, 'sidestick', 0.9],
+      [11, 'kick_acoustic', 0.75], [12, 'hat_closed', 0.6],
+      [14, 'kick_acoustic', 0.75], [14, 'hat_open', 0.7]
+    ])
   },
-  { 
-    id: 'dg_13', 
-    name: 'Jazz Ride Feather Swirl', 
-    desc: 'Triplet swing ride pattern with feathered bass thump',
-    events: beatEvents(120, [[0, 'ride_acoustic', 0.9], [0, 'kick_acoustic', 0.4], [2.6, 'ride_acoustic', 0.7], [4, 'ride_bell', 0.95], [4, 'hat_pedal'], [6.6, 'ride_acoustic', 0.7], [8, 'ride_acoustic', 0.9]])
+  {
+    id: 'mp_13',
+    name: 'Reggae One-Drop Pocket',
+    desc: 'Zero kick on 1, explosive kick and snare dropped together on 3',
+    category: 'main',
+    measures: 1,
+    bpm: 78,
+    events: beatEvents(78, [
+      [0, 'sidestick', 0.7], [2, 'hat_open', 0.8],
+      [4, 'hat_closed', 0.6], [6, 'hat_open', 0.8],
+      [8, 'kick_acoustic', 1.0], [8, 'snare_rim', 1.0], [10, 'hat_open', 0.8],
+      [12, 'hat_closed', 0.6], [14, 'hat_open', 0.85]
+    ])
   },
-  { 
-    id: 'dg_14', 
-    name: 'Thrash Mosh Stomp', 
-    desc: 'Aggressive punk 2-step kick and snare rimshot',
-    events: beatEvents(160, [[0, 'kick_acoustic', 1.0], [2, 'snare_rim', 1.0], [4, 'kick_acoustic', 1.0], [5, 'kick_acoustic', 0.9], [6, 'snare_rim', 1.0], [7, 'crash_acoustic', 0.9]])
+  {
+    id: 'mp_14',
+    name: 'Neo-Soul Slag Pocket',
+    desc: 'Unquantized lazy pocket, dragging rimshots, and loose hats',
+    category: 'main',
+    measures: 1,
+    bpm: 82,
+    events: beatEvents(82, [
+      [0, 'kick_acoustic', 0.95], [2.1, 'hat_closed', 0.6],
+      [4.3, 'snare_rim', 0.95], [6.2, 'hat_closed', 0.6],
+      [7.1, 'kick_acoustic', 0.85], [8.1, 'hat_closed', 0.6],
+      [10.2, 'kick_acoustic', 0.9], [11.2, 'hat_open', 0.7],
+      [12.3, 'snare_rim', 0.95], [14.2, 'hat_closed', 0.6]
+    ])
   },
-  { 
-    id: 'dg_15', 
-    name: '6/8 Blues Turnaround Fill', 
-    desc: 'Slow 12/8 triplet snare roll into ride bell accent',
-    events: beatEvents(75, [[0, 'snare_acoustic', 0.6], [1.3, 'snare_acoustic', 0.7], [2.6, 'snare_acoustic', 0.85], [4, 'tom_mid', 0.9], [5.3, 'tom_floor', 0.95], [6.6, 'kick_acoustic', 1.0], [8, 'crash_acoustic', 1.0]])
+  {
+    id: 'mp_15',
+    name: 'UK Garage 2-Step Drive',
+    desc: 'Skippy syncopated kicks with crisp 16th shuffles and snap snares',
+    category: 'main',
+    measures: 1,
+    bpm: 134,
+    events: beatEvents(134, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.7], [3, 'hat_closed', 0.5],
+      [4, 'snare_acoustic', 1.0], [6, 'hat_closed', 0.7], [7, 'kick_acoustic', 0.9],
+      [8, 'hat_closed', 0.7], [10, 'kick_acoustic', 0.95], [11, 'hat_open', 0.8],
+      [12, 'snare_acoustic', 1.0], [14, 'hat_closed', 0.7], [15, 'hat_closed', 0.5]
+    ])
   },
-  { 
-    id: 'dg_16', 
-    name: 'Tutti Final Crash Flam', 
-    desc: 'Simultaneous power kick, snare, floor tom, and crash',
-    events: beatEvents(110, [[0, 'kick_acoustic', 1.0], [0, 'snare_rim', 1.0], [0, 'tom_floor', 0.95], [0, 'crash_acoustic', 1.0]])
-  },
+  {
+    id: 'mp_16',
+    name: 'Hard Rock Chorus Wall',
+    desc: 'Massive crash cymbal downbeats with thunderous acoustic shells',
+    category: 'main',
+    measures: 1,
+    bpm: 120,
+    events: beatEvents(120, [
+      [0, 'kick_acoustic', 1.0], [0, 'crash_acoustic', 1.0], [2, 'hat_closed', 0.7],
+      [4, 'snare_rim', 1.0], [6, 'kick_acoustic', 0.9], [6, 'hat_closed', 0.7],
+      [8, 'kick_acoustic', 1.0], [8, 'crash_acoustic', 0.9], [10, 'kick_acoustic', 0.85],
+      [12, 'snare_rim', 1.0], [14, 'hat_open', 0.85]
+    ])
+  }
 ];
 
-// Alias for backwards compatibility with any legacy imports
+// 2. Single-Measure Fills (16 Dynamic 1-Measure / 1-Bar Drum Fills)
+export const DRUM_SINGLE_MEASURE_FILLS = [
+  {
+    id: 'f1m_1',
+    name: 'Tom Waterfall 1-Bar Fill',
+    desc: 'Pocket on beats 1-2, rolling High-Mid-Floor tom descent on 3-4',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 120,
+    events: beatEvents(120, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.6], [4, 'snare_rim', 1.0], [6, 'kick_acoustic', 0.8],
+      [8, 'tom_high', 0.9], [9, 'tom_high', 0.95], [10, 'tom_mid', 0.9], [11, 'tom_mid', 0.95],
+      [12, 'tom_floor', 0.95], [13, 'tom_floor', 1.0], [14, 'snare_rim', 1.0], [15, 'tom_floor', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_2',
+    name: '16th Snare Crescendo 1-Bar',
+    desc: 'Dynamic ghost-snare volume swell accelerating into explosive crack',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 120,
+    events: beatEvents(120, [
+      [0, 'kick_acoustic', 1.0], [4, 'snare_rim', 0.8],
+      [8, 'snare_acoustic', 0.35], [9, 'snare_acoustic', 0.45], [10, 'snare_acoustic', 0.55], [11, 'snare_acoustic', 0.65],
+      [12, 'snare_acoustic', 0.75], [13, 'snare_acoustic', 0.85], [14, 'snare_rim', 0.95], [15, 'snare_rim', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_3',
+    name: 'Double-Kick Stutter 1-Bar',
+    desc: 'Rapid 16th double-bass bursts with alternating snare rimshots',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 128,
+    events: beatEvents(128, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.6], [4, 'snare_rim', 1.0],
+      [6, 'kick_acoustic', 0.85], [7, 'kick_acoustic', 0.9],
+      [8, 'kick_acoustic', 0.95], [9, 'kick_acoustic', 0.95], [10, 'snare_rim', 0.95],
+      [11, 'kick_acoustic', 0.95], [12, 'kick_acoustic', 1.0], [13, 'snare_rim', 1.0],
+      [14, 'kick_acoustic', 1.0], [15, 'snare_rim', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_4',
+    name: 'Ghost Snare Rush 1-Bar',
+    desc: 'Subtle syncopated ghost notes rolling across beats 3 & 4',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 110,
+    events: beatEvents(110, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.6], [4, 'snare_rim', 1.0],
+      [6, 'snare_acoustic', 0.35], [7, 'snare_acoustic', 0.4], [8, 'kick_acoustic', 0.9],
+      [9, 'snare_acoustic', 0.45], [10, 'snare_acoustic', 0.55], [11, 'snare_acoustic', 0.65],
+      [12, 'tom_mid', 0.9], [13, 'tom_floor', 0.95], [14, 'snare_rim', 1.0], [15, 'tom_floor', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_5',
+    name: 'Hi-Hat Sizzle Choke 1-Bar',
+    desc: 'Rapid open-hat sizzle roll choked abruptly on the downbeat',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 115,
+    events: beatEvents(115, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_open', 0.85], [3, 'hat_pedal', 0.9],
+      [4, 'snare_rim', 1.0], [6, 'hat_open', 0.85], [7, 'hat_pedal', 0.9],
+      [8, 'hat_open', 0.7], [9, 'hat_open', 0.75], [10, 'hat_open', 0.8], [11, 'hat_open', 0.85],
+      [12, 'hat_open', 0.9], [13, 'hat_open', 0.95], [14, 'snare_rim', 1.0], [15, 'hat_pedal', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_6',
+    name: 'Flam Accent Cascade 1-Bar',
+    desc: 'Alternating hand flams across snare, high tom, and floor tom',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 112,
+    events: beatEvents(112, [
+      [0, 'kick_acoustic', 1.0], [2, 'snare_acoustic', 0.3], [2.2, 'snare_rim', 0.9],
+      [4, 'snare_rim', 1.0],
+      [6, 'tom_high', 0.3], [6.2, 'tom_high', 0.9],
+      [8, 'tom_mid', 0.35], [8.2, 'tom_mid', 0.95],
+      [10, 'tom_floor', 0.4], [10.2, 'tom_floor', 0.95],
+      [12, 'snare_rim', 1.0], [13, 'tom_floor', 0.9], [14, 'snare_rim', 1.0], [15, 'tom_floor', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_7',
+    name: 'Trap 808 Triplet Stutter 1-Bar',
+    desc: '1/32nd triplet snare roll stutter into thunderous 808 sub dive',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 140,
+    events: beatEvents(140, [
+      [0, '808_sub', 1.0], [2, '808_hat_closed', 0.7], [4, '808_clap', 1.0],
+      [6, '808_snare', 0.4], [6.5, '808_snare', 0.5], [7, '808_snare', 0.6], [7.5, '808_snare', 0.7],
+      [8, '808_snare', 0.75], [8.5, '808_snare', 0.8], [9, '808_snare', 0.85], [9.5, '808_snare', 0.9],
+      [10, '808_snare', 0.95], [11, '808_clap', 1.0],
+      [12, '808_tom_low', 0.9], [13, '808_tom_low', 0.95], [14, '808_snare', 1.0], [15, '808_snare', 1.0],
+      [16, '808_crash', 1.0], [16, '808_sub', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_8',
+    name: 'Linear Funk Chops 1-Bar',
+    desc: 'No overlapping hits: kick-snare-tom-hat precise linear phrase',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 106,
+    events: beatEvents(106, [
+      [0, 'kick_acoustic', 1.0], [1, 'hat_closed', 0.7], [2, 'snare_acoustic', 0.8], [3, 'tom_high', 0.85],
+      [4, 'kick_acoustic', 0.9], [5, 'hat_closed', 0.75], [6, 'snare_rim', 0.95], [7, 'tom_mid', 0.85],
+      [8, 'kick_acoustic', 0.95], [9, 'hat_open', 0.8], [10, 'tom_floor', 0.9], [11, 'snare_acoustic', 0.85],
+      [12, 'kick_acoustic', 1.0], [13, 'tom_floor', 0.95], [14, 'snare_rim', 1.0], [15, 'hat_pedal', 0.9],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_9',
+    name: 'Rimshot Crack & Roll 1-Bar',
+    desc: 'Rapid machine-gun rimshots rolling into deep floor tom thump',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 118,
+    events: beatEvents(118, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.6], [4, 'sidestick', 0.9],
+      [8, 'sidestick', 0.7], [9, 'sidestick', 0.75], [10, 'sidestick', 0.8], [11, 'sidestick', 0.85],
+      [12, 'snare_rim', 0.95], [13, 'tom_mid', 0.95], [14, 'tom_floor', 1.0], [15, 'tom_floor', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_10',
+    name: 'Bebop Triplet Turnaround 1-Bar',
+    desc: 'Swung jazz triplet roll across snare rim and ride bell',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 130,
+    events: beatEvents(130, [
+      [0, 'ride_bell', 0.9], [0, 'kick_acoustic', 0.4],
+      [4, 'hat_pedal', 0.9],
+      [6, 'snare_acoustic', 0.6], [7.3, 'snare_acoustic', 0.7],
+      [8.6, 'snare_acoustic', 0.8], [10, 'tom_high', 0.85],
+      [11.3, 'tom_mid', 0.9], [12.6, 'tom_floor', 0.95],
+      [14, 'snare_rim', 1.0], [15, 'snare_rim', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 0.8]
+    ])
+  },
+  {
+    id: 'f1m_11',
+    name: 'Breakbeat Ghost Churn 1-Bar',
+    desc: 'Classic amen-style syncopated ghost snare rolls & kicks',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 136,
+    events: beatEvents(136, [
+      [0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.7], [4, 'snare_rim', 1.0],
+      [6, 'snare_acoustic', 0.4], [7, 'snare_acoustic', 0.45],
+      [8, 'kick_acoustic', 0.9], [10, 'kick_acoustic', 0.95], [11, 'snare_acoustic', 0.5],
+      [12, 'snare_rim', 1.0], [14, 'snare_acoustic', 0.5], [15, 'snare_rim', 0.95],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_12',
+    name: 'Floor Tom Thunder Stomp 1-Bar',
+    desc: 'Heavy floor tom and kick syncopation creating deep rumble',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 114,
+    events: beatEvents(114, [
+      [0, 'kick_acoustic', 1.0], [4, 'snare_rim', 0.9],
+      [8, 'tom_floor', 0.9], [8, 'kick_acoustic', 0.9],
+      [10, 'tom_floor', 0.95], [10, 'kick_acoustic', 0.95],
+      [12, 'tom_floor', 1.0], [12, 'snare_rim', 1.0],
+      [14, 'tom_floor', 1.0], [15, 'tom_floor', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_13',
+    name: 'Afrobeat Shaker & Cross-Stick 1-Bar',
+    desc: '16th shaker syncopation with rapid cross-stick turnaround',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 116,
+    events: beatEvents(116, [
+      [0, 'tambourine', 0.8], [2, 'sidestick', 0.9], [4, 'tambourine', 0.8],
+      [6, 'sidestick', 0.8], [7, 'sidestick', 0.85],
+      [8, 'tom_high', 0.9], [10, 'tom_mid', 0.95],
+      [12, 'sidestick', 0.95], [13, 'sidestick', 1.0], [14, 'tom_floor', 1.0], [15, 'sidestick', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_14',
+    name: 'Metal Blast Stutter 1-Bar',
+    desc: 'High-speed alternating kick and snare blast with china accents',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 155,
+    events: beatEvents(155, [
+      [0, 'kick_acoustic', 1.0], [0, 'china_acoustic', 0.9],
+      [4, 'snare_rim', 1.0],
+      [8, 'kick_acoustic', 1.0], [9, 'snare_rim', 1.0],
+      [10, 'kick_acoustic', 1.0], [11, 'snare_rim', 1.0],
+      [12, 'kick_acoustic', 1.0], [13, 'snare_rim', 1.0],
+      [14, 'kick_acoustic', 1.0], [15, 'snare_rim', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_15',
+    name: 'Lofi SP-404 Glitch Repeat 1-Bar',
+    desc: 'Stuttering tape-delayed snare chop with filtered boom kick',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 86,
+    events: beatEvents(86, [
+      [0, 'lofi_kick', 1.0], [4, 'lofi_snare', 0.9],
+      [8, 'lofi_snare', 0.6], [9, 'lofi_snare', 0.7], [10, 'lofi_snare', 0.8],
+      [11, 'lofi_rim', 0.85], [12, 'lofi_snare', 0.9], [13, 'lofi_snare', 0.95],
+      [14, 'lofi_snare', 1.0], [15, 'lofi_snare', 1.0],
+      [16, 'crash_acoustic', 0.9], [16, 'lofi_kick', 1.0]
+    ])
+  },
+  {
+    id: 'f1m_16',
+    name: 'Tutti All-In Power Stop 1-Bar',
+    desc: 'Unison ensemble punches on beats 1-3 then rapid snare burst',
+    category: 'fill_1m',
+    measures: 1,
+    bpm: 110,
+    events: beatEvents(110, [
+      [0, 'kick_acoustic', 1.0], [0, 'snare_rim', 1.0], [0, 'crash_acoustic', 0.9],
+      [4, 'kick_acoustic', 1.0], [4, 'snare_rim', 1.0],
+      [8, 'kick_acoustic', 1.0], [8, 'snare_rim', 1.0],
+      [12, 'snare_acoustic', 0.7], [13, 'snare_acoustic', 0.8], [14, 'snare_rim', 0.95], [15, 'snare_rim', 1.0],
+      [16, 'crash_acoustic', 1.0], [16, 'kick_acoustic', 1.0]
+    ])
+  }
+];
+
+// Helper to construct structured 4-measure buildup fills
+export function make4MeasureFill(id, name, desc, bpm, bar1, bar2, bar3, bar4) {
+  const allSteps = [
+    ...bar1.map(([s, snd, v]) => [s, snd, v]),
+    ...bar2.map(([s, snd, v]) => [s + 16, snd, v]),
+    ...bar3.map(([s, snd, v]) => [s + 32, snd, v]),
+    ...bar4.map(([s, snd, v]) => [s + 48, snd, v]),
+    [64, 'crash_acoustic', 1.0],
+    [64, 'kick_acoustic', 1.0]
+  ];
+  return {
+    id,
+    name,
+    desc,
+    category: 'fill_4m',
+    measures: 4,
+    bpm,
+    events: beatEvents(bpm, allSteps)
+  };
+}
+
+// 3. Four-Measure Extended Buildup Fills (16 Multi-Bar Progressive Fills with Drop Resolution)
+export const DRUM_FOUR_MEASURE_FILLS = [
+  make4MeasureFill(
+    'b4m_1',
+    'Epic 4-Bar Tom & Snare Buildup',
+    'Bar 1 groove strip -> Bar 2 floor tom pulse -> Bar 3 snare swell -> Bar 4 tom cascade drop',
+    120,
+    [[0, 'kick_acoustic', 0.9], [0, 'ride_bell', 0.8], [2, 'hat_closed', 0.6], [4, 'snare_rim', 0.85], [6, 'hat_closed', 0.6], [8, 'kick_acoustic', 0.85], [10, 'hat_open', 0.7], [12, 'snare_rim', 0.85], [14, 'snare_acoustic', 0.4]],
+    [[0, 'kick_acoustic', 0.95], [0, 'tom_floor', 0.8], [2, 'tom_floor', 0.8], [4, 'snare_rim', 0.9], [4, 'tom_floor', 0.85], [6, 'kick_acoustic', 0.9], [6, 'tom_floor', 0.85], [8, 'tom_floor', 0.9], [10, 'tom_floor', 0.9], [12, 'snare_rim', 0.95], [12, 'tom_floor', 0.95], [14, 'tom_floor', 1.0]],
+    [[0, 'snare_acoustic', 0.35], [1, 'snare_acoustic', 0.4], [2, 'snare_acoustic', 0.45], [3, 'snare_acoustic', 0.5], [4, 'snare_acoustic', 0.55], [5, 'snare_acoustic', 0.6], [6, 'snare_acoustic', 0.65], [7, 'snare_acoustic', 0.7], [8, 'tom_high', 0.85], [9, 'tom_high', 0.9], [10, 'tom_mid', 0.9], [11, 'tom_mid', 0.95], [12, 'tom_floor', 0.95], [13, 'snare_acoustic', 0.85], [14, 'snare_rim', 0.95], [15, 'kick_acoustic', 1.0]],
+    [[0, 'kick_acoustic', 1.0], [0, 'tom_high', 0.95], [1, 'tom_high', 0.95], [2, 'tom_mid', 0.95], [3, 'tom_mid', 1.0], [4, 'tom_floor', 1.0], [5, 'tom_floor', 1.0], [6, 'kick_acoustic', 1.0], [7, 'snare_acoustic', 0.7], [8, 'snare_acoustic', 0.8], [9, 'snare_acoustic', 0.9], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'snare_rim', 1.0], [13, 'snare_rim', 1.0], [14, 'tom_floor', 1.0], [15, 'tom_floor', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_2',
+    '4-Bar Trap Riser & 808 Sub Drop',
+    'Bar 1 offbeat clap -> Bar 2 8th snare rise -> Bar 3 16th roll -> Bar 4 1/32 stutter drop',
+    140,
+    [[0, '808_sub', 1.0], [4, '808_clap', 0.9], [8, '808_hat_open', 0.8], [12, '808_clap', 0.95]],
+    [[0, '808_snare', 0.4], [2, '808_snare', 0.5], [4, '808_snare', 0.6], [6, '808_snare', 0.65], [8, '808_snare', 0.7], [10, '808_snare', 0.75], [12, '808_snare', 0.8], [14, '808_snare', 0.85]],
+    [[0, '808_snare', 0.7], [1, '808_snare', 0.75], [2, '808_snare', 0.8], [3, '808_snare', 0.8], [4, '808_snare', 0.85], [5, '808_snare', 0.85], [6, '808_snare', 0.9], [7, '808_snare', 0.9], [8, '808_tom_low', 0.9], [10, '808_tom_mid', 0.95], [12, '808_tom_hi', 1.0], [14, '808_clap', 1.0]],
+    [[0, '808_snare', 0.8], [0.5, '808_snare', 0.85], [1, '808_snare', 0.9], [1.5, '808_snare', 0.9], [2, '808_snare', 0.95], [2.5, '808_snare', 0.95], [3, '808_snare', 1.0], [4, '808_clap', 1.0], [6, '808_clap', 1.0], [8, '808_snare', 1.0], [9, '808_snare', 1.0], [10, '808_snare', 1.0], [11, '808_snare', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_3',
+    '4-Bar Rock Stadium Crescendo',
+    'Bar 1 crash accents -> Bar 2 8th floor tom -> Bar 3 16th rolling surge -> Bar 4 flam barrage',
+    124,
+    [[0, 'kick_acoustic', 1.0], [0, 'crash_acoustic', 0.9], [4, 'snare_rim', 1.0], [8, 'kick_acoustic', 0.95], [8, 'crash_acoustic', 0.85], [12, 'snare_rim', 1.0]],
+    [[0, 'kick_acoustic', 1.0], [0, 'tom_floor', 0.85], [2, 'tom_floor', 0.85], [4, 'snare_rim', 0.95], [4, 'tom_floor', 0.9], [6, 'tom_floor', 0.9], [8, 'kick_acoustic', 1.0], [8, 'tom_floor', 0.95], [10, 'tom_floor', 0.95], [12, 'snare_rim', 1.0], [14, 'tom_floor', 1.0]],
+    [[0, 'kick_acoustic', 1.0], [1, 'kick_acoustic', 0.9], [2, 'tom_high', 0.85], [3, 'tom_high', 0.9], [4, 'tom_mid', 0.9], [5, 'tom_mid', 0.95], [6, 'tom_floor', 0.95], [7, 'tom_floor', 1.0], [8, 'snare_acoustic', 0.8], [9, 'snare_acoustic', 0.85], [10, 'snare_acoustic', 0.9], [11, 'snare_acoustic', 0.95], [12, 'snare_rim', 1.0], [13, 'snare_rim', 1.0], [14, 'kick_acoustic', 1.0], [15, 'kick_acoustic', 1.0]],
+    [[0, 'kick_acoustic', 1.0], [1, 'kick_acoustic', 0.9], [2, 'tom_high', 0.95], [3, 'tom_high', 0.95], [4, 'tom_mid', 1.0], [5, 'tom_mid', 1.0], [6, 'tom_floor', 1.0], [7, 'tom_floor', 1.0], [8, 'snare_rim', 1.0], [9, 'snare_rim', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'tom_floor', 1.0], [13, 'tom_floor', 1.0], [14, 'kick_acoustic', 1.0], [15, 'snare_rim', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_4',
+    '4-Bar Funk Breakdown & Turnaround',
+    'Bar 1 stripped pocket -> Bar 2 ghost weave -> Bar 3 linear chop shift -> Bar 4 3-tom turnaround',
+    106,
+    [[0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.7], [4, 'snare_rim', 0.95], [6, 'hat_closed', 0.7], [8, 'kick_acoustic', 0.9], [11, 'hat_open', 0.75], [12, 'snare_rim', 0.95]],
+    [[0, 'kick_acoustic', 1.0], [2, 'snare_acoustic', 0.35], [3, 'hat_closed', 0.6], [4, 'snare_rim', 0.95], [6, 'snare_acoustic', 0.4], [7, 'kick_acoustic', 0.85], [8, 'hat_open', 0.7], [9, 'snare_acoustic', 0.45], [10, 'kick_acoustic', 0.9], [12, 'snare_rim', 1.0], [14, 'snare_acoustic', 0.5]],
+    [[0, 'kick_acoustic', 1.0], [1, 'hat_closed', 0.7], [2, 'snare_acoustic', 0.7], [3, 'tom_high', 0.8], [4, 'kick_acoustic', 0.9], [5, 'hat_closed', 0.7], [6, 'snare_rim', 0.9], [7, 'tom_mid', 0.85], [8, 'kick_acoustic', 0.95], [9, 'hat_open', 0.8], [10, 'tom_floor', 0.9], [11, 'snare_acoustic', 0.8], [12, 'kick_acoustic', 1.0], [13, 'snare_rim', 0.95], [14, 'tom_floor', 0.95], [15, 'hat_pedal', 0.9]],
+    [[0, 'tom_high', 0.9], [1, 'tom_high', 0.95], [2, 'tom_mid', 0.9], [3, 'tom_mid', 0.95], [4, 'tom_floor', 0.95], [5, 'tom_floor', 1.0], [6, 'snare_acoustic', 0.8], [7, 'snare_acoustic', 0.85], [8, 'snare_rim', 0.95], [9, 'snare_rim', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'kick_acoustic', 1.0], [13, 'kick_acoustic', 1.0], [14, 'hat_open', 0.9], [15, 'hat_pedal', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_5',
+    '4-Bar Electronic 909 Build & Drop',
+    'Bar 1 4-on-floor pulse -> Bar 2 8th snare -> Bar 3 16th roll -> Bar 4 1/32nd club drop',
+    128,
+    [[0, '909_kick', 1.0], [2, '909_hat_open', 0.8], [4, '909_kick', 1.0], [4, '909_rim', 0.9], [6, '909_hat_open', 0.8], [8, '909_kick', 1.0], [10, '909_hat_open', 0.8], [12, '909_kick', 1.0], [12, '909_rim', 0.9], [14, '909_hat_open', 0.8]],
+    [[0, '909_kick', 1.0], [0, '909_snare', 0.4], [2, '909_snare', 0.5], [4, '909_kick', 1.0], [4, '909_snare', 0.6], [6, '909_snare', 0.65], [8, '909_kick', 1.0], [8, '909_snare', 0.7], [10, '909_snare', 0.75], [12, '909_kick', 1.0], [12, '909_snare', 0.8], [14, '909_snare', 0.85]],
+    [[0, '909_snare', 0.7], [1, '909_snare', 0.75], [2, '909_snare', 0.75], [3, '909_snare', 0.8], [4, '909_snare', 0.8], [5, '909_snare', 0.85], [6, '909_snare', 0.85], [7, '909_snare', 0.9], [8, '909_snare', 0.9], [9, '909_snare', 0.9], [10, '909_snare', 0.95], [11, '909_snare', 0.95], [12, '909_snare', 1.0], [13, '909_snare', 1.0], [14, '909_clap', 1.0], [15, '909_clap', 1.0]],
+    [[0, '909_snare', 0.85], [0.5, '909_snare', 0.9], [1, '909_snare', 0.9], [1.5, '909_snare', 0.95], [2, '909_snare', 0.95], [2.5, '909_snare', 0.95], [3, '909_snare', 1.0], [4, '909_clap', 1.0], [5, '909_clap', 1.0], [6, '909_snare', 1.0], [7, '909_snare', 1.0], [8, '909_snare', 1.0], [9, '909_snare', 1.0], [10, '909_snare', 1.0], [11, '909_snare', 1.0], [12, '909_snare', 1.0], [13, '909_snare', 1.0], [14, '909_crash', 0.8], [15, '909_hat_open', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_6',
+    '4-Bar Metal Double-Bass Blast Surge',
+    'Bar 1 breakdown stomps -> Bar 2 double-bass ramp -> Bar 3 blast beat -> Bar 4 tom carnage',
+    150,
+    [[0, 'kick_acoustic', 1.0], [0, 'china_acoustic', 0.9], [4, 'snare_rim', 1.0], [8, 'kick_acoustic', 1.0], [10, 'kick_acoustic', 0.9], [12, 'snare_rim', 1.0]],
+    [[0, 'kick_acoustic', 1.0], [1, 'kick_acoustic', 0.9], [2, 'kick_acoustic', 0.9], [3, 'kick_acoustic', 0.9], [4, 'snare_rim', 1.0], [5, 'kick_acoustic', 0.9], [6, 'kick_acoustic', 0.9], [7, 'kick_acoustic', 0.9], [8, 'kick_acoustic', 1.0], [9, 'kick_acoustic', 0.9], [10, 'kick_acoustic', 0.9], [11, 'kick_acoustic', 0.9], [12, 'snare_rim', 1.0], [13, 'kick_acoustic', 0.9], [14, 'kick_acoustic', 0.9], [15, 'kick_acoustic', 0.9]],
+    [[0, 'kick_acoustic', 1.0], [1, 'snare_rim', 1.0], [2, 'kick_acoustic', 1.0], [3, 'snare_rim', 1.0], [4, 'kick_acoustic', 1.0], [5, 'snare_rim', 1.0], [6, 'kick_acoustic', 1.0], [7, 'snare_rim', 1.0], [8, 'kick_acoustic', 1.0], [9, 'snare_rim', 1.0], [10, 'kick_acoustic', 1.0], [11, 'snare_rim', 1.0], [12, 'kick_acoustic', 1.0], [13, 'snare_rim', 1.0], [14, 'kick_acoustic', 1.0], [15, 'snare_rim', 1.0]],
+    [[0, 'tom_high', 1.0], [1, 'tom_high', 1.0], [2, 'tom_mid', 1.0], [3, 'tom_mid', 1.0], [4, 'tom_floor', 1.0], [5, 'tom_floor', 1.0], [6, 'kick_acoustic', 1.0], [7, 'kick_acoustic', 1.0], [8, 'snare_rim', 1.0], [9, 'snare_rim', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'tom_floor', 1.0], [13, 'tom_floor', 1.0], [14, 'china_acoustic', 1.0], [15, 'kick_acoustic', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_7',
+    '4-Bar Jazz Bebop Solo Transition',
+    'Bar 1 spang-a-lang -> Bar 2 3-against-4 polyrhythm -> Bar 3 tom dialog -> Bar 4 press roll',
+    130,
+    [[0, 'ride_acoustic', 0.9], [0, 'kick_acoustic', 0.35], [2.6, 'ride_acoustic', 0.7], [4, 'ride_bell', 0.9], [4, 'hat_pedal', 0.9], [6.6, 'ride_acoustic', 0.7], [8, 'ride_acoustic', 0.9], [10.6, 'ride_acoustic', 0.7], [12, 'ride_bell', 0.95], [12, 'hat_pedal', 0.9], [14.6, 'ride_acoustic', 0.7]],
+    [[0, 'snare_acoustic', 0.6], [3, 'sidestick', 0.85], [6, 'snare_acoustic', 0.7], [9, 'sidestick', 0.9], [12, 'snare_acoustic', 0.75], [15, 'sidestick', 0.9]],
+    [[0, 'tom_high', 0.85], [2.6, 'tom_high', 0.9], [4, 'tom_mid', 0.9], [6.6, 'tom_mid', 0.95], [8, 'tom_floor', 0.95], [10.6, 'tom_floor', 1.0], [12, 'snare_acoustic', 0.85], [14, 'tom_floor', 1.0]],
+    [[0, 'snare_acoustic', 0.5], [1, 'snare_acoustic', 0.6], [2, 'snare_acoustic', 0.7], [3, 'snare_acoustic', 0.75], [4, 'snare_acoustic', 0.8], [5, 'snare_acoustic', 0.85], [6, 'snare_acoustic', 0.9], [7, 'snare_acoustic', 0.95], [8, 'snare_rim', 1.0], [10, 'snare_rim', 1.0], [12, 'tom_floor', 1.0], [14, 'hat_pedal', 1.0], [15, 'ride_bell', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_8',
+    '4-Bar Lofi Chillhop Tape Slowdown & Rise',
+    'Bar 1 dusty vinyl pocket -> Bar 2 delayed rim -> Bar 3 filtered toms -> Bar 4 tape stop drop',
+    88,
+    [[0, 'lofi_kick', 1.0], [2.2, 'lofi_hat_closed', 0.6], [4.2, 'lofi_snare', 0.95], [6.2, 'lofi_hat_closed', 0.6], [8, 'lofi_kick', 0.9], [10.2, 'lofi_hat_closed', 0.6], [12.2, 'lofi_snare', 0.95], [14.2, 'lofi_hat_open', 0.7]],
+    [[0, 'lofi_kick', 1.0], [3, 'lofi_rim', 0.7], [4.2, 'lofi_snare', 0.9], [7, 'lofi_rim', 0.75], [8, 'lofi_kick', 0.95], [11, 'lofi_rim', 0.85], [12.2, 'lofi_snare', 0.95], [14, 'lofi_shaker', 0.8]],
+    [[0, 'lofi_tom_low', 0.8], [2, 'lofi_tom_low', 0.85], [4, 'lofi_tom_hi', 0.85], [6, 'lofi_tom_hi', 0.9], [8, 'lofi_snare', 0.7], [10, 'lofi_snare', 0.8], [12, 'lofi_tom_low', 0.95], [14, 'lofi_rim', 0.9]],
+    [[0, 'lofi_snare', 0.6], [2, 'lofi_snare', 0.7], [4, 'lofi_snare', 0.8], [6, 'lofi_snare', 0.85], [8, 'lofi_snare', 0.9], [10, 'lofi_snare', 0.95], [12, 'lofi_snare', 1.0], [13, 'lofi_snare', 1.0], [14, 'tape_stop', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_9',
+    '4-Bar Latin Carnival Percussion Build',
+    'Bar 1 conga clave -> Bar 2 timbale cascara -> Bar 3 timbale roll -> Bar 4 carnival tutti',
+    114,
+    [[0, 'conga_low', 0.9], [2, 'conga_high', 0.85], [4, 'conga_slap', 0.95], [6, 'conga_low', 0.9], [8, 'conga_high', 0.9], [10, 'conga_slap', 0.95], [12, 'conga_low', 0.9], [14, 'conga_high', 0.9]],
+    [[0, 'timbale_low', 0.85], [2, 'timbale_high', 0.85], [4, 'club_cowbell', 0.9], [6, 'timbale_high', 0.9], [8, 'timbale_low', 0.9], [10, 'timbale_high', 0.95], [12, 'club_cowbell', 1.0], [14, 'timbale_low', 0.95]],
+    [[0, 'timbale_low', 0.9], [1, 'timbale_low', 0.9], [2, 'timbale_high', 0.9], [3, 'timbale_high', 0.9], [4, 'timbale_low', 0.95], [5, 'timbale_low', 0.95], [6, 'timbale_high', 0.95], [7, 'timbale_high', 0.95], [8, 'club_cowbell', 1.0], [10, 'club_cowbell', 1.0], [12, 'timbale_high', 1.0], [13, 'timbale_high', 1.0], [14, 'timbale_low', 1.0], [15, 'timbale_low', 1.0]],
+    [[0, 'timbale_high', 0.95], [1, 'timbale_high', 0.95], [2, 'timbale_low', 1.0], [3, 'timbale_low', 1.0], [4, 'conga_slap', 1.0], [6, 'conga_slap', 1.0], [8, 'timbale_high', 1.0], [9, 'timbale_high', 1.0], [10, 'timbale_high', 1.0], [11, 'timbale_high', 1.0], [12, 'timbale_low', 1.0], [13, 'timbale_low', 1.0], [14, 'club_cowbell', 1.0], [15, 'club_cowbell', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_10',
+    '4-Bar Afrobeat Polyrhythmic Expansion',
+    'Bar 1 shaker pocket -> Bar 2 stick polyrhythm -> Bar 3 floor tom drive -> Bar 4 tutti lock',
+    118,
+    [[0, 'kick_acoustic', 1.0], [2, 'sidestick', 0.85], [4, 'tambourine', 0.8], [6, 'kick_acoustic', 0.9], [8, 'tom_mid', 0.8], [10, 'sidestick', 0.9], [12, 'tambourine', 0.8], [14, 'tom_floor', 0.85]],
+    [[0, 'kick_acoustic', 1.0], [1, 'sidestick', 0.8], [3, 'sidestick', 0.85], [5, 'sidestick', 0.9], [7, 'sidestick', 0.95], [8, 'tom_high', 0.9], [10, 'tom_mid', 0.95], [12, 'sidestick', 1.0], [14, 'tom_floor', 1.0]],
+    [[0, 'tom_floor', 0.9], [1, 'tom_floor', 0.9], [2, 'tom_mid', 0.9], [3, 'tom_mid', 0.9], [4, 'tom_high', 0.95], [5, 'tom_high', 0.95], [6, 'snare_rim', 0.95], [7, 'snare_rim', 0.95], [8, 'kick_acoustic', 1.0], [10, 'kick_acoustic', 1.0], [12, 'tom_floor', 1.0], [14, 'tom_floor', 1.0]],
+    [[0, 'sidestick', 1.0], [2, 'sidestick', 1.0], [4, 'tom_high', 1.0], [5, 'tom_high', 1.0], [6, 'tom_mid', 1.0], [7, 'tom_mid', 1.0], [8, 'tom_floor', 1.0], [9, 'tom_floor', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'snare_rim', 1.0], [13, 'snare_rim', 1.0], [14, 'kick_acoustic', 1.0], [15, 'kick_acoustic', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_11',
+    '4-Bar Blues 12/8 Slow Burn Turnaround',
+    'Bar 1 12/8 ride -> Bar 2 swung floor tom -> Bar 3 snare triplet swell -> Bar 4 crash drag',
+    76,
+    [[0, 'ride_acoustic', 0.9], [0, 'kick_acoustic', 0.8], [2.6, 'ride_acoustic', 0.7], [4, 'snare_acoustic', 0.7], [6.6, 'ride_acoustic', 0.7], [8, 'kick_acoustic', 0.8], [10.6, 'ride_acoustic', 0.7], [12, 'snare_acoustic', 0.75], [14.6, 'ride_acoustic', 0.7]],
+    [[0, 'tom_floor', 0.8], [2.6, 'tom_floor', 0.85], [4, 'snare_rim', 0.85], [5.3, 'tom_floor', 0.9], [8, 'tom_mid', 0.9], [10.6, 'tom_floor', 0.95], [12, 'snare_rim', 0.95]],
+    [[0, 'snare_acoustic', 0.5], [1.3, 'snare_acoustic', 0.6], [2.6, 'snare_acoustic', 0.7], [4, 'tom_high', 0.8], [5.3, 'tom_mid', 0.85], [6.6, 'tom_floor', 0.9], [8, 'snare_acoustic', 0.85], [9.3, 'snare_acoustic', 0.9], [10.6, 'snare_acoustic', 0.95], [12, 'snare_rim', 1.0], [14, 'tom_floor', 1.0]],
+    [[0, 'tom_high', 0.95], [1.3, 'tom_high', 0.95], [2.6, 'tom_mid', 1.0], [4, 'tom_mid', 1.0], [5.3, 'tom_floor', 1.0], [6.6, 'tom_floor', 1.0], [8, 'snare_rim', 1.0], [9.3, 'snare_rim', 1.0], [10.6, 'snare_rim', 1.0], [12, 'snare_rim', 1.0], [13.3, 'kick_acoustic', 1.0], [14.6, 'kick_acoustic', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_12',
+    '4-Bar Industrial Glitch & Stutter Ascent',
+    'Bar 1 cold rim & kick -> Bar 2 16th stutter -> Bar 3 hat rush -> Bar 4 wall of sound drop',
+    132,
+    [[0, '808_sub', 1.0], [4, '808_clap', 0.9], [8, '808_sub', 0.95], [12, '808_clap', 0.95]],
+    [[0, '808_sub', 1.0], [2, '808_snare', 0.6], [3, '808_snare', 0.7], [4, '808_clap', 0.9], [6, '808_snare', 0.7], [8, '808_sub', 1.0], [10, '808_snare', 0.8], [11, '808_snare', 0.85], [12, '808_clap', 1.0]],
+    [[0, '808_snare', 0.75], [1, '808_snare', 0.8], [2, '808_snare', 0.8], [3, '808_snare', 0.85], [4, '808_snare', 0.85], [5, '808_snare', 0.9], [6, '808_snare', 0.9], [7, '808_snare', 0.95], [8, '808_hat_open', 0.9], [10, '808_hat_open', 0.95], [12, '808_snare', 1.0], [14, '808_clap', 1.0]],
+    [[0, '808_snare', 0.9], [1, '808_snare', 0.9], [2, '808_snare', 0.95], [3, '808_snare', 0.95], [4, '808_snare', 1.0], [5, '808_snare', 1.0], [6, '808_snare', 1.0], [7, '808_snare', 1.0], [8, '808_sub', 1.0], [10, '808_sub', 1.0], [12, '808_snare', 1.0], [13, '808_snare', 1.0], [14, '808_snare', 1.0], [15, '808_snare', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_13',
+    '4-Bar Disco High-Tension Riser',
+    'Bar 1 4-on-floor -> Bar 2 claps & tambourine -> Bar 3 8th snare rise -> Bar 4 16th disco peak',
+    122,
+    [[0, 'kick_acoustic', 1.0], [2, 'hat_open', 0.8], [4, 'kick_acoustic', 1.0], [6, 'hat_open', 0.8], [8, 'kick_acoustic', 1.0], [10, 'hat_open', 0.8], [12, 'kick_acoustic', 1.0], [14, 'hat_open', 0.8]],
+    [[0, 'kick_acoustic', 1.0], [2, 'tambourine', 0.8], [4, 'kick_acoustic', 1.0], [4, 'clap_acoustic', 0.9], [6, 'tambourine', 0.85], [8, 'kick_acoustic', 1.0], [10, 'tambourine', 0.9], [12, 'kick_acoustic', 1.0], [12, 'clap_acoustic', 0.95], [14, 'tambourine', 0.95]],
+    [[0, 'snare_rim', 0.6], [2, 'snare_rim', 0.65], [4, 'snare_rim', 0.7], [6, 'snare_rim', 0.75], [8, 'snare_rim', 0.8], [10, 'snare_rim', 0.85], [12, 'snare_rim', 0.9], [14, 'snare_rim', 0.95]],
+    [[0, 'snare_rim', 0.85], [1, 'snare_rim', 0.85], [2, 'snare_rim', 0.9], [3, 'snare_rim', 0.9], [4, 'snare_rim', 0.95], [5, 'snare_rim', 0.95], [6, 'snare_rim', 1.0], [7, 'snare_rim', 1.0], [8, 'clap_acoustic', 1.0], [9, 'clap_acoustic', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'snare_rim', 1.0], [13, 'snare_rim', 1.0], [14, 'hat_open', 1.0], [15, 'hat_pedal', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_14',
+    '4-Bar Ambient Cymbal & Tom Swell',
+    'Bar 1 ride washes -> Bar 2 floor tom pulse -> Bar 3 mid & high toms -> Bar 4 full swell drop',
+    96,
+    [[0, 'ride_acoustic', 0.8], [0, 'kick_acoustic', 0.4], [4, 'ride_acoustic', 0.75], [8, 'ride_acoustic', 0.85], [12, 'ride_acoustic', 0.8]],
+    [[0, 'tom_floor', 0.6], [2, 'tom_floor', 0.65], [4, 'tom_floor', 0.7], [6, 'tom_floor', 0.75], [8, 'tom_floor', 0.8], [10, 'tom_floor', 0.85], [12, 'tom_floor', 0.9], [14, 'tom_floor', 0.95]],
+    [[0, 'tom_mid', 0.7], [2, 'tom_mid', 0.75], [4, 'tom_high', 0.8], [6, 'tom_high', 0.85], [8, 'tom_floor', 0.9], [10, 'tom_floor', 0.95], [12, 'tom_mid', 0.95], [14, 'tom_high', 1.0]],
+    [[0, 'tom_floor', 0.9], [1, 'tom_floor', 0.9], [2, 'tom_mid', 0.95], [3, 'tom_mid', 0.95], [4, 'tom_high', 1.0], [5, 'tom_high', 1.0], [6, 'snare_acoustic', 0.8], [7, 'snare_acoustic', 0.85], [8, 'snare_rim', 0.95], [9, 'snare_rim', 0.95], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'kick_acoustic', 1.0], [13, 'kick_acoustic', 1.0], [14, 'crash_acoustic', 0.8], [15, 'crash_acoustic', 0.9]]
+  ),
+  make4MeasureFill(
+    'b4m_15',
+    '4-Bar Dub Reggae Echo Transition',
+    'Bar 1 one-drop -> Bar 2 skank & tom echo -> Bar 3 delayed tom triplets -> Bar 4 sub bass drop',
+    76,
+    [[0, 'sidestick', 0.7], [2, 'hat_open', 0.8], [4, 'hat_closed', 0.6], [6, 'hat_open', 0.8], [8, 'kick_acoustic', 1.0], [8, 'snare_rim', 1.0], [10, 'hat_open', 0.8], [12, 'hat_closed', 0.6], [14, 'hat_open', 0.85]],
+    [[0, 'hat_open', 0.8], [2, 'tom_high', 0.8], [4, 'tom_high', 0.6], [6, 'tom_high', 0.4], [8, 'kick_acoustic', 1.0], [8, 'snare_rim', 1.0], [10, 'tom_mid', 0.8], [12, 'tom_mid', 0.6], [14, 'tom_mid', 0.4]],
+    [[0, 'tom_high', 0.85], [1.3, 'tom_high', 0.7], [2.6, 'tom_mid', 0.9], [4, 'tom_mid', 0.75], [5.3, 'tom_floor', 0.95], [6.6, 'tom_floor', 0.8], [8, 'snare_rim', 1.0], [10, 'tom_floor', 0.9], [12, 'tom_floor', 0.95], [14, 'kick_acoustic', 1.0]],
+    [[0, 'tom_high', 0.95], [2, 'tom_mid', 0.95], [4, 'tom_floor', 1.0], [6, 'tom_floor', 1.0], [8, 'snare_rim', 1.0], [9, 'snare_rim', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'kick_acoustic', 1.0], [13, 'kick_acoustic', 1.0], [14, 'hat_open', 1.0], [15, 'hat_pedal', 1.0]]
+  ),
+  make4MeasureFill(
+    'b4m_16',
+    '4-Bar Grand Finale Tutti Crash & Resolve',
+    'Bar 1 power tom pulse -> Bar 2 unison flams -> Bar 3 blast roll -> Bar 4 ultimate tutti crash',
+    116,
+    [[0, 'kick_acoustic', 1.0], [0, 'tom_floor', 0.9], [4, 'snare_rim', 1.0], [8, 'kick_acoustic', 1.0], [8, 'tom_floor', 0.95], [12, 'snare_rim', 1.0]],
+    [[0, 'kick_acoustic', 1.0], [2, 'snare_rim', 0.9], [4, 'tom_high', 0.95], [6, 'tom_mid', 0.95], [8, 'tom_floor', 1.0], [10, 'kick_acoustic', 1.0], [12, 'snare_rim', 1.0], [14, 'tom_floor', 1.0]],
+    [[0, 'kick_acoustic', 1.0], [1, 'kick_acoustic', 0.9], [2, 'snare_rim', 0.95], [3, 'snare_rim', 0.95], [4, 'tom_high', 0.95], [5, 'tom_high', 1.0], [6, 'tom_mid', 1.0], [7, 'tom_mid', 1.0], [8, 'tom_floor', 1.0], [9, 'tom_floor', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'kick_acoustic', 1.0], [13, 'kick_acoustic', 1.0], [14, 'kick_acoustic', 1.0], [15, 'kick_acoustic', 1.0]],
+    [[0, 'tom_high', 1.0], [1, 'tom_high', 1.0], [2, 'tom_mid', 1.0], [3, 'tom_mid', 1.0], [4, 'tom_floor', 1.0], [5, 'tom_floor', 1.0], [6, 'snare_rim', 1.0], [7, 'snare_rim', 1.0], [8, 'snare_rim', 1.0], [9, 'snare_rim', 1.0], [10, 'snare_rim', 1.0], [11, 'snare_rim', 1.0], [12, 'tom_floor', 1.0], [13, 'tom_floor', 1.0], [14, 'china_acoustic', 1.0], [15, 'crash_acoustic', 1.0]]
+  )
+];
+
+// Backwards-compatible aliases
+export const DRUM_GROOVES_CATALOG = DRUM_MAIN_PARTS_CATALOG;
 export const DRUM_CHORDS_CATALOG = DRUM_GROOVES_CATALOG;
 
 // Guitar Chord Shapes
@@ -1143,6 +1722,11 @@ class TouchControllerEngine {
     this.drumSwing = 0;              // 0, 0.08, 0.16
     this.rollDensity = '16th';       // '8th', '16th', '32nd'
     this.activeSliceTimeouts = [];
+    
+    // Drum Fills & Main Parts arrangement state
+    this.drumGrooveCategory = 'fill_1m'; // 'main' | 'fill_1m' | 'fill_4m'
+    this.selectedMainPartIndex = 0;      // Target main part for fills to drop into
+    this.autoResolveMainPart = true;     // Automatically drop into main part when fill completes
   }
 
   // Instrument-Specific Modes (Drums do not have chords!)
@@ -1288,7 +1872,7 @@ class TouchControllerEngine {
     });
   }
 
-  // Play Dynamic Drum Grooves & Rhythm Fills
+  // Play Dynamic Drum Grooves, 1-Measure Fills, & 4-Measure Buildups
   playDrumGroove(grooveItem) {
     if (!grooveItem) return;
     this.stopActiveSlice();
@@ -1300,6 +1884,24 @@ class TouchControllerEngine {
         }, evt.time * 1000);
         this.activeSliceTimeouts.push(timeoutId);
       });
+
+      // Seamless Auto-Drop into Target Main Part when Fill Completes
+      const isFill = grooveItem.category === 'fill_1m' || grooveItem.category === 'fill_4m' || this.drumGrooveCategory.startsWith('fill');
+      if (this.autoResolveMainPart && isFill) {
+        const mainPart = this.getActiveMainPart();
+        if (mainPart && mainPart.events && mainPart.events.length > 0) {
+          const measures = grooveItem.measures || (this.drumGrooveCategory === 'fill_4m' ? 4 : 1);
+          const bpm = grooveItem.bpm || 120;
+          const fillDuration = measures * ((60 / bpm) * 4);
+          
+          mainPart.events.forEach((evt) => {
+            const timeoutId = setTimeout(() => {
+              instrumentEngine.playDrumSound(evt.sound, evt.vel || 0.95);
+            }, (fillDuration + evt.time) * 1000);
+            this.activeSliceTimeouts.push(timeoutId);
+          });
+        }
+      }
       return;
     }
     
@@ -1317,12 +1919,52 @@ class TouchControllerEngine {
     this.playDrumGroove(chordItem);
   }
 
+  setDrumGrooveCategory(cat) {
+    this.drumGrooveCategory = cat;
+    this.render();
+  }
+
+  getActiveDrumCatalog() {
+    if (this.drumGrooveCategory === 'fill_4m') return DRUM_FOUR_MEASURE_FILLS;
+    if (this.drumGrooveCategory === 'fill_1m') return DRUM_SINGLE_MEASURE_FILLS;
+    return DRUM_MAIN_PARTS_CATALOG;
+  }
+
   getDrumGroove(idx) {
-    return DRUM_GROOVES_CATALOG[idx];
+    const catalog = this.getActiveDrumCatalog();
+    return catalog[idx] || catalog[0];
   }
 
   getDrumChord(idx) {
     return this.getDrumGroove(idx);
+  }
+
+  getActiveMainPart() {
+    return DRUM_MAIN_PARTS_CATALOG[this.selectedMainPartIndex] || DRUM_MAIN_PARTS_CATALOG[0];
+  }
+
+  toggleAutoResolveMainPart() {
+    this.autoResolveMainPart = !this.autoResolveMainPart;
+    this.render();
+  }
+
+  setSelectedMainPart(index) {
+    this.selectedMainPartIndex = parseInt(index, 10) || 0;
+    this.render();
+  }
+
+  auditionFillMode(mode) {
+    this.stopActiveSlice();
+    if (mode === 'fill_4m') {
+      const item = DRUM_FOUR_MEASURE_FILLS[0];
+      this.playDrumGroove(item);
+    } else if (mode === 'fill_1m') {
+      const item = DRUM_SINGLE_MEASURE_FILLS[0];
+      this.playDrumGroove(item);
+    } else {
+      const item = this.getActiveMainPart();
+      this.playDrumGroove(item);
+    }
   }
 
   // Play authentic genre-based breakbeat chops & musical loops
@@ -1482,11 +2124,15 @@ class TouchControllerEngine {
 
   renderActiveInstrumentHudHtml() {
     if (this.activeInstrument === 'drums') {
+      const is4m = this.drumGrooveCategory === 'fill_4m';
+      const is1m = this.drumGrooveCategory === 'fill_1m';
       const modeLabel = this.activeMode === 'chords' 
-        ? 'Grooves & Rhythm Fills' 
+        ? (is4m 
+            ? '4-Measure Fills (64-Step Buildups)' 
+            : (is1m ? '1-Measure Fills (16-Step Transitions)' : 'Main Parts (Core Grooves)'))
         : (this.activeMode === 'slices' ? 'Genre Breakbeat Chops' : '16-Pad MPC One-Shots');
       const badgeDesc = this.activeMode === 'chords' 
-        ? '16 Dynamic Rhythm Fills' 
+        ? (is4m ? '4-Bar Extended Buildups' : (is1m ? '1-Bar Transition Fills' : 'Foundational Grooves'))
         : (this.activeMode === 'slices' ? `${this.activeGenre.toUpperCase()} Breakbeats` : 'Velocity One-Shots');
       return `
         <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
@@ -1516,7 +2162,7 @@ class TouchControllerEngine {
               </div>
             </div>
             <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
-              ⚡ Press QWERTY keys or click on-screen pads. In Grooves &amp; Fills mode, each key triggers a rhythm fill pattern; in Genre Beats mode, each key triggers a live genre chop.
+              ⚡ Press QWERTY keys or click on-screen pads. In Grooves &amp; Fills mode, each key triggers ${is4m ? 'a 4-measure buildup fill (64 steps)' : (is1m ? 'a 1-measure transition fill (16 steps)' : 'a foundational main part groove')}${this.autoResolveMainPart && this.drumGrooveCategory !== 'main' ? ' &mdash; automatically dropping into the target Main Part.' : '.'}
             </div>
           </div>
         </div>
@@ -1691,8 +2337,37 @@ class TouchControllerEngine {
     if (this.activeMode === 'chords') {
       if (this.activeInstrument === 'drums') {
         return `
-          <div style="font-size: 0.78rem; color: #a1a1aa;">
-            Drum Grooves &amp; Fills Engine &bull; Click any pad or press [1-4, Q-R, A-F, Z-V] to trigger dynamic rhythm breaks, rolls &amp; fills
+          <div class="ctrl-genre-picker" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <label class="ctrl-label">Drum Part / Fill:</label>
+            <div class="ctrl-genre-pills">
+              <button 
+                type="button" 
+                class="ctrl-genre-pill ${this.drumGrooveCategory === 'main' ? 'active' : ''}" 
+                onclick="window.touchController.setDrumGrooveCategory('main')"
+                style="${this.drumGrooveCategory === 'main' ? 'border-color: #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.4);' : ''}"
+                title="16 Foundational Main Part Grooves"
+              >
+                🥁 Main Parts
+              </button>
+              <button 
+                type="button" 
+                class="ctrl-genre-pill ${this.drumGrooveCategory === 'fill_1m' ? 'active' : ''}" 
+                onclick="window.touchController.setDrumGrooveCategory('fill_1m')"
+                style="${this.drumGrooveCategory === 'fill_1m' ? 'border-color: #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,0.4);' : ''}"
+                title="16 Dynamic 1-Measure / 1-Bar Drum Fills"
+              >
+                ⚡ 1-Measure Fills
+              </button>
+              <button 
+                type="button" 
+                class="ctrl-genre-pill ${this.drumGrooveCategory === 'fill_4m' ? 'active' : ''}" 
+                onclick="window.touchController.setDrumGrooveCategory('fill_4m')"
+                style="${this.drumGrooveCategory === 'fill_4m' ? 'border-color: #ec4899; box-shadow: 0 0 10px rgba(236,72,153,0.4);' : ''}"
+                title="16 Epic 4-Measure Extended Buildups"
+              >
+                🚀 4-Measure Fills
+              </button>
+            </div>
           </div>
         `;
       }
@@ -1889,24 +2564,44 @@ class TouchControllerEngine {
     `;
   }
 
-  // Grooves & Fills Mode: Drum Grooves & Rhythm Fills 4x4 Grid
+  // Grooves & Fills Mode: Drum Main Parts, 1-Measure Fills, & 4-Measure Buildups 4x4 Grid
   renderDrumGroovesGridHtml() {
+    const catalog = this.getActiveDrumCatalog();
+    const is4m = this.drumGrooveCategory === 'fill_4m';
+    const is1m = this.drumGrooveCategory === 'fill_1m';
+    
+    const borderColor = is4m 
+      ? 'rgba(236, 72, 153, 0.45)' 
+      : (is1m ? 'rgba(56, 189, 248, 0.45)' : 'rgba(245, 158, 11, 0.45)');
+    const bgColor = is4m 
+      ? 'rgba(236, 72, 153, 0.06)' 
+      : (is1m ? 'rgba(56, 189, 248, 0.06)' : 'rgba(245, 158, 11, 0.06)');
+    const textColor = is4m 
+      ? '#f472b6' 
+      : (is1m ? '#38bdf8' : '#fbbf24');
+    const badgePrefix = is4m ? '4-Bar Build' : (is1m ? '1-Bar Fill' : 'Main Part');
+    const badgeSteps = is4m ? '64 Steps' : (is1m ? '16 Steps' : 'Pocket');
+
     return `
       <div class="mpc-grid">
-        ${DRUM_GROOVES_CATALOG.map((dg, idx) => `
+        ${catalog.map((item, idx) => `
           <div 
             class="mpc-pad" 
-            style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.05);"
+            id="drumGroovePad_${idx}"
+            style="border-color: ${borderColor}; background: ${bgColor};"
             onmousedown="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
             ontouchstart="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
             ontouchend="this.classList.remove('active');"
-            title="${dg.desc}"
+            title="${item.desc} • ${item.measures || (is4m ? 4 : 1)} Measure(s) (${item.bpm} BPM)"
           >
-            <div class="mpc-pad-key">Fill / Groove ${idx + 1}</div>
-            <div class="mpc-pad-name" style="color: var(--neon-gold); font-size: 0.9rem;">${dg.name}</div>
-            <div class="mpc-pad-note" style="color: #cbd5e1;">${dg.desc}</div>
+            <div class="mpc-pad-key" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>${badgePrefix} ${idx + 1}</span>
+              <span style="font-size: 0.65rem; opacity: 0.75;">${badgeSteps}</span>
+            </div>
+            <div class="mpc-pad-name" style="color: ${textColor}; font-size: 0.86rem;">${item.name}</div>
+            <div class="mpc-pad-note" style="color: #cbd5e1; font-size: 0.7rem;">${item.desc}</div>
           </div>
         `).join('')}
       </div>
@@ -1916,10 +2611,6 @@ class TouchControllerEngine {
   // Alias for backward compatibility
   renderDrumChordsGridHtml() {
     return this.renderDrumGroovesGridHtml();
-  }
-
-  getDrumChord(idx) {
-    return DRUM_GROOVES_CATALOG[idx];
   }
 
   // Chords Mode: Guitar Strummed Chord Shapes 4x4 Grid
@@ -2129,10 +2820,45 @@ class TouchControllerEngine {
         return `
           <div class="ctrl-editor-panel">
             <div class="ctrl-editor-title">
-              <span>🥁 Drum Kit &amp; Groove Articulation Rack</span>
-              <span style="font-size: 0.72rem; color: #a1a1aa;">Shape rhythm swing feel, fill density, and drum kit acoustics</span>
+              <span>🥁 Drum Fills &amp; Main Parts Articulation Rack</span>
+              <span style="font-size: 0.72rem; color: #a1a1aa;">1-measure fills, 4-measure buildups, and target main parts with seamless drop resolution</span>
             </div>
             <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+              <!-- Active Fills / Parts Selection -->
+              <div class="ctrl-editor-field">
+                <label>Active Fills / Parts:</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumGrooveCategory === 'main' ? 'active' : ''}" onclick="window.touchController.setDrumGrooveCategory('main')">Main Parts</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumGrooveCategory === 'fill_1m' ? 'active' : ''}" onclick="window.touchController.setDrumGrooveCategory('fill_1m')">1-Bar Fills</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumGrooveCategory === 'fill_4m' ? 'active' : ''}" onclick="window.touchController.setDrumGrooveCategory('fill_4m')">4-Bar Fills</button>
+                </div>
+              </div>
+
+              <!-- Target Main Part for Fills to Drop Into -->
+              <div class="ctrl-editor-field">
+                <label>Target Main Part (Fill Drops Into):</label>
+                <select class="theory-select" onchange="window.touchController.setSelectedMainPart(this.value)">
+                  ${DRUM_MAIN_PARTS_CATALOG.map((mp, idx) => `
+                    <option value="${idx}" ${this.selectedMainPartIndex === idx ? 'selected' : ''}>${idx + 1}. ${mp.name}</option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <!-- Auto-Drop into Main Part Toggle -->
+              <div class="ctrl-editor-field">
+                <label>Auto-Drop into Main Part:</label>
+                <button 
+                  type="button" 
+                  class="btn btn-secondary btn-sm" 
+                  onclick="window.touchController.toggleAutoResolveMainPart()" 
+                  style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; width: 100%;"
+                >
+                  <span class="sustain-pedal-led ${this.autoResolveMainPart ? 'active' : ''}"></span>
+                  ${this.autoResolveMainPart ? 'Auto-Drop: ACTIVE' : 'Auto-Drop: OFF'}
+                </button>
+              </div>
+
+              <!-- Drum Kit Profile -->
               <div class="ctrl-editor-field">
                 <label>Drum Kit Profile:</label>
                 <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
@@ -2143,6 +2869,8 @@ class TouchControllerEngine {
                   <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
                 </select>
               </div>
+
+              <!-- Groove Swing Feel -->
               <div class="ctrl-editor-field">
                 <label>Groove Swing Feel:</label>
                 <div style="display: flex; gap: 0.35rem;">
@@ -2151,17 +2879,20 @@ class TouchControllerEngine {
                   <button type="button" class="btn btn-secondary btn-sm ${this.drumSwing === 0.045 ? 'active' : ''}" onclick="window.touchController.setDrumSwing(0.045)">Shuffle</button>
                 </div>
               </div>
-              <div class="ctrl-editor-field">
-                <label>Fill &amp; Roll Density:</label>
-                <div style="display: flex; gap: 0.35rem;">
-                  <button type="button" class="btn btn-secondary btn-sm ${this.rollDensity === '8th' ? 'active' : ''}" onclick="window.touchController.setRollDensity('8th')">1/8th</button>
-                  <button type="button" class="btn btn-secondary btn-sm ${this.rollDensity === '16th' ? 'active' : ''}" onclick="window.touchController.setRollDensity('16th')">1/16th</button>
-                  <button type="button" class="btn btn-secondary btn-sm ${this.rollDensity === '32nd' ? 'active' : ''}" onclick="window.touchController.setRollDensity('32nd')">1/32nd</button>
-                </div>
-              </div>
-              <div class="ctrl-editor-field" style="display: flex; align-items: flex-end;">
-                <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="window.touchController.auditionDrumFill()">
-                  ▶ Audition Drum Fill
+
+              <!-- Direct Audition Buttons -->
+              <div class="ctrl-editor-field" style="display: flex; gap: 0.35rem; align-items: flex-end;">
+                <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="window.touchController.auditionFillMode('fill_1m')">
+                  ▶ 1-Bar Fill
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="window.touchController.auditionFillMode('fill_4m')">
+                  ▶ 4-Bar Build
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="window.touchController.auditionFillMode('main')">
+                  ▶ Main Part
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.stopActiveSlice()" title="Stop audio">
+                  ⏹
                 </button>
               </div>
             </div>

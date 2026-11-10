@@ -973,7 +973,9 @@ window.addEventListener('keydown', (e) => {
         handleMpcPadHit(padObj.pad, 0.95);
       }
       
-      const padEl = document.getElementById(`ctrlMpcPad_${padObj.pad}`) || document.getElementById(`slicePad_${padObj.pad - 1}`);
+      const padEl = document.getElementById(`ctrlMpcPad_${padObj.pad}`) || 
+                    document.getElementById(`drumGroovePad_${padObj.pad - 1}`) || 
+                    document.getElementById(`slicePad_${padObj.pad - 1}`);
       if (padEl) {
         padEl.classList.add('active');
         setTimeout(() => padEl.classList.remove('active'), 200);
