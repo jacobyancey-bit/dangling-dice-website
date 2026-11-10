@@ -14,6 +14,7 @@
 
 import { instrumentEngine, DRUM_KITS } from './instrumentEngine.js';
 import { midiEngine } from './midiEngine.js';
+import { sampleEngine } from './sampleEngine.js';
 
 // ============================================================================
 // CONSTANTS & CATALOGS
@@ -1768,11 +1769,13 @@ class TouchControllerEngine {
     this.stopActiveSlice();
     this.activeInstrument = instId;
     
-    // Match instrument voice in instrumentEngine
+    // Match instrument voice in instrumentEngine & preload real studio soundfonts
     if (instId === 'piano') {
-      instrumentEngine.setInstrument('acoustic_grand');
+      instrumentEngine.setInstrument('grand_piano');
     } else if (instId === 'guitar') {
       instrumentEngine.setInstrument('steel_acoustic');
+    } else if (instId === 'drums') {
+      sampleEngine.preloadAcousticDrums();
     }
     
     this.render();
@@ -2021,9 +2024,15 @@ class TouchControllerEngine {
       <!-- Top Directional Carousel Header -->
       <div class="ctrl-carousel-header">
         <div class="ctrl-brand-group">
-          <span class="calc-panel-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">
-            Hardware &amp; Touch Controller
-          </span>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span class="calc-panel-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">
+              Hardware &amp; Touch Controller
+            </span>
+            <span class="calc-panel-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.3); display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+              Studio SoundFonts Active
+            </span>
+          </div>
           <h3 class="ctrl-title">
             ${this.getInstrumentIcon()} ${this.getInstrumentName()} Surface
           </h3>

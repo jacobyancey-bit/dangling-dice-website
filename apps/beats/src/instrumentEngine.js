@@ -1102,12 +1102,20 @@ class InstrumentEngine {
 
   getAudioContext() {
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
+      if (typeof window !== 'undefined' && window.__SHARED_AUDIO_CTX__) {
+        this.ctx = window.__SHARED_AUDIO_CTX__;
+      } else {
+        const AudioCtx = (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext));
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          if (typeof window !== 'undefined') window.__SHARED_AUDIO_CTX__ = this.ctx;
+        }
+      }
       this.setupMasterBus();
+      sampleEngine.setAudioContext(this.ctx);
     }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
     }
     return this.ctx;
   }
@@ -1129,9 +1137,20 @@ class InstrumentEngine {
   }
 
   setInstrument(id) {
-    if (INSTRUMENT_CATALOG[id]) {
-      this.activeInstrumentId = id;
-      sampleEngine.preloadInstrument(id);
+    const aliasMap = {
+      piano: 'grand_piano',
+      acoustic_grand: 'grand_piano',
+      guitar: 'steel_acoustic',
+      acoustic_guitar: 'steel_acoustic',
+      classical: 'classical_guitar',
+      nylon: 'classical_guitar',
+      electric: 'electric_clean',
+      bass: 'electric_bass',
+    };
+    const targetId = aliasMap[id] || id;
+    if (INSTRUMENT_CATALOG[targetId]) {
+      this.activeInstrumentId = targetId;
+      sampleEngine.preloadInstrument(targetId);
       return true;
     }
     return false;

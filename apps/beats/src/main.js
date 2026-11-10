@@ -2708,8 +2708,9 @@ document.addEventListener("DOMContentLoaded", () => {
   renderInstrumentSettingsRack();
   loadDemoBreakbeat(); // Pre-slice demo breakbeat for immediate Bank B slice auditioning
 
-  // Preload real studio multi-samples for active instrument & acoustic drum kit
-  sampleEngine.preloadInstrument(instrumentEngine.getInstrument().id);
+  // Preload real studio multi-samples for piano, guitar & acoustic drum kit
+  sampleEngine.preloadInstrument('grand_piano');
+  sampleEngine.preloadInstrument('steel_acoustic');
   sampleEngine.preloadAcousticDrums();
   sampleEngine.onStatusChange(() => {
     renderInstrumentSettingsRack();

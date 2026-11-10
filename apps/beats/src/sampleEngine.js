@@ -11,6 +11,7 @@
 
 const SOUNDFONT_BASE_URL = 'https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM';
 const DRUMS_BASE_URL = 'https://tonejs.github.io/audio/drum-samples/acoustic-kit';
+const WESBOS_BASE_URL = 'https://raw.githubusercontent.com/wesbos/JavaScript30/master/01%20-%20JavaScript%20Drum%20Kit/sounds';
 
 export const NOTE_NAMES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
@@ -34,32 +35,65 @@ export function noteNameToMidiFlat(name) {
 }
 
 export const INSTRUMENT_SOUNDFONT_MAP = {
+  // Pianos & Keyboards
   grand_piano: 'acoustic_grand_piano-mp3',
+  acoustic_grand: 'acoustic_grand_piano-mp3',
+  piano: 'acoustic_grand_piano-mp3',
   upright_piano: 'honkytonk_piano-mp3',
-  classical_guitar: 'acoustic_guitar_nylon-mp3',
-  steel_acoustic: 'acoustic_guitar_steel-mp3',
-  electric_clean: 'electric_guitar_clean-mp3',
-  rock_overdrive: 'overdriven_guitar-mp3',
-  palm_mute: 'overdriven_guitar-mp3',
-  mandolin: 'banjo-mp3',
-  electric_bass: 'electric_bass_finger-mp3',
   rhodes_mark1: 'electric_piano_1-mp3',
   wurlitzer_200a: 'electric_piano_2-mp3',
   harpsichord: 'harpsichord-mp3',
   toy_piano: 'music_box-mp3',
   church_organ: 'church_organ-mp3',
+
+  // Guitars & Plucked Strings
+  steel_acoustic: 'acoustic_guitar_steel-mp3',
+  acoustic_guitar: 'acoustic_guitar_steel-mp3',
+  guitar: 'acoustic_guitar_steel-mp3',
+  classical_guitar: 'acoustic_guitar_nylon-mp3',
+  nylon_guitar: 'acoustic_guitar_nylon-mp3',
+  electric_clean: 'electric_guitar_clean-mp3',
+  rock_overdrive: 'overdriven_guitar-mp3',
+  palm_mute: 'electric_guitar_muted-mp3',
+  mandolin: 'banjo-mp3',
+  electric_bass: 'electric_bass_finger-mp3',
+  bass: 'electric_bass_finger-mp3',
 };
 
 export const ACOUSTIC_DRUM_SAMPLE_MAP = {
+  // Kicks
   kick_acoustic: `${DRUMS_BASE_URL}/kick.mp3`,
+  acoustic_kick: `${DRUMS_BASE_URL}/kick.mp3`,
+  kick: `${DRUMS_BASE_URL}/kick.mp3`,
+
+  // Snares & Claps
   snare_acoustic: `${DRUMS_BASE_URL}/snare.mp3`,
-  snare_rim: `${DRUMS_BASE_URL}/snare.mp3`,
+  acoustic_snare: `${DRUMS_BASE_URL}/snare.mp3`,
+  snare: `${DRUMS_BASE_URL}/snare.mp3`,
+  snare_rim: `${WESBOS_BASE_URL}/snare.wav`,
+  sidestick: `${SOUNDFONT_BASE_URL}/woodblock-mp3/C5.mp3`,
+  clap_acoustic: `${WESBOS_BASE_URL}/clap.wav`,
+
+  // Hi-Hats
   hat_closed: `${DRUMS_BASE_URL}/hihat.mp3`,
-  hat_pedal: `${DRUMS_BASE_URL}/hihat.mp3`,
-  hat_open: `${DRUMS_BASE_URL}/hihat.mp3`,
+  hat_pedal: `${WESBOS_BASE_URL}/hihat.wav`,
+  hat_open: `${WESBOS_BASE_URL}/openhat.wav`,
+
+  // Toms
   tom_high: `${DRUMS_BASE_URL}/tom1.mp3`,
   tom_mid: `${DRUMS_BASE_URL}/tom2.mp3`,
   tom_floor: `${DRUMS_BASE_URL}/tom3.mp3`,
+
+  // Cymbals
+  crash_acoustic: `${WESBOS_BASE_URL}/ride.wav`,
+  ride_acoustic: `${WESBOS_BASE_URL}/ride.wav`,
+  ride_bell: `${WESBOS_BASE_URL}/tink.wav`,
+  china_acoustic: `${SOUNDFONT_BASE_URL}/reverse_cymbal-mp3/C4.mp3`,
+  splash_acoustic: `${WESBOS_BASE_URL}/ride.wav`,
+
+  // Percussion
+  cowbell_real: `${SOUNDFONT_BASE_URL}/tinkle_bell-mp3/C5.mp3`,
+  tambourine: `${SOUNDFONT_BASE_URL}/tinkle_bell-mp3/G5.mp3`,
 };
 
 class MultiSampleEngine {
@@ -78,11 +112,18 @@ class MultiSampleEngine {
 
   getAudioContext() {
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
+      if (typeof window !== 'undefined' && window.__SHARED_AUDIO_CTX__) {
+        this.ctx = window.__SHARED_AUDIO_CTX__;
+      } else {
+        const AudioCtx = (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext));
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          if (typeof window !== 'undefined') window.__SHARED_AUDIO_CTX__ = this.ctx;
+        }
+      }
     }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
     }
     return this.ctx;
   }
@@ -266,12 +307,31 @@ class MultiSampleEngine {
   }
 
   /**
-   * Retrieves an acoustic drum one-shot buffer if loaded
+   * Retrieves an acoustic drum one-shot buffer if loaded, with alias matching & lazy preloading
    */
   getAcousticDrumSample(soundKey) {
     if (!this.useRealSamples) return null;
-    const cacheKey = `drum:${soundKey}`;
-    return this.sampleCache.get(cacheKey) || null;
+    const key = (soundKey || '').toLowerCase();
+    const cacheKey = `drum:${key}`;
+    if (this.sampleCache.has(cacheKey)) return this.sampleCache.get(cacheKey);
+
+    // If alias or direct key exists in ACOUSTIC_DRUM_SAMPLE_MAP
+    if (ACOUSTIC_DRUM_SAMPLE_MAP[key]) {
+      const targetUrl = ACOUSTIC_DRUM_SAMPLE_MAP[key];
+      // Search if this URL was already cached under another key
+      for (const [k, buf] of this.sampleCache.entries()) {
+        if (k.startsWith('drum:')) {
+          const mapKey = k.replace('drum:', '');
+          if (ACOUSTIC_DRUM_SAMPLE_MAP[mapKey] === targetUrl) {
+            this.sampleCache.set(cacheKey, buf);
+            return buf;
+          }
+        }
+      }
+      // If not yet cached, fetch in background for future hits
+      this.fetchAndDecodeDrum(key, targetUrl);
+    }
+    return null;
   }
 }
 
