@@ -1114,6 +1114,9 @@ class InstrumentEngine {
       this.setupMasterBus();
       sampleEngine.setAudioContext(this.ctx);
     }
+    if (!this.masterGain && this.ctx) {
+      this.setupMasterBus();
+    }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
@@ -1328,7 +1331,7 @@ class InstrumentEngine {
       src.buffer = drumBuf;
       gain.gain.setValueAtTime(vel * 0.95, t);
       src.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.masterGain || ctx.destination);
       src.start(t);
       return;
     }

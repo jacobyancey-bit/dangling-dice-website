@@ -1850,6 +1850,59 @@ class TouchControllerEngine {
     });
   }
 
+  /**
+   * Instant 1-Click Studio Sound Check: Plays authentic studio multi-samples
+   */
+  auditionInstrument(instId) {
+    this.stopActiveSlice();
+    const ctx = instrumentEngine.getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    if (instId === 'piano') {
+      this.setInstrument('piano');
+      // Authentic Concert Grand Piano Arpeggio (C Major 9)
+      const pianoNotes = [48, 55, 60, 62, 64, 71, 72]; // C3, G3, C4, D4, E4, B4, C5
+      pianoNotes.forEach((midi, idx) => {
+        const tId = setTimeout(() => {
+          instrumentEngine.playNote(midi, 2.2, 0.95);
+        }, idx * 170);
+        this.activeSliceTimeouts.push(tId);
+      });
+    } else if (instId === 'drums') {
+      this.setInstrument('drums');
+      // Authentic Acoustic Drum Kit Sequence (Kick, Snare, Hats, Toms & Ride)
+      const drumSequence = [
+        { sound: 'kick_acoustic', time: 0, vel: 1.0 },
+        { sound: 'hat_closed', time: 0.15, vel: 0.8 },
+        { sound: 'snare_acoustic', time: 0.35, vel: 0.95 },
+        { sound: 'hat_closed', time: 0.50, vel: 0.75 },
+        { sound: 'kick_acoustic', time: 0.65, vel: 0.9 },
+        { sound: 'tom_high', time: 0.80, vel: 0.85 },
+        { sound: 'tom_mid', time: 0.95, vel: 0.85 },
+        { sound: 'snare_rim', time: 1.10, vel: 0.95 },
+        { sound: 'ride_acoustic', time: 1.25, vel: 1.0 },
+      ];
+      drumSequence.forEach(evt => {
+        const tId = setTimeout(() => {
+          instrumentEngine.playDrumSound(evt.sound, evt.vel);
+        }, evt.time * 1000);
+        this.activeSliceTimeouts.push(tId);
+      });
+    } else if (instId === 'guitar') {
+      this.setInstrument('guitar');
+      // Authentic Steel-String Acoustic Guitar Strum (Em9 / G)
+      const guitarNotes = [40, 47, 52, 55, 59, 62]; // E2, B2, E3, G3, B3, D4
+      guitarNotes.forEach((midi, idx) => {
+        const tId = setTimeout(() => {
+          instrumentEngine.playNote(midi, 2.4, 0.92);
+        }, idx * 35);
+        this.activeSliceTimeouts.push(tId);
+      });
+    }
+  }
+
   // ==========================================================================
   // PLAYBACK DISPATCHERS
   // ==========================================================================
@@ -2091,6 +2144,9 @@ class TouchControllerEngine {
         </div>
       </div>
 
+      <!-- Instant 1-Click Studio Sound Check Bar -->
+      ${this.renderAuditionBarHtml()}
+
       <!-- Performance Mode Tabs (Instrument-Adapted) -->
       <div class="ctrl-modes-bar">
         <div class="ctrl-modes-tabs">
@@ -2128,6 +2184,28 @@ class TouchControllerEngine {
       <p style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 0.65rem;">
         ⌨️ <em>Active Instrument Isolation: Whichever instrument is selected exclusively controls the computer keyboard. Clicking text inputs restores standard typing.</em>
       </p>
+    `;
+  }
+
+  renderAuditionBarHtml() {
+    return `
+      <div class="ctrl-audition-bar" style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.55rem 0.9rem; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; margin: 0.6rem 0 1rem 0; flex-wrap: wrap;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.35rem;">
+          <span>🎧</span> Instant Sample Audition:
+        </span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('piano')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.12); color: #a5b4fc; font-size: 0.78rem;">
+          <span>🎹</span> Play Grand Piano
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('drums')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.12); color: #fcd34d; font-size: 0.78rem;">
+          <span>🥁</span> Play Acoustic Drum Kit
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('guitar')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12); color: #6ee7b7; font-size: 0.78rem;">
+          <span>🎸</span> Play Acoustic Guitar
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.stopActiveSlice()" title="Stop Sound" style="padding: 0.25rem 0.5rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+          ⏹ Stop
+        </button>
+      </div>
     `;
   }
 
