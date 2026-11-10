@@ -49,68 +49,156 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(7, 9, 14, 0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 0.85rem 1.5rem;
+  background: rgba(7, 9, 14, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.65), 0 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 1.15rem 2rem;
+  transition: all 0.25s ease;
 }
 
 .nav-container {
-  max-width: 1300px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   text-decoration: none;
   color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.brand:hover {
+  transform: translateY(-1px);
 }
 
 .brand-logo-img {
-  width: 36px;
-  height: 36px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
+  filter: drop-shadow(0 0 14px rgba(6, 182, 212, 0.55));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+}
+
+.brand:hover .brand-logo-img {
+  transform: scale(1.08) rotate(-3deg);
+  filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.75));
 }
 
 .brand-title {
-  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 1.35rem;
   font-weight: 800;
-  letter-spacing: -0.01em;
-  background: linear-gradient(90deg, #fff, #cbd5e1);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  flex-wrap: wrap;
+}
+
+.brand-name-colored {
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 30%, #f43f5e 70%, #fbbf24 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 12px rgba(56, 189, 248, 0.35));
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.brand-tag-gaming {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.18), rgba(168, 85, 247, 0.18));
+  color: #38bdf8;
+  border: 1px solid rgba(6, 182, 212, 0.45);
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.25);
+  vertical-align: middle;
 }
 
 .brand-tagline {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin-top: 0.2rem;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .nav-link {
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   font-weight: 600;
-  transition: color 0.2s;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
 }
 
 .nav-link:hover {
   color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
 }
 
-@media (max-width: 768px) {
+.nav-link-cyan {
+  color: var(--neon-cyan) !important;
+}
+
+.nav-link-cyan:hover {
+  background: rgba(6, 182, 212, 0.12) !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+}
+
+.nav-link-pink {
+  color: var(--neon-pink) !important;
+}
+
+.nav-link-pink:hover {
+  background: rgba(236, 72, 153, 0.12) !important;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.2);
+}
+
+.nav-link-gold {
+  color: #fbbf24 !important;
+}
+
+.nav-link-gold:hover {
+  background: rgba(251, 191, 36, 0.12) !important;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
+}
+
+@media (max-width: 900px) {
+  .gaming-header {
+    padding: 1rem 1.25rem;
+  }
+  .brand-logo-img {
+    width: 42px;
+    height: 42px;
+  }
+  .brand-title {
+    font-size: 1.15rem;
+  }
   .nav-links { display: none; }
 }
 
