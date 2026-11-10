@@ -47,6 +47,13 @@ import { samplerEngine } from './samplerEngine.js';
 import { sampleEngine } from './sampleEngine.js';
 import { instrumentEngine, INSTRUMENT_CATALOG, DRUM_KITS } from './instrumentEngine.js';
 import { studioRecorder } from './studioRecorder.js';
+import { touchController, PIANO_CHORDS_CATALOG, GUITAR_CHORDS_CATALOG, DRUM_CHORDS_CATALOG, GENRE_SLICES } from './touchController.js';
+
+window.touchController = touchController;
+window.setControllerInstrument = (id) => touchController.setInstrument(id);
+window.navControllerInstrument = (dir) => touchController.navInstrument(dir);
+window.setControllerMode = (id) => touchController.setMode(id);
+window.setControllerGenre = (id) => touchController.setGenre(id);
 
 const API_BASE = window.location.hostname === "localhost" 
   ? "http://localhost:5000/api" 
@@ -229,6 +236,10 @@ function handleDrumKitChange(kitId) {
 let mpcBankMode = 'drums';
 
 function renderMpcPads() {
+  if (touchController) {
+    touchController.render();
+    return;
+  }
   const grid = document.getElementById('mpcPadGrid');
   if (!grid) return;
 
@@ -282,10 +293,42 @@ function handleMpcBankChange(val) {
 }
 
 function handleMpcPadHit(padNum, velocity = 0.9) {
-  const padEl = document.getElementById(`mpcPad_${padNum}`);
+  const padEl = document.getElementById(`ctrlMpcPad_${padNum}`) || 
+                document.getElementById(`slicePad_${padNum - 1}`) || 
+                document.getElementById(`mpcPad_${padNum}`);
   if (padEl) {
     padEl.classList.add('active');
     setTimeout(() => padEl.classList.remove('active'), 120);
+  }
+
+  if (touchController) {
+    if (touchController.activeMode === 'slices') {
+      const slice = touchController.getSlice(padNum - 1);
+      if (slice) {
+        touchController.playGenreSlice(slice);
+        return;
+      }
+    } else if (touchController.activeMode === 'chords') {
+      if (touchController.activeInstrument === 'piano') {
+        const chord = PIANO_CHORDS_CATALOG[(padNum - 1) % PIANO_CHORDS_CATALOG.length];
+        if (chord) {
+          touchController.playChordVoicing(chord.notes, false);
+          return;
+        }
+      } else if (touchController.activeInstrument === 'guitar') {
+        const chord = GUITAR_CHORDS_CATALOG[(padNum - 1) % GUITAR_CHORDS_CATALOG.length];
+        if (chord) {
+          touchController.playChordVoicing(chord.notes, true);
+          return;
+        }
+      } else {
+        const chord = touchController.getDrumChord((padNum - 1) % 16);
+        if (chord) {
+          touchController.playDrumChord(chord);
+          return;
+        }
+      }
+    }
   }
 
   if (mpcBankMode === 'drums') {

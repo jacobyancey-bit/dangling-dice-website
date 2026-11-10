@@ -47,3 +47,4 @@ Allow: /
 
 # Canonical Sitemap Declaration
 Sitemap: https://beats.dangling-dice-studios.com/sitemap.xml
+
