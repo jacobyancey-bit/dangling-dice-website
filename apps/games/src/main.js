@@ -27,17 +27,37 @@ function showToast(message, type = 'info') {
   }, 3500);
 }
 
-// Download Helper (Generates client-side text/binary blob)
+// URL Sanitizer (Guards against javascript: or invalid pseudo-protocols)
+function sanitizeUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return '#';
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith('/') || trimmed.startsWith('#')) return trimmed;
+  try {
+    const parsed = new URL(trimmed, window.location.origin);
+    if (['http:', 'https:', 'mailto:', 'steam:'].includes(parsed.protocol)) {
+      return trimmed;
+    }
+  } catch (e) {
+    if (trimmed.startsWith('steam://')) return trimmed;
+  }
+  return '#';
+}
+
+// Download Helper (Generates client-side text/binary blob with sanitized filename & memory cleanup)
 function downloadTextFile(filename, content) {
+  const safeFilename = String(filename || 'download.txt').replace(/[/\\?%*:|"<>]/g, '_');
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = filename;
+  link.download = safeFilename;
   document.body.appendChild(link);
   link.click();
-  setTimeout(() => link.remove(), 1000);
-  showToast(`📥 Downloaded: ${filename}!`);
+  setTimeout(() => {
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
+  showToast(`📥 Downloaded: ${safeFilename}!`);
 }
 
 // Clipboard Copy Helper
@@ -181,7 +201,7 @@ function renderSearchDropdown(query = '') {
         <div style="font-size: 1.8rem;">🔍</div>
         <div class="search-dropdown-empty-title">No calibrated profile matching "${escapeHtml(q)}"</div>
         <p style="font-size: 0.8rem; margin-top: 0.35rem;">
-          Request this title's EQ curves and configs in our <a href="https://discord.gg/uFYMQahNZz" target="_blank" style="color: var(--neon-cyan); font-weight: 700;">Discord Community ↗</a>
+          Request this title's EQ curves and configs in our <a href="https://discord.gg/uFYMQahNZz" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); font-weight: 700;">Discord Community ↗</a>
         </p>
       </div>
     `;
@@ -259,7 +279,7 @@ function renderGamesCatalog(query = '') {
         <div style="font-size: 1.1rem; color: #fff; font-weight: 700;">No games found matching "${escapeHtml(query)}"</div>
         <p style="font-size: 0.85rem; margin-top: 0.25rem;">
           Want us to calibrate sound profiles and configs for this game? 
-          <a href="https://discord.gg/uFYMQahNZz" target="_blank" style="color: var(--neon-cyan);">Request it in Discord ↗</a>
+          <a href="https://discord.gg/uFYMQahNZz" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan);">Request it in Discord ↗</a>
         </p>
       </div>
     `;
@@ -426,7 +446,7 @@ function renderGameDashboard() {
       <div class="card-actions-row">
         ${
           game.controllerProfile.steamConfigCode
-            ? `<a href="${game.controllerProfile.steamConfigCode}" class="btn btn-primary">📥 Apply Steam Input Config ↗</a>`
+            ? `<a href="${sanitizeUrl(game.controllerProfile.steamConfigCode)}" class="btn btn-primary">📥 Apply Steam Input Config ↗</a>`
             : ''
         }
         ${
@@ -781,7 +801,7 @@ function renderContextualGearHtml(gearIds = []) {
       </div>
       <div class="accessory-footer">
         <span class="accessory-price" style="font-size: 1rem;">${escapeHtml(item.price)}</span>
-        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+        <a href="${sanitizeUrl(item.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
           Check Deal ↗
         </a>
       </div>
@@ -816,7 +836,7 @@ function renderMasterAccessories(cat = 'all') {
           <span class="accessory-price">${escapeHtml(item.price)}</span>
           <span style="font-size: 0.75rem; color: var(--neon-gold); margin-left: 0.35rem;">${escapeHtml(item.rating)}</span>
         </div>
-        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+        <a href="${sanitizeUrl(item.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
           Check Deal ↗
         </a>
       </div>
@@ -876,7 +896,7 @@ function renderSoftwareGuide() {
       </div>
 
       <div class="software-actions">
-        <a href="${tool.downloadUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+        <a href="${sanitizeUrl(tool.downloadUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
           📥 Official Download (${escapeHtml(tool.version)}) ↗
         </a>
         ${
@@ -886,7 +906,7 @@ function renderSoftwareGuide() {
               </button>`
             : ''
         }
-        <a href="${tool.officialSite}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <a href="${sanitizeUrl(tool.officialSite)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
           Docs ↗
         </a>
       </div>
