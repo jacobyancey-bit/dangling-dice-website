@@ -275,13 +275,16 @@ function renderGameDashboard() {
       </span>
     </div>
 
-    <!-- 4 Sub-Tabs -->
+    <!-- 5 Sub-Tabs -->
     <div class="dashboard-tabs" role="tablist">
       <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'audio' ? 'active' : ''}" data-tab="audio" onclick="window.switchDashboardTab('audio')">
         🎧 Audio &amp; Footstep EQ
       </button>
       <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'controller' ? 'active' : ''}" data-tab="controller" onclick="window.switchDashboardTab('controller')">
         🎮 Controller &amp; Stick Curves
+      </button>
+      <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'console' ? 'active' : ''}" data-tab="console" onclick="window.switchDashboardTab('console')">
+        🕹️ Console Setup (PS5 &amp; Xbox)
       </button>
       <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'config' ? 'active' : ''}" data-tab="config" onclick="window.switchDashboardTab('config')">
         ⚙️ Config Files &amp; FPS Tweaks
@@ -489,6 +492,144 @@ function renderGameDashboard() {
       <div class="card-actions-row">
         <button type="button" class="btn btn-secondary" onclick="window.copySensValues('${game.id}')">
           📋 Copy Sens Values
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab 5: Console Guide (PS5 & Xbox) -->
+    <div id="tabContentConsole" style="display: ${activeDashboardTab === 'console' ? 'block' : 'none'};">
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+          <h3 style="font-size: 1.2rem; font-weight: 800; color: #fff;">PlayStation 5 &amp; Xbox Series X|S Calibration</h3>
+          <span class="pill-tag pill-tag-cyan" style="font-size: 0.72rem;">🎮 100% Console Compatible</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">
+          Every setting on this page works on consoles. Follow this step-by-step to apply this footstep EQ curve and controller curve directly inside your PS5 or Xbox system menus.
+        </p>
+      </div>
+
+      <!-- 2-Column Grid: PS5 vs Xbox -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+        <!-- PlayStation 5 Card -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.3rem;">🎮</span>
+              <strong style="color: #fff; font-size: 1.05rem;">PlayStation 5 (Tempest 3D)</strong>
+            </div>
+            <span style="font-size: 0.72rem; color: #60a5fa; background: rgba(59, 130, 246, 0.15); padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 700;">PS5 Native 5-Band EQ</span>
+          </div>
+
+          <ol style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.6; margin-bottom: 1rem;">
+            <li>Plug your headset into your DualSense controller jack or PS5 USB port.</li>
+            <li>Go to: <strong style="color: #fff;">Settings &gt; Sound &gt; Audio Output &gt; Headphone Equalizer</strong>.</li>
+            <li>Select a <strong style="color: #fff;">Custom Preset</strong> and set the 5 sliders:</li>
+          </ol>
+
+          <!-- PS5 5-Band EQ Box -->
+          <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--neon-cyan); font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+              Calibrated PS5 Sliders for ${escapeHtml(game.shortName)}:
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35rem; text-align: center;">
+              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">100 Hz</div>
+                <div style="font-size: 0.9rem; font-weight: 800; color: #f43f5e;">-3 dB</div>
+                <div style="font-size: 0.65rem; color: #64748b;">Mud Cut</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">400 Hz</div>
+                <div style="font-size: 0.9rem; font-weight: 800; color: #f43f5e;">-1 dB</div>
+                <div style="font-size: 0.65rem; color: #64748b;">Debris</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">1 kHz</div>
+                <div style="font-size: 0.9rem; font-weight: 800; color: #38bdf8;">0 dB</div>
+                <div style="font-size: 0.65rem; color: #64748b;">Comms</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px; border: 1px solid rgba(6, 182, 212, 0.4);">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">4 kHz</div>
+                <div style="font-size: 0.9rem; font-weight: 800; color: var(--neon-cyan);">+6 dB</div>
+                <div style="font-size: 0.65rem; color: var(--neon-cyan);">Footsteps</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted);">10 kHz</div>
+                <div style="font-size: 0.9rem; font-weight: 800; color: #f43f5e;">-3 dB</div>
+                <div style="font-size: 0.65rem; color: #64748b;">Gun Ring</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size: 0.8rem; color: #94a3b8;">
+            💡 <strong>In-Game Mix:</strong> Open ${escapeHtml(game.shortName)} settings &gt; Audio &gt; set Master Audio Mix to <strong style="color: #fff;">${escapeHtml(game.audioProfile.targetMix)}</strong>.
+          </div>
+        </div>
+
+        <!-- Xbox Series X/S Card -->
+        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.3rem;">🟢</span>
+              <strong style="color: #fff; font-size: 1.05rem;">Xbox Series X|S &amp; One (Dolby Access)</strong>
+            </div>
+            <span style="font-size: 0.72rem; color: #34d399; background: rgba(16, 185, 129, 0.15); padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 700;">10-Band Atmos EQ</span>
+          </div>
+
+          <ol style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.6; margin-bottom: 1rem;">
+            <li>Download the free <strong style="color: #fff;">Dolby Access</strong> app from the Xbox Store.</li>
+            <li>In Xbox Settings &gt; General &gt; Volume &amp; audio output, set Headset audio to <strong style="color: #fff;">Dolby Atmos for Headphones</strong>.</li>
+            <li>Open Dolby Access &gt; Settings &gt; Custom 1, and input this 10-band curve:</li>
+          </ol>
+
+          <!-- Xbox 10-Band EQ Box -->
+          <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--neon-green); font-weight: 800; text-transform: uppercase; margin-bottom: 0.35rem; letter-spacing: 0.05em;">
+              Calibrated Dolby Access Settings:
+            </div>
+            <code style="font-family: var(--font-mono); font-size: 0.78rem; color: #e2e8f0; display: block; word-break: break-all; line-height: 1.5;">
+              ${escapeHtml(game.audioProfile.dolbyValues)}
+            </code>
+          </div>
+
+          <div style="font-size: 0.8rem; color: #94a3b8;">
+            💡 <strong>In-Game Mix:</strong> Open ${escapeHtml(game.shortName)} settings &gt; Audio &gt; set Master Audio Mix to <strong style="color: #fff;">${escapeHtml(game.audioProfile.targetMix)}</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- In-Game Controller & Deadzone Settings for Console -->
+      <div style="background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+        <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🎯</span> In-Game Controller Settings (Enter in PS5/Xbox Menu)
+        </h4>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Response Curve Type</div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: var(--neon-cyan);">${escapeHtml(game.controllerProfile.curveType)}</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Left Stick Min Deadzone</div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.leftStickDeadzoneMin)}</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Right Stick Min Deadzone</div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.rightStickDeadzoneMin)}</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Sensitivity Multipliers</div>
+            <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">Look: ${escapeHtml(game.controllerProfile.horizontalSens)} | ADS: ${escapeHtml(game.controllerProfile.verticalSens)}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="card-actions-row">
+        <button type="button" class="btn btn-primary" onclick="window.copyConsoleCheatSheet('${game.id}')">
+          📋 Copy Console Cheat Sheet to Clipboard
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.downloadConsoleGuideTxt('${game.id}')">
+          📥 Download Console .txt Guide
         </button>
       </div>
     </div>
@@ -1017,6 +1158,77 @@ window.copySensValues = function (gameId) {
   if (!game) return;
   const p = game.controllerProfile;
   copyToClipboard(`Horizontal Sens: ${p.horizontalSens}\nVertical Sens: ${p.verticalSens}\nMode: ${p.aimAssistType}`, '📋 Copied Sensitivity Specs!');
+};
+
+window.copyConsoleCheatSheet = function (gameId) {
+  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  if (!game) return;
+
+  const text = `================================================================================\n` +
+    `DANGLING DICE GAMING LAB™ — CONSOLE SETUP QUICK-GUIDE (PS5 & XBOX)\n` +
+    `Game: ${game.title}\n` +
+    `Target In-Game Audio Mix: ${game.audioProfile.targetMix}\n` +
+    `Website: https://games.dangling-dice-studios.com/\n` +
+    `================================================================================\n\n` +
+    `🎮 PLAYSTATION 5 (TEMPEST 3D NATIVE 5-BAND EQ)\n` +
+    `Location: Settings > Sound > Audio Output > Headphone Equalizer > Custom\n` +
+    `  • 100 Hz:  -3 dB (Cuts sub-bass mud and explosion artillery rumble)\n` +
+    `  • 400 Hz:  -1 dB (Clears voice / debris clutter)\n` +
+    `  • 1 kHz:    0 dB (Natural team comms & weapon reloads)\n` +
+    `  • 4 kHz:   +6 dB (CRITICAL: Isolates footsteps, tile clicks & broken glass)\n` +
+    `  • 10 kHz:  -3 dB (Tames shrill gunshot ear fatigue)\n\n` +
+    `🟢 XBOX SERIES X|S & ONE (DOLBY ACCESS 10-BAND EQ)\n` +
+    `Location: Xbox Store > Dolby Access app > Settings > Custom 1\n` +
+    `  • Values: ${game.audioProfile.dolbyValues}\n\n` +
+    `🎯 CONSOLE IN-GAME CONTROLLER SETTINGS\n` +
+    `  • Response Curve: ${game.controllerProfile.curveType}\n` +
+    `  • Left Stick Deadzone: ${game.controllerProfile.leftStickDeadzoneMin}\n` +
+    `  • Right Stick Deadzone: ${game.controllerProfile.rightStickDeadzoneMin}\n` +
+    `  • Max Deadzone: ${game.controllerProfile.stickDeadzoneMax}\n` +
+    `  • Sensitivity: Look (${game.controllerProfile.horizontalSens}) / ADS (${game.controllerProfile.verticalSens})\n` +
+    `  • Aim Assist Mode: ${game.controllerProfile.aimAssistType}\n\n` +
+    `⚡ CONSOLE GRAPHICS & FPS TIPS:\n` +
+    `  • Turn OFF Motion Blur & Depth of Field in game settings.\n` +
+    `  • Enable 120Hz / Performance Mode in console display settings.\n` +
+    `  • Set Field of View (FOV) to 105 - 115 if supported.`;
+
+  copyToClipboard(text, `📋 Copied PS5 & Xbox Console Cheat Sheet for ${game.shortName}!`);
+};
+
+window.downloadConsoleGuideTxt = function (gameId) {
+  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  if (!game) return;
+
+  const filename = `${game.shortName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_console_setup.txt`;
+  const text = `================================================================================\n` +
+    `DANGLING DICE GAMING LAB™ — CONSOLE SETUP QUICK-GUIDE (PS5 & XBOX)\n` +
+    `Game: ${game.title}\n` +
+    `Target In-Game Audio Mix: ${game.audioProfile.targetMix}\n` +
+    `Website: https://games.dangling-dice-studios.com/\n` +
+    `================================================================================\n\n` +
+    `🎮 PLAYSTATION 5 (TEMPEST 3D NATIVE 5-BAND EQ)\n` +
+    `Location: Settings > Sound > Audio Output > Headphone Equalizer > Custom\n` +
+    `  • 100 Hz:  -3 dB (Cuts sub-bass mud and explosion artillery rumble)\n` +
+    `  • 400 Hz:  -1 dB (Clears voice / debris clutter)\n` +
+    `  • 1 kHz:    0 dB (Natural team comms & weapon reloads)\n` +
+    `  • 4 kHz:   +6 dB (CRITICAL: Isolates footsteps, tile clicks & broken glass)\n` +
+    `  • 10 kHz:  -3 dB (Tames shrill gunshot ear fatigue)\n\n` +
+    `🟢 XBOX SERIES X|S & ONE (DOLBY ACCESS 10-BAND EQ)\n` +
+    `Location: Xbox Store > Dolby Access app > Settings > Custom 1\n` +
+    `  • Values: ${game.audioProfile.dolbyValues}\n\n` +
+    `🎯 CONSOLE IN-GAME CONTROLLER SETTINGS\n` +
+    `  • Response Curve: ${game.controllerProfile.curveType}\n` +
+    `  • Left Stick Deadzone: ${game.controllerProfile.leftStickDeadzoneMin}\n` +
+    `  • Right Stick Deadzone: ${game.controllerProfile.rightStickDeadzoneMin}\n` +
+    `  • Max Deadzone: ${game.controllerProfile.stickDeadzoneMax}\n` +
+    `  • Sensitivity: Look (${game.controllerProfile.horizontalSens}) / ADS (${game.controllerProfile.verticalSens})\n` +
+    `  • Aim Assist Mode: ${game.controllerProfile.aimAssistType}\n\n` +
+    `⚡ CONSOLE GRAPHICS & FPS TIPS:\n` +
+    `  • Turn OFF Motion Blur & Depth of Field in game settings.\n` +
+    `  • Enable 120Hz / Performance Mode in console display settings.\n` +
+    `  • Set Field of View (FOV) to 105 - 115 if supported.`;
+
+  downloadTextFile(filename, text);
 };
 
 // Audio Setup Wizard Handlers
