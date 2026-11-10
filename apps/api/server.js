@@ -125,6 +125,43 @@ app.get(['/.well-known/discord', '/.well-known/discord.txt'], (req, res) => {
   res.send('dh=1249865747f1f8a9daec742ba9b4bbc5dd950ae9');
 });
 
+// Dedicated Subdomain Sitemap & Robots Discovery Engine
+// Ensures crawlers always receive valid XML/TXT payloads and never fall through to SPA index.html
+app.get(['/sitemap.xml', '/sitemap-index.xml', '/robots.txt'], (req, res, next) => {
+  const hostname = (req.hostname || '').toLowerCase();
+  const filename = req.path.replace('/', '');
+  
+  let appName = 'web';
+  if (hostname.startsWith('games.') || hostname.startsWith('gaming.') || req.query.subdomain === 'games') {
+    appName = 'games';
+  } else if (hostname.startsWith('beats.') || hostname.startsWith('music.') || req.query.subdomain === 'beats') {
+    appName = 'beats';
+  } else if (hostname.startsWith('dev.') || req.query.subdomain === 'dev') {
+    appName = 'dev';
+  } else if (hostname.startsWith('media.') || req.query.subdomain === 'media') {
+    appName = 'media';
+  }
+
+  // Look in dist first, then fallback to public
+  const candidatePaths = [
+    path.join(__dirname, '..', appName, 'dist', filename),
+    path.join(__dirname, '..', appName, 'public', filename),
+    path.join(__dirname, '..', 'web', 'dist', filename),
+    path.join(__dirname, '..', 'web', 'public', filename),
+  ];
+
+  for (const candidate of candidatePaths) {
+    if (fs.existsSync(candidate)) {
+      const isXml = filename.endsWith('.xml');
+      res.setHeader('Content-Type', isXml ? 'application/xml; charset=utf-8' : 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.sendFile(candidate);
+    }
+  }
+
+  next();
+});
+
 // 3. Prevent Denial of Service (DoS) by limiting JSON & URL-encoded request body size
 // Preserves raw body for Stripe webhook cryptographic signature verification
 app.use(
