@@ -58,6 +58,31 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     assert.match(redirectLocation, /utm_source=danglingdice/i);
   });
 
+  it('AFF-01c: Successfully redirects /go/gear-truthear-red with 302 to verified gear destination', () => {
+    let statusCode = null;
+    let redirectLocation = null;
+
+    const req = {
+      params: { slug: 'gear-truthear-red' },
+      query: { src: 'gaming_hub' },
+    };
+
+    const res = {
+      setHeader() {},
+      redirect(code, location) {
+        statusCode = code;
+        redirectLocation = location;
+      },
+    };
+
+    redirectPartner(req, res);
+
+    assert.equal(statusCode, 302);
+    assert.match(redirectLocation, /amazon\.com/i);
+    assert.match(redirectLocation, /utm_source=danglingdice/i);
+    assert.match(redirectLocation, /utm_campaign=gaming_hub/i);
+  });
+
   it('AFF-02: Returns 404 for unrecognized partner slug', () => {
     let statusCode = null;
     let jsonBody = null;

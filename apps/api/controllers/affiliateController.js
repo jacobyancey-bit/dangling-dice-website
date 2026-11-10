@@ -125,6 +125,73 @@ const PARTNER_DIRECTORY = {
     icon: '☕',
     featured: true,
   },
+
+  // --------------------------------------------------------------------------
+  // Gaming Hub Hardware & Accessories Deals (games.dangling-dice-studios.com)
+  // --------------------------------------------------------------------------
+  'gear-truthear-red': {
+    name: 'Truthear x Crinacle Zero:RED Dual Dynamic IEM',
+    targetUrl: 'https://www.amazon.com/s?k=Truthear+x+Crinacle+Zero+RED',
+    category: 'Gaming Gear & Accessories',
+    description: 'Dual dynamic driver in-ear monitors calibrated for competitive audio separation and footstep clarity.',
+    perkBadge: 'Studio Footstep King',
+    icon: '🎧',
+    featured: true,
+  },
+  'gear-tangzu-waner': {
+    name: 'Tangzu Wan’er S.G Studio Gaming IEM',
+    targetUrl: 'https://www.amazon.com/s?k=Tangzu+Waner+S.G+IEM',
+    category: 'Gaming Gear & Accessories',
+    description: 'Sub-$25 budget-champion in-ear monitors with pinpoint spatial imaging for CS2, Valorant, and Apex.',
+    perkBadge: 'Sub-$25 Budget Champion',
+    icon: '🎧',
+    featured: true,
+  },
+  'gear-vader-4-pro': {
+    name: 'Flydigi Vader 4 Pro Controller (Hall Effect)',
+    targetUrl: 'https://www.amazon.com/s?k=Flydigi+Vader+4+Pro',
+    category: 'Gaming Gear & Accessories',
+    description: 'Hall-Effect anti-drift controller with adjustable thumbstick tension rings and 1000Hz polling rate.',
+    perkBadge: 'Anti-Drift Hall Effect',
+    icon: '🎮',
+    featured: true,
+  },
+  'gear-dualsense-edge': {
+    name: 'PlayStation DualSense Edge Wireless Controller',
+    targetUrl: 'https://www.amazon.com/s?k=PlayStation+DualSense+Edge+Wireless+Controller',
+    category: 'Gaming Gear & Accessories',
+    description: 'Official Sony pro controller with swappable analog stick modules, trigger stop locks, and back paddles.',
+    perkBadge: 'Official Pro Controller',
+    icon: '🎮',
+    featured: true,
+  },
+  'gear-kontrolfreek-galaxy': {
+    name: 'KontrolFreek FPS Freek Galaxy Thumbstick Risers',
+    targetUrl: 'https://www.amazon.com/s?k=KontrolFreek+FPS+Freek+Galaxy',
+    category: 'Gaming Gear & Accessories',
+    description: 'Mixed-height thumbstick risers adding +120% range of motion for micro-adjustments in FPS shooters.',
+    perkBadge: 'Precision Aim Mod',
+    icon: '🕹️',
+    featured: true,
+  },
+  'gear-rapid-trigger-kb': {
+    name: 'Wooting 60HE+ / DrunkDeer Rapid-Trigger Keyboard',
+    targetUrl: 'https://www.amazon.com/s?k=DrunkDeer+A75+Rapid+Trigger+Keyboard',
+    category: 'Gaming Gear & Accessories',
+    description: 'Magnetic Hall-Effect analog switches with 0.1mm rapid trigger for instant counter-strafing.',
+    perkBadge: '0.1mm Rapid Trigger',
+    icon: '⌨️',
+    featured: true,
+  },
+  'gear-viper-v3-pro': {
+    name: 'Razer Viper V3 Pro Ultra-Lightweight 8000Hz Mouse',
+    targetUrl: 'https://www.amazon.com/s?k=Razer+Viper+V3+Pro',
+    category: 'Gaming Gear & Accessories',
+    description: '54-gram ultra-lightweight esports mouse with genuine 8000Hz polling rate and optical Gen-3 switches.',
+    perkBadge: '54g Pro Esports Mouse',
+    icon: '🖱️',
+    featured: true,
+  },
 };
 
 /**
@@ -152,6 +219,12 @@ export const redirectPartner = (req, res) => {
   target.searchParams.set('utm_source', 'danglingdice');
   target.searchParams.set('utm_medium', 'affiliate');
   target.searchParams.set('utm_campaign', cleanSource);
+
+  // Attach Amazon Associate Tracking Tag if configured in environment
+  const amazonTag = process.env.AMAZON_ASSOCIATE_TAG || process.env.AMAZON_AFFILIATE_TAG;
+  if (target.hostname.includes('amazon.') && amazonTag) {
+    target.searchParams.set('tag', amazonTag);
+  }
 
   // Set privacy and security headers
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
