@@ -2634,17 +2634,17 @@ class TouchControllerEngine {
         ${PIANO_CHORDS_CATALOG.map((chord, idx) => `
           <div 
             class="mpc-pad" 
-            style="border-color: rgba(6, 182, 212, 0.35); background: rgba(6, 182, 212, 0.05);"
+            style="border-color: rgba(6, 182, 212, 0.35); background: rgba(6, 182, 212, 0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
             onmousedown="window.touchController.playChordVoicing([${chord.notes.join(',')}], false); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
             ontouchstart="window.touchController.playChordVoicing([${chord.notes.join(',')}], false); this.classList.add('active');"
             ontouchend="this.classList.remove('active');"
-            title="${chord.desc}"
+            title="${chord.name}: ${chord.desc}"
           >
-            <div class="mpc-pad-key">Chord ${idx + 1}</div>
-            <div class="mpc-pad-name" style="color: var(--neon-cyan); font-size: 0.95rem;">${chord.name}</div>
-            <div class="mpc-pad-note" style="color: #cbd5e1;">${chord.desc}</div>
+            <div style="font-size: 0.68rem; font-weight: 800; color: #22d3ee; opacity: 0.85; text-transform: uppercase;">CHORD ${idx + 1}</div>
+            <div style="color: #f8fafc; font-weight: 700; font-size: 1.05rem; line-height: 1.2;">${chord.name}</div>
+            <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace;">VOICING</div>
           </div>
         `).join('')}
       </div>
@@ -2666,31 +2666,39 @@ class TouchControllerEngine {
     const textColor = is4m 
       ? '#f472b6' 
       : (is1m ? '#38bdf8' : '#fbbf24');
-    const badgePrefix = is4m ? '4-Bar Build' : (is1m ? '1-Bar Fill' : 'Main Part');
-    const badgeSteps = is4m ? '64 Steps' : (is1m ? '16 Steps' : 'Pocket');
+    const badgePrefix = is4m ? 'BUILD' : (is1m ? 'FILL' : 'PART');
 
     return `
       <div class="mpc-grid">
-        ${catalog.map((item, idx) => `
-          <div 
-            class="mpc-pad" 
-            id="drumGroovePad_${idx}"
-            style="border-color: ${borderColor}; background: ${bgColor};"
-            onmousedown="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
-            onmouseup="this.classList.remove('active');"
-            onmouseleave="this.classList.remove('active');"
-            ontouchstart="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
-            ontouchend="this.classList.remove('active');"
-            title="${item.desc} • ${item.measures || (is4m ? 4 : 1)} Measure(s) (${item.bpm} BPM)"
-          >
-            <div class="mpc-pad-key" style="display: flex; justify-content: space-between; align-items: center;">
-              <span>${badgePrefix} ${idx + 1}</span>
-              <span style="font-size: 0.65rem; opacity: 0.75;">${badgeSteps}</span>
+        ${catalog.map((item, idx) => {
+          const cleanName = (item.name || '')
+            .replace(/\s*(?:1-Bar Fill|1-Bar|4-Bar Buildup|4-Bar Extended Buildup|4-Bar Build|4-Bar|Main Part|Main Pocket|1-Measure)\b/gi, '')
+            .trim();
+
+          return `
+            <div 
+              class="mpc-pad" 
+              id="drumGroovePad_${idx}"
+              style="border-color: ${borderColor}; background: ${bgColor}; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.3rem;"
+              onmousedown="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
+              onmouseup="this.classList.remove('active');"
+              onmouseleave="this.classList.remove('active');"
+              ontouchstart="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
+              ontouchend="this.classList.remove('active');"
+              title="${item.name}: ${item.desc} • ${item.measures || (is4m ? 4 : 1)} Measure(s) (${item.bpm} BPM)"
+            >
+              <div style="font-size: 0.68rem; font-weight: 800; color: ${textColor}; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.05em;">
+                ${badgePrefix} ${idx + 1}
+              </div>
+              <div style="color: #f8fafc; font-weight: 700; font-size: 0.92rem; line-height: 1.25;">
+                ${cleanName}
+              </div>
+              <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace; font-weight: 600;">
+                ${is4m ? '4 BARS' : (is1m ? '1 BAR' : 'GROOVE')}
+              </div>
             </div>
-            <div class="mpc-pad-name" style="color: ${textColor}; font-size: 0.86rem;">${item.name}</div>
-            <div class="mpc-pad-note" style="color: #cbd5e1; font-size: 0.7rem;">${item.desc}</div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     `;
   }
@@ -2707,17 +2715,17 @@ class TouchControllerEngine {
         ${GUITAR_CHORDS_CATALOG.map((gc, idx) => `
           <div 
             class="mpc-pad" 
-            style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);"
+            style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
             onmousedown="window.touchController.playChordVoicing([${gc.notes.join(',')}], true); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
             ontouchstart="window.touchController.playChordVoicing([${gc.notes.join(',')}], true); this.classList.add('active');"
             ontouchend="this.classList.remove('active');"
-            title="${gc.desc} • Frets: ${gc.frets}"
+            title="${gc.name}: ${gc.desc} • Frets: ${gc.frets}"
           >
-            <div class="mpc-pad-key">Fret: ${gc.frets}</div>
-            <div class="mpc-pad-name" style="color: #34d399; font-size: 0.95rem;">${gc.name}</div>
-            <div class="mpc-pad-note" style="color: #cbd5e1;">${gc.desc}</div>
+            <div style="font-size: 0.68rem; font-weight: 800; color: #34d399; opacity: 0.85; text-transform: uppercase;">[ ${gc.frets} ]</div>
+            <div style="color: #f8fafc; font-weight: 700; font-size: 1.05rem; line-height: 1.2;">${gc.name}</div>
+            <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace;">STRUM</div>
           </div>
         `).join('')}
       </div>
@@ -2735,7 +2743,7 @@ class TouchControllerEngine {
           <div 
             class="mpc-pad" 
             id="slicePad_${idx}"
-            style="border-color: rgba(236, 72, 153, 0.4); background: rgba(236, 72, 153, 0.06);"
+            style="border-color: rgba(236, 72, 153, 0.4); background: rgba(236, 72, 153, 0.06); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
             onmousedown="window.touchController.playGenreSlice(window.touchController.getSlice(${idx})); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
@@ -2743,9 +2751,9 @@ class TouchControllerEngine {
             ontouchend="this.classList.remove('active');"
             title="Slice ${idx + 1} (${slice.name}) • Click to trigger"
           >
-            <div class="mpc-pad-key">Slice ${idx + 1}</div>
-            <div class="mpc-pad-name" style="color: var(--neon-pink); font-size: 0.85rem;">${slice.name}</div>
-            <div class="mpc-pad-note">${this.activeGenre.toUpperCase()}</div>
+            <div style="font-size: 0.68rem; font-weight: 800; color: #f472b6; opacity: 0.85; text-transform: uppercase;">SLICE ${idx + 1}</div>
+            <div style="color: #f8fafc; font-weight: 700; font-size: 0.95rem; line-height: 1.2;">${slice.name}</div>
+            <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace;">${this.activeGenre.toUpperCase()}</div>
           </div>
         `).join('')}
       </div>
