@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Dangling Dice Dev Suite™: Canonical Home -->
+  <url>
+    <loc>https://dev.dangling-dice-studios.com/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!-- OpenAPI 3.0 Documentation Spec -->
+  <url>
+    <loc>https://api.dangling-dice-studios.com/openapi.json</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Public AI Discovery -->
+  <url>
+    <loc>https://dev.dangling-dice-studios.com/llms.txt</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>

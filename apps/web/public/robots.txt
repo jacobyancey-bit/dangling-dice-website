@@ -69,3 +69,4 @@ Allow: /
 
 # Canonical Sitemap Declaration for Google Search Console & AI Engines
 Sitemap: https://dangling-dice-studios.com/sitemap.xml
+Sitemap: https://dangling-dice-studios.com/sitemap-index.xml

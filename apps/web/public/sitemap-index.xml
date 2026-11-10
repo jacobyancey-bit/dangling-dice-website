@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Dangling Dice Studios™ Ecosystem Unified Sitemap Index -->
+  <sitemap>
+    <loc>https://dangling-dice-studios.com/sitemap.xml</loc>
+    <lastmod>2026-11-10</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://games.dangling-dice-studios.com/sitemap.xml</loc>
+    <lastmod>2026-11-10</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://media.dangling-dice-studios.com/sitemap.xml</loc>
+    <lastmod>2026-11-10</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://beats.dangling-dice-studios.com/sitemap.xml</loc>
+    <lastmod>2026-11-10</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://dev.dangling-dice-studios.com/sitemap.xml</loc>
+    <lastmod>2026-11-10</lastmod>
+  </sitemap>
+</sitemapindex>

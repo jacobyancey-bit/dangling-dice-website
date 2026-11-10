@@ -1,0 +1,50 @@
+# ==============================================================================
+# robots.txt for dev.dangling-dice-studios.com
+# Dangling Dice Dev Suite™ — Serverless Compute & Developer APIs
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Allow: /images/
+Allow: /assets/
+Allow: /llms.txt
+Allow: /openapi.json
+
+# Microsoft Bing & Copilot Crawlers
+User-agent: bingbot
+Allow: /
+
+User-agent: msnbot
+Allow: /
+
+User-agent: BingPreview
+Allow: /
+
+# Google Search Crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+# AI & LLM Search Agents
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Canonical Sitemap Declaration
+Sitemap: https://dev.dangling-dice-studios.com/sitemap.xml
