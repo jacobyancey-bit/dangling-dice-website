@@ -10,18 +10,20 @@
   ],
   "scripts": {
     "start": "node apps/api/server.js",
-    "build": "npm run build:web && npm run build:media && npm run build:beats && npm run build:dev",
+    "build": "npm run build:web && npm run build:media && npm run build:beats && npm run build:dev && npm run build:games",
     "dev:api": "npm run dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:media": "npm run dev --workspace=apps/media",
     "dev:beats": "npm run dev --workspace=apps/beats",
     "dev:dev": "npm run dev --workspace=apps/dev",
+    "dev:games": "npm run dev --workspace=apps/games",
     "seed": "npm run seed --workspace=apps/api",
     "test": "npm run test --workspace=apps/api",
     "build:web": "npm run build --workspace=apps/web",
     "build:media": "npm run build --workspace=apps/media",
     "build:beats": "npm run build --workspace=apps/beats",
-    "build:dev": "npm run build --workspace=apps/dev"
+    "build:dev": "npm run build --workspace=apps/dev",
+    "build:games": "npm run build --workspace=apps/games"
   },
   "keywords": [
     "dangling-dice-studios",

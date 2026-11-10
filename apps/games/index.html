@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dangling Dice Gaming Lab™ — Game Settings, Footstep EQ Curves, Config Files &amp; Gear</title>
+  <meta name="description" content="Free competitive game settings catalog: 10-band footstep EQ curves for SteelSeries Sonar & Equalizer APO, controller deadzones & response curves, CS2 autoexec.cfg, and verified gaming accessories." />
+  <meta name="keywords" content="footstep eq, warzone eq settings, cs2 autoexec, apex legends controller curve, steelseries sonar gaming presets, peace eq profiles, gaming accessories, iems for gaming" />
+
+  <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- ========================================================================
+       Site Header
+       ======================================================================== -->
+  <header class="gaming-header">
+    <div class="nav-container">
+      <a href="/" class="brand">
+        <img src="/images/logo.png" alt="Dangling Dice Gaming Lab™" class="brand-logo-img" />
+        <div>
+          <div class="brand-title">Dangling Dice Gaming Lab™</div>
+          <div class="brand-tagline">Game Settings &bull; Audio EQ &bull; Controller Curves &bull; Gear</div>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="https://dangling-dice-studios.com/" class="nav-link">🎲 Main Studio Hub ↗</a>
+        <a href="https://beats.dangling-dice-studios.com/" target="_blank" class="nav-link" style="color: #f472b6;">🎛️ Beats Studio ↗</a>
+        <a href="#gearSection" class="nav-link" style="color: #fbbf24;">🎧 Gaming Gear &amp; Accessories</a>
+        <a href="https://discord.gg/uFYMQahNZz" target="_blank" rel="noopener noreferrer" class="btn btn-discord btn-sm">
+          <svg width="13" height="13" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.86,53,48.81,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+          Discord
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- ========================================================================
+         Hero Section & Live Search Catalog Bar
+         ======================================================================== -->
+    <section class="gaming-hero">
+      <div class="hero-badge">🎯 Competitive Game Settings &amp; Audio Lab</div>
+      <h1 class="hero-heading">Dial In Your Game: Audio EQ, Controller Curves &amp; Config Files</h1>
+      <p class="hero-subtext">
+        Search any competitive shooter or sports title to unlock verified footstep audio EQ curves, anti-drift controller deadzones, FPS config files, and studio-tested gear.
+      </p>
+
+      <!-- Instant Live Search Bar -->
+      <div class="search-bar-container">
+        <div class="search-input-wrap">
+          <span class="search-glass-icon">🔍</span>
+          <input
+            type="text"
+            id="gameSearchInput"
+            class="game-search-input"
+            placeholder="Search by game name (e.g. Warzone, CS2, Apex, Valorant, Rocket League)..."
+            autocomplete="off"
+          />
+          <button type="button" id="clearSearchBtn" class="search-clear-btn" style="display: none;" title="Clear search">&times;</button>
+        </div>
+      </div>
+
+      <!-- Quick Game Filter Chips -->
+      <div class="game-chips-row" id="gameChipsRow">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         Active Game Dashboard (Reveals all 4 modules when a game is selected)
+         ======================================================================== -->
+    <section id="gameDashboardSection" class="game-dashboard-card" style="display: none;">
+      <!-- Populated dynamically via JS -->
+    </section>
+
+    <!-- ========================================================================
+         All Games Browser Grid
+         ======================================================================== -->
+    <section class="section-container" id="gamesCatalogSection">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🎮 Supported Competitive Games</h2>
+          <p class="section-desc">Select any title to explore its calibrated settings and downloadable configuration files.</p>
+        </div>
+        <span class="pill-count" id="gamesCountBadge">5 Games Calibrated</span>
+      </div>
+
+      <div class="games-grid" id="gamesGrid">
+        <!-- Populated via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         Gaming Gear & Accessories Directory
+         ======================================================================== -->
+    <section class="section-container" id="gearSection">
+      <div class="section-header">
+        <div>
+          <div class="pill-tag pill-tag-yellow">🎧 Verified Hardware Recommendations</div>
+          <h2 class="section-title">Studio-Tested Gaming Gear &amp; Accessories</h2>
+          <p class="section-desc">Curated in-ear monitors (IEMs), anti-drift Hall-Effect controllers, precision stick grips, and rapid-trigger keyboards.</p>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="gear-filter-pills" id="gearFilterPills">
+        <button type="button" class="gear-filter-pill active" data-cat="all">All Gear</button>
+        <button type="button" class="gear-filter-pill" data-cat="audio">🎧 In-Ear Monitors (IEMs)</button>
+        <button type="button" class="gear-filter-pill" data-cat="controllers">🎮 Controllers &amp; Grips</button>
+        <button type="button" class="gear-filter-pill" data-cat="keyboards">⌨️ Rapid-Trigger Keyboards</button>
+        <button type="button" class="gear-filter-pill" data-cat="mice">🖱️ Mice &amp; Surfaces</button>
+      </div>
+
+      <!-- Accessories Grid -->
+      <div class="accessories-grid" id="accessoriesGrid">
+        <!-- Populated via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         Community Discord Request Desk (Viral Retention Loop)
+         ======================================================================== -->
+    <section class="discord-request-card">
+      <div class="discord-request-content">
+        <div class="discord-icon-badge">💬</div>
+        <div>
+          <h3 class="discord-card-title">Don't See Your Game or Headset?</h3>
+          <p class="discord-card-desc">
+            Our audio engineers build custom 10-band parametric curves and controller configs for any game or gear setup upon request. Join our Discord community and post in the #gear-request channel!
+          </p>
+        </div>
+      </div>
+      <a href="https://discord.gg/uFYMQahNZz" target="_blank" rel="noopener noreferrer" class="btn btn-discord btn-lg">
+        Join Discord &bull; Request Custom Profile ↗
+      </a>
+    </section>
+  </main>
+
+  <footer class="gaming-footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="/images/logo.png" alt="" class="footer-logo" />
+        <div>
+          <strong>Dangling Dice Gaming Lab™</strong>
+          <small>&bull; An official division of Dangling Dice Studios™</small>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="https://dangling-dice-studios.com/">Main Studio</a>
+        <a href="https://beats.dangling-dice-studios.com/">Dangling Beats</a>
+        <a href="https://media.dangling-dice-studios.com/">Media Transcoder</a>
+        <a href="https://dev.dangling-dice-studios.com/">Dev Suite</a>
+        <a href="https://discord.gg/uFYMQahNZz">Discord Community</a>
+      </div>
+      <div class="footer-disclaimer">
+        Disclaimer: Game titles, logos, and trademarks (Call of Duty, Counter-Strike 2, Apex Legends, Valorant, Rocket League) belong to their respective publishers. Dangling Dice Gaming Lab™ is an independent software and audio research studio providing performance optimizations and configuration utilities.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Client Application Engine -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
