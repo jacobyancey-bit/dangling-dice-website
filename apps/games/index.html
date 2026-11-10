@@ -72,9 +72,13 @@
         <div id="searchResultsDropdown" class="search-results-dropdown" style="display: none;"></div>
       </div>
 
-      <!-- Quick Game Filter Chips -->
-      <div class="game-chips-row" id="gameChipsRow">
-        <!-- Injected via JS -->
+      <!-- Quick Game Filter Chips with Smooth Left/Right Navigation -->
+      <div class="chips-scroll-container">
+        <button type="button" class="chips-arrow chips-arrow-left" id="chipsScrollLeft" onclick="window.scrollGameChips(-250)" title="Scroll left" aria-label="Scroll left">&#8249;</button>
+        <div class="game-chips-row" id="gameChipsRow">
+          <!-- Injected via JS -->
+        </div>
+        <button type="button" class="chips-arrow chips-arrow-right" id="chipsScrollRight" onclick="window.scrollGameChips(250)" title="Scroll right" aria-label="Scroll right">&#8250;</button>
       </div>
     </section>
 

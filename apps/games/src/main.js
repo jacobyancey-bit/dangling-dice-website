@@ -53,6 +53,36 @@ async function copyToClipboard(text, successMessage) {
 // Curated top played games for the clean single-line quick row
 const TOP_PLAYED_GAME_IDS = ['warzone', 'cs2', 'tarkov', 'rust', 'fortnite', 'apex', 'r6-siege', 'valorant'];
 
+window.scrollGameChips = function (offset) {
+  const container = document.getElementById('gameChipsRow');
+  if (container) {
+    container.scrollBy({ left: offset, behavior: 'smooth' });
+    setTimeout(updateChipsArrows, 200);
+  }
+};
+
+function updateChipsArrows() {
+  const container = document.getElementById('gameChipsRow');
+  const leftBtn = document.getElementById('chipsScrollLeft');
+  const rightBtn = document.getElementById('chipsScrollRight');
+  if (!container || !leftBtn || !rightBtn) return;
+
+  const maxScroll = container.scrollWidth - container.clientWidth;
+  if (maxScroll <= 5) {
+    leftBtn.style.display = 'none';
+    rightBtn.style.display = 'none';
+    return;
+  }
+  leftBtn.style.display = 'flex';
+  rightBtn.style.display = 'flex';
+
+  const atStart = container.scrollLeft <= 5;
+  const atEnd = container.scrollLeft >= maxScroll - 5;
+
+  leftBtn.classList.toggle('disabled', atStart);
+  rightBtn.classList.toggle('disabled', atEnd);
+}
+
 // Render Quick Game Chips (Clean single-line row of most played games)
 function renderGameChips() {
   const container = document.getElementById('gameChipsRow');
@@ -79,6 +109,13 @@ function renderGameChips() {
   ].filter(Boolean).join('');
 
   container.innerHTML = chipsHtml;
+  requestAnimationFrame(() => {
+    updateChipsArrows();
+    const activeChip = container.querySelector('.game-chip.active');
+    if (activeChip) {
+      activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  });
 }
 
 // Game Search Aliases Dictionary for intelligent search matching
@@ -1392,5 +1429,24 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSoftwareGuide();
   renderAudioSetupWizard();
   renderMasterAccessories('all');
+
+  const chipsContainer = document.getElementById('gameChipsRow');
+  if (chipsContainer) {
+    chipsContainer.addEventListener('scroll', () => {
+      updateChipsArrows();
+    }, { passive: true });
+
+    chipsContainer.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        chipsContainer.scrollLeft += e.deltaY;
+        updateChipsArrows();
+      }
+    }, { passive: false });
+  }
+
+  window.addEventListener('resize', () => {
+    updateChipsArrows();
+  });
 });
 
