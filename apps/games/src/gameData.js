@@ -520,6 +520,286 @@ GstRender.UndergrowthQuality 0 // Strips dense grass concealment`,
     },
     recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'kb-wooting'],
   },
+  {
+    id: 'squad',
+    title: 'Squad',
+    shortName: 'Squad',
+    genre: 'Tactical Milsim / Combined Arms',
+    engine: 'Unreal Engine 4.27',
+    badge: '🎖️ Milsim Standard',
+    icon: '🪖',
+    bannerGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Acoustic profile for multi-channel audio (MaxChannels=128), suppression volume limiter, and distance scaling in Engine.ini.',
+    audioProfile: {
+      profileName: 'Distant Vehicle Acoustics & Weapon Crack Balancer',
+      targetMix: 'Epic / Low Latency',
+      description: 'Squad firefights feature deafening 50-cal and artillery suppression. This EQ curbs low-end vehicle rumblings and suppresses ear-shattering concussions while lifting 125Hz (mud steps) and 3.5kHz (distant rifle snaps and radio squelch).',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'BTR / Tank Engine Mud' },
+        { freq: '64Hz', gain: -3, type: 'Cut', label: 'Mortar Concussion' },
+        { freq: '125Hz', gain: 5, type: 'Boost', label: 'Infantry Steps on Dirt' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Vehicle Idle Wash' },
+        { freq: '500Hz', gain: 2, type: 'Boost', label: 'Squad Comms Radio' },
+        { freq: '1kHz', gain: 3, type: 'Boost', label: 'Foliage & Tree Brush' },
+        { freq: '2.5kHz', gain: 5, type: 'Peak', label: 'Bolt Cycling & Reload' },
+        { freq: '3.5kHz', gain: 7, type: 'Peak', label: 'Distant Rifle Direction' },
+        { freq: '8kHz', gain: -5, type: 'Cut', label: 'Supersonic Crack Tamer' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'Wind Turbulence' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -3.0 dB, Q: 1.0',
+        'Band 2 (125 Hz): +5.0 dB, Q: 1.4',
+        'Band 3 (500 Hz): +2.0 dB, Q: 1.0',
+        'Band 4 (3500 Hz): +7.0 dB, Q: 1.5',
+        'Band 5 (8000 Hz): -5.0 dB, Q: 1.2',
+      ],
+      dolbyValues: 'Surround: OFF | EQ: 32Hz(-6), 64Hz(-3), 125Hz(+5), 250Hz(-3), 500Hz(+2), 1k(+3), 2.5k(+5), 3.5k(+7), 8k(-5), 16k(-3)',
+      peaceConfig: `GraphicEQ: 20 -6; 32 -6; 64 -3; 125 5; 250 -3; 500 2; 1000 3; 2500 5; 3500 7; 8000 -5; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'Tactical Milsim Stability Curve',
+      curveType: 'Linear with Low Acceleration',
+      leftStickDeadzoneMin: '0.05 (5% Movement)',
+      rightStickDeadzoneMin: '0.03 (3% Micro-Aim)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 Digital Instant',
+      rightTriggerDeadzone: '0.00 Digital Instant',
+      horizontalSens: '0.35 (Long-Range Stability)',
+      verticalSens: '0.30',
+      aimAssistType: 'None (Simulation Standards)',
+      steamConfigCode: 'steam://controllerconfig/393380/squad_tactical_stability_v1',
+      ds4xmlSnippet: `<LeftDeadzone>5</LeftDeadzone><RightDeadzone>3</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'Engine.ini',
+      targetPath: 'AppData/Local/SquadGame/Saved/Config/WindowsNoEditor/Engine.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — Squad Engine.ini Multi-Channel Audio & Visibility
+[/Script/Engine.AudioSettings]
+bDisableMasterEQ=True
+MaxChannels=128 // Expands audio channels from default 32 to 128 so footsteps never drop
+
+[SystemSettings]
+r.ViewDistanceScale=1.5 // Maximizes soldier render distance
+r.ShadowQuality=0 // Removes dense tree shadows to reveal proned snipers
+r.DistanceFieldShadowing=0
+r.MotionBlurQuality=0
+r.DepthOfFieldQuality=0
+r.SceneColorFringeQuality=0
+r.BloomQuality=0
+r.Tonemapper.GrainQuantization=0
+r.EyeAdaptationQuality=0 // Eliminates blinding exposure delay when exiting dark bunkers`,
+      fpsTips: [
+        'Set MaxChannels=128 under [/Script/Engine.AudioSettings] to stop footsteps from disappearing during massive 50v50 artillery bombardments.',
+        'Disable r.EyeAdaptationQuality=0 to eliminate the blinding brightness delay when stepping outside buildings.',
+        'Drop r.ShadowQuality=0 to clear dense tree shadows and spot enemies through long foliage lines.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
+  {
+    id: 'tf2',
+    title: 'Team Fortress 2',
+    shortName: 'TF 2',
+    genre: 'Class-Based Arena Shooter',
+    engine: 'Source Engine',
+    badge: '⚡ Source Engine Classic',
+    icon: '🎩',
+    bannerGradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(15, 23, 42, 0.95))',
+    summary: 'Ultra-low-latency Source sound buffer (snd_mixahead 0.04), 66-tick network interp, and null-cancelling movement script in autoexec.cfg.',
+    audioProfile: {
+      profileName: 'Source Engine Spy Uncloak & Footstep Snapper',
+      targetMix: 'Headphones Stereo / dsp_enhance_stereo',
+      description: 'Source engine spatial audio responds exceptionally to sound pan exponent calibration. This preset boosts 2.5kHz and 4kHz to catch the high-pitched hum of enemy Spies uncloaking and rocket jumper aerial trajectories.',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'Explosion Sub-Bass' },
+        { freq: '64Hz', gain: -2, type: 'Cut', label: 'Rocket Mud' },
+        { freq: '125Hz', gain: 3, type: 'Boost', label: 'Heavy/Scout Footsteps' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Flame Thrower Wash' },
+        { freq: '500Hz', gain: 1, type: 'Flat', label: 'Medic Voice Calls' },
+        { freq: '1kHz', gain: 3, type: 'Boost', label: 'Metal Step Clatter' },
+        { freq: '2.5kHz', gain: 7, type: 'Peak', label: 'Spy Cloak & Sentry Beep' },
+        { freq: '4kHz', gain: 6, type: 'Peak', label: 'Headshot Crit Ding' },
+        { freq: '8kHz', gain: -4, type: 'Cut', label: 'Minigun Ring Tamer' },
+        { freq: '16kHz', gain: 0, type: 'Flat', label: 'Air Rush' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -4.0 dB, Q: 1.0',
+        'Band 2 (125 Hz): +3.0 dB, Q: 1.2',
+        'Band 3 (2500 Hz): +7.0 dB, Q: 1.5',
+        'Band 4 (4000 Hz): +6.0 dB, Q: 1.4',
+        'Band 5 (8000 Hz): -4.0 dB, Q: 1.0',
+      ],
+      dolbyValues: 'Surround: OFF | EQ: 32Hz(-6), 64Hz(-2), 125Hz(+3), 250Hz(-3), 500Hz(+1), 1k(+3), 2.5k(+7), 4k(+6), 8k(-4), 16k(0)',
+      peaceConfig: `GraphicEQ: 20 -6; 32 -6; 64 -2; 125 3; 250 -3; 500 1; 1000 3; 2500 7; 4000 6; 8000 -4; 16000 0`,
+    },
+    controllerProfile: {
+      profileName: 'Source Engine eDPI & Raw Input',
+      curveType: '1:1 Raw Mouse Input (m_rawinput 1)',
+      leftStickDeadzoneMin: 'eDPI: 800 - 1200 (Consensus Pro Range)',
+      rightStickDeadzoneMin: 'm_rawinput: 1 (Bypasses Windows Cursor Acceleration)',
+      stickDeadzoneMax: 'm_filter: 0 (Zero Interpolation Delay)',
+      leftTriggerDeadzone: 'Digital Instant',
+      rightTriggerDeadzone: 'Digital Instant',
+      horizontalSens: 'Sensitivity: 2.0 @ 400 DPI (or 1.0 @ 800 DPI)',
+      verticalSens: '1:1 Yaw/Pitch Ratio (m_yaw 0.022 / m_pitch 0.022)',
+      aimAssistType: 'None (Pure Physics)',
+      steamConfigCode: 'steam://controllerconfig/440/tf2_competitive_raw_input',
+      ds4xmlSnippet: ``,
+    },
+    configProfile: {
+      fileName: 'autoexec.cfg',
+      targetPath: 'steamapps/common/Team Fortress 2/tf/cfg/autoexec.cfg',
+      fileContent: `// Dangling Dice Gaming Lab™ — Team Fortress 2 Master Competitive Autoexec
+// Network Interpolation (Lowest Hitreg Delay on 66-tick servers)
+cl_cmdrate 66
+cl_updaterate 66
+rate 196608
+cl_interp 0.030303
+cl_interp_ratio 2
+cl_smooth 0
+cl_smoothtime 0.01
+
+// Low-Latency Source Audio Engine (Zero Sound Lag)
+snd_mixahead "0.04" // Lowers audio buffer from default 100ms down to 40ms
+snd_headphone_pan_exponent "2.0" // Sharpens left/right separation
+snd_spatialize_roundoff "1"
+dsp_enhance_stereo "1"
+snd_async_fullyloaded "1"
+
+// Null-Cancelling Movement Script (Perfect A-D Counter-Strafing)
+alias +mfwd "-back;+forward;alias checkfwd +forward"
+alias +mback "-forward;+back;alias checkback +back"
+alias +mleft "-moveright;+moveleft;alias checkleft +moveleft"
+alias +mright "-moveleft;+moveright;alias checkright +moveright"
+alias -mfwd "-forward;checkback;alias checkfwd none"
+alias -mback "-back;checkfwd;alias checkback none"
+alias -mleft "-moveleft;checkright;alias checkleft none"
+alias -mright "-moveright;checkleft;alias checkright none"
+alias checkfwd none
+alias checkback none
+alias checkleft none
+alias checkright none
+alias none ""
+bind w +mfwd
+bind s +mback
+bind a +mleft
+bind d +mright`,
+      fpsTips: [
+        'Set snd_mixahead 0.04 to cut audio buffer latency down to 40ms so Spy uncloaks and Scout footsteps register instantly.',
+        'The included Null-Cancelling script prevents movement locking when pressing A and D at the same time.',
+        'Place this file in: steamapps/common/Team Fortress 2/tf/cfg/ and add +exec autoexec.cfg to Steam launch options.',
+      ],
+    },
+    recommendedGear: ['kb-wooting', 'mouse-viper-v3', 'iem-waner'],
+  },
+  {
+    id: 'steam-deck-cyberpunk',
+    title: 'Cyberpunk 2077 & Steam Deck / Steam Input',
+    shortName: 'Steam Deck .VDF',
+    genre: 'Open-World RPG / Valve Data Format (.vdf)',
+    engine: 'REDengine / Valve Steam Input API',
+    badge: '🌌 Valve .vdf Master Layout',
+    icon: '🎮',
+    bannerGradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Universal Valve Data Format (.vdf) layout with Right-Stick Touch Gyro Aiming, 10-slot Left Trackpad Quick-Hack Radial Menu, and REDengine audio.',
+    audioProfile: {
+      profileName: 'Cyberpunk Night City Combat & Cyberware Acoustics',
+      targetMix: 'Night City Dynamic / 3D Headphone',
+      description: 'Isolates approaching Arasaka footsteps and Sandevistan activation chimes from dense ambient city traffic and nightclub sub-bass.',
+      bands: [
+        { freq: '32Hz', gain: -5, type: 'Cut', label: 'AV Engine Sub-Rumble' },
+        { freq: '64Hz', gain: -2, type: 'Cut', label: 'Nightclub Bass Muffle' },
+        { freq: '125Hz', gain: 4, type: 'Boost', label: 'Footsteps on Asphalt' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Vehicle Traffic Hum' },
+        { freq: '500Hz', gain: 1, type: 'Flat', label: 'NCPD Radio Chime' },
+        { freq: '1kHz', gain: 3, type: 'Boost', label: 'Shattered Glass & Scuff' },
+        { freq: '2.5kHz', gain: 5, type: 'Peak', label: 'Cyberware Charge Hum' },
+        { freq: '4kHz', gain: 6, type: 'Peak', label: 'Footstep Tile & Concrete' },
+        { freq: '8kHz', gain: -3, type: 'Cut', label: 'Smart Gun Laser Sibilance' },
+        { freq: '16kHz', gain: -2, type: 'Cut', label: 'Neon Buzz' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -3.0 dB, Q: 1.0',
+        'Band 2 (125 Hz): +4.0 dB, Q: 1.4',
+        'Band 3 (2500 Hz): +5.0 dB, Q: 1.5',
+        'Band 4 (4000 Hz): +6.0 dB, Q: 1.5',
+        'Band 5 (8000 Hz): -3.0 dB, Q: 1.0',
+      ],
+      dolbyValues: 'Surround: OFF | EQ: 32Hz(-5), 64Hz(-2), 125Hz(+4), 250Hz(-3), 500Hz(+1), 1k(+3), 2.5k(+5), 4k(+6), 8k(-3), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -5; 32 -5; 64 -2; 125 4; 250 -3; 500 1; 1000 3; 2500 5; 4000 6; 8000 -3; 16000 -2`,
+    },
+    controllerProfile: {
+      profileName: 'Steam Deck Gyro Aim & Dual-Stage Triggers',
+      curveType: 'Linear with Gyro Right-Stick Capacitive Touch',
+      leftStickDeadzoneMin: '0.04 (4% Inner Deadzone)',
+      rightStickDeadzoneMin: '0.02 (Gyro Activated upon Touching Right Stick)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: 'Soft-Pull: Aim Down Sight | Full-Pull: Sandevistan Time Dilation',
+      rightTriggerDeadzone: 'Hair-Trigger (0.00 Digital Snap)',
+      horizontalSens: 'Gyro Sensitivity: 2.4 (Mouse Emulation)',
+      verticalSens: 'Gyro Vertical Scale: 1.0',
+      aimAssistType: 'Gyro-As-Mouse (Bypasses controller aim-assist for 1:1 precision)',
+      steamConfigCode: 'steam://controllerconfig/1091500/cyberpunk_steamdeck_gyro_radial_v2',
+      ds4xmlSnippet: ``,
+    },
+    configProfile: {
+      fileName: 'controller_cyberpunk_danglingdice.vdf',
+      targetPath: 'Steam/controller_base/templates/controller_cyberpunk_danglingdice.vdf',
+      fileContent: `"controller_mappings"
+{
+  "version" "3"
+  "game" "Cyberpunk 2077"
+  "creator" "Dangling Dice Gaming Lab"
+  "title" "Dangling Dice Gyro & Radial Quick-Hack Layout"
+  "description" "Steam Deck & Universal Steam Input layout. Enables 1:1 Gyro Aiming on Right-Thumbstick Touch, Left Trackpad 8-Item Radial Wheel, and dual-stage hair triggers."
+  
+  "group"
+  {
+    "id" "0"
+    "mode" "four_buttons"
+    "bindings"
+    {
+      "button_a" "jump"
+      "button_b" "crouch_slide"
+      "button_x" "reload_interact"
+      "button_y" "switch_weapon"
+    }
+  }
+
+  "group"
+  {
+    "id" "1"
+    "mode" "gyro"
+    "settings"
+    {
+      "gyro_source" "right_stick_touch" // Activates gyro only when thumb touches the right stick
+      "gyro_mode" "mouse" // Emulates raw optical mouse for 1:1 pixel aiming
+      "sensitivity" "240"
+      "smoothing" "2"
+      "gyro_deadzone" "0"
+    }
+  }
+
+  "group"
+  {
+    "id" "2"
+    "mode" "touch_radial_menu"
+    "settings"
+    {
+      "input_source" "left_trackpad"
+      "radial_menu_slots" "8"
+      "haptic_intensity" "medium"
+    }
+  }
+}`,
+      fpsTips: [
+        'Valve Data Format (.vdf) files can be dropped into your Steam controller templates folder: Steam/controller_base/templates/',
+        'On the Steam Deck, you can also place it in: /home/deck/.steam/steam/controller_base/templates/',
+        'This profile binds Gyro to Mouse mode on Right-Stick touch, giving you sub-pixel sniper precision without losing stick turning.',
+      ],
+    },
+    recommendedGear: ['ctrl-vader-4', 'iem-truthear-zero', 'grip-kontrolfreek'],
+  },
 ];
 
 export const ACCESSORIES_CATALOG = [

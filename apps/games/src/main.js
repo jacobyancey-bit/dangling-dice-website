@@ -283,27 +283,51 @@ function renderGameDashboard() {
 
     <!-- Tab 3: Config Files -->
     <div id="tabContentConfig" style="display: ${activeDashboardTab === 'config' ? 'block' : 'none'};">
-      <div style="margin-bottom: 1rem;">
-        <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff;">${escapeHtml(game.configProfile.fileName)}</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-          Target Path: <code style="color: var(--neon-cyan); font-family: var(--font-mono);">${escapeHtml(game.configProfile.targetPath)}</code>
-        </p>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">${escapeHtml(game.configProfile.fileName)}</h3>
+            <span class="pill-count" style="font-size: 0.68rem; text-transform: uppercase;">${escapeHtml(game.engine)}</span>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span>Target Path:</span>
+            <code style="color: var(--neon-cyan); background: rgba(0,0,0,0.4); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.78rem;">${escapeHtml(game.configProfile.targetPath)}</code>
+            <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;" onclick="window.copyTargetFilePath('${game.id}')">📋 Copy Path</button>
+          </div>
+        </div>
+        <div class="pill-tag pill-tag-yellow" style="font-size: 0.72rem;">⚡ Plain Text Preset (0% Ban Risk)</div>
       </div>
 
-      <pre class="code-block-preview"><code>${escapeHtml(game.configProfile.fileContent)}</code></pre>
+      <div style="background: rgba(6, 182, 212, 0.08); border-left: 3px solid var(--neon-cyan); padding: 0.75rem 1rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.82rem; color: #cbd5e1; margin-bottom: 1rem;">
+        💡 <strong>Quick Setup:</strong> If you don't want to download a file, click <strong>"Copy Raw Code"</strong> below, open a blank file in Notepad, paste the lines, and save it directly into the target directory!
+      </div>
 
-      <div class="card-actions-row">
-        <button type="button" class="btn btn-primary" onclick="window.downloadGameConfigFile('${game.id}')">
+      <div style="position: relative;">
+        <div style="position: absolute; right: 12px; top: 12px; z-index: 5;">
+          <button type="button" class="btn btn-secondary btn-sm" style="background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); border-color: rgba(255,255,255,0.2);" onclick="window.copyConfigFileContent('${game.id}')">
+            📋 Copy Code
+          </button>
+        </div>
+        <pre class="code-block-preview" style="max-height: 380px; overflow-y: auto;"><code>${escapeHtml(game.configProfile.fileContent)}</code></pre>
+      </div>
+
+      <div class="card-actions-row" style="margin-top: 1rem;">
+        <button type="button" class="btn btn-primary" onclick="window.copyConfigFileContent('${game.id}')">
+          📋 Copy Raw Code (Recommended)
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.downloadGameConfigFile('${game.id}')">
           📥 Download ${escapeHtml(game.configProfile.fileName)}
         </button>
-        <button type="button" class="btn btn-secondary" onclick="window.copyConfigFileContent('${game.id}')">
-          📋 Copy File Content
+        <button type="button" class="btn btn-secondary" onclick="window.copyTargetFilePath('${game.id}')">
+          📋 Copy Target Directory Path
         </button>
       </div>
 
-      <div style="margin-top: 1.5rem; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-        <div style="font-size: 0.8rem; font-weight: 700; color: var(--neon-gold); margin-bottom: 0.35rem;">⚡ Performance Tips:</div>
-        <ul style="padding-left: 1.25rem; font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
+      <div style="margin-top: 1.5rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+        <div style="font-size: 0.82rem; font-weight: 800; color: var(--neon-gold); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.5rem;">
+          ⚡ Pro Installation &amp; Performance Tips:
+        </div>
+        <ul style="padding-left: 1.25rem; font-size: 0.82rem; color: #cbd5e1; line-height: 1.6; display: flex; flex-direction: column; gap: 0.35rem;">
           ${game.configProfile.fpsTips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('')}
         </ul>
       </div>
@@ -851,6 +875,12 @@ window.copyConfigFileContent = function (gameId) {
   const game = GAMES_CATALOG.find((g) => g.id === gameId);
   if (!game) return;
   copyToClipboard(game.configProfile.fileContent, `📋 Copied ${game.configProfile.fileName} contents!`);
+};
+
+window.copyTargetFilePath = function (gameId) {
+  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  if (!game) return;
+  copyToClipboard(game.configProfile.targetPath, `📋 Copied target path for ${game.shortName}!`);
 };
 
 window.copySensValues = function (gameId) {
