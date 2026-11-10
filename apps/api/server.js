@@ -19,6 +19,7 @@ import affiliateRoutes from './routes/affiliateRoutes.js';
 import showcaseRoutes from './routes/showcaseRoutes.js';
 import { getOEmbed } from './controllers/oembedController.js';
 import { redirectPartner } from './controllers/affiliateController.js';
+import { findAndTrackShortUrl } from './models/ShortUrl.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 import { analyticsMiddleware } from './middleware/analytics.js';
@@ -189,6 +190,19 @@ app.use(hpp({ whitelist: ['category', 'tags', 'price'] }));
  * API Tier Routes (Protected by General API Limiter)
  * ----------------------------------------------------
  */
+// Branded short link redirector
+app.get('/go/l/:slug', async (req, res) => {
+  try {
+    const record = await findAndTrackShortUrl(req.params.slug);
+    if (!record || !record.targetUrl) {
+      return res.status(404).send('Short URL not found or expired.');
+    }
+    return res.redirect(302, record.targetUrl);
+  } catch {
+    return res.status(500).send('Redirect error.');
+  }
+});
+
 // Privacy-preserving outbound affiliate & partner redirector
 app.get('/go/:slug', redirectPartner);
 

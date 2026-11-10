@@ -40,6 +40,10 @@
     { "name": "Finance Engine", "description": "Penny-accurate loan amortization, extra payment simulator, cash flow metrics, and software project scoping" },
     { "name": "Geo & Network Engine", "description": "GIS polygon acreage/perimeter, Haversine distance/bearing, WireGuard tunnel generator, and DocScanner sessions" },
     { "name": "Privacy Engine", "description": "Luhn credit card & PII text redaction, recursive JSON secret masking, and HIPAA PHI telemetry firewall" },
+    { "name": "Music & Audio Theory", "description": "Chord progression generation, modal fretboard solver, delay acoustics, and standard MIDI generation" },
+    { "name": "Gaming & RNG", "description": "Provably fair cryptographic dice rolling and global high score leaderboards" },
+    { "name": "Developer Utilities", "description": "OpenGraph link preview scraper, vector SVG QR codes, and URL shortener" },
+    { "name": "API Key Management", "description": "Developer portal API key provisioning, rate limiting, and quota inspection" },
     { "name": "Connected Ecosystem", "description": "DaaS stealth web scraper job dispatcher and Marketing Leviathan local AI generator" },
     { "name": "System & Telemetry", "description": "Real-time health diagnostics, database state, and request counters" }
   ],
@@ -608,6 +612,225 @@
         "responses": {
           "200": { "description": "Dispatched model response metadata" }
         }
+      }
+    },
+    "/v1/music/progression": {
+      "post": {
+        "operationId": "generateMusicProgression",
+        "tags": ["Music & Audio Theory"],
+        "summary": "Synthesize Chord Progression & MIDI Note Voicings",
+        "description": "Calculates chord names, Roman numerals, bass notes, MIDI pitches, and frequencies in Hz for lo-fi, neo-soul, trap, or custom scales.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preset": { "type": "string", "example": "lofi_chill" },
+                  "key": { "type": "string", "example": "Eb" },
+                  "baseOctave": { "type": "number", "example": 3 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Resolved chord progression array with frequencies and voicings" }
+        }
+      }
+    },
+    "/v1/music/scale": {
+      "get": {
+        "operationId": "resolveScaleFretboard",
+        "tags": ["Music & Audio Theory"],
+        "summary": "Resolve Scale Intervals, Mood & Fretboard Coordinates",
+        "parameters": [
+          { "name": "root", "in": "query", "schema": { "type": "string", "default": "C" } },
+          { "name": "scale", "in": "query", "schema": { "type": "string", "default": "dorian" } },
+          { "name": "tuning", "in": "query", "schema": { "type": "string", "default": "guitar_standard" } }
+        ],
+        "responses": {
+          "200": { "description": "Calculated scale notes and string fretboard positions" }
+        }
+      }
+    },
+    "/v1/music/delay-calc": {
+      "get": {
+        "operationId": "calculateDelayAcoustics",
+        "tags": ["Music & Audio Theory"],
+        "summary": "Calculate BPM Tempo Delays & Reverb Pre-Delays",
+        "parameters": [
+          { "name": "bpm", "in": "query", "schema": { "type": "number", "default": 120 } },
+          { "name": "sampleRate", "in": "query", "schema": { "type": "number", "default": 44100 } }
+        ],
+        "responses": {
+          "200": { "description": "Millisecond and Hertz timings for all musical divisions" }
+        }
+      }
+    },
+    "/v1/games/dice/roll": {
+      "post": {
+        "operationId": "rollProvablyFairDice",
+        "tags": ["Gaming & RNG"],
+        "summary": "Cryptographically Provably Fair Dice Roll",
+        "description": "Generates tamper-proof dice rolls using HMAC-SHA256 with verifiable cryptographic seed proofs.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "count": { "type": "integer", "default": 2 },
+                  "sides": { "type": "integer", "default": 6 },
+                  "clientSeed": { "type": "string", "example": "custom_player_seed" },
+                  "nonce": { "type": "integer", "default": 1 },
+                  "modifier": { "type": "integer", "default": 0 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Dice rolls, totals, and HMAC-SHA256 proof" }
+        }
+      }
+    },
+    "/v1/games/leaderboard/submit": {
+      "post": {
+        "operationId": "submitLeaderboardScore",
+        "tags": ["Gaming & RNG"],
+        "summary": "Submit Player High Score to Global Leaderboard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["gameId", "playerName", "score"],
+                "properties": {
+                  "gameId": { "type": "string", "example": "dice_battles" },
+                  "playerName": { "type": "string", "example": "PlayerOne" },
+                  "score": { "type": "number", "example": 2500 },
+                  "level": { "type": "number", "example": 5 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Submission confirmation and top standings" }
+        }
+      }
+    },
+    "/v1/tools/opengraph": {
+      "get": {
+        "operationId": "scrapeOpenGraphMetadata",
+        "tags": ["Developer Utilities"],
+        "summary": "Extract OpenGraph & Social Preview Cards from URL",
+        "parameters": [
+          { "name": "url", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Scraped title, description, image, and favicon" }
+        }
+      }
+    },
+    "/v1/tools/qrcode": {
+      "get": {
+        "operationId": "generateQrCode",
+        "tags": ["Developer Utilities"],
+        "summary": "Generate Vector SVG or Data URL QR Code",
+        "parameters": [
+          { "name": "text", "in": "query", "schema": { "type": "string" } },
+          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 256 } },
+          { "name": "color", "in": "query", "schema": { "type": "string", "default": "ffffff" } },
+          { "name": "bg", "in": "query", "schema": { "type": "string", "default": "0f172a" } }
+        ],
+        "responses": {
+          "200": { "description": "Scalable SVG QR matrix and data URL" }
+        }
+      }
+    },
+    "/v1/tools/shorten": {
+      "post": {
+        "operationId": "createShortUrl",
+        "tags": ["Developer Utilities"],
+        "summary": "Shorten Target URL & Track Clicks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["targetUrl"],
+                "properties": {
+                  "targetUrl": { "type": "string", "example": "https://dangling-dice-studios.com/beats" },
+                  "title": { "type": "string", "example": "Dangling Beats Studio" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Shortened URL slug and redirect endpoint" }
+        }
+      }
+    },
+    "/v1/media/waveform": {
+      "post": {
+        "operationId": "extractAudioWaveform",
+        "tags": ["Media Converter"],
+        "summary": "Calculate Audio Waveform Peaks & Visualizer Bars",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetBars": { "type": "integer", "default": 64 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Normalized peak array (0.0 to 1.0) for sound visualizers" }
+        }
+      }
+    },
+    "/v1/auth/keys": {
+      "post": {
+        "operationId": "generateApiKey",
+        "tags": ["API Key Management"],
+        "summary": "Provision New Developer API Key",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["ownerEmail"],
+                "properties": {
+                  "ownerEmail": { "type": "string", "example": "dev@dangling-dice-studios.com" },
+                  "name": { "type": "string", "example": "Production Key" },
+                  "tier": { "type": "string", "enum": ["free", "pro", "enterprise"], "default": "free" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "API Key token, rate limit, and quota information" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
       }
     }
   }

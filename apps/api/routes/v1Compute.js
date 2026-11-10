@@ -24,6 +24,34 @@ import {
   maskJsonPayload,
   scrubHipaaTelemetry,
 } from '../engines/privacy.js';
+import {
+  resolveScale,
+  generateProgression,
+  calculateDelayAcoustics,
+  buildMidiBuffer,
+} from '../engines/music.js';
+import {
+  rollProvablyFairDice,
+} from '../engines/gaming.js';
+import {
+  recordScore,
+  getTopScores,
+} from '../models/Leaderboard.js';
+import {
+  scrapeOpenGraph,
+  generateSvgQrCode,
+  extractAudioWaveform,
+} from '../engines/tools.js';
+import {
+  createShortUrl,
+  findAndTrackShortUrl,
+} from '../models/ShortUrl.js';
+import {
+  createApiKeyRecord,
+  findApiKeyRecord,
+  revokeApiKeyRecord,
+} from '../models/ApiKey.js';
+import { optionalApiKey, requireApiKey } from '../middleware/apiKeyMiddleware.js';
 
 const router = express.Router();
 
@@ -80,6 +108,11 @@ router.get(['/', '/health'], (req, res) => {
       'schema (infer, sql-to-ts, inspect-uri)',
       'geo (parcel-metrics, distance, point-in-polygon, wireguard-config, docscan-session)',
       'privacy (redact, validate-luhn, mask-json, hipaa-scrub)',
+      'music (progression, scale, delay-calc, midi)',
+      'games (dice-roll, leaderboard-submit, leaderboard-query)',
+      'tools (opengraph, qrcode, shorten)',
+      'media (waveform)',
+      'auth (keys-generate, keys-lookup, keys-revoke)',
       'extract (scrape-job)',
       'ai (leviathan-generate)',
     ],
@@ -390,6 +423,281 @@ router.post('/ai/leviathan-generate', (req, res) => {
     promptPreview: String(body.prompt).slice(0, 120),
     content: `Leviathan AI synthesized response for prompt: "${String(body.prompt).slice(0, 60)}..."`,
   });
+});
+
+// =========================================================================
+// 6. Music Theory & Acoustic Engine (/v1/music/*)
+// =========================================================================
+router.post('/music/progression', optionalApiKey, (req, res) => {
+  const start = performance.now();
+  try {
+    const out = generateProgression(req.body || {});
+    return sendEngineSuccess(req, res, 'music', start, out);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.get('/music/scale', optionalApiKey, (req, res) => {
+  const start = performance.now();
+  try {
+    const out = resolveScale(req.query || {});
+    return sendEngineSuccess(req, res, 'music', start, out);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.get('/music/delay-calc', optionalApiKey, (req, res) => {
+  const start = performance.now();
+  try {
+    const out = calculateDelayAcoustics(req.query || {});
+    return sendEngineSuccess(req, res, 'music', start, out);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.post('/music/midi', optionalApiKey, (req, res) => {
+  const start = performance.now();
+  try {
+    const body = req.body || {};
+    const midiBuffer = buildMidiBuffer(body);
+
+    if (body.format === 'binary' || req.query.download === 'true') {
+      res.setHeader('Content-Type', 'audio/midi');
+      res.setHeader('Content-Disposition', 'attachment; filename="dangling-beats.mid"');
+      return res.status(200).send(midiBuffer);
+    }
+
+    return sendEngineSuccess(req, res, 'music', start, {
+      bpm: body.bpm || 120,
+      title: body.title || 'Dangling Beats Sequence',
+      fileSizeBytes: midiBuffer.length,
+      mimeType: 'audio/midi',
+      base64Midi: midiBuffer.toString('base64'),
+    });
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+// =========================================================================
+// 7. Gaming & Provably Fair RNG Engine (/v1/games/*)
+// =========================================================================
+router.post('/games/dice/roll', optionalApiKey, (req, res) => {
+  const start = performance.now();
+  try {
+    const out = rollProvablyFairDice(req.body || {});
+    return sendEngineSuccess(req, res, 'games', start, out);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.post('/games/leaderboard/submit', optionalApiKey, async (req, res) => {
+  const start = performance.now();
+  try {
+    const body = req.body || {};
+    if (!body.gameId || !body.playerName || body.score === undefined) {
+      return res.status(400).json({
+        error: 'BadRequest',
+        message: 'gameId, playerName, and score are required fields.',
+      });
+    }
+
+    const recorded = await recordScore(body);
+    const standings = await getTopScores({ gameId: body.gameId, limit: 10 });
+
+    return sendEngineSuccess(req, res, 'games', start, {
+      submission: recorded,
+      topStandings: standings.leaderboard,
+    });
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.get('/games/leaderboard/:gameId', optionalApiKey, async (req, res) => {
+  const start = performance.now();
+  try {
+    const out = await getTopScores({
+      gameId: req.params.gameId,
+      limit: req.query.limit,
+      offset: req.query.offset,
+    });
+    return sendEngineSuccess(req, res, 'games', start, out);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+// =========================================================================
+// 8. Developer Utilities & Tools Engine (/v1/tools/*)
+// =========================================================================
+router.get('/tools/opengraph', optionalApiKey, async (req, res) => {
+  const start = performance.now();
+  try {
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+      return res.status(400).json({
+        error: 'BadRequest',
+        message: 'The `url` query parameter is required (e.g. ?url=https://github.com).',
+      });
+    }
+
+    const metadata = await scrapeOpenGraph(targetUrl);
+    return sendEngineSuccess(req, res, 'tools', start, metadata);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.get('/tools/qrcode', optionalApiKey, (req, res) => {
+  const start = performance.now();
+  try {
+    const text = req.query.text || req.query.data || 'https://dangling-dice-studios.com';
+    const size = req.query.size || 256;
+    const color = req.query.color ? (req.query.color.startsWith('#') ? req.query.color : `#${req.query.color}`) : '#ffffff';
+    const bg = req.query.bg ? (req.query.bg.startsWith('#') ? req.query.bg : `#${req.query.bg}`) : '#0f172a';
+
+    const qr = generateSvgQrCode({ text, size, color, bg });
+
+    if (req.query.format === 'svg') {
+      res.setHeader('Content-Type', 'image/svg+xml');
+      return res.status(200).send(qr.svg);
+    }
+
+    return sendEngineSuccess(req, res, 'tools', start, qr);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.post('/tools/shorten', optionalApiKey, async (req, res) => {
+  const start = performance.now();
+  try {
+    const body = req.body || {};
+    if (!body.targetUrl) {
+      return res.status(400).json({
+        error: 'BadRequest',
+        message: 'targetUrl is required to generate a short link.',
+      });
+    }
+
+    const short = await createShortUrl({
+      targetUrl: body.targetUrl,
+      customSlug: body.customSlug,
+      title: body.title,
+      createdByEmail: req.apiKey?.ownerEmail,
+    });
+
+    return sendEngineSuccess(req, res, 'tools', start, short);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.get('/tools/shorten/:slug', optionalApiKey, async (req, res) => {
+  const start = performance.now();
+  try {
+    const found = await findAndTrackShortUrl(req.params.slug);
+    if (!found) {
+      return res.status(404).json({ error: 'NotFound', message: 'Short URL slug not found.' });
+    }
+    return sendEngineSuccess(req, res, 'tools', start, found);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+// =========================================================================
+// 9. Media & Waveform Engine (/v1/media/*)
+// =========================================================================
+router.post('/media/waveform', optionalApiKey, (req, res) => {
+  const start = performance.now();
+  try {
+    const out = extractAudioWaveform(req.body || {});
+    return sendEngineSuccess(req, res, 'media', start, out);
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+// =========================================================================
+// 10. Developer API Key Management (/v1/auth/*)
+// =========================================================================
+router.post('/auth/keys', async (req, res) => {
+  const start = performance.now();
+  try {
+    const body = req.body || {};
+    if (!body.ownerEmail) {
+      return res.status(400).json({
+        error: 'BadRequest',
+        message: 'ownerEmail is required to generate an API key.',
+      });
+    }
+
+    const keyDoc = await createApiKeyRecord({
+      ownerEmail: body.ownerEmail,
+      name: body.name || 'Production App',
+      tier: body.tier || 'free',
+    });
+
+    return sendEngineSuccess(req, res, 'auth', start, {
+      message: 'API Key generated successfully. Keep your key confidential.',
+      apiKey: keyDoc.key,
+      ownerEmail: keyDoc.ownerEmail,
+      tier: keyDoc.tier,
+      monthlyQuota: keyDoc.monthlyQuota,
+      rateLimitPerMin: keyDoc.rateLimitPerMin,
+      docs: 'https://dev.dangling-dice-studios.com',
+    });
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.get('/auth/keys/:key', async (req, res) => {
+  const start = performance.now();
+  try {
+    const keyDoc = await findApiKeyRecord(req.params.key);
+    if (!keyDoc) {
+      return res.status(404).json({ error: 'NotFound', message: 'API key not found or revoked.' });
+    }
+
+    return sendEngineSuccess(req, res, 'auth', start, {
+      key: keyDoc.key,
+      ownerEmail: keyDoc.ownerEmail,
+      tier: keyDoc.tier,
+      monthlyQuota: keyDoc.monthlyQuota,
+      requestsThisMonth: keyDoc.requestsThisMonth,
+      remainingQuota: Math.max(0, keyDoc.monthlyQuota - keyDoc.requestsThisMonth),
+      totalRequests: keyDoc.totalRequests,
+      isActive: keyDoc.isActive,
+      lastUsedAt: keyDoc.lastUsedAt,
+    });
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
+});
+
+router.delete('/auth/keys/:key', async (req, res) => {
+  const start = performance.now();
+  try {
+    const revoked = await revokeApiKeyRecord(req.params.key);
+    if (!revoked) {
+      return res.status(404).json({ error: 'NotFound', message: 'API key not found.' });
+    }
+
+    return sendEngineSuccess(req, res, 'auth', start, {
+      message: 'API key successfully revoked.',
+      key: req.params.key,
+      isActive: false,
+    });
+  } catch (err) {
+    return res.status(400).json({ error: 'BadRequest', message: err.message });
+  }
 });
 
 export default router;
