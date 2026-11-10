@@ -55,7 +55,7 @@
         Search any competitive shooter or sports title to unlock verified footstep audio EQ curves, anti-drift controller deadzones, FPS config files, and studio-tested gear.
       </p>
 
-      <!-- Instant Live Search Bar -->
+      <!-- Instant Live Search Bar with Floating Autocomplete -->
       <div class="search-bar-container">
         <div class="search-input-wrap">
           <span class="search-glass-icon">🔍</span>
@@ -63,11 +63,13 @@
             type="text"
             id="gameSearchInput"
             class="game-search-input"
-            placeholder="Search by game name (e.g. Warzone, Battlefield 6, ARC Raiders, CS2, Apex)..."
+            placeholder="Search any game (e.g. Warzone, Tarkov, Rust, CS2, Fortnite, Battlefield 6)..."
             autocomplete="off"
           />
           <button type="button" id="clearSearchBtn" class="search-clear-btn" style="display: none;" title="Clear search">&times;</button>
         </div>
+        <!-- Live Instant Search Results Dropdown -->
+        <div id="searchResultsDropdown" class="search-results-dropdown" style="display: none;"></div>
       </div>
 
       <!-- Quick Game Filter Chips -->

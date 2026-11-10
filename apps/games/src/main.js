@@ -81,22 +81,135 @@ function renderGameChips() {
   container.innerHTML = chipsHtml;
 }
 
+// Game Search Aliases Dictionary for intelligent search matching
+const GAME_ALIASES = {
+  'warzone': ['cod', 'call of duty', 'bo6', 'black ops', 'black ops 6', 'mw3', 'mw2', 'modern warfare', 'wz', 'iw9', 'options.3.cod24.cst'],
+  'cs2': ['cs', 'csgo', 'counter strike', 'counter-strike', 'counterstrike', 'source 2', 'valve', 'autoexec.cfg', 'autoexec', 'esports'],
+  'apex': ['apex legends', 'respawn', 'titanfall', 'autoexec.cfg', 'source'],
+  'valorant': ['val', 'riot', 'vanguard', 'hero shooter', 'tactical'],
+  'tarkov': ['eft', 'escape from tarkov', 'arena', 'tarkov arena', 'battlestate', 'bsg', 'local.ini', 'extraction', 'binaural'],
+  'rust': ['facepunch', 'survival', 'airlock', 'base raid', 'client.cfg', 'gc.buffer'],
+  'hunt-showdown': ['hunt', 'showdown', 'hunt 1896', 'cryengine', 'crytek', 'attributes.xml', 'binaural', 'extraction'],
+  'hell-let-loose': ['hll', 'hell let loose', 'ww2', 'world war 2', 'milsim', 'engine.ini', 'artillery'],
+  'r6-siege': ['r6', 'rainbow', 'rainbow six', 'rainbow six siege', 'siege', 'ubisoft', 'gamesettings.ini', 'night mode'],
+  'dayz': ['day z', 'bohemia', 'chernarus', 'survival', 'dayz.cfg', 'enfusion'],
+  'pubg': ['pubg', 'battlegrounds', 'playerunknown', 'krafton', 'gameusersettings.ini', 'br'],
+  'the-finals': ['finals', 'the finals', 'embark', 'chaos physics', 'gameusersettings.ini', 'destruction'],
+  'fortnite': ['fn', 'fort', 'epic games', 'zero build', 'battle royale', 'gameusersettings.ini', 'performance mode', 'linear'],
+  'arma-reforger': ['arma', 'reforger', 'arma 4', 'arma 3', 'bohemia', 'enfusion', 'armareforger.json', 'milsim'],
+  'arc-raiders': ['arc', 'raiders', 'arc raiders', 'embark', 'gameusersettings.ini', 'extraction', 'ue5'],
+  'battlefield-6': ['bf', 'bf6', 'battlefield', 'dice', 'frostbite', 'user.cfg', 'wartapes'],
+  'squad': ['offworld', 'milsim', 'tactical', 'engine.ini', 'ue4'],
+  'tf2': ['team fortress', 'team fortress 2', 'valve', 'autoexec.cfg', 'source'],
+  'rocket-league': ['rl', 'rocket league', 'psyonix', 'car soccer', 'tasystemsettings.ini'],
+  'steam-deck-cyberpunk': ['deck', 'steam deck', 'steamdeck', 'cyberpunk', 'cyberpunk 2077', 'cdpr', 'vdf', 'gyro', 'steam input'],
+};
+
+function matchesGameQuery(game, rawQ) {
+  if (!rawQ) return true;
+  const q = rawQ.toLowerCase().trim();
+  if (game.title.toLowerCase().includes(q)) return true;
+  if (game.shortName.toLowerCase().includes(q)) return true;
+  if (game.id.toLowerCase().includes(q)) return true;
+  if (game.genre.toLowerCase().includes(q)) return true;
+  if (game.engine.toLowerCase().includes(q)) return true;
+  if (game.summary && game.summary.toLowerCase().includes(q)) return true;
+  if (game.configProfile?.fileName && game.configProfile.fileName.toLowerCase().includes(q)) return true;
+  if (game.audioProfile?.profileName && game.audioProfile.profileName.toLowerCase().includes(q)) return true;
+
+  const aliases = GAME_ALIASES[game.id] || [];
+  return aliases.some((alias) => alias.includes(q) || q.includes(alias));
+}
+
+let focusedDropdownIndex = -1;
+
+// Render Floating Instant Search Dropdown
+function renderSearchDropdown(query = '') {
+  const dropdown = document.getElementById('searchResultsDropdown');
+  if (!dropdown) return;
+
+  const q = query.trim();
+  if (!q) {
+    dropdown.style.display = 'none';
+    dropdown.innerHTML = '';
+    focusedDropdownIndex = -1;
+    return;
+  }
+
+  const matches = GAMES_CATALOG.filter((g) => matchesGameQuery(g, q));
+
+  if (matches.length === 0) {
+    dropdown.innerHTML = `
+      <div class="search-dropdown-empty">
+        <div style="font-size: 1.8rem;">🔍</div>
+        <div class="search-dropdown-empty-title">No calibrated profile matching "${escapeHtml(q)}"</div>
+        <p style="font-size: 0.8rem; margin-top: 0.35rem;">
+          Request this title's EQ curves and configs in our <a href="https://discord.gg/uFYMQahNZz" target="_blank" style="color: var(--neon-cyan); font-weight: 700;">Discord Community ↗</a>
+        </p>
+      </div>
+    `;
+    dropdown.style.display = 'flex';
+    focusedDropdownIndex = -1;
+    return;
+  }
+
+  dropdown.innerHTML = `
+    <div class="search-dropdown-header">
+      <span>Matching Game Profiles (${matches.length})</span>
+      <span>Press Enter to Open &bull; Esc to Close</span>
+    </div>
+    ${matches
+      .map(
+        (g, idx) => `
+      <div 
+        class="search-dropdown-item ${idx === 0 ? 'focused' : ''}" 
+        data-game-id="${g.id}" 
+        data-index="${idx}"
+        onclick="window.selectGameFromSearch('${g.id}')"
+      >
+        <div class="search-item-left">
+          <span class="search-item-icon">${g.icon}</span>
+          <div class="search-item-info">
+            <div class="search-item-title">
+              <span>${escapeHtml(g.title)}</span>
+              <span class="search-item-badge">${escapeHtml(g.badge)}</span>
+            </div>
+            <div class="search-item-subtitle">${escapeHtml(g.audioProfile.profileName)} &bull; <code>${escapeHtml(g.configProfile.fileName)}</code></div>
+          </div>
+        </div>
+        <div class="search-item-action">
+          <span>View Profiles &rarr;</span>
+        </div>
+      </div>
+    `
+      )
+      .join('')}
+  `;
+
+  dropdown.style.display = 'flex';
+  focusedDropdownIndex = 0;
+}
+
+window.selectGameFromSearch = function (gameId) {
+  const dropdown = document.getElementById('searchResultsDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+
+  const searchInput = document.getElementById('gameSearchInput');
+  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  if (searchInput && game) {
+    searchInput.value = game.shortName;
+  }
+
+  window.selectGame(gameId);
+};
+
 // Render Games Catalog Grid
 function renderGamesCatalog(query = '') {
   const grid = document.getElementById('gamesGrid');
   const countBadge = document.getElementById('gamesCountBadge');
   if (!grid) return;
 
-  const filtered = GAMES_CATALOG.filter((g) => {
-    const q = query.toLowerCase().trim();
-    if (!q) return true;
-    return (
-      g.title.toLowerCase().includes(q) ||
-      g.shortName.toLowerCase().includes(q) ||
-      g.genre.toLowerCase().includes(q) ||
-      g.engine.toLowerCase().includes(q)
-    );
-  });
+  const filtered = GAMES_CATALOG.filter((g) => matchesGameQuery(g, query));
 
   if (countBadge) {
     countBadge.textContent = `${filtered.length} Game${filtered.length === 1 ? '' : 's'} Available`;
@@ -958,15 +1071,72 @@ window.copyAudioSetupChecklist = function (setupId) {
   copyToClipboard(text, `📋 Copied setup checklist for ${setup.shortTitle}!`);
 };
 
-// Search Bar Input Listener
+// Search Bar Input, Floating Autocomplete & Keyboard Listeners
 const searchInput = document.getElementById('gameSearchInput');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+function updateDropdownFocus(items) {
+  items.forEach((item, idx) => {
+    if (idx === focusedDropdownIndex) {
+      item.classList.add('focused');
+      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } else {
+      item.classList.remove('focused');
+    }
+  });
+}
 
 if (searchInput) {
   searchInput.addEventListener('input', (e) => {
     const val = e.target.value;
     if (clearSearchBtn) clearSearchBtn.style.display = val ? 'block' : 'none';
+    renderSearchDropdown(val);
     renderGamesCatalog(val);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    const dropdown = document.getElementById('searchResultsDropdown');
+    const isDropdownOpen = dropdown && dropdown.style.display !== 'none';
+
+    if (e.key === 'ArrowDown' && isDropdownOpen) {
+      e.preventDefault();
+      const items = dropdown.querySelectorAll('.search-dropdown-item');
+      if (items.length > 0) {
+        focusedDropdownIndex = (focusedDropdownIndex + 1) % items.length;
+        updateDropdownFocus(items);
+      }
+    } else if (e.key === 'ArrowUp' && isDropdownOpen) {
+      e.preventDefault();
+      const items = dropdown.querySelectorAll('.search-dropdown-item');
+      if (items.length > 0) {
+        focusedDropdownIndex = (focusedDropdownIndex - 1 + items.length) % items.length;
+        updateDropdownFocus(items);
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isDropdownOpen) {
+        const items = dropdown.querySelectorAll('.search-dropdown-item');
+        const target = items[focusedDropdownIndex >= 0 ? focusedDropdownIndex : 0];
+        if (target) {
+          const gameId = target.getAttribute('data-game-id');
+          if (gameId) window.selectGameFromSearch(gameId);
+        }
+      } else {
+        const val = searchInput.value.trim();
+        const firstMatch = GAMES_CATALOG.find((g) => matchesGameQuery(g, val));
+        if (firstMatch) {
+          window.selectGameFromSearch(firstMatch.id);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      if (dropdown) dropdown.style.display = 'none';
+    }
+  });
+
+  searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim()) {
+      renderSearchDropdown(searchInput.value);
+    }
   });
 }
 
@@ -977,9 +1147,19 @@ if (clearSearchBtn) {
       searchInput.focus();
     }
     clearSearchBtn.style.display = 'none';
+    renderSearchDropdown('');
     renderGamesCatalog('');
   });
 }
+
+// Close search dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const searchContainer = document.querySelector('.search-bar-container');
+  const dropdown = document.getElementById('searchResultsDropdown');
+  if (dropdown && searchContainer && !searchContainer.contains(e.target)) {
+    dropdown.style.display = 'none';
+  }
+});
 
 // Gear Filter Pills Listener
 const gearPills = document.querySelectorAll('.gear-filter-pill');
