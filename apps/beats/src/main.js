@@ -2708,6 +2708,20 @@ document.addEventListener("DOMContentLoaded", () => {
   renderInstrumentSettingsRack();
   loadDemoBreakbeat(); // Pre-slice demo breakbeat for immediate Bank B slice auditioning
 
+  // Instant Audio Unlock on first user gesture
+  const unlockAudio = () => {
+    const ctx = instrumentEngine.getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    sampleEngine.preloadInstrument('grand_piano');
+    sampleEngine.preloadInstrument('steel_acoustic');
+    sampleEngine.preloadAcousticDrums();
+  };
+  window.addEventListener('click', unlockAudio, { once: true });
+  window.addEventListener('keydown', unlockAudio, { once: true });
+  window.addEventListener('touchstart', unlockAudio, { once: true });
+
   // Preload real studio multi-samples for piano, guitar & acoustic drum kit
   sampleEngine.preloadInstrument('grand_piano');
   sampleEngine.preloadInstrument('steel_acoustic');

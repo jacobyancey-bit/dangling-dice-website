@@ -383,11 +383,11 @@ export class InstrumentVoice {
       this.sampleSource = source;
       this.oscillators.push(source);
 
-      // Route through tone & presence filters
+      // Route through wideband presence filter (preserves full 20kHz sparkle of real studio recordings)
       const toneFilter = ctx.createBiquadFilter();
       toneFilter.type = 'lowpass';
       const damp = this.settings.guitarDamp || 0;
-      const baseTone = this.settings.guitarTone || 16000;
+      const baseTone = (this.settings.guitarTone && this.settings.guitarTone < 14000) ? this.settings.guitarTone : 20000;
       toneFilter.frequency.setValueAtTime(Math.max(450, baseTone * (1.0 - damp * 0.7)), t);
       this.filters.push(toneFilter);
 
@@ -395,11 +395,11 @@ export class InstrumentVoice {
       toneFilter.connect(gain);
 
       // Authentic Acoustic Envelope & Hold Sustain:
-      const peakGain = 0.95 * vel;
+      const peakGain = 1.05 * vel;
       gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.linearRampToValueAtTime(peakGain, t + 0.005);
+      gain.gain.linearRampToValueAtTime(peakGain, t + 0.004);
       // Ring naturally through sustain decay:
-      const holdDecay = (this.settings.sustainDecay || 5.0) * (1.0 - damp * 0.75);
+      const holdDecay = (this.settings.sustainDecay || 6.5) * (1.0 - damp * 0.75);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + holdDecay);
 
       source.start(t);

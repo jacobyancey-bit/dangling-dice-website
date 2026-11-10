@@ -61,39 +61,39 @@ export const INSTRUMENT_SOUNDFONT_MAP = {
 };
 
 export const ACOUSTIC_DRUM_SAMPLE_MAP = {
-  // Kicks
-  kick_acoustic: `${DRUMS_BASE_URL}/kick.mp3`,
-  acoustic_kick: `${DRUMS_BASE_URL}/kick.mp3`,
-  kick: `${DRUMS_BASE_URL}/kick.mp3`,
+  // Kicks (Local studio punchy acoustic birch kick)
+  kick_acoustic: '/samples/drums/kick.mp3',
+  acoustic_kick: '/samples/drums/kick.mp3',
+  kick: '/samples/drums/kick.mp3',
 
-  // Snares & Claps
-  snare_acoustic: `${DRUMS_BASE_URL}/snare.mp3`,
-  acoustic_snare: `${DRUMS_BASE_URL}/snare.mp3`,
-  snare: `${DRUMS_BASE_URL}/snare.mp3`,
-  snare_rim: `${WESBOS_BASE_URL}/snare.wav`,
-  sidestick: `${SOUNDFONT_BASE_URL}/woodblock-mp3/C5.mp3`,
-  clap_acoustic: `${WESBOS_BASE_URL}/clap.wav`,
+  // Snares & Claps (Local studio maple snare, room clap, woodblock)
+  snare_acoustic: '/samples/drums/snare.mp3',
+  acoustic_snare: '/samples/drums/snare.mp3',
+  snare: '/samples/drums/snare.mp3',
+  snare_rim: '/samples/drums/snare.mp3',
+  sidestick: '/samples/drums/woodblock.mp3',
+  clap_acoustic: '/samples/drums/clap.wav',
 
-  // Hi-Hats
-  hat_closed: `${DRUMS_BASE_URL}/hihat.mp3`,
-  hat_pedal: `${WESBOS_BASE_URL}/hihat.wav`,
-  hat_open: `${WESBOS_BASE_URL}/openhat.wav`,
+  // Hi-Hats (Local closed, pedal & sizzle open hats)
+  hat_closed: '/samples/drums/hihat.mp3',
+  hat_pedal: '/samples/drums/hihat.mp3',
+  hat_open: '/samples/drums/openhat.wav',
 
-  // Toms
-  tom_high: `${DRUMS_BASE_URL}/tom1.mp3`,
-  tom_mid: `${DRUMS_BASE_URL}/tom2.mp3`,
-  tom_floor: `${DRUMS_BASE_URL}/tom3.mp3`,
+  // Toms (High, Mid, Floor tuned acoustic toms)
+  tom_high: '/samples/drums/tom1.mp3',
+  tom_mid: '/samples/drums/tom2.mp3',
+  tom_floor: '/samples/drums/tom3.mp3',
 
-  // Cymbals
-  crash_acoustic: `${WESBOS_BASE_URL}/ride.wav`,
-  ride_acoustic: `${WESBOS_BASE_URL}/ride.wav`,
-  ride_bell: `${WESBOS_BASE_URL}/tink.wav`,
-  china_acoustic: `${SOUNDFONT_BASE_URL}/reverse_cymbal-mp3/C4.mp3`,
-  splash_acoustic: `${WESBOS_BASE_URL}/ride.wav`,
+  // Cymbals & Bells (Local studio ride cymbal, tink, crash)
+  crash_acoustic: '/samples/drums/ride.wav',
+  ride_acoustic: '/samples/drums/ride.wav',
+  ride_bell: '/samples/drums/tink.wav',
+  china_acoustic: '/samples/drums/ride.wav',
+  splash_acoustic: '/samples/drums/ride.wav',
 
-  // Percussion
-  cowbell_real: `${SOUNDFONT_BASE_URL}/tinkle_bell-mp3/C5.mp3`,
-  tambourine: `${SOUNDFONT_BASE_URL}/tinkle_bell-mp3/G5.mp3`,
+  // Percussion (Organic woodblock & metallic tink)
+  cowbell_real: '/samples/drums/tink.wav',
+  tambourine: '/samples/drums/tink.wav',
 };
 
 class MultiSampleEngine {
@@ -226,17 +226,42 @@ class MultiSampleEngine {
     const promise = (async () => {
       try {
         const ctx = this.getAudioContext();
-        const url = `${SOUNDFONT_BASE_URL}/${soundfont}/${noteName}.mp3`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const arrayBuf = await res.arrayBuffer();
+        let arrayBuf = null;
+
+        // 1. Try bundled local studio samples (offline / zero-latency / CSP-safe)
+        let localPath = null;
+        if (soundfont === 'acoustic_grand_piano-mp3') {
+          localPath = `/samples/piano/${noteName}.mp3`;
+        } else if (soundfont === 'acoustic_guitar_steel-mp3') {
+          localPath = `/samples/guitar/${noteName}.mp3`;
+        }
+
+        if (localPath) {
+          try {
+            const localRes = await fetch(localPath);
+            if (localRes.ok) {
+              arrayBuf = await localRes.arrayBuffer();
+            }
+          } catch (e) {
+            // fallback to CDN
+          }
+        }
+
+        // 2. Fallback to Soundfont CDN
+        if (!arrayBuf) {
+          const url = `${SOUNDFONT_BASE_URL}/${soundfont}/${noteName}.mp3`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          arrayBuf = await res.arrayBuffer();
+        }
+
         const audioBuf = await ctx.decodeAudioData(arrayBuf);
         audioBuf.rootMidi = noteNameToMidiFlat(noteName);
         audioBuf.noteName = noteName;
         this.sampleCache.set(cacheKey, audioBuf);
         return audioBuf;
       } catch (err) {
-        // Individual note fetch error - non-critical, nearest neighbor pitch shifting will cover it
+        console.warn(`[MultiSampleEngine] Note fetch notice for ${soundfont} ${noteName}:`, err.message);
         return null;
       } finally {
         this.loadingPromises.delete(cacheKey);
@@ -289,14 +314,14 @@ class MultiSampleEngine {
       }
     }
 
-    // If a nearby sample is loaded (within 12 semitones / 1 octave)
-    if (closestBuffer && minDistance <= 12) {
+    // If a nearby sample is loaded (within 36 semitones / 3 octaves)
+    if (closestBuffer && minDistance <= 36) {
       const semitoneDiff = midiNote - closestBuffer.rootMidi;
       const playbackRate = Math.pow(2, semitoneDiff / 12);
       return {
         buffer: closestBuffer,
         playbackRate,
-        isExact: false,
+        isExact: (minDistance === 0),
         rootMidi: closestBuffer.rootMidi,
       };
     }
