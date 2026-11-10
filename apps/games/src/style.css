@@ -386,38 +386,77 @@ body::before {
   color: #fff;
 }
 
-/* Quick Chips */
+/* Quick Chips - Clean Single Line */
 .game-chips-row {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.35rem 0.5rem;
+  max-width: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.game-chips-row::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-chips-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--neon-cyan);
+  white-space: nowrap;
+  margin-right: 0.25rem;
+  flex-shrink: 0;
 }
 
 .game-chip {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-muted);
-  padding: 0.4rem 0.85rem;
+  padding: 0.42rem 0.95rem;
   border-radius: 9999px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .game-chip:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-1px);
 }
 
 .game-chip.active {
-  background: rgba(6, 182, 212, 0.15);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.22), rgba(168, 85, 247, 0.18));
   border-color: var(--neon-cyan);
-  color: var(--neon-cyan);
+  color: #38bdf8;
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.35);
+}
+
+.game-chip-all {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  color: #e2e8f0;
+}
+
+.game-chip-all:hover {
+  border-style: solid;
+  border-color: var(--neon-pink);
+  color: #f43f5e;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
 }
 
 /* Active Game Dashboard Card */

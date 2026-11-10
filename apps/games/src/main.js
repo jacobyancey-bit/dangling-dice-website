@@ -50,17 +50,33 @@ async function copyToClipboard(text, successMessage) {
   }
 }
 
-// Render Quick Game Chips
+// Curated top played games for the clean single-line quick row
+const TOP_PLAYED_GAME_IDS = ['warzone', 'cs2', 'tarkov', 'rust', 'fortnite', 'apex', 'r6-siege', 'valorant'];
+
+// Render Quick Game Chips (Clean single-line row of most played games)
 function renderGameChips() {
   const container = document.getElementById('gameChipsRow');
   if (!container) return;
 
+  const topGames = TOP_PLAYED_GAME_IDS
+    .map((id) => GAMES_CATALOG.find((g) => g.id === id))
+    .filter(Boolean);
+
+  // If a game outside the top list is currently selected, include it dynamically
+  const activeCustomGame = (!TOP_PLAYED_GAME_IDS.includes(selectedGameId) && selectedGameId !== 'all')
+    ? GAMES_CATALOG.find((g) => g.id === selectedGameId)
+    : null;
+
   const chipsHtml = [
-    `<button type="button" class="game-chip ${selectedGameId === 'all' ? 'active' : ''}" onclick="window.selectGameChip('all')">🎯 All Games</button>`,
-    ...GAMES_CATALOG.map(
+    `<span class="quick-chips-label">🔥 Most Played:</span>`,
+    ...topGames.map(
       (g) => `<button type="button" class="game-chip ${selectedGameId === g.id ? 'active' : ''}" onclick="window.selectGame('${g.id}')">${g.icon} ${g.shortName}</button>`
     ),
-  ].join('');
+    activeCustomGame
+      ? `<button type="button" class="game-chip active" onclick="window.selectGame('${activeCustomGame.id}')">${activeCustomGame.icon} ${activeCustomGame.shortName}</button>`
+      : '',
+    `<button type="button" class="game-chip game-chip-all ${selectedGameId === 'all' ? 'active' : ''}" onclick="window.selectGameChip('all')">🎯 View All 20 ↓</button>`,
+  ].filter(Boolean).join('');
 
   container.innerHTML = chipsHtml;
 }
