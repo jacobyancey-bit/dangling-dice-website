@@ -361,6 +361,88 @@ OneFrameThreadLag=False`,
     },
     recommendedGear: ['ctrl-vader-4', 'iem-waner', 'grip-kontrolfreek'],
   },
+  {
+    id: 'arc-raiders',
+    title: 'ARC Raiders',
+    shortName: 'ARC Raiders',
+    genre: 'PvPvE Extraction Shooter',
+    engine: 'Unreal Engine 5 (Lumen & Chaos)',
+    badge: '🤖 Hyped • Embark Studios',
+    icon: '🤖',
+    bannerGradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Acoustic profile isolating ARC machine servo whines, robot drone scans, and player footsteps, paired with Unreal Engine 5 max-FPS config.',
+    audioProfile: {
+      profileName: 'ARC Servo Whine & Extraction Audio Isolation',
+      targetMix: 'Studio Monitor / Balanced Flat',
+      description: 'Sub-bass cut dampens orbital drops and drop-pod booms, while boosted 125Hz and 3.5kHz isolate enemy player boots on metal structures and mechanical ARC drone hover frequencies.',
+      bands: [
+        { freq: '32Hz', gain: -5, type: 'Cut', label: 'Drop Pod Sub-Bass' },
+        { freq: '64Hz', gain: -2, type: 'Cut', label: 'Explosion Reverb' },
+        { freq: '125Hz', gain: 4, type: 'Boost', label: 'Heavy Boots on Metal' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Engine Drone Hum' },
+        { freq: '500Hz', gain: 1, type: 'Flat', label: 'Team Comms' },
+        { freq: '1kHz', gain: 3, type: 'Boost', label: 'Foliage & Scrap Scuff' },
+        { freq: '2.5kHz', gain: 5, type: 'Peak', label: 'Zip-line & Ladder Hooks' },
+        { freq: '3.5kHz', gain: 7, type: 'Peak', label: 'ARC Drone Servo Scan' },
+        { freq: '7.5kHz', gain: -4, type: 'Cut', label: 'Laser Sibilance Tamer' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'High Air Whistle' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -3.0 dB, Q: 1.0',
+        'Band 2 (125 Hz): +4.5 dB, Q: 1.41',
+        'Band 3 (250 Hz): -3.0 dB, Q: 1.2',
+        'Band 4 (3500 Hz): +7.0 dB, Q: 1.5',
+        'Band 5 (7500 Hz): -4.0 dB, Q: 1.2',
+      ],
+      dolbyValues: 'Surround: OFF | Leveler: OFF | EQ: 32Hz(-5), 64Hz(-2), 125Hz(+4), 250Hz(-3), 500Hz(+1), 1k(+3), 2.5k(+5), 3.5k(+7), 7.5k(-4), 16k(-3)',
+      peaceConfig: `GraphicEQ: 20 -5; 32 -5; 64 -2; 125 4; 250 -3; 500 1; 1000 3; 2500 5; 3500 7; 7500 -4; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'UE5 Smooth-Linear Tracking & Snap Response',
+      curveType: 'Linear with Anti-Deadzone Compensation',
+      leftStickDeadzoneMin: '0.04 (4% Inner)',
+      rightStickDeadzoneMin: '0.02 (2% Micro-Aim for Weakspots)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 (Instant ADS Hair-Trigger)',
+      rightTriggerDeadzone: '0.00 (Instant Fire Hair-Trigger)',
+      horizontalSens: '5.5 (Fast Tracking for Aerial Drones)',
+      verticalSens: '5.0 (High Vertical Recoil Stability)',
+      aimAssistType: 'Standard Rotational (Target Weakpoint Pull)',
+      steamConfigCode: 'steam://controllerconfig/1808500/arc_raiders_linear_precision_v1',
+      ds4xmlSnippet: `<LeftDeadzone>4</LeftDeadzone><RightDeadzone>2</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve><AntiDeadzone>3</AntiDeadzone>`,
+    },
+    configProfile: {
+      fileName: 'GameUserSettings.ini',
+      targetPath: '%LOCALAPPDATA%/ArcRaiders/Saved/Config/WindowsClient/GameUserSettings.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — ARC Raiders UE5 Max FPS & Low Latency Config
+[ScalabilityGroups]
+sg.ResolutionQuality=100.000000
+sg.ViewDistanceQuality=3
+sg.AntiAliasingQuality=2 // TSR / DLSS Quality
+sg.ShadowQuality=1 // Drastic FPS gain while keeping cast shadows
+sg.GlobalIlluminationQuality=1 // Disable heavy software Lumen bounce
+sg.ReflectionQuality=1
+sg.PostProcessQuality=1
+sg.TextureQuality=3
+sg.EffectsQuality=1
+sg.FoliageQuality=1 // Strips non-essential grass clutter to spot prone enemies
+sg.ShadingQuality=1
+
+[/Script/ArcRaiders.ArcRaidersSettings]
+bEnableMotionBlur=False
+bEnableCameraShake=False
+bEnableChromaticAberration=False
+bEnableNvidiaReflex=True
+bNvidiaReflexBoost=True
+FieldOfView=105.000000`,
+      fpsTips: [
+        'Set sg.ShadowQuality=1 and sg.GlobalIlluminationQuality=1 to dramatically improve framerates on Unreal Engine 5 while retaining player drop shadows.',
+        'Drop sg.FoliageQuality=1 to strip distracting decorative vegetation and easily spot crawling raiders.',
+        'Enable Nvidia Reflex to On + Boost to bypass CPU-bound UE5 drawcall queue latency.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
 ];
 
 export const ACCESSORIES_CATALOG = [
@@ -456,3 +538,107 @@ export const ACCESSORIES_CATALOG = [
     icon: '🖱️',
   },
 ];
+
+export const SOFTWARE_GUIDE = [
+  {
+    id: 'equalizer-apo',
+    name: 'Equalizer APO',
+    category: 'Audio Core DSP Engine',
+    price: '100% Free & Open Source',
+    license: 'GPLv2',
+    icon: '🎚️',
+    badge: '⚡ Required Core Engine',
+    downloadUrl: 'https://sourceforge.net/projects/equalizerapo/',
+    officialSite: 'https://equalizerapo.com/',
+    version: 'v1.3.2+ (64-bit Windows)',
+    description: 'A system-wide 32-bit floating-point parametric audio equalizer that integrates directly into Windows audio pipeline with 0ms latency and negligible CPU usage.',
+    whyNeedIt: 'Windows default audio drivers do not allow precise parametric frequency boosts. Equalizer APO hooks into your playback device so footstep frequency spikes work in all games, Discord, and media.',
+    steps: [
+      'Download and run the official Equalizer APO 64-bit installer.',
+      'During installation, the <strong>Configurator</strong> dialog will appear. Go to the <strong>Playback devices</strong> tab.',
+      'Check the checkbox next to your active primary audio device (e.g. <em>Headphones</em>, <em>Realtek Audio</em>, or your USB DAC). Do NOT select non-active devices.',
+      'Click <strong>OK</strong> and allow the installer to complete.',
+      '<strong>Crucial Step:</strong> Reboot your PC. The Windows audio filter driver hook requires a restart to activate.',
+    ],
+    troubleshooting: [
+      'If audio stops working or no changes occur after reboot: open <code>C:\\Program Files\\EqualizerAPO\\Configurator.exe</code>, select your device, click <strong>Troubleshooting options</strong>, switch install mode to <strong>Install as LFX/GFX</strong> or <strong>SFX/EFX</strong>, and click OK.',
+      'Make sure Windows Audio Enhancements / Spatial sound is not conflicting.',
+    ],
+  },
+  {
+    id: 'peace-gui',
+    name: 'Peace Equalizer (GUI for Equalizer APO)',
+    category: 'Graphical EQ & Preset Manager',
+    price: '100% Free & Open Source',
+    license: 'Freeware / Open Source',
+    icon: '🎨',
+    badge: '🔥 Essential GUI Overlay',
+    downloadUrl: 'https://sourceforge.net/projects/peace-equalizer-apo-extension/',
+    officialSite: 'https://sourceforge.net/projects/peace-equalizer-apo-extension/',
+    version: 'v1.6.6+ (Windows 10/11)',
+    description: 'The graphical interface and preset loader for Equalizer APO. Adds 10 to 31 parametric sliders, dynamic visual meters, hotkeys, and 1-click import for our downloadable .peace config files.',
+    whyNeedIt: 'Equalizer APO alone only edits a text file (`config.txt`). Peace gives you a clean visual dashboard, real-time gain sliders, and allows 1-click loading of any game profile downloaded from this hub.',
+    steps: [
+      'Make sure Equalizer APO is installed first and your PC has been rebooted.',
+      'Download and run <strong>PeaceSetup.exe</strong> from SourceForge.',
+      'Click <strong>Install</strong>. When prompted, select <strong>"Start with Peace"</strong> (choose the standard or full interface).',
+      '<strong>How to load our game presets:</strong> Download any <code>.peace</code> file on this site (e.g. Warzone, ARC Raiders, CS2). In Peace GUI, click the <strong>Import</strong> button at the bottom right, select the downloaded file, and click <strong>Done</strong>.',
+      'The 10 frequency bands will immediately populate. Click <strong>Save</strong> to save it in your Peace preset tray.',
+    ],
+    troubleshooting: [
+      'Verify the top-left ON/OFF switch in Peace is set to green (ON).',
+      'Test the Pre-amplifying slider: dragging it down should noticeably lower overall volume immediately. If not, follow Equalizer APO troubleshooting.',
+    ],
+  },
+  {
+    id: 'steelseries-sonar',
+    name: 'SteelSeries Sonar Audio Suite',
+    category: 'All-in-One Headset Audio Suite',
+    price: '100% Free Software',
+    license: 'Freeware',
+    icon: '🎧',
+    badge: '✨ Best Plug & Play Alternative',
+    downloadUrl: 'https://steelseries.com/gg/sonar',
+    officialSite: 'https://steelseries.com/gg/sonar',
+    version: 'Latest SteelSeries GG',
+    description: 'An all-in-one virtual audio mixer with parametric EQ, directional spatial audio, and AI noise suppression that works on any headset brand (not just SteelSeries).',
+    whyNeedIt: 'If you use a USB gaming headset and prefer not to modify Windows system driver hooks with Equalizer APO, Sonar gives you a clean parametric equalizer with Q-factor control.',
+    steps: [
+      'Download and install <strong>SteelSeries GG</strong> from the official website.',
+      'Open SteelSeries GG and navigate to the <strong>Sonar</strong> tab in the left sidebar.',
+      'In Sonar Settings, map your <strong>Game</strong> and <strong>Chat</strong> output channels to your headphones.',
+      'Click the <strong>Game</strong> channel tab and locate the <strong>Parametric EQ</strong> module.',
+      'Click the <strong>Copy Sonar Values</strong> button on any game on this page, then input the frequency (Hz), gain (dB), and Q values into Sonar.',
+      'Set Windows default playback device to <code>SteelSeries Sonar - Gaming</code>.',
+    ],
+    troubleshooting: [
+      'If you hear echo or delay, disable Windows Sonic or Dolby Atmos in Windows Sound Settings, as Sonar handles spatial virtualisation natively.',
+    ],
+  },
+  {
+    id: 'ds4windows',
+    name: 'DS4Windows & Steam Input',
+    category: 'Controller Overclocking & Deadzones',
+    price: '100% Free & Open Source',
+    license: 'GPLv3',
+    icon: '🎮',
+    badge: '🎯 Pro Controller Calibration',
+    downloadUrl: 'https://github.com/Ryochan7/DS4Windows/releases',
+    officialSite: 'https://ds4-windows.com/',
+    version: 'v3.3.3+ (x64)',
+    description: 'Virtual controller driver that remaps DualSense, PS4, Switch Pro, and Xbox pads into virtual 360/DS4 controllers with dynamic curves, 1000Hz polling rate, and custom deadzones.',
+    whyNeedIt: 'Enables true dynamic S-curves, eliminates stick drift via sub-millimeter inner deadzones, and removes input latency down to 1 millisecond on PC.',
+    steps: [
+      'Download <code>DS4Windows_x64.zip</code> from GitHub and extract it to a dedicated folder.',
+      'Run <code>DS4Windows.exe</code>. If prompted, complete the 1-click ViGEmBus virtual bus driver installation.',
+      'Connect your controller via USB-C or Bluetooth.',
+      'Under the <strong>Profiles</strong> tab, click <strong>New</strong>, choose <strong>Game Controller</strong>, and name your profile.',
+      'Navigate to <strong>LS (Left Stick)</strong> and <strong>RS (Right Stick)</strong>: set Dead Zone (e.g. 0.02 - 0.04) and set Output Curve to <strong>Dynamic</strong> or <strong>Linear</strong> as indicated in our game guides.',
+      'Apply and minimize to system tray.',
+    ],
+    troubleshooting: [
+      'For Steam games, you can also paste our <code>steam://controllerconfig/...</code> URL straight into your browser to import into Steam Input without third-party drivers.',
+    ],
+  },
+];
+

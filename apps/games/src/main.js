@@ -2,7 +2,7 @@
  * Dangling Dice Gaming Lab™ — Application Logic
  */
 
-import { GAMES_CATALOG, ACCESSORIES_CATALOG } from './gameData.js';
+import { GAMES_CATALOG, ACCESSORIES_CATALOG, SOFTWARE_GUIDE } from './gameData.js';
 
 // State
 let selectedGameId = 'warzone';
@@ -200,6 +200,12 @@ function renderGameDashboard() {
         <button type="button" class="btn btn-secondary" onclick="window.copyDolbyValues('${game.id}')">
           📋 Copy Dolby Atmos Settings
         </button>
+      </div>
+
+      <div style="margin-top: 0.85rem;">
+        <a href="#softwareSection" class="software-guide-shortcut">
+          💡 New to Equalizer APO or Peace GUI? Read the 2-minute step-by-step setup guide ↓
+        </a>
       </div>
 
       <!-- Contextual Gear Recommendations -->
@@ -482,6 +488,68 @@ function renderMasterAccessories(cat = 'all') {
     .join('');
 }
 
+// Render Software Toolkit Guide
+function renderSoftwareGuide() {
+  const container = document.getElementById('softwareGrid');
+  if (!container) return;
+
+  container.innerHTML = SOFTWARE_GUIDE.map(
+    (tool) => `
+    <div class="software-card">
+      <div>
+        <div class="software-card-header">
+          <div style="display: flex; gap: 0.85rem; align-items: center;">
+            <div class="software-icon-wrap">${tool.icon}</div>
+            <div>
+              <div class="software-title">${escapeHtml(tool.name)}</div>
+              <div class="software-category">${escapeHtml(tool.category)}</div>
+            </div>
+          </div>
+          <span class="pill-count" style="font-size: 0.72rem; border-color: rgba(6,182,212,0.4);">${escapeHtml(tool.price)}</span>
+        </div>
+
+        <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.5rem;">
+          ${escapeHtml(tool.description)}
+        </p>
+
+        <div class="software-why-box">
+          <strong>Why you need it:</strong> ${escapeHtml(tool.whyNeedIt)}
+        </div>
+
+        <div class="software-steps-header">
+          <span>📋 Step-by-Step Setup:</span>
+        </div>
+        <ol class="software-steps-list">
+          ${tool.steps.map((s) => `<li class="software-step-item">${s}</li>`).join('')}
+        </ol>
+
+        ${
+          tool.troubleshooting && tool.troubleshooting.length > 0
+            ? `
+          <div class="software-troubleshoot">
+            <strong>⚠️ Pro Tips &amp; Troubleshooting:</strong>
+            <ul style="margin-top: 0.35rem; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem;">
+              ${tool.troubleshooting.map((t) => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>
+        `
+            : ''
+        }
+      </div>
+
+      <div class="software-actions">
+        <a href="${tool.downloadUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+          📥 Official Download (${escapeHtml(tool.version)}) ↗
+        </a>
+        <a href="${tool.officialSite}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+          Documentation ↗
+        </a>
+      </div>
+    </div>
+  `
+  ).join('');
+}
+
 // Security Escape Helper
 function escapeHtml(str) {
   if (!str) return '';
@@ -611,5 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderGameChips();
   renderGamesCatalog('');
   renderGameDashboard();
+  renderSoftwareGuide();
   renderMasterAccessories('all');
 });
+
