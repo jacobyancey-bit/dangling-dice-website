@@ -45,7 +45,7 @@ describe('⚡ Dangling Dice Studios™ Public API Suite (V1)', () => {
 
       assert.equal(created.ownerEmail, 'developer@dangling-dice-studios.com');
       assert.equal(created.tier, 'pro');
-      assert.equal(created.monthlyQuota, 50000);
+      assert.equal(created.monthlyQuota, 5000);
       assert.equal(created.isActive, true);
 
       const fetched = await findApiKeyRecord(created.key);
@@ -225,3 +225,4 @@ describe('⚡ Dangling Dice Studios™ Public API Suite (V1)', () => {
     });
   });
 });
+

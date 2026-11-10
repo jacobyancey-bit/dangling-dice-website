@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import Item from '../models/Item.js';
 import Order from '../models/Order.js';
 import { LICENSE_TIERS } from '@dangling-dice/shared';
+import { API_TIER_CONFIG, createApiKeyRecord, upgradeApiKeyTier } from '../models/ApiKey.js';
 
 // Lazy-initialize Stripe client
 const getStripe = () => {
@@ -122,6 +123,86 @@ export const createCheckoutSession = async (req, res, next) => {
 };
 
 /**
+ * @desc    Create a Stripe Checkout Session for Developer API Subscriptions
+ * @route   POST /api/checkout/create-api-session
+ * @access  Public
+ */
+export const createApiSubscriptionSession = async (req, res, next) => {
+  try {
+    const { customerEmail, tier = 'pro', apiKey, successUrl, cancelUrl } = req.body;
+
+    if (!customerEmail) {
+      return res.status(400).json({ success: false, message: 'Customer email is required for API checkout' });
+    }
+
+    const selectedTier = String(tier || 'pro').toLowerCase();
+    const cfg = API_TIER_CONFIG[selectedTier];
+    if (!cfg || cfg.priceUsd <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid subscription tier selected. Choose "pro" ($9.99) or "ultra" ($29.99).',
+      });
+    }
+
+    let targetKey = apiKey;
+    if (!targetKey) {
+      const newKeyDoc = await createApiKeyRecord({
+        ownerEmail: customerEmail,
+        name: `${cfg.name} Key`,
+        tier: 'free',
+      });
+      targetKey = newKeyDoc.key;
+    }
+
+    const stripe = getStripe();
+    const clientBase = process.env.DEV_URL || process.env.CLIENT_URL || 'https://dev.dangling-dice-studios.com';
+    const redirectSuccess = successUrl || `${clientBase}/#billingSuccess?session_id={CHECKOUT_SESSION_ID}&key=${targetKey}`;
+    const redirectCancel = cancelUrl || `${clientBase}/#billingCancelled`;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: customerEmail,
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Dangling Dice Studios™ API — ${cfg.name}`,
+              description: `${cfg.monthlyQuota.toLocaleString()} requests/month, ${cfg.rateLimitPerMin} req/min burst limit. Identical to RapidAPI plan.`,
+            },
+            unit_amount: Math.round(cfg.priceUsd * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        type: 'api_subscription',
+        tier: selectedTier,
+        apiKey: targetKey,
+        ownerEmail: customerEmail,
+      },
+      success_url: redirectSuccess,
+      cancel_url: redirectCancel,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        sessionId: session.id,
+        checkoutUrl: session.url,
+        amount: cfg.priceUsd,
+        currency: 'usd',
+        tier: cfg.name,
+        apiKey: targetKey,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Handle Stripe Webhook events (Fulfills orders upon payment confirmation)
  * @route   POST /api/checkout/webhook
  * @access  Public (Validated with Stripe HMAC Signature)
@@ -133,8 +214,8 @@ export const handleWebhook = async (req, res, next) => {
   let event;
 
   try {
-    const stripe = getStripe();
     if (process.env.NODE_ENV === 'production' || webhookSecret) {
+      const stripe = getStripe();
       if (!sig || !webhookSecret) {
         return res.status(400).send('Webhook Error: Missing Stripe signature or webhook secret configuration');
       }
@@ -153,7 +234,15 @@ export const handleWebhook = async (req, res, next) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     try {
-      // Generate a cryptographically secure digital license key
+      // 1. API Subscription / Key Fulfillment
+      if (session.metadata?.type === 'api_subscription') {
+        const { apiKey, tier } = session.metadata;
+        await upgradeApiKeyTier({ key: apiKey, tier });
+        console.log(`[Stripe API Fulfillment] API Key ${apiKey} upgraded to tier "${tier}"`);
+        return res.status(200).json({ received: true });
+      }
+
+      // 2. Studio Resource / Beat License Fulfillment
       const licenseKey = `DDS-LIC-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
       const order = await Order.findOneAndUpdate(

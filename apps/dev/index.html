@@ -101,6 +101,9 @@
       <button type="button" class="hub-tab-btn" id="hubShowcaseBtn" onclick="window.switchDevSection('showcase')">
         <span>★</span> 4. Community Showcase
       </button>
+      <button type="button" class="hub-tab-btn" id="hubBillingBtn" onclick="window.switchDevSection('billing')">
+        <span>💳</span> 5. API Plans &amp; Key Billing
+      </button>
     </div>
 
     <!-- ======================================================================
@@ -422,6 +425,153 @@
         <div id="httpStatusGrid" class="http-status-grid">
           <!-- Populated dynamically via systemSimulators.js -->
         </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 5: API PLANS & KEY BILLING (Stripe & RapidAPI Parity)
+         ====================================================================== -->
+    <section id="sectionBilling" class="sandbox-card" style="display: none; margin-bottom: 2.5rem;">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">
+            <span>💳</span> API Key Provisioning &amp; Stripe Billing
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Generate authentication tokens for all 21+ production microservices. Direct Stripe billing matched 1:1 with RapidAPI.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Key Generator & Quota Inspector -->
+      <div style="background: rgba(10, 14, 24, 0.7); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 2rem;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🔑</span> Manage or Generate Your API Key
+        </h4>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <input type="email" id="devKeyEmailInput" class="form-input" style="flex: 1; min-width: 240px;" placeholder="Enter your developer email (e.g. dev@example.com)" />
+          <button type="button" id="generateFreeKeyBtn" class="btn btn-primary" onclick="window.handleGenerateFreeKey()">
+            + Generate Free Key
+          </button>
+        </div>
+
+        <!-- Key Display Box -->
+        <div id="keyDisplayBox" style="display: none; background: #060911; border: 1px dashed rgba(6, 182, 212, 0.5); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Active API Key:</span>
+              <span id="activeKeyTierBadge" class="hero-pill" style="font-size: 0.65rem; padding: 0.15rem 0.5rem; background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: var(--neon-emerald);">FREE TIER</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.copyActiveKey()">
+              📋 Copy Key
+            </button>
+          </div>
+          <code id="activeKeyString" style="color: var(--neon-cyan); font-family: monospace; font-size: 0.9rem; word-break: break-all;">dds_live_...</code>
+          <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span id="keyQuotaUsage">Usage: 0 / 100 requests this month</span>
+            <span id="keyRateLimit">Burst: 60 req/min</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Plans Grid (Identical to RapidAPI) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Tier 1: Free Basic -->
+        <div class="sandbox-card" style="border: 1px solid var(--border-subtle); display: flex; flex-direction: column; background: #0a0f1d;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff;">Free Basic</h4>
+            <span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 0.2rem 0.5rem; border-radius: 4px;">Hobby</span>
+          </div>
+          <div style="font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem;">
+            $0 <span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/ month</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+            Ideal for sandbox testing, prototyping, and personal educational projects.
+          </p>
+          <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; font-size: 0.82rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li>✓ <strong>100 requests</strong> / month</li>
+            <li>✓ 60 requests / minute rate limit</li>
+            <li>✓ Access to all 21+ /v1/* endpoints</li>
+            <li>✓ No credit card required</li>
+          </ul>
+          <div style="margin-top: auto;">
+            <button type="button" class="btn btn-secondary" style="width: 100%; cursor: default;">
+              Included by Default
+            </button>
+          </div>
+        </div>
+
+        <!-- Tier 2: PRO Plan (Most Popular) -->
+        <div class="sandbox-card" style="border: 1px solid var(--neon-cyan); box-shadow: 0 0 20px rgba(6, 182, 212, 0.15); display: flex; flex-direction: column; background: #0a1124; position: relative;">
+          <div style="position: absolute; top: -11px; right: 20px; background: var(--neon-cyan); color: #060911; font-size: 0.65rem; font-weight: 900; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">
+            RapidAPI Match • Popular
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff;">PRO Developer</h4>
+            <span style="font-size: 0.7rem; color: var(--neon-cyan); background: rgba(6,182,212,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">Commercial</span>
+          </div>
+          <div style="font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem;">
+            $9.99 <span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/ month</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+            Best for active Discord bots, personal production apps, and studio toolkits.
+          </p>
+          <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; font-size: 0.82rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li>✓ <strong>5,000 requests</strong> / month</li>
+            <li>✓ 300 requests / minute burst throughput</li>
+            <li>✓ Commercial rights &amp; bot integration</li>
+            <li>✓ Matches RapidAPI $9.99 tier exactly</li>
+            <li>✓ $0.005 / overage request</li>
+          </ul>
+          <div style="margin-top: auto;">
+            <button type="button" class="btn btn-primary" style="width: 100%;" onclick="window.handleStripeCheckout('pro')">
+              ⚡ Subscribe with Stripe ($9.99/mo)
+            </button>
+          </div>
+        </div>
+
+        <!-- Tier 3: Commercial ULTRA -->
+        <div class="sandbox-card" style="border: 1px solid var(--border-subtle); display: flex; flex-direction: column; background: #0a0f1d;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff;">Commercial ULTRA</h4>
+            <span style="font-size: 0.7rem; color: #f59e0b; background: rgba(245, 158, 11, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">High Volume</span>
+          </div>
+          <div style="font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem;">
+            $29.99 <span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/ month</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+            For high-volume web scrapers, media pipelines, and commercial SaaS platforms.
+          </p>
+          <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; font-size: 0.82rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li>✓ <strong>25,000 requests</strong> / month</li>
+            <li>✓ 1,200 requests / minute high-speed burst</li>
+            <li>✓ High-priority cluster queue processing</li>
+            <li>✓ Matches RapidAPI $29.99 tier exactly</li>
+            <li>✓ $0.0025 / overage request</li>
+          </ul>
+          <div style="margin-top: auto;">
+            <button type="button" class="btn btn-amber" style="width: 100%;" onclick="window.handleStripeCheckout('ultra')">
+              🔥 Subscribe with Stripe ($29.99/mo)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Marketplace Guarantee Strip -->
+      <div style="padding: 1rem 1.25rem; background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="font-size: 0.9rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🌐</span> Identical Pricing Guarantee: Stripe &amp; RapidAPI
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Already have an active RapidAPI account or prefer consolidated billing? You can subscribe on RapidAPI with the same tiers and endpoints.
+          </div>
+        </div>
+        <a href="https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+          Open on RapidAPI Marketplace &rarr;
+        </a>
       </div>
     </section>
 

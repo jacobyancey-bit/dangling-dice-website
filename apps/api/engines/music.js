@@ -472,3 +472,4 @@ export function buildMidiBuffer({ chordEvents = [], bpm = 120, title = 'Dangling
 
   return Buffer.concat([header, trackHeader, trackData]);
 }
+

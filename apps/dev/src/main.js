@@ -50,6 +50,7 @@ function switchDevSection(sectionId) {
     dataTypes: document.getElementById('sectionDataTypes'),
     systemSim: document.getElementById('sectionSystemSim'),
     showcase: document.getElementById('showcase'),
+    billing: document.getElementById('sectionBilling'),
   };
 
   const buttons = {
@@ -57,6 +58,7 @@ function switchDevSection(sectionId) {
     dataTypes: document.getElementById('hubDataTypesBtn'),
     systemSim: document.getElementById('hubSystemSimBtn'),
     showcase: document.getElementById('hubShowcaseBtn'),
+    billing: document.getElementById('hubBillingBtn'),
   };
 
   Object.entries(sections).forEach(([key, el]) => {
@@ -667,6 +669,168 @@ function setupModal() {
   }
 }
 
+// ============================================================================
+// SECTION 5: API KEYS & STRIPE BILLING
+// ============================================================================
+function renderActiveKey(keyDoc) {
+  const box = document.getElementById('keyDisplayBox');
+  const keyString = document.getElementById('activeKeyString');
+  const badge = document.getElementById('activeKeyTierBadge');
+  const usage = document.getElementById('keyQuotaUsage');
+  const rate = document.getElementById('keyRateLimit');
+
+  if (!box || !keyString || !keyDoc) return;
+
+  box.style.display = 'block';
+  keyString.textContent = keyDoc.key || keyDoc.apiKey;
+
+  const tier = (keyDoc.tier || 'free').toUpperCase();
+  if (badge) {
+    badge.textContent = `${tier} TIER`;
+    if (tier === 'PRO') {
+      badge.style.background = 'rgba(6, 182, 212, 0.2)';
+      badge.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+      badge.style.color = 'var(--neon-cyan)';
+    } else if (tier === 'ULTRA' || tier === 'ENTERPRISE') {
+      badge.style.background = 'rgba(245, 158, 11, 0.2)';
+      badge.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+      badge.style.color = 'var(--neon-amber)';
+    } else {
+      badge.style.background = 'rgba(16, 185, 129, 0.2)';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+      badge.style.color = 'var(--neon-emerald)';
+    }
+  }
+
+  const reqUsed = keyDoc.requestsThisMonth || 0;
+  const quota = keyDoc.monthlyQuota ? Number(keyDoc.monthlyQuota).toLocaleString() : '100';
+  if (usage) usage.textContent = `Usage: ${reqUsed} / ${quota} requests this month`;
+  if (rate) rate.textContent = `Burst: ${keyDoc.rateLimitPerMin || 60} req/min`;
+}
+
+async function handleGenerateFreeKey() {
+  const emailInput = document.getElementById('devKeyEmailInput');
+  const email = (emailInput?.value || '').trim();
+
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid developer email address.');
+    emailInput?.focus();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_GATEWAY_URL}/v1/auth/keys`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ownerEmail: email,
+        name: 'Dashboard Free Key',
+        tier: 'free',
+      }),
+    });
+
+    const json = await res.json();
+    if (json.success && json.data) {
+      localStorage.setItem('dds_developer_key', json.data.apiKey);
+      localStorage.setItem('dds_developer_email', email);
+      renderActiveKey(json.data);
+      showToast('API Key generated successfully! (100 free requests/mo)');
+    } else {
+      showToast(json.message || 'Error generating API key.');
+    }
+  } catch (err) {
+    showToast(`Gateway connection error: ${err.message}`);
+  }
+}
+
+function copyActiveKey() {
+  const keyEl = document.getElementById('activeKeyString');
+  if (!keyEl || !keyEl.textContent) return;
+  navigator.clipboard.writeText(keyEl.textContent.trim()).then(() => {
+    showToast('Copied API Key to clipboard!');
+  });
+}
+
+async function handleStripeCheckout(tier = 'pro') {
+  const emailInput = document.getElementById('devKeyEmailInput');
+  let email = (emailInput?.value || localStorage.getItem('dds_developer_email') || '').trim();
+
+  if (!email || !email.includes('@')) {
+    email = prompt('Enter your developer email to associate your subscription:') || '';
+    if (!email || !email.includes('@')) {
+      showToast('A valid email is required to initiate Stripe checkout.');
+      return;
+    }
+    if (emailInput) emailInput.value = email;
+    localStorage.setItem('dds_developer_email', email);
+  }
+
+  const currentKey = localStorage.getItem('dds_developer_key') || undefined;
+
+  showToast(`Initiating secure Stripe Checkout for ${tier.toUpperCase()} tier...`);
+
+  try {
+    const res = await fetch(`${API_GATEWAY_URL}/api/checkout/create-api-session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerEmail: email,
+        tier,
+        apiKey: currentKey,
+      }),
+    });
+
+    const json = await res.json();
+    if (json.success && json.data?.checkoutUrl) {
+      if (json.data.apiKey) {
+        localStorage.setItem('dds_developer_key', json.data.apiKey);
+      }
+      window.location.href = json.data.checkoutUrl;
+    } else {
+      showToast(json.message || 'Failed to create checkout session.');
+    }
+  } catch (err) {
+    showToast(`Checkout initialization error: ${err.message}`);
+  }
+}
+
+async function initBillingStudio() {
+  const savedEmail = localStorage.getItem('dds_developer_email');
+  const savedKey = localStorage.getItem('dds_developer_key');
+
+  const emailInput = document.getElementById('devKeyEmailInput');
+  if (emailInput && savedEmail) {
+    emailInput.value = savedEmail;
+  }
+
+  // Handle post-checkout redirect return: #billingSuccess?session_id=...&key=...
+  const hash = window.location.hash || '';
+  if (hash.includes('billingSuccess')) {
+    showToast('🎉 Stripe payment confirmed! Your API key quota has been upgraded.');
+    const params = new URLSearchParams(hash.split('?')[1] || '');
+    const upgradedKey = params.get('key');
+    if (upgradedKey) {
+      localStorage.setItem('dds_developer_key', upgradedKey);
+    }
+    window.switchDevSection('billing');
+  }
+
+  const keyToLookup = savedKey || (new URLSearchParams(window.location.search)).get('key');
+  if (keyToLookup) {
+    try {
+      const res = await fetch(`${API_GATEWAY_URL}/v1/auth/keys/${encodeURIComponent(keyToLookup)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) {
+          renderActiveKey(json.data);
+        }
+      }
+    } catch {
+      // offline or unseeded
+    }
+  }
+}
+
 // Global Exports for HTML Onclicks
 window.switchDevSection = switchDevSection;
 window.handleEndpointSelect = handleEndpointSelect;
@@ -687,12 +851,16 @@ window.handleBucketConfig = handleBucketConfig;
 window.triggerBucketRequest = triggerBucketRequest;
 window.runCronTranslation = runCronTranslation;
 window.setCronPreset = setCronPreset;
+window.handleGenerateFreeKey = handleGenerateFreeKey;
+window.copyActiveKey = copyActiveKey;
+window.handleStripeCheckout = handleStripeCheckout;
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
   initApiStudio();
   initDataTypesStudio();
   initSystemSandbox();
+  initBillingStudio();
   loadAffiliates();
   loadShowcase();
   setupModal();

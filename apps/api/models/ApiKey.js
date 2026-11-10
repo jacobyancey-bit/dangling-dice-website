@@ -25,12 +25,12 @@ const apiKeySchema = new mongoose.Schema(
     },
     tier: {
       type: String,
-      enum: ['free', 'pro', 'enterprise'],
+      enum: ['free', 'pro', 'ultra', 'enterprise'],
       default: 'free',
     },
     monthlyQuota: {
       type: Number,
-      default: 1000,
+      default: 100,
     },
     requestsThisMonth: {
       type: Number,
@@ -75,31 +75,55 @@ export function generateKeyString(prefix = 'dds_live_') {
 /**
  * Store a new API key record with MongoDB or in-memory fallback
  */
+export const API_TIER_CONFIG = {
+  free: {
+    name: 'Free Basic Plan',
+    priceUsd: 0,
+    monthlyQuota: 100,
+    rateLimitPerMin: 60,
+    desc: 'Hobbyists and sandbox integration testing.',
+  },
+  pro: {
+    name: 'Pro Developer Plan',
+    priceUsd: 9.99,
+    monthlyQuota: 5000,
+    rateLimitPerMin: 300,
+    desc: 'Discord bots, commercial web utilities, and active apps.',
+  },
+  ultra: {
+    name: 'Commercial Ultra Plan',
+    priceUsd: 29.99,
+    monthlyQuota: 25000,
+    rateLimitPerMin: 1200,
+    desc: 'High-volume production SaaS, media conversion pipelines, and scale.',
+  },
+  enterprise: {
+    name: 'Enterprise Scale Plan',
+    priceUsd: 99.99,
+    monthlyQuota: 1000000,
+    rateLimitPerMin: 3000,
+    desc: 'Dedicated enterprise infrastructure & uncapped throughput.',
+  },
+};
+
+/**
+ * Store a new API key record with MongoDB or in-memory fallback
+ */
 export async function createApiKeyRecord({ ownerEmail, name = 'Production App', tier = 'free' }) {
-  const quotas = {
-    free: 1000,
-    pro: 50000,
-    enterprise: 1000000,
-  };
-  const rateLimits = {
-    free: 60,
-    pro: 300,
-    enterprise: 1200,
-  };
+  const selectedTier = API_TIER_CONFIG[tier] ? tier : 'free';
+  const cfg = API_TIER_CONFIG[selectedTier];
 
   const key = generateKeyString();
-  const quota = quotas[tier] || 1000;
-  const rateLimit = rateLimits[tier] || 60;
 
   const keyDoc = {
     key,
     ownerEmail: ownerEmail.toLowerCase().trim(),
     name: name.trim(),
-    tier,
-    monthlyQuota: quota,
+    tier: selectedTier,
+    monthlyQuota: cfg.monthlyQuota,
     requestsThisMonth: 0,
     totalRequests: 0,
-    rateLimitPerMin: rateLimit,
+    rateLimitPerMin: cfg.rateLimitPerMin,
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -194,4 +218,42 @@ export async function revokeApiKeyRecord(key) {
   return !!mem;
 }
 
+/**
+ * Upgrade an API key tier and quota upon confirmed Stripe payment
+ */
+export async function upgradeApiKeyTier({ key, tier }) {
+  if (!key || !API_TIER_CONFIG[tier]) return null;
+  const cfg = API_TIER_CONFIG[tier];
+
+  const mem = memoryKeyStore.get(key);
+  if (mem) {
+    mem.tier = tier;
+    mem.monthlyQuota = cfg.monthlyQuota;
+    mem.rateLimitPerMin = cfg.rateLimitPerMin;
+    mem.isActive = true;
+    mem.updatedAt = new Date();
+  }
+
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      const updated = await ApiKeyModel.findOneAndUpdate(
+        { key },
+        {
+          tier,
+          monthlyQuota: cfg.monthlyQuota,
+          rateLimitPerMin: cfg.rateLimitPerMin,
+          isActive: true,
+        },
+        { new: true }
+      );
+      if (updated) return updated.toObject();
+    } catch {
+      // fallback
+    }
+  }
+
+  return mem || null;
+}
+
 export default ApiKeyModel;
+

@@ -140,3 +140,4 @@ export async function getTopScores({ gameId, limit = 20, offset = 0 }) {
 }
 
 export default LeaderboardModel;
+

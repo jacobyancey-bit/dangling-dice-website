@@ -291,3 +291,4 @@ export function extractAudioWaveform({ samples = [], targetBars = 64 }) {
     peaks: normalized,
   };
 }
+

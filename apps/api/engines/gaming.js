@@ -99,3 +99,4 @@ export function verifyScoreChecksum({ score, gameId, playerName, timestamp, sign
   const expected = crypto.createHmac('sha256', secretKey).update(payload).digest('hex');
   return expected === signature;
 }
+
