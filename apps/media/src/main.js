@@ -299,6 +299,7 @@ async function startDownloadWithOverlay(media) {
     }
 
     showToast(`✅ Downloaded ${media.cleanTitle}!`, 'success');
+    checkDownloadMilestoneForTip();
   } catch (err) {
     clearInterval(progressTimer);
     console.error('[Download Stream Error]', err);
@@ -463,3 +464,74 @@ if (convertBtn) {
     }
   });
 }
+
+// Milestone Download Helper (Respectful, non-intrusive Buy Me a Coffee prompt on 3rd download)
+function checkDownloadMilestoneForTip() {
+  if (localStorage.getItem('dds_bmc_dismissed') === 'true') return;
+
+  const cooldownUntil = Number(localStorage.getItem('dds_bmc_cooldown')) || 0;
+  if (Date.now() < cooldownUntil) return;
+
+  const currentCount = (Number(localStorage.getItem('dds_dl_count')) || 0) + 1;
+  localStorage.setItem('dds_dl_count', currentCount);
+
+  // Trigger on milestone: 3rd download, or every 10 downloads if not dismissed
+  if (currentCount === 3 || (currentCount > 3 && currentCount % 10 === 0)) {
+    setTimeout(() => {
+      showGentleMilestoneTipCard(currentCount);
+    }, 1500);
+  }
+}
+
+function showGentleMilestoneTipCard(count) {
+  const existing = document.getElementById('bmcGentleTipCard');
+  if (existing) existing.remove();
+
+  const card = document.createElement('div');
+  card.id = 'bmcGentleTipCard';
+  card.className = 'bmc-gentle-card';
+  card.innerHTML = `
+    <div class="bmc-gentle-header">
+      <span class="bmc-gentle-title">🎉 Track #${count} Downloaded!</span>
+      <button type="button" class="bmc-gentle-close" onclick="window.dismissBmcTip(false)" aria-label="Close">&times;</button>
+    </div>
+    <p class="bmc-gentle-body">
+      Enjoying clean 320kbps audio without popup ads or paywalls? If our converter saved you time, consider dropping a tip in the studio coffee jar to help cover bandwidth!
+    </p>
+    <div class="bmc-gentle-actions">
+      <a href="https://buymeacoffee.com/danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-coffee btn-sm" onclick="window.dismissBmcTip(true)">
+        ☕ Buy a Coffee ($5 or Custom) ↗
+      </a>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="window.dismissBmcTip(false)">
+        Maybe Later
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(card);
+
+  setTimeout(() => {
+    if (document.getElementById('bmcGentleTipCard')) {
+      window.dismissBmcTip(false);
+    }
+  }, 18000);
+}
+
+function dismissBmcTip(isSupporter) {
+  const card = document.getElementById('bmcGentleTipCard');
+  if (card) {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'all 0.3s ease';
+    setTimeout(() => card.remove(), 300);
+  }
+
+  if (isSupporter) {
+    localStorage.setItem('dds_bmc_dismissed', 'true');
+  } else {
+    // 14-day silence cooldown
+    localStorage.setItem('dds_bmc_cooldown', Date.now() + 1209600000);
+  }
+}
+
+window.dismissBmcTip = dismissBmcTip;
