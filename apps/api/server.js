@@ -1,20 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Conditionally initialize Datadog APM Tracer only when explicitly enabled/configured
-if (process.env.DD_API_KEY || process.env.DD_AGENT_HOST || process.env.DATADOG_ENABLED === 'true') {
-  try {
-    const { default: tracer } = await import('dd-trace');
-    tracer.init({
-      service: 'dangling-dice-api',
-      env: process.env.NODE_ENV || 'development',
-      logInjection: true
-    });
-  } catch (err) {
-    console.warn('[Datadog] Tracer initialization skipped:', err.message);
-  }
-}
-
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
