@@ -443,6 +443,83 @@ FieldOfView=105.000000`,
     },
     recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
   },
+  {
+    id: 'battlefield-6',
+    title: 'Battlefield 6 (Next-Gen Tactical Warfare)',
+    shortName: 'Battlefield 6',
+    genre: 'All-Out Warfare / Large Scale Tactical FPS',
+    engine: 'Frostbite Engine 4.0',
+    badge: '💥 High Impact • EA / DICE',
+    icon: '🎖️',
+    bannerGradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Frostbite Wartapes sub-bass suppressor to isolate infantry footstep gravel and reload clicks through artillery fire, plus low-latency user.cfg tweaks.',
+    audioProfile: {
+      profileName: 'Frostbite Vehicle Rumble Dampener & Soldier Tracking',
+      targetMix: '3D Headphones / Wartapes Overhaul',
+      description: 'The Frostbite engine creates intense atmospheric bass that drowns out approaching flankers. This profile cuts sub-bass under 80Hz (tank rumbles, mortar reverb, jet flyovers) while boosting 125Hz and 3.4kHz to pinpoint sprint steps, fence cuts, and parachute deployments.',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'Tank Diesel & Jet Rumble' },
+        { freq: '64Hz', gain: -3, type: 'Cut', label: 'Mortar Mud & Collapse' },
+        { freq: '125Hz', gain: 5, type: 'Boost', label: 'Infantry Boot Strikes' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Artillery Echo Mud' },
+        { freq: '500Hz', gain: 1, type: 'Flat', label: 'Squad Comms & Defib' },
+        { freq: '1kHz', gain: 3, type: 'Boost', label: 'Foliage & Wire Clatter' },
+        { freq: '2.5kHz', gain: 5, type: 'Peak', label: 'Parachute & Weapon Switch' },
+        { freq: '3.4kHz', gain: 7, type: 'Peak', label: 'Gravel Steps & Shell Drops' },
+        { freq: '8kHz', gain: -5, type: 'Cut', label: 'Supersonic Crack Tamer' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'Air Turbulence Hiss' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -3.5 dB, Q: 1.0',
+        'Band 2 (125 Hz): +5.0 dB, Q: 1.41',
+        'Band 3 (250 Hz): -3.0 dB, Q: 1.2',
+        'Band 4 (3400 Hz): +7.0 dB, Q: 1.5',
+        'Band 5 (8000 Hz): -5.0 dB, Q: 1.1',
+      ],
+      dolbyValues: 'Surround: OFF | Leveler: OFF | EQ: 32Hz(-6), 64Hz(-3), 125Hz(+5), 250Hz(-3), 500Hz(+1), 1k(+3), 2.5k(+5), 3.4k(+7), 8k(-5), 16k(-3)',
+      peaceConfig: `GraphicEQ: 20 -6; 32 -6; 64 -3; 125 5; 250 -3; 500 1; 1000 3; 2500 5; 3400 7; 8000 -5; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'Frostbite Uniform Soldier Aiming (USA) Calibration',
+      curveType: 'Linear (Uniform Soldier Aiming: 133% Coefficient)',
+      leftStickDeadzoneMin: '0.05 (5% Inner)',
+      rightStickDeadzoneMin: '0.03 (3% Micro-Aim for Long Range)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 (Instant Digital Hair-Trigger)',
+      rightTriggerDeadzone: '0.00 (Instant Digital Hair-Trigger)',
+      horizontalSens: '48 (Uniform Soldier Aiming: ON)',
+      verticalSens: '48 (133% Coefficient for 16:9 Muscle Memory)',
+      aimAssistType: 'Snap Zoom: OFF (Avoids Target Switching) | Slowdown: ON (100%)',
+      steamConfigCode: 'steam://controllerconfig/1517290/battlefield_frostbite_linear_usa_v1',
+      ds4xmlSnippet: `<LeftDeadzone>5</LeftDeadzone><RightDeadzone>3</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'user.cfg',
+      targetPath: 'Battlefield 6 Install Directory / user.cfg',
+      fileContent: `// Dangling Dice Gaming Lab™ — Battlefield 6 Frostbite Low Latency & High FPS
+Thread.ProcessorCount 8 // Match your physical CPU cores (not hyperthreads)
+Thread.MaxProcessorCount 8
+Thread.MinFreeProcessorCount 0
+Thread.JobThreadPriority 0
+RenderDevice.RenderAheadLimit 1 // Reduces input queue delay to absolute minimum
+RenderDevice.TripleBufferingEnable 0
+RenderDevice.VSyncEnable 0
+GstRender.Dx12Enabled 1
+GstRender.NvidiaReflex 2 // On + Boost
+GstRender.WeaponDOF 0
+GstRender.MotionBlur 0.000000
+GstRender.MotionBlurEnabled 0
+GstRender.ScreenSpaceAO 0
+GstRender.UndergrowthQuality 0 // Strips dense grass concealment`,
+      fpsTips: [
+        'Place this user.cfg file directly into your Battlefield 6 root game installation directory (where the game .exe is located).',
+        'Set Thread.ProcessorCount to your physical CPU core count to eliminate Frostbite core stuttering and frame drops during 64/128-player firefights.',
+        'Set RenderDevice.RenderAheadLimit 1 to force the GPU to render immediately without queuing frames in a buffer, cutting mouse click-to-fire latency down to minimum.',
+        'Turn GstRender.UndergrowthQuality 0 to eliminate ground grass clutter and easily spot proned snipers.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'kb-wooting'],
+  },
 ];
 
 export const ACCESSORIES_CATALOG = [
