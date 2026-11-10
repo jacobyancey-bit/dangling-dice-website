@@ -1325,7 +1325,51 @@ class InstrumentEngine {
       return src;
     };
 
-    switch (soundKey) {
+    // Normalize soundKey aliases so any genre beat sound maps to an authentic synthesized drum
+    let key = (soundKey || 'snare_acoustic').toLowerCase();
+    if (key.includes('808_sub') || key.includes('sub_drop') || key.includes('808_slide') || key.includes('808_gliss')) {
+      key = '808_sub';
+    } else if (key.includes('808') && key.includes('kick')) {
+      key = '808_sub';
+    } else if (key.includes('808') && key.includes('snare')) {
+      key = '808_snare';
+    } else if (key.includes('808') && key.includes('clap')) {
+      key = '808_clap';
+    } else if (key.includes('808') && key.includes('hat')) {
+      key = '808_hat_closed';
+    } else if (key.includes('china') || key.includes('crash') || key.includes('splash')) {
+      key = 'crash_acoustic';
+    } else if (key.includes('ride') && (key.includes('bell') || key.includes('ping'))) {
+      key = 'ride_bell';
+    } else if (key.includes('ride') || key.includes('sizzle')) {
+      key = 'ride_acoustic';
+    } else if (key.includes('open') && key.includes('hat')) {
+      key = 'hat_open';
+    } else if (key.includes('pedal') && key.includes('hat')) {
+      key = 'hat_pedal';
+    } else if (key.includes('hat') || key.includes('laser')) {
+      key = 'hat_closed';
+    } else if (key.includes('clap')) {
+      key = 'clap_acoustic';
+    } else if (key.includes('rim') || key.includes('stick') || key.includes('knock') || key.includes('cross')) {
+      key = 'sidestick';
+    } else if (key.includes('cowbell')) {
+      key = 'cowbell_real';
+    } else if (key.includes('shaker') || key.includes('tamb') || key.includes('maraca')) {
+      key = 'tambourine';
+    } else if (key.includes('tom') && (key.includes('low') || key.includes('floor') || key.includes('bomb'))) {
+      key = 'tom_floor';
+    } else if (key.includes('tom') && (key.includes('hi') || key.includes('high') || key.includes('rack'))) {
+      key = 'tom_high';
+    } else if (key.includes('tom') || key.includes('conga')) {
+      key = 'tom_mid';
+    } else if (key.includes('snare') || key.includes('brush') || key.includes('crack') || key.includes('stutter') || key.includes('buzz')) {
+      key = key.includes('rim') ? 'snare_rim' : 'snare_acoustic';
+    } else if (key.includes('kick') || key.includes('thump') || key.includes('stomp') || key.includes('blast') || key.includes('gallop')) {
+      key = 'kick_acoustic';
+    }
+
+    switch (key) {
       // =========================================================
       // ACOUSTIC DRUM KIT
       // =========================================================

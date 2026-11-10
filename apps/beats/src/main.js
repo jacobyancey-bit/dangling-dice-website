@@ -963,9 +963,21 @@ window.addEventListener('keydown', (e) => {
       e.preventDefault();
       if (heldDrumKeys.has(keyUpper)) return;
       heldDrumKeys.add(keyUpper);
-      handleMpcPadHit(padObj.pad, 0.95);
-      const padEl = document.getElementById(`ctrlMpcPad_${padObj.pad}`);
-      if (padEl) padEl.classList.add('active');
+      
+      const tc = window.touchController;
+      if (tc && tc.activeMode === 'chords') {
+        tc.playDrumGroove(tc.getDrumGroove(padObj.pad - 1));
+      } else if (tc && tc.activeMode === 'slices') {
+        tc.playGenreSlice(tc.getSlice(padObj.pad - 1));
+      } else {
+        handleMpcPadHit(padObj.pad, 0.95);
+      }
+      
+      const padEl = document.getElementById(`ctrlMpcPad_${padObj.pad}`) || document.getElementById(`slicePad_${padObj.pad - 1}`);
+      if (padEl) {
+        padEl.classList.add('active');
+        setTimeout(() => padEl.classList.remove('active'), 200);
+      }
       return;
     }
     return; // Don't trigger piano or guitar when drums is active

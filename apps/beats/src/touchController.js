@@ -162,25 +162,118 @@ export const GUITAR_FULL_KEY_MAP = {
   '/': { type: 'chord', idx: 5, name: 'F Barre' },
 };
 
-// Drum Chords (Layered Multi-Stem Stacks)
-export const DRUM_CHORDS_CATALOG = [
-  { id: 'dc_1', name: 'Heavy Drop', sounds: ['kick', 'sub_drop', 'shaker'], desc: 'Sub Kick + 808 Boom + Shaker' },
-  { id: 'dc_2', name: 'Punchy Backbeat', sounds: ['snare', 'clap', 'rimshot'], desc: 'Fat Snare + Clap + Rimshot' },
-  { id: 'dc_3', name: 'Sizzle Top', sounds: ['hat_open', 'hat_closed', 'tambourine'], desc: 'Open Hat + Closed Hat + Tamb' },
-  { id: 'dc_4', name: 'Power Crash', sounds: ['crash', 'sub_drop'], desc: 'Heavy Crash + 808 Boom' },
-  { id: 'dc_5', name: 'Tom Cascade', sounds: ['tom_hi', 'tom_mid'], desc: 'High Tom + Mid Tom Flam' },
-  { id: 'dc_6', name: 'Latin Poly', sounds: ['conga_hi', 'conga_low', 'woodblock'], desc: 'Conga High + Low + Woodblock' },
-  { id: 'dc_7', name: 'Funk Ghost Stack', sounds: ['ghost_snare', 'hat_tick', 'kick'], desc: 'Ghost Snare + Hat + Kick' },
-  { id: 'dc_8', name: 'Drill Stutter', sounds: ['snare_roll', 'sub_drop'], desc: 'Triple Snare Roll + 808 Slide' },
-  { id: 'dc_9', name: 'Trap Drop', sounds: ['kick_808', 'crash'], desc: 'Sub Kick 808 + Crash Accent' },
-  { id: 'dc_10', name: 'R&B Snap Stack', sounds: ['snap', 'rimshot', 'hat_closed'], desc: 'Finger Snap + Rim + Tight Hat' },
-  { id: 'dc_11', name: 'House 909 Stack', sounds: ['kick_909', 'hat_open', 'ride'], desc: '909 Punch + Open Hat + Ride' },
-  { id: 'dc_12', name: 'Afro Shaker Stack', sounds: ['shaker', 'conga_hi'], desc: 'Afrobeat Shaker + High Conga' },
-  { id: 'dc_13', name: 'Metal Double Blast', sounds: ['double_kick', 'china'], desc: 'Double Kick + China Cymbal' },
-  { id: 'dc_14', name: 'Lofi Slap', sounds: ['lofi_snare', 'vinyl_crack', 'kick'], desc: 'Dusty Snare + Vinyl + Kick' },
-  { id: 'dc_15', name: 'Gated 80s Stack', sounds: ['gated_snare', 'tom_low'], desc: '80s Gated Snare + Low Tom' },
-  { id: 'dc_16', name: 'Tutti Fill', sounds: ['tom_hi', 'tom_low', 'crash', 'snare'], desc: 'All Toms + Snare Roll + Crash' },
+// Helper function to build 16th-step sequenced drum beat events
+export function beatEvents(bpm, stepList) {
+  const secPer16th = (60 / bpm) / 4;
+  return stepList.map(([step, sound, vel]) => ({
+    time: Number((step * secPer16th).toFixed(4)),
+    sound,
+    vel: vel !== undefined ? vel : 0.95
+  }));
+}
+
+// Drum Grooves & Fills Catalog (Dynamic sequenced drum fills, rolls, and breakbeat stems)
+export const DRUM_GROOVES_CATALOG = [
+  { 
+    id: 'dg_1', 
+    name: 'Heavy Downbeat Stomp', 
+    desc: 'Kick on 1 & 3 + Backbeat Snare + Ride Bell',
+    events: beatEvents(110, [[0, 'kick_acoustic'], [0, 'ride_bell', 0.8], [2, 'hat_closed', 0.6], [4, 'snare_rim'], [6, 'hat_closed', 0.6], [8, 'kick_acoustic'], [10, 'hat_open', 0.7], [12, 'snare_rim'], [14, 'hat_closed', 0.6]])
+  },
+  { 
+    id: 'dg_2', 
+    name: '16th Ghost Snare Roll', 
+    desc: 'Dynamic ghost-snare crescendo into accent crack',
+    events: beatEvents(112, [[0, 'snare_acoustic', 0.25], [1, 'snare_acoustic', 0.35], [2, 'snare_acoustic', 0.45], [3, 'snare_acoustic', 0.6], [4, 'snare_rim', 1.0], [5, 'kick_acoustic'], [6, 'snare_acoustic', 0.4], [7, 'crash_acoustic', 0.85]])
+  },
+  { 
+    id: 'dg_3', 
+    name: '808 Trap Stutter Fill', 
+    desc: '1/32 snare roll stutter into 808 sub boom',
+    events: beatEvents(140, [[0, '808_snare', 0.5], [0.5, '808_snare', 0.6], [1, '808_snare', 0.7], [1.5, '808_snare', 0.8], [2, '808_snare', 0.95], [3, '808_clap', 1.0], [4, '808_sub', 1.0], [6, '808_hat_closed']])
+  },
+  { 
+    id: 'dg_4', 
+    name: 'Tom Cascade Flam', 
+    desc: 'High Tom -> Mid Tom -> Floor Tom flam crescendo',
+    events: beatEvents(115, [[0, 'tom_high', 0.85], [1, 'tom_high', 0.9], [2, 'tom_mid', 0.9], [3, 'tom_mid', 0.95], [4, 'tom_floor', 0.95], [5, 'tom_floor', 1.0], [6, 'snare_rim', 1.0], [7, 'crash_acoustic', 0.95]])
+  },
+  { 
+    id: 'dg_5', 
+    name: 'Half-Time Breakdown Stomp', 
+    desc: 'Deep sub kick on 1 with explosive clap on 3',
+    events: beatEvents(90, [[0, 'kick_acoustic', 1.0], [0, 'crash_acoustic', 0.8], [4, 'hat_closed', 0.6], [8, 'clap_acoustic', 1.0], [8, 'snare_rim', 0.9], [12, 'kick_acoustic', 0.85], [14, 'hat_open', 0.75]])
+  },
+  { 
+    id: 'dg_6', 
+    name: 'Double-Bass Blast Run', 
+    desc: 'Rapid 16th double-kick bursts with crash cymbal',
+    events: beatEvents(150, [[0, 'kick_acoustic'], [0, 'crash_acoustic'], [1, 'kick_acoustic'], [2, 'snare_rim'], [3, 'kick_acoustic'], [4, 'kick_acoustic'], [5, 'snare_rim'], [6, 'kick_acoustic'], [7, 'crash_acoustic']])
+  },
+  { 
+    id: 'dg_7', 
+    name: 'Funky Drummer 16th Comp', 
+    desc: 'Syncopated funk ghost notes & 16th hi-hat sizzle',
+    events: beatEvents(104, [[0, 'kick_acoustic'], [2, 'hat_closed', 0.7], [4, 'snare_rim', 1.0], [6, 'snare_acoustic', 0.35], [7, 'kick_acoustic'], [8, 'hat_open', 0.75], [10, 'kick_acoustic'], [12, 'snare_rim', 1.0], [14, 'hat_closed', 0.6]])
+  },
+  { 
+    id: 'dg_8', 
+    name: 'Latin Timbales & Conga Poly', 
+    desc: 'Syncopated conga slaps, woodblock, and rim clicks',
+    events: beatEvents(110, [[0, 'tom_mid', 0.9], [2, 'sidestick', 0.8], [3, 'tom_high', 0.75], [4, 'tom_mid', 0.9], [6, 'sidestick', 0.85], [7, 'tom_floor', 0.8], [8, 'tom_high', 0.95]])
+  },
+  { 
+    id: 'dg_9', 
+    name: 'Sizzle Hat Open-Choke', 
+    desc: 'Swung open hi-hat into instant foot choke',
+    events: beatEvents(108, [[0, 'kick_acoustic'], [2, 'hat_open', 0.9], [3, 'hat_pedal', 0.95], [4, 'snare_acoustic'], [6, 'hat_open', 0.9], [7, 'hat_pedal', 0.95], [8, 'kick_acoustic']])
+  },
+  { 
+    id: 'dg_10', 
+    name: 'Afrobeat Shaker Roll', 
+    desc: 'Dynamic 16th shaker syncopation with rimshot accents',
+    events: beatEvents(116, [[0, 'tambourine', 0.8], [1, 'tambourine', 0.5], [2, 'tambourine', 0.7], [3, 'tambourine', 0.5], [4, 'sidestick', 0.9], [4, 'tambourine', 0.8], [6, 'kick_acoustic'], [8, 'tambourine', 0.8]])
+  },
+  { 
+    id: 'dg_11', 
+    name: 'Boom-Bap Vinyl Drag', 
+    desc: 'Behind-the-grid lazy snare with vinyl crackle',
+    events: beatEvents(84, [[0, 'kick_acoustic', 1.0], [2.2, 'hat_closed', 0.6], [4.2, 'snare_acoustic', 0.95], [6.2, 'hat_closed', 0.6], [7.2, 'kick_acoustic', 0.8], [8.2, 'snare_acoustic', 0.4]])
+  },
+  { 
+    id: 'dg_12', 
+    name: '909 Build & Drop Crescendo', 
+    desc: '909 snare roll accelerating into heavy kick drop',
+    events: beatEvents(128, [[0, 'snare_acoustic', 0.4], [1, 'snare_acoustic', 0.5], [2, 'snare_acoustic', 0.65], [3, 'snare_acoustic', 0.8], [4, 'snare_acoustic', 0.95], [5, 'snare_rim', 1.0], [6, 'kick_acoustic', 1.0], [6, 'crash_acoustic', 1.0]])
+  },
+  { 
+    id: 'dg_13', 
+    name: 'Jazz Ride Feather Swirl', 
+    desc: 'Triplet swing ride pattern with feathered bass thump',
+    events: beatEvents(120, [[0, 'ride_acoustic', 0.9], [0, 'kick_acoustic', 0.4], [2.6, 'ride_acoustic', 0.7], [4, 'ride_bell', 0.95], [4, 'hat_pedal'], [6.6, 'ride_acoustic', 0.7], [8, 'ride_acoustic', 0.9]])
+  },
+  { 
+    id: 'dg_14', 
+    name: 'Thrash Mosh Stomp', 
+    desc: 'Aggressive punk 2-step kick and snare rimshot',
+    events: beatEvents(160, [[0, 'kick_acoustic', 1.0], [2, 'snare_rim', 1.0], [4, 'kick_acoustic', 1.0], [5, 'kick_acoustic', 0.9], [6, 'snare_rim', 1.0], [7, 'crash_acoustic', 0.9]])
+  },
+  { 
+    id: 'dg_15', 
+    name: '6/8 Blues Turnaround Fill', 
+    desc: 'Slow 12/8 triplet snare roll into ride bell accent',
+    events: beatEvents(75, [[0, 'snare_acoustic', 0.6], [1.3, 'snare_acoustic', 0.7], [2.6, 'snare_acoustic', 0.85], [4, 'tom_mid', 0.9], [5.3, 'tom_floor', 0.95], [6.6, 'kick_acoustic', 1.0], [8, 'crash_acoustic', 1.0]])
+  },
+  { 
+    id: 'dg_16', 
+    name: 'Tutti Final Crash Flam', 
+    desc: 'Simultaneous power kick, snare, floor tom, and crash',
+    events: beatEvents(110, [[0, 'kick_acoustic', 1.0], [0, 'snare_rim', 1.0], [0, 'tom_floor', 0.95], [0, 'crash_acoustic', 1.0]])
+  },
 ];
+
+// Alias for backwards compatibility with any legacy imports
+export const DRUM_CHORDS_CATALOG = DRUM_GROOVES_CATALOG;
 
 // Guitar Chord Shapes
 export const GUITAR_CHORDS_CATALOG = [
@@ -224,22 +317,102 @@ export const GENRE_SLICES = {
       { id: 'fp_16', name: 'Turnaround Stab', pattern: [55, 64, 67, 71], dur: 0.35, type: 'piano' },
     ],
     drums: [
-      { id: 'fd_1', name: 'Funky Drummer Kick-Hat', sound: 'kick_funky', dur: 0.25 },
-      { id: 'fd_2', name: 'Ghost Snare Roll', sound: 'snare_ghost', dur: 0.2 },
-      { id: 'fd_3', name: 'Accent Snare Crack', sound: 'snare_crack', dur: 0.28 },
-      { id: 'fd_4', name: '16th Hat Sizzle', sound: 'hat_sizzle', dur: 0.18 },
-      { id: 'fd_5', name: 'Open-Close Hat Swung', sound: 'hat_open_close', dur: 0.3 },
-      { id: 'fd_6', name: 'James Brown Break Chop', sound: 'jb_break', dur: 0.35 },
-      { id: 'fd_7', name: 'Syncopated Double Kick', sound: 'kick_double', dur: 0.24 },
-      { id: 'fd_8', name: 'Tight Rim Click', sound: 'rim_tight', dur: 0.15 },
-      { id: 'fd_9', name: 'Cowbell Accent', sound: 'cowbell_funk', dur: 0.22 },
-      { id: 'fd_10', name: 'Tambourine Shake Chop', sound: 'tamb_shake', dur: 0.25 },
-      { id: 'fd_11', name: 'Hi-Tom Accent', sound: 'tom_funk_hi', dur: 0.28 },
-      { id: 'fd_12', name: 'Floor Tom Groove', sound: 'tom_funk_low', dur: 0.3 },
-      { id: 'fd_13', name: 'Splash Cymbal Choke', sound: 'splash_choke', dur: 0.2 },
-      { id: 'fd_14', name: 'Clap-Rim Layer', sound: 'clap_rim', dur: 0.22 },
-      { id: 'fd_15', name: 'Funk Break Fill', sound: 'break_fill', dur: 0.45 },
-      { id: 'fd_16', name: 'Downbeat Crash Slam', sound: 'crash_funk', dur: 0.5 },
+      { 
+        id: 'fd_1', 
+        name: 'Funky Drummer 16th Break', 
+        desc: 'Clyde Stubblefield syncopated breakbeat with 16th hats & ghost snares',
+        events: beatEvents(104, [[0, 'kick_acoustic'], [0, 'hat_closed', 0.7], [2, 'hat_closed', 0.6], [4, 'snare_rim', 1.0], [4, 'hat_closed', 0.6], [6, 'snare_acoustic', 0.35], [7, 'kick_acoustic', 0.8], [8, 'hat_open', 0.75], [10, 'kick_acoustic', 0.9], [12, 'snare_rim', 1.0], [14, 'snare_acoustic', 0.35], [15, 'hat_open', 0.8]])
+      },
+      { 
+        id: 'fd_2', 
+        name: 'Ghost Snare Pocket Roll', 
+        desc: 'Rolling 16th ghost notes into sharp rim backbeat',
+        events: beatEvents(106, [[0, 'kick_acoustic'], [0, 'hat_closed'], [1, 'snare_acoustic', 0.3], [2, 'hat_closed'], [3, 'snare_acoustic', 0.35], [4, 'snare_rim', 1.0], [6, 'hat_closed'], [7, 'kick_acoustic'], [8, 'kick_acoustic'], [9, 'snare_acoustic', 0.3], [10, 'hat_closed'], [12, 'snare_rim', 1.0], [14, 'snare_acoustic', 0.4], [15, 'snare_acoustic', 0.5]])
+      },
+      { 
+        id: 'fd_3', 
+        name: 'James Brown Cold Sweat Accent', 
+        desc: 'Staccato kick on one, punchy snare on two, and open hat choke',
+        events: beatEvents(108, [[0, 'kick_acoustic'], [0, 'crash_acoustic', 0.8], [3, 'kick_acoustic'], [4, 'snare_rim', 1.0], [6, 'hat_closed'], [8, 'kick_acoustic'], [10, 'hat_open'], [12, 'snare_rim', 1.0], [14, 'kick_acoustic'], [15, 'snare_rim', 0.9]])
+      },
+      { 
+        id: 'fd_4', 
+        name: '16th Hat Sizzle Groove', 
+        desc: 'Continuous 16th hi-hat stream with dynamic accent swings',
+        events: beatEvents(105, [[0, 'kick_acoustic'], [0, 'hat_closed', 0.8], [1, 'hat_closed', 0.5], [2, 'hat_closed', 0.7], [3, 'hat_closed', 0.5], [4, 'snare_acoustic'], [4, 'hat_closed', 0.8], [5, 'hat_closed', 0.5], [6, 'hat_open', 0.7], [8, 'kick_acoustic'], [8, 'hat_closed'], [10, 'kick_acoustic', 0.8], [12, 'snare_rim'], [14, 'hat_closed', 0.7], [15, 'hat_open']])
+      },
+      { 
+        id: 'fd_5', 
+        name: 'Four-on-the-Floor Disco Funk', 
+        desc: 'Solid four-on-the-floor kick with open hats on the upbeats',
+        events: beatEvents(112, [[0, 'kick_acoustic'], [2, 'hat_open'], [4, 'kick_acoustic'], [4, 'snare_acoustic'], [6, 'hat_open'], [8, 'kick_acoustic'], [10, 'hat_open'], [12, 'kick_acoustic'], [12, 'snare_acoustic'], [14, 'hat_open']])
+      },
+      { 
+        id: 'fd_6', 
+        name: 'Slap & Pop Funk Beat', 
+        desc: 'Aggressive syncopated double kick and crisp snare rimshot',
+        events: beatEvents(107, [[0, 'kick_acoustic'], [2, 'hat_closed'], [4, 'snare_rim'], [6, 'kick_acoustic'], [7, 'kick_acoustic'], [8, 'hat_open'], [10, 'hat_closed'], [12, 'snare_rim'], [14, 'kick_acoustic']])
+      },
+      { 
+        id: 'fd_7', 
+        name: 'Syncopated Cowbell Break', 
+        desc: 'Latin funk cowbell syncopation with driving kick & snare',
+        events: beatEvents(110, [[0, 'kick_acoustic'], [0, 'cowbell_real'], [2, 'cowbell_real', 0.7], [4, 'snare_rim'], [4, 'cowbell_real'], [6, 'kick_acoustic'], [7, 'cowbell_real'], [8, 'kick_acoustic'], [10, 'cowbell_real'], [12, 'snare_rim'], [14, 'kick_acoustic'], [15, 'cowbell_real']])
+      },
+      { 
+        id: 'fd_8', 
+        name: 'Tight Rim Click Groove', 
+        desc: 'Clean cross-stick wooden rim on 2 & 4 over punchy kick',
+        events: beatEvents(102, [[0, 'kick_acoustic'], [2, 'sidestick'], [4, 'sidestick'], [6, 'kick_acoustic'], [8, 'kick_acoustic'], [10, 'sidestick'], [12, 'sidestick'], [14, 'hat_open']])
+      },
+      { 
+        id: 'fd_9', 
+        name: 'Tambourine 16th Shake Beat', 
+        desc: 'Layered 16th tambourine shake over driving funk rhythm',
+        events: beatEvents(106, [[0, 'kick_acoustic'], [0, 'tambourine'], [1, 'tambourine', 0.5], [2, 'tambourine', 0.7], [3, 'tambourine', 0.5], [4, 'snare_rim'], [4, 'tambourine'], [6, 'kick_acoustic'], [8, 'kick_acoustic'], [10, 'tambourine'], [12, 'snare_rim'], [14, 'tambourine']])
+      },
+      { 
+        id: 'fd_10', 
+        name: 'Linear Hi-Tom Funk Fill', 
+        desc: 'Kick-snare-tom linear 16th fill leading into snare snap',
+        events: beatEvents(108, [[0, 'kick_acoustic'], [2, 'snare_acoustic'], [4, 'tom_high'], [6, 'tom_mid'], [8, 'kick_acoustic'], [10, 'snare_rim'], [12, 'tom_floor'], [14, 'crash_acoustic']])
+      },
+      { 
+        id: 'fd_11', 
+        name: 'Floor Tom Funk Pocket', 
+        desc: 'Deep floor tom backbeats interlaced with snare crack',
+        events: beatEvents(100, [[0, 'tom_floor'], [0, 'kick_acoustic'], [2, 'hat_closed'], [4, 'snare_rim'], [6, 'tom_floor'], [8, 'tom_floor'], [10, 'kick_acoustic'], [12, 'snare_rim'], [14, 'hat_open']])
+      },
+      { 
+        id: 'fd_12', 
+        name: 'P-Funk Sub Breakbeat', 
+        desc: 'Booming 808 sub kick with open hat wash and handclap',
+        events: beatEvents(98, [[0, '808_sub'], [2, 'hat_closed'], [4, 'snare_acoustic'], [4, 'clap_acoustic'], [6, 'hat_open'], [8, '808_sub'], [10, 'kick_acoustic'], [12, 'snare_acoustic'], [14, 'hat_open']])
+      },
+      { 
+        id: 'fd_13', 
+        name: 'Syncopated Triplet Break', 
+        desc: 'Triplet ghost snare accents resolving to punchy backbeat',
+        events: beatEvents(104, [[0, 'kick_acoustic'], [2, 'hat_closed'], [3.3, 'snare_acoustic', 0.5], [4.6, 'snare_acoustic', 0.7], [6, 'snare_rim'], [8, 'kick_acoustic'], [10, 'kick_acoustic'], [12, 'snare_rim'], [14, 'hat_open']])
+      },
+      { 
+        id: 'fd_14', 
+        name: 'Clap & Rimshot Layer Beat', 
+        desc: 'Dual acoustic clap and rimshot strike on 2 & 4 with double kick',
+        events: beatEvents(105, [[0, 'kick_acoustic'], [2, 'hat_closed'], [4, 'clap_acoustic'], [4, 'snare_rim'], [7, 'kick_acoustic'], [8, 'kick_acoustic'], [10, 'hat_open'], [12, 'clap_acoustic'], [12, 'snare_rim'], [14, 'hat_closed']])
+      },
+      { 
+        id: 'fd_15', 
+        name: 'Tower of Power 16th Climax', 
+        desc: 'Fast 16th syncopation with open hat bark and tom roll',
+        events: beatEvents(106, [[0, 'kick_acoustic'], [1, 'hat_closed', 0.5], [2, 'hat_closed'], [3, 'snare_acoustic', 0.4], [4, 'snare_rim'], [5, 'kick_acoustic'], [6, 'hat_open'], [8, 'kick_acoustic'], [9, 'snare_acoustic', 0.4], [10, 'hat_closed'], [11, 'kick_acoustic'], [12, 'snare_rim'], [13, 'tom_high'], [14, 'tom_mid'], [15, 'crash_acoustic']])
+      },
+      { 
+        id: 'fd_16', 
+        name: 'Clyde Stubblefield Finale', 
+        desc: 'Full kit solo breakbeat with ghost rolls and crash climax',
+        events: beatEvents(108, [[0, 'crash_acoustic'], [0, 'kick_acoustic'], [2, 'hat_closed'], [4, 'snare_rim'], [6, 'snare_acoustic', 0.4], [7, 'kick_acoustic'], [8, 'hat_open'], [9, 'kick_acoustic'], [10, 'snare_acoustic', 0.4], [11, 'snare_acoustic', 0.6], [12, 'snare_rim'], [13, 'tom_mid'], [14, 'tom_floor'], [15, 'crash_acoustic']])
+      },
     ],
     guitar: [
       { id: 'fg_1', name: '16th Muted Scratch', pattern: [0], dur: 0.12, type: 'scratch' },
@@ -280,22 +453,102 @@ export const GENRE_SLICES = {
       { id: 'jp_16', name: 'Final Cadence Bloom', pattern: [48, 55, 59, 62, 64], dur: 0.8, type: 'piano' },
     ],
     drums: [
-      { id: 'jd_1', name: 'Swing Ride Pattern', sound: 'ride_swing', dur: 0.35 },
-      { id: 'jd_2', name: 'Feathered Kick Thump', sound: 'kick_jazz', dur: 0.3 },
-      { id: 'jd_3', name: 'Brush Snare Swirl', sound: 'snare_brush', dur: 0.45 },
-      { id: 'jd_4', name: 'Hi-Hat 2 & 4 Snap', sound: 'hat_pedal_snap', dur: 0.2 },
-      { id: 'jd_5', name: 'Cross-Stick Accent', sound: 'cross_stick_jazz', dur: 0.25 },
-      { id: 'jd_6', name: 'Bebop Snare Comp', sound: 'snare_bebop', dur: 0.22 },
-      { id: 'jd_7', name: 'Ride Bell Tap', sound: 'ride_bell_jazz', dur: 0.3 },
-      { id: 'jd_8', name: 'Bossa Nova Rim Tap', sound: 'bossa_rim', dur: 0.25 },
-      { id: 'jd_9', name: 'Swung Hi-Hat Open', sound: 'hat_jazz_open', dur: 0.28 },
-      { id: 'jd_10', name: 'Tom Jazz Roll', sound: 'tom_jazz_roll', dur: 0.38 },
-      { id: 'jd_11', name: 'Sizzle Cymbal Wash', sound: 'sizzle_wash', dur: 0.6 },
-      { id: 'jd_12', name: 'Brush Tap Fast', sound: 'brush_tap', dur: 0.18 },
-      { id: 'jd_13', name: 'Ghost Kick Sync', sound: 'kick_ghost', dur: 0.2 },
-      { id: 'jd_14', name: 'Triplet Snare Comp', sound: 'triplet_snare', dur: 0.3 },
-      { id: 'jd_15', name: 'Crash Accent Decay', sound: 'crash_jazz', dur: 0.55 },
-      { id: 'jd_16', name: 'Free Jazz Accent', sound: 'free_jazz_tutti', dur: 0.5 },
+      { 
+        id: 'jd_1', 
+        name: 'Bebop Swing Ride Beat', 
+        desc: 'Traditional "Spang-a-lang" swing ride pattern with feathered bass drum & pedal hat',
+        events: beatEvents(120, [[0, 'ride_acoustic', 0.9], [0, 'kick_acoustic', 0.35], [2.6, 'ride_acoustic', 0.65], [4, 'ride_acoustic', 0.9], [4, 'hat_pedal', 0.9], [4, 'snare_acoustic', 0.25], [6.6, 'ride_acoustic', 0.65], [8, 'ride_acoustic', 0.9], [8, 'kick_acoustic', 0.35], [10.6, 'ride_acoustic', 0.65], [12, 'ride_bell', 0.95], [12, 'hat_pedal', 0.9], [14.6, 'ride_acoustic', 0.65]])
+      },
+      { 
+        id: 'jd_2', 
+        name: 'Brush Snare Swirl Comp', 
+        desc: 'Soft swept brush snare on 1 & 3 with delicate ride tap and feathered kick',
+        events: beatEvents(110, [[0, 'snare_acoustic', 0.4], [0, 'kick_acoustic', 0.3], [2.6, 'ride_acoustic', 0.6], [4, 'snare_acoustic', 0.6], [4, 'hat_pedal'], [6.6, 'ride_acoustic', 0.6], [8, 'snare_acoustic', 0.4], [8, 'kick_acoustic', 0.3], [10.6, 'ride_acoustic', 0.6], [12, 'snare_acoustic', 0.7], [12, 'hat_pedal']])
+      },
+      { 
+        id: 'jd_3', 
+        name: 'Bossa Nova Cross-Stick', 
+        desc: 'Authentic Brazilian bossa nova rimshot syncopation with gentle walking kick',
+        events: beatEvents(125, [[0, 'sidestick', 0.85], [0, 'kick_acoustic', 0.4], [2, 'hat_closed', 0.5], [3, 'sidestick', 0.8], [4, 'hat_closed', 0.5], [6, 'sidestick', 0.85], [8, 'kick_acoustic', 0.4], [9, 'sidestick', 0.8], [10, 'hat_closed', 0.5], [12, 'sidestick', 0.85], [14, 'hat_closed', 0.5]])
+      },
+      { 
+        id: 'jd_4', 
+        name: '6/8 Jazz Waltz Turnaround', 
+        desc: 'Swung 3/4 ride bell with light snare comping and pedal hat',
+        events: beatEvents(135, [[0, 'ride_bell', 0.9], [0, 'kick_acoustic', 0.4], [2, 'ride_acoustic', 0.7], [4, 'ride_acoustic', 0.8], [4, 'hat_pedal'], [4, 'snare_acoustic', 0.35], [6, 'ride_bell', 0.9], [8, 'ride_acoustic', 0.7], [10, 'ride_acoustic', 0.8], [10, 'hat_pedal']])
+      },
+      { 
+        id: 'jd_5', 
+        name: 'Neo-Soul Swung Dilla Pocket', 
+        desc: 'Laid-back unquantized kick-snare pocket with dragged hi-hats',
+        events: beatEvents(86, [[0, 'kick_acoustic', 0.85], [2.4, 'hat_closed', 0.55], [4.4, 'sidestick', 0.95], [6.8, 'hat_closed', 0.55], [7.6, 'kick_acoustic', 0.75], [9.2, 'kick_acoustic', 0.8], [12.4, 'sidestick', 0.95], [14.8, 'hat_open', 0.65]])
+      },
+      { 
+        id: 'jd_6', 
+        name: 'Jazz Tom Cascading Roll', 
+        desc: 'Melodic acoustic tom run: High Tom -> Mid Tom -> Floor Tom into Ride Bell',
+        events: beatEvents(120, [[0, 'tom_high', 0.75], [1.3, 'tom_high', 0.8], [2.6, 'tom_mid', 0.85], [4, 'tom_mid', 0.9], [5.3, 'tom_floor', 0.9], [6.6, 'tom_floor', 0.95], [8, 'ride_bell', 1.0], [8, 'kick_acoustic', 0.8]])
+      },
+      { 
+        id: 'jd_7', 
+        name: 'Feathered Kick & Ride Bell', 
+        desc: 'Subtle acoustic feathered bass drum with clean ride bell ping on the upbeats',
+        events: beatEvents(118, [[0, 'ride_acoustic', 0.7], [0, 'kick_acoustic', 0.3], [2, 'ride_bell', 0.85], [4, 'ride_acoustic', 0.7], [4, 'hat_pedal'], [6, 'ride_bell', 0.85], [8, 'ride_acoustic', 0.7], [8, 'kick_acoustic', 0.3], [10, 'ride_bell', 0.9], [12, 'hat_pedal']])
+      },
+      { 
+        id: 'jd_8', 
+        name: 'Sizzle Cymbal Wash Groove', 
+        desc: 'Long sustaining cymbal wash with gentle cross-stick backbeats',
+        events: beatEvents(110, [[0, 'crash_acoustic', 0.7], [0, 'kick_acoustic', 0.35], [4, 'sidestick', 0.75], [4, 'hat_pedal'], [8, 'ride_acoustic', 0.7], [8, 'kick_acoustic', 0.3], [12, 'sidestick', 0.8], [12, 'hat_pedal']])
+      },
+      { 
+        id: 'jd_9', 
+        name: 'Bop Snare Flam Comping', 
+        desc: 'Dynamic snare flams on off-beat syncopations over walking ride',
+        events: beatEvents(124, [[0, 'ride_acoustic', 0.85], [2.6, 'snare_acoustic', 0.5], [2.8, 'snare_rim', 0.85], [4, 'hat_pedal'], [6.6, 'ride_acoustic', 0.7], [8, 'kick_acoustic', 0.4], [10.6, 'snare_acoustic', 0.4], [10.8, 'snare_rim', 0.9], [12, 'hat_pedal']])
+      },
+      { 
+        id: 'jd_10', 
+        name: 'Afro-Cuban 6/8 Jazz Bell', 
+        desc: 'Intricate 6/8 bell pattern with conga tom accents and foot hat',
+        events: beatEvents(130, [[0, 'ride_bell', 0.9], [0, 'tom_mid', 0.8], [2, 'ride_bell', 0.7], [4, 'ride_bell', 0.85], [4, 'tom_high', 0.85], [6, 'ride_bell', 0.9], [8, 'ride_bell', 0.7], [8, 'tom_floor', 0.9], [10, 'ride_bell', 0.85]])
+      },
+      { 
+        id: 'jd_11', 
+        name: 'Pedal Hat Splash & Ride', 
+        desc: 'Hi-hat foot splash on 2 & 4 with walking swing rhythm',
+        events: beatEvents(116, [[0, 'ride_acoustic', 0.8], [2.6, 'ride_acoustic', 0.6], [4, 'hat_open', 0.75], [4.5, 'hat_pedal', 0.9], [6.6, 'ride_acoustic', 0.6], [8, 'ride_acoustic', 0.8], [10.6, 'ride_acoustic', 0.6], [12, 'hat_open', 0.75], [12.5, 'hat_pedal', 0.9]])
+      },
+      { 
+        id: 'jd_12', 
+        name: 'Modern ECM Straight-8th Jazz', 
+        desc: 'Straight-8th modern European jazz groove with rimshot and light ride',
+        events: beatEvents(115, [[0, 'ride_acoustic', 0.7], [0, 'kick_acoustic', 0.4], [2, 'ride_acoustic', 0.6], [4, 'sidestick', 0.85], [6, 'ride_acoustic', 0.6], [7, 'kick_acoustic', 0.35], [8, 'ride_acoustic', 0.7], [10, 'ride_acoustic', 0.6], [12, 'sidestick', 0.85]])
+      },
+      { 
+        id: 'jd_13', 
+        name: 'Hard Bop Double-Time Break', 
+        desc: 'High energy double-time swing ride with rapid snare comping',
+        events: beatEvents(140, [[0, 'ride_acoustic', 0.95], [1, 'snare_acoustic', 0.35], [2, 'ride_acoustic', 0.7], [3, 'snare_acoustic', 0.4], [4, 'hat_pedal'], [4, 'snare_rim', 0.85], [6, 'ride_acoustic', 0.7], [7, 'kick_acoustic', 0.5], [8, 'ride_acoustic', 0.95]])
+      },
+      { 
+        id: 'jd_14', 
+        name: 'Vamp Cross-Stick Groove', 
+        desc: 'Atmospheric rim click vamp ideal for solo piano and guitar comping',
+        events: beatEvents(108, [[0, 'kick_acoustic', 0.35], [2, 'hat_closed', 0.5], [4, 'sidestick', 0.8], [6, 'hat_closed', 0.5], [8, 'sidestick', 0.7], [10, 'kick_acoustic', 0.3], [12, 'sidestick', 0.85], [14, 'hat_open', 0.6]])
+      },
+      { 
+        id: 'jd_15', 
+        name: 'Neo-Soul Snap & Rim Pocket', 
+        desc: 'Deep neo-soul groove with snap/rim layer and sub-thump bass drum',
+        events: beatEvents(88, [[0, 'kick_acoustic', 0.9], [2.2, 'hat_closed', 0.6], [4.2, 'clap_acoustic', 0.8], [4.2, 'sidestick', 0.85], [6.4, 'hat_closed', 0.5], [8, 'kick_acoustic', 0.75], [9.2, 'kick_acoustic', 0.8], [12.2, 'clap_acoustic', 0.85]])
+      },
+      { 
+        id: 'jd_16', 
+        name: 'Jazz Club Climax Roll', 
+        desc: 'Dynamic crescendo snare buzz roll into cymbal crash turnaround',
+        events: beatEvents(122, [[0, 'snare_acoustic', 0.3], [1, 'snare_acoustic', 0.4], [2, 'snare_acoustic', 0.55], [3, 'snare_acoustic', 0.7], [4, 'snare_acoustic', 0.85], [5, 'snare_rim', 0.95], [6, 'kick_acoustic', 0.9], [6, 'crash_acoustic', 0.95], [8, 'ride_acoustic', 0.8]])
+      },
     ],
     guitar: [
       { id: 'jg_1', name: 'Wes Montgomery Octaves', pattern: [50, 62], dur: 0.35, type: 'octave' },
@@ -336,22 +589,102 @@ export const GENRE_SLICES = {
       { id: 'mp_16', name: 'Sub-Bass Drop Impact', pattern: [24], dur: 0.8, type: 'piano' },
     ],
     drums: [
-      { id: 'md_1', name: 'Double Kick Blast 16th', sound: 'blast_kick_double', dur: 0.2 },
-      { id: 'md_2', name: 'Machine Gun Snare Crack', sound: 'snare_machine_gun', dur: 0.18 },
-      { id: 'md_3', name: 'China Cymbal Trash Accent', sound: 'china_cymbal', dur: 0.4 },
-      { id: 'md_4', name: 'Fast Thrash D-Beat', sound: 'd_beat_loop', dur: 0.35 },
-      { id: 'md_5', name: 'Breakdown Mosh Stomp', sound: 'mosh_stomp', dur: 0.45 },
-      { id: 'md_6', name: 'Gravity Blast Snare', sound: 'gravity_blast', dur: 0.15 },
-      { id: 'md_7', name: 'Heavy Low Tom Bomb', sound: 'tom_metal_floor', dur: 0.35 },
-      { id: 'md_8', name: 'Ride Cymbal Bell Pinger', sound: 'ride_metal_bell', dur: 0.28 },
-      { id: 'md_9', name: 'Double-Bass 32nd Quad', sound: 'kick_metal_quad', dur: 0.25 },
-      { id: 'md_10', name: 'Snare Rim Shot Explosive', sound: 'snare_metal_rim', dur: 0.25 },
-      { id: 'md_11', name: 'Splash Cymbal Quick Choke', sound: 'splash_metal', dur: 0.2 },
-      { id: 'md_12', name: 'Double Kick Gallop', sound: 'kick_gallop', dur: 0.3 },
-      { id: 'md_13', name: 'Trash Can Snare Ping', sound: 'snare_trash_can', dur: 0.2 },
-      { id: 'md_14', name: 'High Tom Fill Burst', sound: 'tom_metal_burst', dur: 0.32 },
-      { id: 'md_15', name: 'Half-Time Slam', sound: 'half_time_slam', dur: 0.45 },
-      { id: 'md_16', name: 'Final Crash Doom Ring', sound: 'crash_metal_doom', dur: 0.9 },
+      { 
+        id: 'md_1', 
+        name: 'Double-Bass Blast Beat', 
+        desc: '150 BPM rapid 16th alternating double kicks, blasting snare, and crash cymbal',
+        events: beatEvents(150, [[0, 'kick_acoustic'], [0, 'crash_acoustic'], [1, 'snare_rim'], [2, 'kick_acoustic'], [3, 'snare_rim'], [4, 'kick_acoustic'], [4, 'ride_bell'], [5, 'snare_rim'], [6, 'kick_acoustic'], [7, 'snare_rim'], [8, 'kick_acoustic'], [8, 'crash_acoustic'], [9, 'snare_rim'], [10, 'kick_acoustic'], [11, 'snare_rim'], [12, 'tom_high'], [13, 'tom_mid'], [14, 'tom_floor'], [15, 'crash_acoustic']])
+      },
+      { 
+        id: 'md_2', 
+        name: 'Thrash D-Beat Punk', 
+        desc: 'Classic relentless d-beat: Kick-snare-kick-kick-snare with driving open hat',
+        events: beatEvents(165, [[0, 'kick_acoustic'], [0, 'hat_open'], [2, 'snare_rim'], [4, 'kick_acoustic'], [5, 'kick_acoustic'], [6, 'snare_rim'], [8, 'kick_acoustic'], [8, 'hat_open'], [10, 'snare_rim'], [12, 'kick_acoustic'], [13, 'kick_acoustic'], [14, 'snare_rim']])
+      },
+      { 
+        id: 'md_3', 
+        name: 'Heavy Breakdown Mosh Stomp', 
+        desc: 'Crushing half-time breakdown: massive double kick, wide snare crack, trash china',
+        events: beatEvents(130, [[0, 'kick_acoustic', 1.0], [0, 'crash_acoustic', 1.0], [3, 'kick_acoustic'], [4, 'snare_rim', 1.0], [7, 'kick_acoustic'], [8, 'kick_acoustic'], [11, 'kick_acoustic'], [12, 'snare_rim', 1.0], [14, 'kick_acoustic'], [15, 'crash_acoustic', 1.0]])
+      },
+      { 
+        id: 'md_4', 
+        name: 'Iron Maiden Gallop Beat', 
+        desc: 'Galloping 16th double bass rhythm into heavy snare crack',
+        events: beatEvents(145, [[0, 'kick_acoustic'], [1, 'kick_acoustic'], [2, 'kick_acoustic'], [4, 'snare_rim'], [4, 'ride_bell'], [6, 'kick_acoustic'], [7, 'kick_acoustic'], [8, 'kick_acoustic'], [10, 'kick_acoustic'], [11, 'kick_acoustic'], [12, 'snare_rim'], [14, 'kick_acoustic'], [15, 'kick_acoustic']])
+      },
+      { 
+        id: 'md_5', 
+        name: 'Gravity Blast Extreme', 
+        desc: 'Hyper-speed extreme metal gravity blast on snare with double kick pulses',
+        events: beatEvents(170, [[0, 'snare_rim'], [0, 'kick_acoustic'], [1, 'snare_rim'], [2, 'snare_rim'], [2, 'kick_acoustic'], [3, 'snare_rim'], [4, 'snare_rim'], [4, 'kick_acoustic'], [5, 'snare_rim'], [6, 'snare_rim'], [6, 'kick_acoustic'], [7, 'snare_rim'], [8, 'crash_acoustic']])
+      },
+      { 
+        id: 'md_6', 
+        name: 'China Trash Cymbal Chug', 
+        desc: 'Heavy china cymbal accents on quarter notes driving heavy guitar chugs',
+        events: beatEvents(135, [[0, 'crash_acoustic', 1.0], [0, 'kick_acoustic'], [2, 'kick_acoustic'], [4, 'crash_acoustic', 1.0], [4, 'snare_rim'], [6, 'kick_acoustic'], [7, 'kick_acoustic'], [8, 'crash_acoustic', 1.0], [8, 'kick_acoustic'], [10, 'kick_acoustic'], [12, 'crash_acoustic', 1.0], [12, 'snare_rim']])
+      },
+      { 
+        id: 'md_7', 
+        name: 'Quad Double-Bass Burst', 
+        desc: '4-stroke 32nd double bass burst resolving into heavy snare backbeat',
+        events: beatEvents(140, [[0, 'kick_acoustic'], [0.5, 'kick_acoustic'], [1, 'kick_acoustic'], [1.5, 'kick_acoustic'], [2, 'snare_rim', 1.0], [4, 'kick_acoustic'], [4.5, 'kick_acoustic'], [5, 'kick_acoustic'], [5.5, 'kick_acoustic'], [6, 'snare_rim', 1.0], [8, 'crash_acoustic']])
+      },
+      { 
+        id: 'md_8', 
+        name: '16th Machine Gun Snare Roll', 
+        desc: 'Military tight metal snare roll escalating into full kit crash',
+        events: beatEvents(145, [[0, 'snare_acoustic', 0.6], [1, 'snare_acoustic', 0.7], [2, 'snare_acoustic', 0.8], [3, 'snare_acoustic', 0.9], [4, 'snare_rim', 1.0], [5, 'snare_acoustic', 0.8], [6, 'snare_acoustic', 0.9], [7, 'snare_rim', 1.0], [8, 'crash_acoustic', 1.0], [8, 'kick_acoustic']])
+      },
+      { 
+        id: 'md_9', 
+        name: 'Heavy Ride Bell Metal Pinger', 
+        desc: 'Power ride bell accents on off-beats over relentless double kicks',
+        events: beatEvents(148, [[0, 'kick_acoustic'], [0, 'ride_bell', 0.9], [1, 'kick_acoustic'], [2, 'kick_acoustic'], [2, 'ride_bell', 0.85], [3, 'kick_acoustic'], [4, 'snare_rim', 1.0], [4, 'ride_bell', 0.9], [6, 'kick_acoustic'], [6, 'ride_bell', 0.85], [8, 'kick_acoustic'], [8, 'ride_bell', 0.9]])
+      },
+      { 
+        id: 'md_10', 
+        name: 'Floor Tom Tribal War Beat', 
+        desc: 'Driving double floor toms with accented snare rimshots on 3',
+        events: beatEvents(128, [[0, 'tom_floor', 1.0], [0, 'kick_acoustic'], [2, 'tom_floor', 0.85], [4, 'tom_floor', 0.9], [4, 'snare_rim'], [6, 'tom_floor', 0.85], [8, 'tom_floor', 1.0], [8, 'kick_acoustic'], [10, 'tom_floor', 0.85], [12, 'snare_rim', 1.0], [14, 'crash_acoustic']])
+      },
+      { 
+        id: 'md_11', 
+        name: 'Splash Cymbal Quick Choke', 
+        desc: 'Explosive splash choke accent with stop-start staccato kicks',
+        events: beatEvents(140, [[0, 'crash_acoustic', 0.9], [0, 'kick_acoustic'], [2, 'snare_rim'], [4, 'kick_acoustic'], [5, 'crash_acoustic', 0.8], [6, 'snare_rim'], [8, 'kick_acoustic'], [10, 'snare_rim'], [12, 'kick_acoustic'], [14, 'crash_acoustic']])
+      },
+      { 
+        id: 'md_12', 
+        name: 'Pantera Groove Metal Stomp', 
+        desc: 'Mid-tempo stomping groove with syncopated double kick & deep snare',
+        events: beatEvents(116, [[0, 'kick_acoustic'], [0, 'crash_acoustic'], [3, 'kick_acoustic'], [4, 'snare_rim'], [6, 'hat_closed'], [7, 'kick_acoustic'], [8, 'kick_acoustic'], [10, 'hat_open'], [12, 'snare_rim'], [14, 'kick_acoustic'], [15, 'kick_acoustic']])
+      },
+      { 
+        id: 'md_13', 
+        name: 'Progressive 7/8 Polyrhythm', 
+        desc: 'Complex time signature metal groove with alternating snare placements',
+        events: beatEvents(138, [[0, 'kick_acoustic'], [0, 'ride_bell'], [2, 'snare_rim'], [3, 'kick_acoustic'], [5, 'snare_rim'], [7, 'kick_acoustic'], [7, 'ride_bell'], [9, 'snare_rim'], [11, 'kick_acoustic'], [13, 'snare_rim']])
+      },
+      { 
+        id: 'md_14', 
+        name: 'Punk Rock 2-Step Skank Beat', 
+        desc: 'Fast energetic 2-step skank beat on snare and high-hat',
+        events: beatEvents(175, [[0, 'kick_acoustic'], [0, 'hat_open'], [1, 'snare_rim'], [2, 'kick_acoustic'], [3, 'snare_rim'], [4, 'kick_acoustic'], [5, 'snare_rim'], [6, 'kick_acoustic'], [7, 'snare_rim'], [8, 'crash_acoustic']])
+      },
+      { 
+        id: 'md_15', 
+        name: 'Dual Floor Tom Cascade', 
+        desc: 'Thundering tom cascade rolling down to floor tom before the chorus',
+        events: beatEvents(135, [[0, 'tom_high', 0.9], [1, 'tom_high', 0.95], [2, 'tom_mid', 0.9], [3, 'tom_mid', 0.95], [4, 'tom_floor', 1.0], [5, 'tom_floor', 1.0], [6, 'snare_rim', 1.0], [7, 'kick_acoustic'], [8, 'crash_acoustic', 1.0]])
+      },
+      { 
+        id: 'md_16', 
+        name: 'Full Metal Blast Climax', 
+        desc: 'All-out double bass blast with simultaneous crash, china, and snare destruction',
+        events: beatEvents(155, [[0, 'kick_acoustic'], [0, 'crash_acoustic'], [1, 'snare_rim'], [2, 'kick_acoustic'], [3, 'snare_rim'], [4, 'kick_acoustic'], [5, 'snare_rim'], [6, 'kick_acoustic'], [7, 'snare_rim'], [8, 'crash_acoustic', 1.0], [8, 'kick_acoustic'], [10, 'kick_acoustic'], [12, 'tom_floor'], [14, 'crash_acoustic', 1.0]])
+      },
     ],
     guitar: [
       { id: 'mg_1', name: 'Palm-Mute Djent Chug', pattern: [38], dur: 0.15, type: 'chug' },
@@ -392,22 +725,102 @@ export const GENRE_SLICES = {
       { id: 'lp_16', name: 'Fadeout Velvet Tonic', pattern: [48, 55, 59, 64], dur: 0.9, type: 'rhodes' },
     ],
     drums: [
-      { id: 'ld_1', name: 'Dusty Boom-Bap Kick', sound: 'kick_lofi_dusty', dur: 0.3 },
-      { id: 'ld_2', name: 'Swung Lazy Snare', sound: 'snare_lofi_lazy', dur: 0.28 },
-      { id: 'ld_3', name: 'Crackle Closed Hat', sound: 'hat_lofi_crackle', dur: 0.2 },
-      { id: 'ld_4', name: 'Vinyl Shaker Drift', sound: 'shaker_lofi', dur: 0.32 },
-      { id: 'ld_5', name: 'Muffled Rim Knock', sound: 'rim_lofi_knock', dur: 0.22 },
-      { id: 'ld_6', name: 'SP-404 Swung Kick', sound: 'kick_sp404', dur: 0.35 },
-      { id: 'ld_7', name: 'Sidechained Hat Splash', sound: 'hat_lofi_splash', dur: 0.26 },
-      { id: 'ld_8', name: 'Snap & Ambient Verb', sound: 'snap_lofi', dur: 0.3 },
-      { id: 'ld_9', name: 'Low-Pass Filtered Kick', sound: 'kick_lofi_filter', dur: 0.35 },
-      { id: 'ld_10', name: 'Tape Stop Perc', sound: 'perc_tape_stop', dur: 0.25 },
-      { id: 'ld_11', name: 'Ghost Snare Drag', sound: 'snare_lofi_ghost', dur: 0.22 },
-      { id: 'ld_12', name: 'Subtle Conga Tap', sound: 'conga_lofi', dur: 0.28 },
-      { id: 'ld_13', name: 'Vinyl Drop Pop', sound: 'vinyl_pop', dur: 0.15 },
-      { id: 'ld_14', name: 'Swung Ride Tap', sound: 'ride_lofi_swing', dur: 0.35 },
-      { id: 'ld_15', name: 'Lazy Drum Fill', sound: 'lofi_drum_fill', dur: 0.45 },
-      { id: 'ld_16', name: 'Cymbal Wash Warm', sound: 'cymbal_lofi_wash', dur: 0.7 },
+      { 
+        id: 'ld_1', 
+        name: 'SP-404 Dusty Boom-Bap Beat', 
+        desc: '82 BPM unquantized kick, lazy snare with vinyl crackle, and swung shaker',
+        events: beatEvents(82, [[0, 'kick_acoustic', 1.0], [0, 'tambourine', 0.6], [2.2, 'hat_closed', 0.55], [4.2, 'snare_acoustic', 0.95], [6.4, 'hat_closed', 0.5], [7.2, 'kick_acoustic', 0.75], [8.4, 'tambourine', 0.6], [10.2, 'kick_acoustic', 0.85], [12.2, 'snare_acoustic', 0.95], [14.4, 'hat_open', 0.6]])
+      },
+      { 
+        id: 'ld_2', 
+        name: 'Behind-the-Beat Lazy Snare Drag', 
+        desc: 'Heavily delayed snare on 2 & 4 creating authentic late-night head-nod',
+        events: beatEvents(80, [[0, 'kick_acoustic'], [2.3, 'hat_closed', 0.5], [4.4, 'snare_acoustic', 1.0], [6.6, 'hat_closed', 0.5], [8.0, 'kick_acoustic', 0.85], [10.4, 'hat_closed', 0.5], [12.4, 'snare_acoustic', 1.0], [14.6, 'hat_open', 0.65]])
+      },
+      { 
+        id: 'ld_3', 
+        name: 'Muffled Low-Pass Kick Groove', 
+        desc: 'Warm filtered bass drum thump with gentle wooden rim knock',
+        events: beatEvents(84, [[0, 'kick_acoustic', 0.9], [2, 'hat_closed', 0.4], [4, 'sidestick', 0.85], [6, 'hat_closed', 0.4], [7, 'kick_acoustic', 0.7], [8, 'kick_acoustic', 0.85], [10, 'hat_closed', 0.4], [12, 'sidestick', 0.85], [14, 'hat_open', 0.5]])
+      },
+      { 
+        id: 'ld_4', 
+        name: 'Vinyl Shaker Pocket Beat', 
+        desc: 'Intimate continuous shaker pattern with quiet ghost kicks',
+        events: beatEvents(85, [[0, 'kick_acoustic', 0.8], [0, 'tambourine'], [2, 'tambourine', 0.5], [4, 'sidestick', 0.8], [4, 'tambourine'], [6, 'tambourine', 0.5], [8, 'kick_acoustic', 0.7], [8, 'tambourine'], [10, 'kick_acoustic', 0.75], [12, 'sidestick', 0.85], [14, 'tambourine']])
+      },
+      { 
+        id: 'ld_5', 
+        name: 'Finger Snap & Ambient Reverb', 
+        desc: 'Smooth finger snap backbeat with deep kick and tape warmth',
+        events: beatEvents(78, [[0, 'kick_acoustic', 0.95], [2.2, 'hat_closed', 0.45], [4.2, 'clap_acoustic', 0.8], [6.4, 'hat_closed', 0.45], [8.0, 'kick_acoustic', 0.85], [10.3, 'kick_acoustic', 0.7], [12.2, 'clap_acoustic', 0.85], [14.4, 'hat_open', 0.6]])
+      },
+      { 
+        id: 'ld_6', 
+        name: 'Tape-Stop Pitch-Wobble Beat', 
+        desc: 'Slow decaying kick-snare groove mimicking warped cassette tape',
+        events: beatEvents(76, [[0, 'kick_acoustic', 0.85], [3, 'hat_closed', 0.4], [4.3, 'snare_acoustic', 0.9], [7, 'kick_acoustic', 0.7], [8.2, 'kick_acoustic', 0.8], [11, 'hat_closed', 0.4], [12.3, 'snare_acoustic', 0.9], [15, 'hat_pedal']])
+      },
+      { 
+        id: 'ld_7', 
+        name: 'Chillhop Conga & Rim Beat', 
+        desc: 'Organic conga taps over relaxed boom-bap rhythm',
+        events: beatEvents(86, [[0, 'kick_acoustic', 0.85], [1.5, 'tom_mid', 0.6], [3, 'tom_high', 0.55], [4, 'sidestick', 0.9], [6, 'tom_mid', 0.65], [8, 'kick_acoustic', 0.8], [9.5, 'tom_floor', 0.7], [12, 'sidestick', 0.9], [14, 'hat_open', 0.6]])
+      },
+      { 
+        id: 'ld_8', 
+        name: 'SP-1200 Crunchy 12-Bit Beat', 
+        desc: 'Gritty punchy 12-bit filtered drum machine chop',
+        events: beatEvents(88, [[0, 'kick_acoustic', 1.0], [2, 'hat_closed', 0.7], [4, 'snare_rim', 1.0], [6, 'hat_closed', 0.7], [7, 'kick_acoustic', 0.85], [8, 'kick_acoustic', 0.95], [10, 'hat_open', 0.8], [12, 'snare_rim', 1.0], [14, 'hat_closed', 0.7]])
+      },
+      { 
+        id: 'ld_9', 
+        name: 'Dusty Ghost Snare Pocket', 
+        desc: 'Quiet ghost taps on the upbeat creating hypnotic study groove',
+        events: beatEvents(82, [[0, 'kick_acoustic'], [1.5, 'snare_acoustic', 0.25], [2.5, 'hat_closed', 0.5], [4, 'snare_acoustic', 0.9], [5.5, 'snare_acoustic', 0.25], [7, 'kick_acoustic'], [8, 'kick_acoustic', 0.8], [9.5, 'snare_acoustic', 0.25], [12, 'snare_acoustic', 0.9], [14, 'hat_open']])
+      },
+      { 
+        id: 'ld_10', 
+        name: 'Sidechained Open Hat Splash', 
+        desc: 'Mellow open hat ducking behind the kick with warm room verb',
+        events: beatEvents(80, [[0, 'kick_acoustic', 1.0], [2, 'hat_open', 0.7], [4, 'snare_acoustic', 0.9], [6, 'hat_open', 0.6], [8, 'kick_acoustic', 0.9], [10, 'hat_open', 0.7], [12, 'snare_acoustic', 0.9], [14, 'hat_pedal']])
+      },
+      { 
+        id: 'ld_11', 
+        name: 'Bedroom Study Session Beat', 
+        desc: 'Gentle, comforting lo-fi groove with soft transients and deep warmth',
+        events: beatEvents(78, [[0, 'kick_acoustic', 0.75], [2, 'hat_closed', 0.4], [4, 'snare_acoustic', 0.7], [6, 'hat_closed', 0.4], [8, 'kick_acoustic', 0.7], [10, 'hat_closed', 0.4], [12, 'snare_acoustic', 0.7], [14, 'hat_open', 0.5]])
+      },
+      { 
+        id: 'ld_12', 
+        name: 'Vinyl Rain & Rim Click Beat', 
+        desc: 'Ambient texture with delicate side-stick and quiet ride ping',
+        events: beatEvents(83, [[0, 'kick_acoustic', 0.8], [0, 'ride_bell', 0.5], [2, 'hat_closed', 0.4], [4, 'sidestick', 0.8], [6, 'hat_closed', 0.4], [8, 'kick_acoustic', 0.7], [10, 'ride_bell', 0.5], [12, 'sidestick', 0.85], [14, 'hat_open', 0.55]])
+      },
+      { 
+        id: 'ld_13', 
+        name: 'Mellow Boom-Bap Turnaround', 
+        desc: 'Subtle high tom and floor tom fill leading back into the pocket',
+        events: beatEvents(84, [[0, 'kick_acoustic'], [2, 'hat_closed'], [4, 'snare_acoustic'], [6, 'tom_high', 0.6], [7, 'tom_mid', 0.65], [8, 'tom_floor', 0.7], [10, 'kick_acoustic'], [12, 'snare_acoustic'], [14, 'crash_acoustic', 0.6]])
+      },
+      { 
+        id: 'ld_14', 
+        name: 'Swung Hi-Hat Triplet Lofi', 
+        desc: 'Deep swung 16th triplet hi-hats with relaxed kick drops',
+        events: beatEvents(81, [[0, 'kick_acoustic'], [0, 'hat_closed'], [1.3, 'hat_closed', 0.5], [2.6, 'hat_closed', 0.6], [4, 'snare_acoustic'], [5.3, 'hat_closed', 0.5], [6.6, 'hat_closed', 0.6], [8, 'kick_acoustic'], [9.3, 'hat_closed', 0.5], [12, 'snare_acoustic']])
+      },
+      { 
+        id: 'ld_15', 
+        name: 'Dusty Clap & Vinyl Snare', 
+        desc: 'Layered quiet handclap with vinyl textured snare and sub kick',
+        events: beatEvents(85, [[0, 'kick_acoustic', 0.95], [2.2, 'hat_closed'], [4.2, 'clap_acoustic', 0.75], [4.2, 'snare_acoustic', 0.85], [7, 'kick_acoustic', 0.8], [8, 'kick_acoustic', 0.9], [10, 'hat_open', 0.6], [12.2, 'clap_acoustic', 0.8], [12.2, 'snare_acoustic', 0.9]])
+      },
+      { 
+        id: 'ld_16', 
+        name: 'Lofi Midnight Fadeout Break', 
+        desc: 'Complete chillhop drum loop resolving into gentle cymbal ring',
+        events: beatEvents(80, [[0, 'crash_acoustic', 0.6], [0, 'kick_acoustic', 0.85], [2, 'hat_closed', 0.45], [4, 'snare_acoustic', 0.85], [6, 'hat_open', 0.5], [7, 'kick_acoustic', 0.7], [8, 'kick_acoustic', 0.85], [10, 'sidestick', 0.75], [12, 'snare_acoustic', 0.9], [14, 'ride_bell', 0.6]])
+      },
     ],
     guitar: [
       { id: 'lg_1', name: 'Warm Chorus Nylon Pluck', pattern: [52, 55, 59], dur: 0.45, type: 'nylon' },
@@ -448,22 +861,102 @@ export const GENRE_SLICES = {
       { id: 'tp_16', name: 'Final Dark Drop', pattern: [24, 36, 48], dur: 0.8, type: '808' },
     ],
     drums: [
-      { id: 'td_1', name: 'Spinz 808 Sub Boom', sound: 'kick_808_spinz', dur: 0.5 },
-      { id: 'td_2', name: 'Sharp Pyrex Clap', sound: 'clap_pyrex', dur: 0.22 },
-      { id: 'td_3', name: '1/32 Hi-Hat Roll Triplet', sound: 'hat_32_roll', dur: 0.25 },
-      { id: 'td_4', name: 'Drill Sliding 808', sound: '808_slide', dur: 0.45 },
-      { id: 'td_5', name: 'Snare Stutter Fill', sound: 'snare_stutter', dur: 0.3 },
-      { id: 'td_6', name: 'Open Hat Laser Tick', sound: 'hat_laser', dur: 0.2 },
-      { id: 'td_7', name: 'Hard Acoustic Kick Punch', sound: 'kick_trap_punch', dur: 0.28 },
-      { id: 'td_8', name: 'Dark Perc Rimshot', sound: 'rim_dark_trap', dur: 0.22 },
-      { id: 'td_9', name: 'High Pitch Hat Pitch-Down', sound: 'hat_pitch_down', dur: 0.25 },
-      { id: 'td_10', name: 'Sub Drop 808 Gliss', sound: '808_gliss', dur: 0.55 },
-      { id: 'td_11', name: 'Trap Triangle Accent', sound: 'triangle_trap', dur: 0.3 },
-      { id: 'td_12', name: 'Fast Double Snare Chop', sound: 'snare_double', dur: 0.2 },
-      { id: 'td_13', name: 'Cymbal Reverse Swell', sound: 'cymbal_reverse', dur: 0.4 },
-      { id: 'td_14', name: 'Sub Stutter Drop', sound: 'sub_stutter', dur: 0.35 },
-      { id: 'td_15', name: 'Trap Fill 16th Burst', sound: 'trap_fill_burst', dur: 0.38 },
-      { id: 'td_16', name: 'Heavy Drop Impact Crash', sound: 'crash_trap_impact', dur: 0.65 },
+      { 
+        id: 'td_1', 
+        name: 'Spinz 808 & 1/32 Hat Roll', 
+        desc: '140 BPM booming 808 sub, fast 1/32nd triplet hat roll, and sharp Pyrex clap on 3',
+        events: beatEvents(140, [[0, '808_sub'], [0, 'hat_closed', 0.8], [2, 'hat_closed', 0.7], [4, '808_clap', 1.0], [5, 'hat_closed', 0.5], [6, 'hat_closed', 0.7], [6.5, 'hat_closed', 0.6], [7, 'hat_closed', 0.6], [7.5, 'hat_closed', 0.7], [8, '808_sub', 1.0], [8, 'hat_closed', 0.8], [10, 'hat_closed', 0.7], [12, '808_clap', 1.0], [14, 'hat_closed', 0.6], [14.5, 'hat_closed', 0.7], [15, 'hat_open', 0.8]])
+      },
+      { 
+        id: 'td_2', 
+        name: 'UK/NY Drill Sliding 808 Beat', 
+        desc: 'Sliding 808 pitch glide with off-beat syncopated drill snare backbeat',
+        events: beatEvents(142, [[0, '808_sub', 1.0], [2, 'hat_closed', 0.7], [3, '808_sub', 0.9], [4.5, 'snare_rim', 1.0], [6, 'hat_closed', 0.6], [7, '808_sub', 0.85], [8, 'hat_open', 0.7], [10, 'hat_closed', 0.7], [11, '808_sub', 0.9], [12.5, 'snare_rim', 1.0], [14, 'hat_closed', 0.6]])
+      },
+      { 
+        id: 'td_3', 
+        name: 'Triple 808 Stutter Drop', 
+        desc: 'Stuttering 808 kick drops into sudden silence and piercing clap',
+        events: beatEvents(138, [[0, '808_sub', 1.0], [0.75, '808_sub', 0.85], [1.5, '808_sub', 0.9], [4, '808_clap', 1.0], [6, 'hat_closed', 0.7], [8, '808_sub', 1.0], [10, 'hat_open', 0.7], [12, '808_clap', 1.0], [14, 'hat_closed', 0.6]])
+      },
+      { 
+        id: 'td_4', 
+        name: 'Accelerating Hat Roll Cascade', 
+        desc: 'Hi-hat roll shifting from 1/16 to 1/32 to 1/64 speed over punchy 808',
+        events: beatEvents(140, [[0, '808_sub'], [0, 'hat_closed'], [2, 'hat_closed'], [4, '808_clap'], [6, 'hat_closed'], [6.5, 'hat_closed'], [7, 'hat_closed'], [7.3, 'hat_closed'], [7.6, 'hat_closed'], [8, '808_sub'], [10, 'hat_closed'], [12, '808_clap'], [14, 'hat_open']])
+      },
+      { 
+        id: 'td_5', 
+        name: 'Pyrex Clap & Laser Tick', 
+        desc: 'Crisp trap clap layered with high-frequency laser hat patterns',
+        events: beatEvents(144, [[0, 'kick_acoustic', 0.9], [2, 'hat_closed', 0.7], [4, '808_clap', 1.0], [6, 'hat_closed', 0.7], [7, 'kick_acoustic', 0.8], [8, '808_sub', 1.0], [10, 'hat_open', 0.7], [12, '808_clap', 1.0], [14, 'hat_closed', 0.7]])
+      },
+      { 
+        id: 'td_6', 
+        name: 'Acoustic Punch + 808 Sub Layer', 
+        desc: 'Hard acoustic top kick layered over sustained booming sub bass',
+        events: beatEvents(136, [[0, 'kick_acoustic', 1.0], [0, '808_sub', 1.0], [2, 'hat_closed'], [4, '808_clap', 1.0], [6, 'hat_closed'], [7, 'kick_acoustic', 0.9], [8, '808_sub', 1.0], [10, 'hat_open'], [12, '808_clap', 1.0], [14, 'hat_closed']])
+      },
+      { 
+        id: 'td_7', 
+        name: 'Pitch-Down Hat Drop Beat', 
+        desc: 'Descending pitch hi-hat roll falling into heavy 808 sub drop',
+        events: beatEvents(140, [[0, 'hat_closed', 0.9], [0.5, 'hat_closed', 0.8], [1, 'hat_closed', 0.7], [1.5, 'hat_closed', 0.6], [2, '808_sub', 1.0], [4, '808_clap', 1.0], [6, 'hat_closed'], [8, '808_sub'], [10, 'hat_closed'], [12, '808_clap'], [14, 'hat_open']])
+      },
+      { 
+        id: 'td_8', 
+        name: 'Trap Triangle & Syncopated Rim', 
+        desc: 'High metallic triangle ping with syncopated dark trap rimshot',
+        events: beatEvents(138, [[0, '808_sub'], [0, 'cowbell_real', 0.8], [2, 'hat_closed'], [4, 'sidestick', 1.0], [6, 'cowbell_real', 0.8], [8, '808_sub'], [10, 'hat_closed'], [12, 'sidestick', 1.0], [14, 'cowbell_real', 0.9]])
+      },
+      { 
+        id: 'td_9', 
+        name: 'Rapid 32nd Snare Roll Build', 
+        desc: 'Rising snare roll crescendo leading directly into 808 drop',
+        events: beatEvents(142, [[0, '808_snare', 0.4], [0.5, '808_snare', 0.5], [1, '808_snare', 0.6], [1.5, '808_snare', 0.7], [2, '808_snare', 0.8], [2.5, '808_snare', 0.9], [3, '808_snare', 1.0], [4, '808_sub', 1.0], [4, 'crash_acoustic', 1.0], [6, 'hat_closed'], [8, '808_clap']])
+      },
+      { 
+        id: 'td_10', 
+        name: 'Drill Glissando Sub Roll', 
+        desc: 'Two-stage 808 pitch glide with staggered rim clicks',
+        events: beatEvents(140, [[0, '808_sub', 1.0], [3, 'sidestick', 0.85], [4.5, '808_clap', 1.0], [7, '808_sub', 0.9], [8, 'hat_closed'], [10, 'sidestick', 0.85], [12.5, '808_clap', 1.0], [14, 'hat_open']])
+      },
+      { 
+        id: 'td_11', 
+        name: 'Atlanta Bounce Kick-Clap', 
+        desc: 'Modern Atlanta bounce kick-clap pattern with open hat accents',
+        events: beatEvents(135, [[0, '808_sub'], [2, 'hat_closed'], [3, 'kick_acoustic', 0.85], [4, '808_clap'], [6, 'hat_open'], [8, '808_sub'], [10, 'kick_acoustic', 0.85], [12, '808_clap'], [14, 'hat_closed']])
+      },
+      { 
+        id: 'td_12', 
+        name: 'Dark Cinematic Trap Drop', 
+        desc: 'Heavy 808 sub boom with reverb crash and syncopated snare',
+        events: beatEvents(130, [[0, '808_sub', 1.0], [0, 'crash_acoustic', 1.0], [4, '808_clap', 1.0], [7, '808_sub', 0.85], [8, '808_sub', 1.0], [10, 'hat_open'], [12, '808_clap', 1.0], [14, 'crash_acoustic', 0.7]])
+      },
+      { 
+        id: 'td_13', 
+        name: 'Trap Hi-Hat Glitch Beat', 
+        desc: 'Stuttering glitch hi-hats over heavy sub 808 and snare crack',
+        events: beatEvents(140, [[0, '808_sub'], [0.7, 'hat_closed'], [1.4, 'hat_closed'], [2.1, 'hat_closed'], [4, '808_clap'], [6, 'hat_closed'], [8, '808_sub'], [9.5, 'hat_closed'], [12, '808_clap'], [14, 'hat_open']])
+      },
+      { 
+        id: 'td_14', 
+        name: 'Sub Drop & Open Hat Sizzle', 
+        desc: 'Low-end sub boom with wide stereo open hi-hat wash',
+        events: beatEvents(136, [[0, '808_sub', 1.0], [2, 'hat_open', 0.8], [4, '808_clap', 1.0], [6, 'hat_closed'], [8, '808_sub', 1.0], [10, 'hat_open', 0.8], [12, '808_clap', 1.0], [14, 'hat_closed']])
+      },
+      { 
+        id: 'td_15', 
+        name: 'Double Clap Drill Bounce', 
+        desc: 'Rapid double clap with sliding 808 sub and fast hat rolls',
+        events: beatEvents(144, [[0, '808_sub'], [2, 'hat_closed'], [4, '808_clap', 0.8], [4.5, '808_clap', 1.0], [7, '808_sub'], [8, 'hat_closed'], [10, 'hat_closed'], [12, '808_clap', 0.8], [12.5, '808_clap', 1.0]])
+      },
+      { 
+        id: 'td_16', 
+        name: 'Full Metro Trap Beat Drop', 
+        desc: 'Complete trap beat: 808 sub, rolling hats, open hats, clap, and crash impact',
+        events: beatEvents(140, [[0, 'crash_acoustic', 1.0], [0, '808_sub', 1.0], [2, 'hat_closed', 0.8], [3, 'hat_closed', 0.6], [4, '808_clap', 1.0], [5, 'hat_closed', 0.6], [6, 'hat_open', 0.8], [7, 'kick_acoustic', 0.9], [8, '808_sub', 1.0], [9, 'hat_closed', 0.6], [10, 'hat_closed', 0.8], [11, '808_sub', 0.8], [12, '808_clap', 1.0], [13, 'hat_closed', 0.6], [14, 'hat_open', 0.8], [15, '808_snare', 0.9]])
+      },
     ],
     guitar: [
       { id: 'tg_1', name: 'Dark Spanish Trap Pluck', pattern: [60, 63, 67], dur: 0.35, type: 'nylon' },
@@ -504,22 +997,102 @@ export const GENRE_SLICES = {
       { id: 'bp_16', name: 'Final Blues Cadence', pattern: [36, 52, 58, 64], dur: 0.8, type: 'piano' },
     ],
     drums: [
-      { id: 'bd_1', name: 'Chicago Shuffle Swing', sound: 'shuffle_swing', dur: 0.35 },
-      { id: 'bd_2', name: 'Texas Blues Kick Thump', sound: 'kick_blues_texas', dur: 0.3 },
-      { id: 'bd_3', name: 'Slow 6/8 Blues Roll', sound: 'snare_6_8_roll', dur: 0.45 },
-      { id: 'bd_4', name: 'Rim Accent Turnaround', sound: 'rim_turnaround', dur: 0.25 },
-      { id: 'bd_5', name: 'Swung Ride Bell Pattern', sound: 'ride_blues_bell', dur: 0.32 },
-      { id: 'bd_6', name: 'Brush Swirl Shuffle', sound: 'brush_swirl_blues', dur: 0.4 },
-      { id: 'bd_7', name: 'Double Shuffled Snare', sound: 'snare_double_shuffle', dur: 0.22 },
-      { id: 'bd_8', name: 'Open Hi-Hat Accent', sound: 'hat_blues_open', dur: 0.28 },
-      { id: 'bd_9', name: 'Fat Backbeat Snare Crack', sound: 'snare_backbeat_fat', dur: 0.28 },
-      { id: 'bd_10', name: 'Blues Tom Fill Swung', sound: 'tom_blues_fill', dur: 0.35 },
-      { id: 'bd_11', name: 'Crash Accent on One', sound: 'crash_blues_one', dur: 0.55 },
-      { id: 'bd_12', name: 'Side Stick Slow Blues', sound: 'sidestick_blues', dur: 0.25 },
-      { id: 'bd_13', name: 'Triplet Kick Thump', sound: 'kick_triplet_blues', dur: 0.28 },
-      { id: 'bd_14', name: 'Hi-Hat Foot Chic', sound: 'hat_foot_chic', dur: 0.18 },
-      { id: 'bd_15', name: 'End-of-12 Bar Fill', sound: 'fill_12_bar', dur: 0.48 },
-      { id: 'bd_16', name: 'Grand Blues Finale Crash', sound: 'crash_blues_finale', dur: 0.8 },
+      { 
+        id: 'bd_1', 
+        name: 'Chicago 12-Bar Shuffle Beat', 
+        desc: '92 BPM classic Chicago blues driving swing ride, feathered kick, and fat backbeat snare',
+        events: beatEvents(92, [[0, 'ride_acoustic', 0.9], [0, 'kick_acoustic', 0.8], [2.6, 'ride_acoustic', 0.65], [4, 'snare_rim', 1.0], [4, 'ride_acoustic', 0.9], [6.6, 'ride_acoustic', 0.65], [8, 'kick_acoustic', 0.8], [8, 'ride_acoustic', 0.9], [10.6, 'ride_acoustic', 0.65], [12, 'snare_rim', 1.0], [12, 'ride_bell', 0.9], [14.6, 'ride_acoustic', 0.65]])
+      },
+      { 
+        id: 'bd_2', 
+        name: 'Texas Blues Double Shuffle', 
+        desc: 'Stevie Ray Vaughan style double-hand snare shuffle with driving kick',
+        events: beatEvents(110, [[0, 'kick_acoustic', 0.9], [0, 'snare_acoustic', 0.4], [1.3, 'snare_acoustic', 0.6], [2.6, 'snare_acoustic', 0.5], [4, 'snare_rim', 1.0], [5.3, 'snare_acoustic', 0.6], [6.6, 'snare_acoustic', 0.5], [8, 'kick_acoustic', 0.9], [9.3, 'snare_acoustic', 0.6], [12, 'snare_rim', 1.0]])
+      },
+      { 
+        id: 'bd_3', 
+        name: 'Slow 6/8 Blues Ballad Beat', 
+        desc: 'Deep 12/8 triplet slow blues groove with ride bell and rolling snare drags',
+        events: beatEvents(65, [[0, 'ride_bell', 0.9], [0, 'kick_acoustic', 0.9], [1.3, 'ride_acoustic', 0.6], [2.6, 'ride_acoustic', 0.6], [4, 'snare_rim', 1.0], [4, 'ride_acoustic', 0.8], [5.3, 'ride_acoustic', 0.6], [6.6, 'ride_acoustic', 0.6], [8, 'kick_acoustic', 0.8], [9.3, 'ride_acoustic', 0.6], [12, 'snare_rim', 1.0]])
+      },
+      { 
+        id: 'bd_4', 
+        name: 'Wooden Side-Stick Blues Beat', 
+        desc: 'Delicate wooden cross-stick on 2 & 4 with gentle walking kick',
+        events: beatEvents(88, [[0, 'kick_acoustic', 0.7], [2.6, 'hat_closed', 0.5], [4, 'sidestick', 0.9], [6.6, 'hat_closed', 0.5], [8, 'kick_acoustic', 0.65], [10.6, 'hat_closed', 0.5], [12, 'sidestick', 0.9], [14.6, 'hat_open', 0.6]])
+      },
+      { 
+        id: 'bd_5', 
+        name: 'Swung Ride Bell Turnaround', 
+        desc: 'Accented heavy ride bell on triplet upbeats leading into new 12-bar cycle',
+        events: beatEvents(94, [[0, 'ride_bell', 0.95], [0, 'kick_acoustic'], [2.6, 'ride_bell', 0.8], [4, 'snare_rim', 0.9], [6.6, 'ride_bell', 0.8], [8, 'kick_acoustic'], [10.6, 'ride_bell', 0.85], [12, 'snare_rim', 1.0], [14.6, 'crash_acoustic', 0.85]])
+      },
+      { 
+        id: 'bd_6', 
+        name: 'Delta Blues Foot Stomp', 
+        desc: 'Raw acoustic kick stomp on every quarter beat with tambourine shake',
+        events: beatEvents(85, [[0, 'kick_acoustic', 1.0], [0, 'tambourine'], [2.6, 'tambourine', 0.6], [4, 'kick_acoustic', 0.9], [4, 'tambourine'], [6.6, 'tambourine', 0.6], [8, 'kick_acoustic', 1.0], [8, 'tambourine'], [10.6, 'tambourine', 0.6], [12, 'kick_acoustic', 0.9], [12, 'snare_acoustic', 0.7]])
+      },
+      { 
+        id: 'bd_7', 
+        name: 'Brush Shuffle Swirl Groove', 
+        desc: 'Gentle swept brush snare pattern with swung ride cymbal',
+        events: beatEvents(90, [[0, 'ride_acoustic', 0.7], [0, 'kick_acoustic', 0.4], [1.3, 'snare_acoustic', 0.4], [2.6, 'snare_acoustic', 0.5], [4, 'snare_acoustic', 0.8], [4, 'hat_pedal'], [6.6, 'ride_acoustic', 0.6], [8, 'kick_acoustic', 0.4], [12, 'snare_acoustic', 0.85]])
+      },
+      { 
+        id: 'bd_8', 
+        name: 'Fat Backbeat Rimshot Smack', 
+        desc: 'Deep fat snare smack with open hi-hat splash on the ands',
+        events: beatEvents(95, [[0, 'kick_acoustic', 0.95], [2.6, 'hat_open', 0.7], [4, 'snare_rim', 1.0], [6.6, 'hat_open', 0.7], [8, 'kick_acoustic', 0.9], [10.6, 'hat_open', 0.7], [12, 'snare_rim', 1.0], [14.6, 'hat_open', 0.8]])
+      },
+      { 
+        id: 'bd_9', 
+        name: 'Blues Tom Swung Fill', 
+        desc: 'Lazy triplet tom fill rolling down to crash on beat one',
+        events: beatEvents(90, [[0, 'kick_acoustic'], [2.6, 'hat_closed'], [4, 'snare_rim'], [6.6, 'tom_high', 0.8], [8, 'tom_mid', 0.85], [9.3, 'tom_mid', 0.85], [10.6, 'tom_floor', 0.95], [12, 'snare_rim', 1.0], [14.6, 'crash_acoustic', 1.0]])
+      },
+      { 
+        id: 'bd_10', 
+        name: 'Pumping Open Hi-Hat Blues', 
+        desc: 'Swung 8th open/closed hat pump driving the blues engine',
+        events: beatEvents(96, [[0, 'kick_acoustic'], [0, 'hat_closed'], [2, 'hat_open', 0.75], [4, 'snare_rim'], [4, 'hat_closed'], [6, 'hat_open', 0.75], [8, 'kick_acoustic'], [8, 'hat_closed'], [10, 'hat_open', 0.75], [12, 'snare_rim'], [14, 'hat_open', 0.85]])
+      },
+      { 
+        id: 'bd_11', 
+        name: 'Memphis Soul Stax Pocket', 
+        desc: 'Tight, crisp drum pocket with tambourine accents and solid kick',
+        events: beatEvents(100, [[0, 'kick_acoustic'], [0, 'tambourine'], [2, 'hat_closed'], [4, 'snare_rim'], [4, 'tambourine'], [6, 'kick_acoustic'], [7, 'kick_acoustic'], [8, 'tambourine'], [10, 'hat_open'], [12, 'snare_rim'], [12, 'tambourine'], [14, 'hat_closed']])
+      },
+      { 
+        id: 'bd_12', 
+        name: 'Slow Burn Triplet Snare Roll', 
+        desc: 'Swelling triplet snare roll building tension for a guitar solo',
+        events: beatEvents(70, [[0, 'snare_acoustic', 0.3], [1.3, 'snare_acoustic', 0.4], [2.6, 'snare_acoustic', 0.55], [4, 'snare_acoustic', 0.7], [5.3, 'snare_acoustic', 0.85], [6.6, 'snare_rim', 1.0], [8, 'kick_acoustic'], [8, 'crash_acoustic', 1.0]])
+      },
+      { 
+        id: 'bd_13', 
+        name: 'Blues Turnaround Crash Choke', 
+        desc: 'Swung fill ending on an explosive choked crash cymbal',
+        events: beatEvents(92, [[0, 'kick_acoustic'], [2.6, 'hat_closed'], [4, 'snare_rim'], [6.6, 'tom_floor', 0.8], [8, 'kick_acoustic'], [10.6, 'snare_rim'], [12, 'crash_acoustic', 0.95], [13, 'hat_pedal', 1.0]])
+      },
+      { 
+        id: 'bd_14', 
+        name: 'Juke Joint Backbeat Stomp', 
+        desc: 'Raucous foot-stomping rhythm with loud handclaps and heavy kick',
+        events: beatEvents(105, [[0, 'kick_acoustic', 1.0], [2, 'hat_closed'], [4, 'clap_acoustic', 1.0], [4, 'snare_rim', 0.9], [6, 'kick_acoustic'], [7, 'kick_acoustic'], [8, 'kick_acoustic'], [10, 'hat_open'], [12, 'clap_acoustic', 1.0], [14, 'kick_acoustic']])
+      },
+      { 
+        id: 'bd_15', 
+        name: 'Shuffle Snare Drag Beat', 
+        desc: 'Subtle double-stroke snare drag on the upbeat before the backbeat',
+        events: beatEvents(90, [[0, 'kick_acoustic'], [2.6, 'hat_closed'], [3.5, 'snare_acoustic', 0.4], [4, 'snare_rim', 1.0], [6.6, 'hat_closed'], [8, 'kick_acoustic'], [10.6, 'hat_closed'], [11.5, 'snare_acoustic', 0.4], [12, 'snare_rim', 1.0]])
+      },
+      { 
+        id: 'bd_16', 
+        name: 'B.B. King Final Blues Accent', 
+        desc: 'Full band crash flam turnaround to resolve a 12-bar blues chorus',
+        events: beatEvents(88, [[0, 'crash_acoustic', 1.0], [0, 'kick_acoustic', 1.0], [2.6, 'snare_acoustic', 0.4], [4, 'snare_rim', 0.9], [6.6, 'tom_high', 0.8], [8, 'tom_mid', 0.85], [10.6, 'tom_floor', 0.95], [12, 'snare_rim', 1.0], [12, 'crash_acoustic', 1.0]])
+      },
     ],
     guitar: [
       { id: 'bg_1', name: 'Albert King String Bend', pattern: [62, 64], dur: 0.45, type: 'bend' },
@@ -559,14 +1132,41 @@ class TouchControllerEngine {
     this.sliceSpeed = 1.0;           // 0.5, 1.0, 2.0
     this.sliceFilter = 1.0;          // Cutoff multiplier
     
-    // Interactive Chord Builder state
+    // Interactive Chord Builder state (Piano & Guitar)
     this.selectedChordRoot = 0;      // 0 = C, 2 = D, etc.
     this.selectedChordType = 'maj7'; // 'maj', 'min', 'maj7', 'min7', 'dom7', 'min9', 'maj9', 'sus4', 'dim'
     this.selectedChordInversion = 0; // 0 = Root, 1 = 1st, 2 = 2nd
     this.chordStrumSpeed = 0.024;    // Strum spread in seconds
     
-    // Drum Kit state
+    // Drum Engine & Groove state (Drums)
     this.selectedDrumKit = 'studio_acoustic';
+    this.drumSwing = 0;              // 0, 0.08, 0.16
+    this.rollDensity = '16th';       // '8th', '16th', '32nd'
+    this.activeSliceTimeouts = [];
+  }
+
+  // Instrument-Specific Modes (Drums do not have chords!)
+  getModesForInstrument() {
+    if (this.activeInstrument === 'drums') {
+      return [
+        { id: 'notes', name: 'Single Hits', icon: '🥁', desc: '16-Pad MPC one-shot drum hits' },
+        { id: 'chords', name: 'Grooves & Fills', icon: '⚡', desc: 'Dynamic drum rolls, groove stems, and rhythm fills' },
+        { id: 'slices', name: 'Genre Beats', icon: '✂️', desc: 'Live genre-based breakbeats, chops, and drum loops' },
+      ];
+    }
+    if (this.activeInstrument === 'guitar') {
+      return [
+        { id: 'notes', name: 'Single Notes', icon: '🎸', desc: 'Fretboard frets & open strings' },
+        { id: 'chords', name: 'Guitar Chords', icon: '🎼', desc: 'Strummable chord shapes & barres' },
+        { id: 'slices', name: 'Genre Riffs', icon: '✂️', desc: 'Genre-based guitar riffs & chops' },
+      ];
+    }
+    // Piano
+    return [
+      { id: 'notes', name: 'Single Notes', icon: '🎹', desc: '2+ Octaves chromatic piano keys' },
+      { id: 'chords', name: 'Harmonic Chords', icon: '🎼', desc: 'Jazz, Soul, Pop & Classical chord voicings' },
+      { id: 'slices', name: 'Genre Licks', icon: '✂️', desc: 'Genre-based piano phrases & stabs' },
+    ];
   }
 
   // Directional Navigation (Left, Middle, Right)
@@ -581,6 +1181,7 @@ class TouchControllerEngine {
 
   setInstrument(instId) {
     if (!['piano', 'drums', 'guitar'].includes(instId)) return;
+    this.stopActiveSlice();
     this.activeInstrument = instId;
     
     // Match instrument voice in instrumentEngine
@@ -595,12 +1196,14 @@ class TouchControllerEngine {
 
   setMode(modeId) {
     if (!['notes', 'chords', 'slices'].includes(modeId)) return;
+    this.stopActiveSlice();
     this.activeMode = modeId;
     this.render();
   }
 
   setGenre(genreId) {
     if (!GENRES_CATALOG.some(g => g.id === genreId)) return;
+    this.stopActiveSlice();
     this.activeGenre = genreId;
     this.render();
   }
@@ -618,6 +1221,46 @@ class TouchControllerEngine {
 
   setSliceSpeed(speed) {
     this.sliceSpeed = parseFloat(speed) || 1.0;
+    this.render();
+  }
+
+  setDrumSwing(amt) {
+    this.drumSwing = parseFloat(amt) || 0;
+    this.render();
+  }
+
+  setRollDensity(density) {
+    this.rollDensity = density;
+    this.render();
+  }
+
+  stopActiveSlice() {
+    if (this.activeSliceTimeouts && this.activeSliceTimeouts.length > 0) {
+      this.activeSliceTimeouts.forEach(id => clearTimeout(id));
+      this.activeSliceTimeouts = [];
+    }
+  }
+
+  auditionDrumFill() {
+    const kit = instrumentEngine.getDrumKit();
+    const is808 = kit && kit.id === 'trap_808';
+    const snare = is808 ? '808_snare' : 'snare_acoustic';
+    const kick = is808 ? '808_sub' : 'kick_acoustic';
+    const crash = is808 ? '808_crash' : 'crash_acoustic';
+    const steps = this.rollDensity === '32nd' 
+      ? [[0, kick], [2, snare], [3, snare], [4, snare], [5, snare], [6, snare], [7, snare], [8, crash]]
+      : this.rollDensity === '8th'
+      ? [[0, kick], [2, snare], [4, 'tom_mid'], [6, 'tom_floor'], [8, crash]]
+      : [[0, kick], [2, snare], [3, snare], [4, 'tom_high'], [5, 'tom_mid'], [6, 'tom_floor'], [7, 'tom_floor'], [8, crash]];
+    
+    const events = beatEvents(120, steps);
+    this.stopActiveSlice();
+    events.forEach(evt => {
+      const tId = setTimeout(() => {
+        instrumentEngine.playDrumSound(evt.sound, evt.vel);
+      }, evt.time * 1000);
+      this.activeSliceTimeouts.push(tId);
+    });
   }
 
   // ==========================================================================
@@ -645,24 +1288,44 @@ class TouchControllerEngine {
     });
   }
 
-  playDrumChord(chordItem) {
-    if (!chordItem || !chordItem.sounds) return;
+  // Play Dynamic Drum Grooves & Rhythm Fills
+  playDrumGroove(grooveItem) {
+    if (!grooveItem) return;
+    this.stopActiveSlice();
     
-    // Trigger multi-drum sounds simultaneously for massive layered stem punch
-    chordItem.sounds.forEach((soundName, i) => {
-      setTimeout(() => {
-        // Map sound to kit or synthesis
-        if (soundName.includes('kick')) instrumentEngine.playDrumSound('kick', 1.0);
-        else if (soundName.includes('snare')) instrumentEngine.playDrumSound('snare', 0.95);
-        else if (soundName.includes('hat')) instrumentEngine.playDrumSound('hat_closed', 0.85);
-        else if (soundName.includes('crash')) instrumentEngine.playDrumSound('crash', 0.9);
-        else if (soundName.includes('tom')) instrumentEngine.playDrumSound('tom_hi', 0.85);
-        else if (soundName.includes('clap')) instrumentEngine.playDrumSound('clap', 0.92);
-        else instrumentEngine.playDrumSound('percussion', 0.85);
-      }, i * 8); // subtle 8ms flam
-    });
+    if (grooveItem.events && grooveItem.events.length > 0) {
+      grooveItem.events.forEach((evt) => {
+        const timeoutId = setTimeout(() => {
+          instrumentEngine.playDrumSound(evt.sound, evt.vel || 0.95);
+        }, evt.time * 1000);
+        this.activeSliceTimeouts.push(timeoutId);
+      });
+      return;
+    }
+    
+    if (grooveItem.sounds) {
+      grooveItem.sounds.forEach((soundName, i) => {
+        setTimeout(() => {
+          instrumentEngine.playDrumSound(soundName, 0.95);
+        }, i * 20);
+      });
+    }
   }
 
+  // Backward-compatible alias
+  playDrumChord(chordItem) {
+    this.playDrumGroove(chordItem);
+  }
+
+  getDrumGroove(idx) {
+    return DRUM_GROOVES_CATALOG[idx];
+  }
+
+  getDrumChord(idx) {
+    return this.getDrumGroove(idx);
+  }
+
+  // Play authentic genre-based breakbeat chops & musical loops
   playGenreSlice(slice) {
     if (!slice) return;
     
@@ -670,22 +1333,35 @@ class TouchControllerEngine {
     const speedMult = this.sliceSpeed;
     
     if (this.activeInstrument === 'drums') {
-      // Drum Slice hit
-      instrumentEngine.playDrumSound(slice.sound || 'snare', 0.95);
-    } else {
-      // Piano or Guitar Slice phrase / chord
-      const notes = (slice.pattern || [60]).map(n => n + pitchOffset);
-      const baseDuration = (slice.dur || 0.3) / speedMult;
-      
-      if (notes.length === 1) {
-        instrumentEngine.playNote(notes[0], baseDuration, 0.95);
-      } else {
-        notes.forEach((midi, i) => {
-          setTimeout(() => {
-            instrumentEngine.playNote(midi, baseDuration, 0.92);
-          }, i * (25 / speedMult));
+      // DRUM SLICE: Play fully sequenced genre breakbeats!
+      this.stopActiveSlice();
+      if (slice.events && slice.events.length > 0) {
+        slice.events.forEach((evt) => {
+          const timeoutId = setTimeout(() => {
+            instrumentEngine.playDrumSound(evt.sound, evt.vel || 0.95);
+          }, (evt.time * 1000) / speedMult);
+          this.activeSliceTimeouts.push(timeoutId);
         });
+        return;
       }
+      
+      // Fallback single sound if no events array
+      instrumentEngine.playDrumSound(slice.sound || 'snare_acoustic', 0.95);
+      return;
+    }
+    
+    // Piano or Guitar Slice phrase / chord
+    const notes = (slice.pattern || [60]).map(n => n + pitchOffset);
+    const baseDuration = (slice.dur || 0.3) / speedMult;
+    
+    if (notes.length === 1) {
+      instrumentEngine.playNote(notes[0], baseDuration, 0.95);
+    } else {
+      notes.forEach((midi, i) => {
+        setTimeout(() => {
+          instrumentEngine.playNote(midi, baseDuration, 0.92);
+        }, i * (25 / speedMult));
+      });
     }
   }
 
@@ -696,6 +1372,8 @@ class TouchControllerEngine {
   render() {
     const container = document.getElementById('mpcDeck');
     if (!container) return;
+
+    const modes = this.getModesForInstrument();
 
     container.innerHTML = `
       <!-- Top Directional Carousel Header -->
@@ -708,7 +1386,9 @@ class TouchControllerEngine {
             ${this.getInstrumentIcon()} ${this.getInstrumentName()} Surface
           </h3>
           <p class="ctrl-sub">
-            Interactive multi-instrument workstation: switch instruments, edit single notes, trigger rich chords, and perform genre-based slices.
+            ${this.activeInstrument === 'drums' 
+              ? 'Dynamic drum computer: 4×4 pad hits, sequenced rhythm fills &amp; rolls, and live genre breakbeats.' 
+              : 'Interactive workstation: switch instruments, edit single notes, trigger rich chords, and perform genre-based slices.'}
           </p>
         </div>
 
@@ -760,10 +1440,10 @@ class TouchControllerEngine {
         </div>
       </div>
 
-      <!-- Performance Mode Tabs (Single Notes, Chords, Slices) -->
+      <!-- Performance Mode Tabs (Instrument-Adapted) -->
       <div class="ctrl-modes-bar">
         <div class="ctrl-modes-tabs">
-          ${CONTROLLER_MODES.map(m => `
+          ${modes.map(m => `
             <button 
               type="button" 
               class="ctrl-mode-btn ${this.activeMode === m.id ? 'active' : ''}" 
@@ -786,7 +1466,7 @@ class TouchControllerEngine {
         ${this.renderSurfaceContentHtml()}
       </div>
 
-      <!-- Interactive Editor Drawer (Single Note Tuning, Chord Voicing, Slice Pitch) -->
+      <!-- Interactive Editor Drawer (Customized Per Instrument) -->
       <div class="ctrl-editor-drawer">
         ${this.renderEditorDrawerHtml()}
       </div>
@@ -802,13 +1482,19 @@ class TouchControllerEngine {
 
   renderActiveInstrumentHudHtml() {
     if (this.activeInstrument === 'drums') {
+      const modeLabel = this.activeMode === 'chords' 
+        ? 'Grooves & Rhythm Fills' 
+        : (this.activeMode === 'slices' ? 'Genre Breakbeat Chops' : '16-Pad MPC One-Shots');
+      const badgeDesc = this.activeMode === 'chords' 
+        ? '16 Dynamic Rhythm Fills' 
+        : (this.activeMode === 'slices' ? `${this.activeGenre.toUpperCase()} Breakbeats` : 'Velocity One-Shots');
       return `
         <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
           <div class="qwerty-hud-group active-hud" style="border-color: rgba(245, 158, 11, 0.45); background: rgba(245, 158, 11, 0.05); grid-column: 1 / -1;">
             <div class="qwerty-hud-title" style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="color: #fbbf24; font-weight: 700; font-size: 0.95rem;">🥁 Active Instrument: Drum Machine (16-Pad MPC)</span>
+              <span style="color: #fbbf24; font-weight: 700; font-size: 0.95rem;">🥁 Active Instrument: Drum Machine (${modeLabel})</span>
               <span class="calc-panel-badge" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-size: 0.7rem; border-color: rgba(245, 158, 11, 0.4);">
-                Dedicated 4×4 Pad Keys
+                ${badgeDesc}
               </span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
@@ -830,7 +1516,7 @@ class TouchControllerEngine {
               </div>
             </div>
             <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
-              ⚡ Velocity-responsive drum hits and layered stacks. Each key corresponds directly to one pad.
+              ⚡ Press QWERTY keys or click on-screen pads. In Grooves &amp; Fills mode, each key triggers a rhythm fill pattern; in Genre Beats mode, each key triggers a live genre chop.
             </div>
           </div>
         </div>
@@ -1003,6 +1689,13 @@ class TouchControllerEngine {
     }
 
     if (this.activeMode === 'chords') {
+      if (this.activeInstrument === 'drums') {
+        return `
+          <div style="font-size: 0.78rem; color: #a1a1aa;">
+            Drum Grooves &amp; Fills Engine &bull; Click any pad or press [1-4, Q-R, A-F, Z-V] to trigger dynamic rhythm breaks, rolls &amp; fills
+          </div>
+        `;
+      }
       return `
         <div style="font-size: 0.78rem; color: #a1a1aa;">
           Harmonic Chord Engine &bull; Click any pad to trigger or edit voicing below
@@ -1023,10 +1716,10 @@ class TouchControllerEngine {
       return this.renderGenreSlicesGridHtml();
     }
 
-    // 2. CHORDS MODE
+    // 2. CHORDS / GROOVES MODE
     if (this.activeMode === 'chords') {
       if (this.activeInstrument === 'piano') return this.renderPianoChordsGridHtml();
-      if (this.activeInstrument === 'drums') return this.renderDrumChordsGridHtml();
+      if (this.activeInstrument === 'drums') return this.renderDrumGroovesGridHtml();
       if (this.activeInstrument === 'guitar') return this.renderGuitarChordsGridHtml();
     }
 
@@ -1196,32 +1889,37 @@ class TouchControllerEngine {
     `;
   }
 
-  // Chords Mode: Drum Chords (Layered Stem Stacks) 4x4 Grid
-  renderDrumChordsGridHtml() {
+  // Grooves & Fills Mode: Drum Grooves & Rhythm Fills 4x4 Grid
+  renderDrumGroovesGridHtml() {
     return `
       <div class="mpc-grid">
-        ${DRUM_CHORDS_CATALOG.map((dc, idx) => `
+        ${DRUM_GROOVES_CATALOG.map((dg, idx) => `
           <div 
             class="mpc-pad" 
             style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.05);"
-            onmousedown="window.touchController.playDrumChord(window.touchController.getDrumChord(${idx})); this.classList.add('active');"
+            onmousedown="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
-            ontouchstart="window.touchController.playDrumChord(window.touchController.getDrumChord(${idx})); this.classList.add('active');"
+            ontouchstart="window.touchController.playDrumGroove(window.touchController.getDrumGroove(${idx})); this.classList.add('active');"
             ontouchend="this.classList.remove('active');"
-            title="${dc.desc}"
+            title="${dg.desc}"
           >
-            <div class="mpc-pad-key">Stack ${idx + 1}</div>
-            <div class="mpc-pad-name" style="color: var(--neon-gold); font-size: 0.9rem;">${dc.name}</div>
-            <div class="mpc-pad-note" style="color: #cbd5e1;">${dc.desc}</div>
+            <div class="mpc-pad-key">Fill / Groove ${idx + 1}</div>
+            <div class="mpc-pad-name" style="color: var(--neon-gold); font-size: 0.9rem;">${dg.name}</div>
+            <div class="mpc-pad-note" style="color: #cbd5e1;">${dg.desc}</div>
           </div>
         `).join('')}
       </div>
     `;
   }
 
+  // Alias for backward compatibility
+  renderDrumChordsGridHtml() {
+    return this.renderDrumGroovesGridHtml();
+  }
+
   getDrumChord(idx) {
-    return DRUM_CHORDS_CATALOG[idx];
+    return DRUM_GROOVES_CATALOG[idx];
   }
 
   // Chords Mode: Guitar Strummed Chord Shapes 4x4 Grid
@@ -1287,14 +1985,108 @@ class TouchControllerEngine {
   // ==========================================================================
 
   renderEditorDrawerHtml() {
+    // 1. SLICES MODE (Genre-based)
     if (this.activeMode === 'slices') {
+      if (this.activeInstrument === 'drums') {
+        return `
+          <div class="ctrl-editor-panel">
+            <div class="ctrl-editor-title">
+              <span>🥁 Drum Breakbeat &amp; Slice Designer (${this.activeGenre.toUpperCase()})</span>
+              <span style="font-size: 0.72rem; color: #a1a1aa;">Time-stretching, groove swing, and sound model for genre beat chops</span>
+            </div>
+            <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+              <div class="ctrl-editor-field">
+                <label>Drum Kit Profile:</label>
+                <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
+                  <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>🥁 Studio Acoustic</option>
+                  <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>⚡ 808 Trap &amp; Drill</option>
+                  <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>🎛️ 909 Dance</option>
+                  <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>📻 Lofi Vinyl</option>
+                  <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
+                </select>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Playback Speed / Time Stretch:</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm ${this.sliceSpeed === 0.5 ? 'active' : ''}" onclick="window.touchController.setSliceSpeed(0.5)">0.5x Half</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.sliceSpeed === 1.0 ? 'active' : ''}" onclick="window.touchController.setSliceSpeed(1.0)">1.0x Normal</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.sliceSpeed === 2.0 ? 'active' : ''}" onclick="window.touchController.setSliceSpeed(2.0)">2.0x Double</button>
+                </div>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Groove Swing Feel:</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumSwing === 0 ? 'active' : ''}" onclick="window.touchController.setDrumSwing(0)">Straight</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumSwing === 0.02 ? 'active' : ''}" onclick="window.touchController.setDrumSwing(0.02)">16th Swing</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumSwing === 0.045 ? 'active' : ''}" onclick="window.touchController.setDrumSwing(0.045)">Shuffle</button>
+                </div>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--neon-cyan);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
+                <input 
+                  type="range" 
+                  min="-12" 
+                  max="12" 
+                  step="1" 
+                  value="${this.slicePitchShift}" 
+                  class="calc-slider"
+                  oninput="window.touchController.setSlicePitch(this.value)"
+                />
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      if (this.activeInstrument === 'guitar') {
+        return `
+          <div class="ctrl-editor-panel">
+            <div class="ctrl-editor-title">
+              <span>🎸 Guitar Riff &amp; Lick Designer (${this.activeGenre.toUpperCase()})</span>
+              <span style="font-size: 0.72rem; color: #a1a1aa;">Real-time pitch shift, tempo stretch, &amp; guitar timbre</span>
+            </div>
+            <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+              <div class="ctrl-editor-field">
+                <label>Guitar Voice:</label>
+                <select class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
+                  <option value="steel_acoustic" selected>🎸 Steel Acoustic</option>
+                  <option value="classical_guitar">🎸 Classical Nylon</option>
+                  <option value="electric_clean">⚡ Clean Electric</option>
+                  <option value="rock_overdrive">🔥 Rock Overdrive</option>
+                  <option value="palm_mute">🤘 Palm Muted</option>
+                </select>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--neon-cyan);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
+                <input 
+                  type="range" 
+                  min="-12" 
+                  max="12" 
+                  step="1" 
+                  value="${this.slicePitchShift}" 
+                  class="calc-slider"
+                  oninput="window.touchController.setSlicePitch(this.value)"
+                />
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Playback Speed / Time Stretch:</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm ${this.sliceSpeed === 0.5 ? 'active' : ''}" onclick="window.touchController.setSliceSpeed(0.5)">0.5x Half</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.sliceSpeed === 1.0 ? 'active' : ''}" onclick="window.touchController.setSliceSpeed(1.0)">1.0x Normal</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.sliceSpeed === 2.0 ? 'active' : ''}" onclick="window.touchController.setSliceSpeed(2.0)">2.0x Double</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      // Piano Slices
       return `
         <div class="ctrl-editor-panel">
           <div class="ctrl-editor-title">
-            <span>✂️ Genre Slice Sound Designer</span>
-            <span style="font-size: 0.72rem; color: #a1a1aa;">Real-time pitch shift, tempo stretch, &amp; envelope editing</span>
+            <span>🎹 Piano Lick Sound Designer (${this.activeGenre.toUpperCase()})</span>
+            <span style="font-size: 0.72rem; color: #a1a1aa;">Real-time pitch shift, tempo stretch, &amp; harmonic resonance</span>
           </div>
-          <div class="ctrl-editor-controls">
+          <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
             <div class="ctrl-editor-field">
               <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--neon-cyan);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
               <input 
@@ -1315,17 +2107,138 @@ class TouchControllerEngine {
                 <button type="button" class="btn btn-secondary btn-sm ${this.sliceSpeed === 2.0 ? 'active' : ''}" onclick="window.touchController.setSliceSpeed(2.0)">2.0x Double</button>
               </div>
             </div>
+            <div class="ctrl-editor-field" style="display: flex; align-items: flex-end;">
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-sm" 
+                onclick="window.toggleSustainPedal()" 
+                style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+              >
+                <span class="sustain-pedal-led ${instrumentEngine.settings.sustainPedal ? 'active' : ''}"></span>
+                Sustain Pedal (Shift Key)
+              </button>
+            </div>
           </div>
         </div>
       `;
     }
 
+    // 2. CHORDS / GROOVES MODE
     if (this.activeMode === 'chords') {
+      if (this.activeInstrument === 'drums') {
+        return `
+          <div class="ctrl-editor-panel">
+            <div class="ctrl-editor-title">
+              <span>🥁 Drum Kit &amp; Groove Articulation Rack</span>
+              <span style="font-size: 0.72rem; color: #a1a1aa;">Shape rhythm swing feel, fill density, and drum kit acoustics</span>
+            </div>
+            <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+              <div class="ctrl-editor-field">
+                <label>Drum Kit Profile:</label>
+                <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
+                  <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>🥁 Studio Acoustic</option>
+                  <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>⚡ 808 Trap &amp; Drill</option>
+                  <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>🎛️ 909 Dance</option>
+                  <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>📻 Lofi Vinyl</option>
+                  <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
+                </select>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Groove Swing Feel:</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumSwing === 0 ? 'active' : ''}" onclick="window.touchController.setDrumSwing(0)">Straight</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumSwing === 0.02 ? 'active' : ''}" onclick="window.touchController.setDrumSwing(0.02)">16th Swing</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.drumSwing === 0.045 ? 'active' : ''}" onclick="window.touchController.setDrumSwing(0.045)">Shuffle</button>
+                </div>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Fill &amp; Roll Density:</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm ${this.rollDensity === '8th' ? 'active' : ''}" onclick="window.touchController.setRollDensity('8th')">1/8th</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.rollDensity === '16th' ? 'active' : ''}" onclick="window.touchController.setRollDensity('16th')">1/16th</button>
+                  <button type="button" class="btn btn-secondary btn-sm ${this.rollDensity === '32nd' ? 'active' : ''}" onclick="window.touchController.setRollDensity('32nd')">1/32nd</button>
+                </div>
+              </div>
+              <div class="ctrl-editor-field" style="display: flex; align-items: flex-end;">
+                <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="window.touchController.auditionDrumFill()">
+                  ▶ Audition Drum Fill
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      if (this.activeInstrument === 'guitar') {
+        return `
+          <div class="ctrl-editor-panel">
+            <div class="ctrl-editor-title">
+              <span>🎸 Guitar Voicing &amp; Strum Physics Rack</span>
+              <span style="font-size: 0.72rem; color: #a1a1aa;">Custom fret voicing builder, pick dynamics &amp; acoustic strum speed</span>
+            </div>
+            <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+              <div class="ctrl-editor-field">
+                <label>Guitar Voice:</label>
+                <select class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
+                  <option value="steel_acoustic" selected>🎸 Steel Acoustic</option>
+                  <option value="classical_guitar">🎸 Classical Nylon</option>
+                  <option value="electric_clean">⚡ Clean Electric</option>
+                  <option value="rock_overdrive">🔥 Rock Overdrive</option>
+                  <option value="palm_mute">🤘 Palm Muted</option>
+                </select>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Root Note:</label>
+                <select class="theory-select" onchange="window.touchController.selectedChordRoot = parseInt(this.value)">
+                  <option value="0">C</option>
+                  <option value="1">C# / Db</option>
+                  <option value="2">D</option>
+                  <option value="3">D# / Eb</option>
+                  <option value="4">E</option>
+                  <option value="5">F</option>
+                  <option value="6">F# / Gb</option>
+                  <option value="7">G</option>
+                  <option value="8">G# / Ab</option>
+                  <option value="9">A</option>
+                  <option value="10">A# / Bb</option>
+                  <option value="11">B</option>
+                </select>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Chord Type:</label>
+                <select class="theory-select" onchange="window.touchController.selectedChordType = this.value">
+                  <option value="maj7" selected>Major 7th (Maj7)</option>
+                  <option value="min7">Minor 7th (m7)</option>
+                  <option value="dom7">Dominant 7th (7)</option>
+                  <option value="min9">Minor 9th (m9)</option>
+                  <option value="maj9">Major 9th (Maj9)</option>
+                  <option value="sus4">Suspended 4th (sus4)</option>
+                  <option value="dim7">Diminished 7th (dim7)</option>
+                  <option value="add9">Add 9 (add9)</option>
+                </select>
+              </div>
+              <div class="ctrl-editor-field">
+                <label>Strum Physics:</label>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.chordStrumSpeed = 0.005">Tight Block</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.chordStrumSpeed = 0.024">Standard Strum</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.chordStrumSpeed = 0.05">Slow Arp</button>
+                </div>
+              </div>
+              <div class="ctrl-editor-field" style="display: flex; align-items: flex-end;">
+                <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="window.touchController.auditionCustomChord()">
+                  ▶ Audition Guitar Chord
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      // Piano Chords
       return `
         <div class="ctrl-editor-panel">
           <div class="ctrl-editor-title">
-            <span>🎼 Interactive Chord Voicing Builder</span>
-            <span style="font-size: 0.72rem; color: #a1a1aa;">Build, edit, and strum custom harmonic chord structures</span>
+            <span>🎹 Piano Harmonic Voicing &amp; Inversion Builder</span>
+            <span style="font-size: 0.72rem; color: #a1a1aa;">Build, voice, and invert rich piano chords</span>
           </div>
           <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
             <div class="ctrl-editor-field">
@@ -1359,16 +2272,20 @@ class TouchControllerEngine {
               </select>
             </div>
             <div class="ctrl-editor-field">
-              <label>Strum Physics:</label>
-              <div style="display: flex; gap: 0.35rem;">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.chordStrumSpeed = 0.005">Tight Block</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.chordStrumSpeed = 0.024">Standard Strum</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.chordStrumSpeed = 0.05">Slow Arp</button>
-              </div>
+              <label>Sustain Resonance:</label>
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-sm" 
+                onclick="window.toggleSustainPedal()" 
+                style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+              >
+                <span class="sustain-pedal-led ${instrumentEngine.settings.sustainPedal ? 'active' : ''}"></span>
+                Sustain Pedal (Shift Key)
+              </button>
             </div>
             <div class="ctrl-editor-field" style="display: flex; align-items: flex-end;">
               <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="window.touchController.auditionCustomChord()">
-                ▶ Audition Chord
+                ▶ Audition Piano Chord
               </button>
             </div>
           </div>
@@ -1376,12 +2293,65 @@ class TouchControllerEngine {
       `;
     }
 
-    // Single Notes Mode Editor
+    // 3. SINGLE NOTES MODE
+    if (this.activeInstrument === 'drums') {
+      return `
+        <div class="ctrl-editor-panel">
+          <div class="ctrl-editor-title">
+            <span>🥁 MPC Drum Kit &amp; Pad Velocity Rack</span>
+            <span style="font-size: 0.72rem; color: #a1a1aa;">Select kit acoustic timbre and trigger velocity</span>
+          </div>
+          <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div class="ctrl-editor-field">
+              <label>Drum Kit Profile:</label>
+              <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
+                <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>🥁 Studio Acoustic</option>
+                <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>⚡ 808 Trap &amp; Drill</option>
+                <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>🎛️ 909 Dance</option>
+                <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>📻 Lofi Vinyl</option>
+                <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
+              </select>
+            </div>
+            <div class="ctrl-editor-field">
+              <label>Pad Hit Velocity: <span style="color: var(--neon-cyan);">95%</span></label>
+              <input type="range" min="40" max="100" value="95" class="calc-slider" />
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    if (this.activeInstrument === 'guitar') {
+      return `
+        <div class="ctrl-editor-panel">
+          <div class="ctrl-editor-title">
+            <span>🎸 Guitar Timbre &amp; Fret Dynamics Rack</span>
+            <span style="font-size: 0.72rem; color: #a1a1aa;">Tune guitar sound model, string action, and pick velocity</span>
+          </div>
+          <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div class="ctrl-editor-field">
+              <label>Guitar Voice:</label>
+              <select class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
+                <option value="steel_acoustic" selected>🎸 Steel Acoustic</option>
+                <option value="classical_guitar">🎸 Classical Nylon</option>
+                <option value="electric_clean">⚡ Clean Electric</option>
+                <option value="rock_overdrive">🔥 Rock Overdrive</option>
+                <option value="palm_mute">🤘 Palm Muted</option>
+              </select>
+            </div>
+            <div class="ctrl-editor-field">
+              <label>Pick Attack Velocity: <span style="color: var(--neon-cyan);">95%</span></label>
+              <input type="range" min="40" max="100" value="95" class="calc-slider" />
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    // Piano single notes
     return `
       <div class="ctrl-editor-panel">
         <div class="ctrl-editor-title">
-          <span>🎵 Single Note Articulation Rack</span>
-          <span style="font-size: 0.72rem; color: #a1a1aa;">Tune key sensitivity, velocity, and decay</span>
+          <span>🎹 Piano Keybed Articulation Rack</span>
+          <span style="font-size: 0.72rem; color: #a1a1aa;">Tune key velocity, octave range, and sustain resonance</span>
         </div>
         <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
           <div class="ctrl-editor-field">
