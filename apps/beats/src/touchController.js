@@ -60,6 +60,108 @@ export const PIANO_CHORDS_CATALOG = [
   { id: 'neo_quartal', name: 'C Quartal', notes: [48, 53, 58, 63, 68], desc: 'Modern 4th stack' },
 ];
 
+// ============================================================================
+// FULL QWERTY KEYBOARD MAPS (EXCLUSIVE PER INSTRUMENT)
+// ============================================================================
+
+// Piano: 2+ Chromatic Octaves across entire keyboard
+export const PIANO_FULL_KEY_MAP = {
+  // Lower Octave (Base octave: C to E+1)
+  'Z': { offset: 0, note: 'C' },
+  'S': { offset: 1, note: 'C#' },
+  'X': { offset: 2, note: 'D' },
+  'D': { offset: 3, note: 'D#' },
+  'C': { offset: 4, note: 'E' },
+  'V': { offset: 5, note: 'F' },
+  'G': { offset: 6, note: 'F#' },
+  'B': { offset: 7, note: 'G' },
+  'H': { offset: 8, note: 'G#' },
+  'N': { offset: 9, note: 'A' },
+  'J': { offset: 10, note: 'A#' },
+  'M': { offset: 11, note: 'B' },
+  ',': { offset: 12, note: 'C' },
+  'L': { offset: 13, note: 'C#' },
+  '.': { offset: 14, note: 'D' },
+  ';': { offset: 15, note: 'D#' },
+  '/': { offset: 16, note: 'E' },
+
+  // Upper Octave (Base octave + 12: C+1 to G+2)
+  'Q': { offset: 12, note: 'C' },
+  '2': { offset: 13, note: 'C#' },
+  'W': { offset: 14, note: 'D' },
+  '3': { offset: 15, note: 'D#' },
+  'E': { offset: 16, note: 'E' },
+  'R': { offset: 17, note: 'F' },
+  '5': { offset: 18, note: 'F#' },
+  'T': { offset: 19, note: 'G' },
+  '6': { offset: 20, note: 'G#' },
+  'Y': { offset: 21, note: 'A' },
+  '7': { offset: 22, note: 'A#' },
+  'U': { offset: 23, note: 'B' },
+  'I': { offset: 24, note: 'C' },
+  '9': { offset: 25, note: 'C#' },
+  'O': { offset: 26, note: 'D' },
+  '0': { offset: 27, note: 'D#' },
+  'P': { offset: 28, note: 'E' },
+  '[': { offset: 29, note: 'F' },
+  '=': { offset: 30, note: 'F#' },
+  ']': { offset: 31, note: 'G' },
+};
+
+// Guitar: 4-Row Mapping (Open Strings, Melody Frets, Mid Riffs, Bass & Strum Chords)
+export const GUITAR_FULL_KEY_MAP = {
+  // Row 1: Open Strings plucks (1-6) + high notes
+  '1': { type: 'string', midi: 64, name: 'String 1 (High E)' },
+  '2': { type: 'string', midi: 59, name: 'String 2 (B)' },
+  '3': { type: 'string', midi: 55, name: 'String 3 (G)' },
+  '4': { type: 'string', midi: 50, name: 'String 4 (D)' },
+  '5': { type: 'string', midi: 45, name: 'String 5 (A)' },
+  '6': { type: 'string', midi: 40, name: 'String 6 (Low E)' },
+  '7': { type: 'note', midi: 65, name: 'F4' },
+  '8': { type: 'note', midi: 67, name: 'G4' },
+  '9': { type: 'note', midi: 69, name: 'A4' },
+  '0': { type: 'note', midi: 71, name: 'B4' },
+
+  // Row 2: Solo Lead Frets (Q - ])
+  'Q': { type: 'note', midi: 64, name: 'E4 (Fret 0)' },
+  'W': { type: 'note', midi: 65, name: 'F4 (Fret 1)' },
+  'E': { type: 'note', midi: 66, name: 'F#4 (Fret 2)' },
+  'R': { type: 'note', midi: 67, name: 'G4 (Fret 3)' },
+  'T': { type: 'note', midi: 68, name: 'G#4 (Fret 4)' },
+  'Y': { type: 'note', midi: 69, name: 'A4 (Fret 5)' },
+  'U': { type: 'note', midi: 70, name: 'A#4 (Fret 6)' },
+  'I': { type: 'note', midi: 71, name: 'B4 (Fret 7)' },
+  'O': { type: 'note', midi: 72, name: 'C5 (Fret 8)' },
+  'P': { type: 'note', midi: 73, name: 'C#5 (Fret 9)' },
+  '[': { type: 'note', midi: 74, name: 'D5 (Fret 10)' },
+  ']': { type: 'note', midi: 76, name: 'E5 (Fret 12)' },
+
+  // Row 3: Mid Riffing Frets (A - ')
+  'A': { type: 'note', midi: 50, name: 'D3' },
+  'S': { type: 'note', midi: 52, name: 'E3' },
+  'D': { type: 'note', midi: 53, name: 'F3' },
+  'F': { type: 'note', midi: 55, name: 'G3' },
+  'G': { type: 'note', midi: 57, name: 'A3' },
+  'H': { type: 'note', midi: 59, name: 'B3' },
+  'J': { type: 'note', midi: 60, name: 'C4' },
+  'K': { type: 'note', midi: 62, name: 'D4' },
+  'L': { type: 'note', midi: 64, name: 'E4' },
+  ';': { type: 'note', midi: 65, name: 'F4' },
+  "'": { type: 'note', midi: 67, name: 'G4' },
+
+  // Row 4: Bass plucks + 6 Classic Guitar Chords
+  'Z': { type: 'note', midi: 40, name: 'Low E2' },
+  'X': { type: 'note', midi: 43, name: 'G2' },
+  'C': { type: 'note', midi: 45, name: 'A2' },
+  'V': { type: 'note', midi: 47, name: 'B2' },
+  'B': { type: 'chord', idx: 0, name: 'Open Em' },
+  'N': { type: 'chord', idx: 1, name: 'Open C' },
+  'M': { type: 'chord', idx: 2, name: 'Open G' },
+  ',': { type: 'chord', idx: 3, name: 'Open D' },
+  '.': { type: 'chord', idx: 4, name: 'Open Am' },
+  '/': { type: 'chord', idx: 5, name: 'F Barre' },
+};
+
 // Drum Chords (Layered Multi-Stem Stacks)
 export const DRUM_CHORDS_CATALOG = [
   { id: 'dc_1', name: 'Heavy Drop', sounds: ['kick', 'sub_drop', 'shaker'], desc: 'Sub Kick + 808 Boom + Shaker' },
@@ -689,44 +791,143 @@ class TouchControllerEngine {
         ${this.renderEditorDrawerHtml()}
       </div>
 
-      <!-- Multi-Instrument QWERTY Performance Keyboard HUD -->
-      <div class="qwerty-multi-instrument-hud" style="margin-top: 1.5rem;">
-        <div class="qwerty-hud-group ${this.activeInstrument === 'drums' ? 'active-hud' : ''}">
-          <div class="qwerty-hud-title">
-            <span>🥁 Drums &amp; Pad MPC</span>
-            <span class="calc-panel-badge" style="font-size: 0.65rem; padding: 1px 6px; background: rgba(245, 158, 11, 0.2); color: #fbbf24;">4×4 Pads</span>
-          </div>
-          <div class="qwerty-hud-keys">
-            <kbd>1-4</kbd> <kbd>Q-R</kbd> <kbd>A-F</kbd> <kbd>Z-V</kbd>
-          </div>
-          <div class="qwerty-hud-desc">Triggers live drum hits &amp; stem stacks</div>
-        </div>
+      <!-- Dynamic Active Instrument QWERTY HUD -->
+      ${this.renderActiveInstrumentHudHtml()}
+      
+      <p style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 0.65rem;">
+        ⌨️ <em>Active Instrument Isolation: Whichever instrument is selected exclusively controls the computer keyboard. Clicking text inputs restores standard typing.</em>
+      </p>
+    `;
+  }
 
-        <div class="qwerty-hud-group ${this.activeInstrument === 'piano' ? 'active-hud' : ''}">
-          <div class="qwerty-hud-title">
-            <span>🎹 Piano &amp; Keys</span>
-            <span class="calc-panel-badge" style="font-size: 0.65rem; padding: 1px 6px; background: rgba(6, 182, 212, 0.2); color: #67e8f9;">Chromatic</span>
+  renderActiveInstrumentHudHtml() {
+    if (this.activeInstrument === 'drums') {
+      return `
+        <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
+          <div class="qwerty-hud-group active-hud" style="border-color: rgba(245, 158, 11, 0.45); background: rgba(245, 158, 11, 0.05); grid-column: 1 / -1;">
+            <div class="qwerty-hud-title" style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #fbbf24; font-weight: 700; font-size: 0.95rem;">🥁 Active Instrument: Drum Machine (16-Pad MPC)</span>
+              <span class="calc-panel-badge" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-size: 0.7rem; border-color: rgba(245, 158, 11, 0.4);">
+                Dedicated 4×4 Pad Keys
+              </span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
+              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 4 (Pads 13-16):</span>
+                <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 3 (Pads 9-12):</span>
+                <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 2 (Pads 5-8):</span>
+                <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd>
+              </div>
+              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 1 (Pads 1-4):</span>
+                <kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd>
+              </div>
+            </div>
+            <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
+              ⚡ Velocity-responsive drum hits and layered stacks. Each key corresponds directly to one pad.
+            </div>
           </div>
-          <div class="qwerty-hud-keys">
-            White: <kbd>T</kbd><kbd>Y</kbd><kbd>U</kbd><kbd>I</kbd><kbd>O</kbd><kbd>P</kbd><kbd>[</kbd><kbd>]</kbd> • Black: <kbd>5</kbd><kbd>6</kbd><kbd>8</kbd><kbd>9</kbd><kbd>0</kbd>
-          </div>
-          <div class="qwerty-hud-desc">Chromatic octave keys &amp; chord voicings</div>
         </div>
+      `;
+    }
 
-        <div class="qwerty-hud-group ${this.activeInstrument === 'guitar' ? 'active-hud' : ''}">
-          <div class="qwerty-hud-title">
-            <span>🎸 Guitar &amp; Fretboard</span>
-            <span class="calc-panel-badge" style="font-size: 0.65rem; padding: 1px 6px; background: rgba(16, 185, 129, 0.2); color: #34d399;">Strings</span>
+    if (this.activeInstrument === 'piano') {
+      return `
+        <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
+          <div class="qwerty-hud-group active-hud" style="border-color: rgba(6, 182, 212, 0.45); background: rgba(6, 182, 212, 0.05); grid-column: 1 / -1;">
+            <div class="qwerty-hud-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <span style="color: #67e8f9; font-weight: 700; font-size: 0.95rem;">🎹 Active Instrument: Chromatic Piano (Full Keyboard Layout)</span>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="calc-panel-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; font-size: 0.7rem; border-color: rgba(6, 182, 212, 0.4);">
+                  Octave: C${this.pianoOctave} - C${this.pianoOctave + 2} (Press [1] / [-] to Shift)
+                </span>
+                <span class="calc-panel-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.7rem; border-color: rgba(16, 185, 129, 0.4);">
+                  Hold [Shift] for Sustain
+                </span>
+              </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
+              <!-- Upper Octave -->
+              <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.15);">
+                <div style="font-size: 0.75rem; font-weight: 600; color: #67e8f9; margin-bottom: 0.35rem;">
+                  Upper Tier (Octave C${this.pianoOctave + 1} - G${this.pianoOctave + 2}):
+                </div>
+                <div style="margin-bottom: 0.3rem;">
+                  <span style="color: #a1a1aa; font-size: 0.7rem;">Whites:</span> 
+                  <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>I</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>[</kbd> <kbd>]</kbd>
+                </div>
+                <div>
+                  <span style="color: #a1a1aa; font-size: 0.7rem;">Blacks:</span> 
+                  <kbd>2</kbd> <kbd>3</kbd> &nbsp; <kbd>5</kbd> <kbd>6</kbd> <kbd>7</kbd> &nbsp; <kbd>9</kbd> <kbd>0</kbd> <kbd>=</kbd>
+                </div>
+              </div>
+
+              <!-- Lower Octave -->
+              <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.15);">
+                <div style="font-size: 0.75rem; font-weight: 600; color: #67e8f9; margin-bottom: 0.35rem;">
+                  Lower Tier (Octave C${this.pianoOctave} - E${this.pianoOctave + 1}):
+                </div>
+                <div style="margin-bottom: 0.3rem;">
+                  <span style="color: #a1a1aa; font-size: 0.7rem;">Whites:</span> 
+                  <kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd> <kbd>B</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>,</kbd> <kbd>.</kbd> <kbd>/</kbd>
+                </div>
+                <div>
+                  <span style="color: #a1a1aa; font-size: 0.7rem;">Blacks:</span> 
+                  <kbd>S</kbd> <kbd>D</kbd> &nbsp; <kbd>G</kbd> <kbd>H</kbd> <kbd>J</kbd> &nbsp; <kbd>L</kbd> <kbd>;</kbd>
+                </div>
+              </div>
+            </div>
+
+            <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
+              🎹 Over two full continuous octaves mapped across your keyboard like a professional digital audio workstation.
+            </div>
           </div>
-          <div class="qwerty-hud-keys">
-            Strings: <kbd>G</kbd><kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd><kbd>;</kbd><kbd>'</kbd> • Chords: <kbd>B</kbd><kbd>N</kbd><kbd>M</kbd><kbd>,</kbd><kbd>.</kbd><kbd>/</kbd>
+        </div>
+      `;
+    }
+
+    // Guitar Active HUD
+    return `
+      <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
+        <div class="qwerty-hud-group active-hud" style="border-color: rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.05); grid-column: 1 / -1;">
+          <div class="qwerty-hud-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <span style="color: #34d399; font-weight: 700; font-size: 0.95rem;">🎸 Active Instrument: Guitar Fretboard &amp; Strummer (Full Keyboard Layout)</span>
+            <span class="calc-panel-badge" style="background: rgba(16, 185, 129, 0.25); color: #34d399; font-size: 0.7rem; border-color: rgba(16, 185, 129, 0.4);">
+              Full 4-Row Guitar Map
+            </span>
           </div>
-          <div class="qwerty-hud-desc">Plucks open strings or strums guitar chords</div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
+            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
+              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 1: Open Strings Plucks</span>
+              <kbd>1</kbd> (E4) <kbd>2</kbd> (B3) <kbd>3</kbd> (G3) <kbd>4</kbd> (D3) <kbd>5</kbd> (A2) <kbd>6</kbd> (E2) &bull; <kbd>7</kbd><kbd>8</kbd><kbd>9</kbd><kbd>0</kbd>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
+              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 2: Lead Solo Frets (High E Fret 0-12)</span>
+              <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>I</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>[</kbd> <kbd>]</kbd>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
+              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 3: Mid Riffing Frets (Strings 3 &amp; 4)</span>
+              <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>H</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> <kbd>;</kbd> <kbd>'</kbd>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
+              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 4: Bass Notes &amp; Chord Strums</span>
+              Bass: <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd> &bull; Chords: <kbd>B</kbd>(Em) <kbd>N</kbd>(C) <kbd>M</kbd>(G) <kbd>,</kbd>(D) <kbd>.</kbd>(Am) <kbd>/</kbd>(F)
+            </div>
+          </div>
+
+          <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
+            🎸 Pluck individual open strings, run guitar solos up the neck, or trigger full chord strums with realistic acoustic resonance.
+          </div>
         </div>
       </div>
-      <p style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 0.65rem;">
-        ⌨️ <em>Auto-Typing Active: Clicking into any text box or input field instantly restores normal letters with zero interference.</em>
-      </p>
     `;
   }
 
@@ -847,6 +1048,12 @@ class TouchControllerEngine {
     const totalKeys = 25; // 2 octaves + high C
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+    // Map primary QWERTY key badges for all 25 keys across lower and upper tiers
+    const qwertyBadges = [
+      'Z', 'S', 'X', 'D', 'C', 'V', 'G', 'B', 'H', 'N', 'J', 'M',
+      'Q', '2', 'W', '3', 'E', 'R', '5', 'T', '6', 'Y', '7', 'U', 'I'
+    ];
+
     let html = '<div class="piano-wrapper" style="overflow-x: auto; padding: 1rem 0;"><div class="piano-keyboard">';
     
     for (let i = 0; i < totalKeys; i++) {
@@ -855,19 +1062,22 @@ class TouchControllerEngine {
       const isWhite = whiteKeyOffsets.includes(semi);
       const noteName = noteNames[semi];
       const oct = Math.floor(midi / 12) - 1;
+      const badge = qwertyBadges[i] || '';
 
       html += `
         <div 
           class="piano-key ${isWhite ? 'white-key' : 'black-key'}" 
           data-midi="${midi}"
+          data-offset="${i}"
           onmousedown="window.touchController.playSingleNote(${midi}); this.classList.add('playing');"
           onmouseup="this.classList.remove('playing');"
           onmouseleave="this.classList.remove('playing');"
           ontouchstart="window.touchController.playSingleNote(${midi}); this.classList.add('playing');"
           ontouchend="this.classList.remove('playing');"
-          title="${noteName}${oct} (${midi} Hz)"
+          title="${noteName}${oct} • Computer Key: [${badge}]"
         >
           <span style="font-size: 0.65rem; opacity: 0.85;">${noteName}${oct}</span>
+          ${badge ? `<span class="piano-key-badge" style="font-size: 0.58rem; opacity: 0.75; margin-top: 2px;">[${badge}]</span>` : ''}
         </div>
       `;
     }

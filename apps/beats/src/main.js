@@ -47,7 +47,15 @@ import { samplerEngine } from './samplerEngine.js';
 import { sampleEngine } from './sampleEngine.js';
 import { instrumentEngine, INSTRUMENT_CATALOG, DRUM_KITS } from './instrumentEngine.js';
 import { studioRecorder } from './studioRecorder.js';
-import { touchController, PIANO_CHORDS_CATALOG, GUITAR_CHORDS_CATALOG, DRUM_CHORDS_CATALOG, GENRE_SLICES } from './touchController.js';
+import { 
+  touchController, 
+  PIANO_CHORDS_CATALOG, 
+  GUITAR_CHORDS_CATALOG, 
+  DRUM_CHORDS_CATALOG, 
+  GENRE_SLICES,
+  PIANO_FULL_KEY_MAP,
+  GUITAR_FULL_KEY_MAP
+} from './touchController.js';
 
 window.touchController = touchController;
 window.setControllerInstrument = (id) => touchController.setInstrument(id);
@@ -923,7 +931,7 @@ function playGuitarKey(action) {
   }
 }
 
-// Master Multi-Instrument QWERTY Keyboard Listener
+// Master Single-Instrument Exclusive QWERTY Keyboard Listener
 window.addEventListener('keydown', (e) => {
   // CRITICAL: Immediately yield to native browser typing if user is in an input, textarea, or dropdown!
   if (isTypingInField() || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -943,37 +951,83 @@ window.addEventListener('keydown', (e) => {
   // Prevent browser auto-repeat from stuttering note attacks while key is held down!
   if (e.repeat) return;
 
-  // 1. DRUMS (1-4, Q-R, A-F, Z-V)
-  const padObj = MPC_PADS_CONFIG.find((p) => p.key.toUpperCase() === keyUpper);
-  if (padObj) {
-    e.preventDefault();
-    // A single press & long press count as ONLY a single strike — never repeat through sustained press!
-    if (heldDrumKeys.has(keyUpper)) return;
-    heldDrumKeys.add(keyUpper);
-    handleMpcPadHit(padObj.pad, 0.95);
-    return;
-  }
+  // STRICT SINGLE-INSTRUMENT SELECTION: Whichever instrument is active completely owns the keyboard!
+  const activeInst = window.touchController ? window.touchController.activeInstrument : 'drums';
 
-  // 2. PIANO / KEYBOARD (T, 5, Y, 6, U, I, 8, O, 9, P, 0, [, ])
-  if (PIANO_KEY_MAP[keyUpper] !== undefined || PIANO_KEY_MAP[rawKey] !== undefined) {
-    e.preventDefault();
-    const midi = PIANO_KEY_MAP[keyUpper] !== undefined ? PIANO_KEY_MAP[keyUpper] : PIANO_KEY_MAP[rawKey];
-    activeHeldKeys.set(keyUpper, { type: 'piano', midi });
-    instrumentNoteOn(midi, 0.95);
-    return;
-  }
-
-  // 3. GUITAR / STRINGS (G, H, J, K, L, ;, ', B, N, M, ,, ., /)
-  const guitarAction = GUITAR_KEY_MAP[keyUpper] || GUITAR_KEY_MAP[rawKey];
-  if (guitarAction) {
-    e.preventDefault();
-    if (guitarAction.type === 'string') {
-      activeHeldKeys.set(keyUpper, { type: 'guitar_string', midi: guitarAction.midi });
-      instrumentNoteOn(guitarAction.midi, 0.95);
-    } else {
-      playGuitarKey(guitarAction);
+  // =========================================================================
+  // 1. ACTIVE INSTRUMENT: DRUMS (MPC 16-Pad Layout: 1-4, Q-R, A-F, Z-V)
+  // =========================================================================
+  if (activeInst === 'drums') {
+    const padObj = MPC_PADS_CONFIG.find((p) => p.key.toUpperCase() === keyUpper);
+    if (padObj) {
+      e.preventDefault();
+      if (heldDrumKeys.has(keyUpper)) return;
+      heldDrumKeys.add(keyUpper);
+      handleMpcPadHit(padObj.pad, 0.95);
+      const padEl = document.getElementById(`ctrlMpcPad_${padObj.pad}`);
+      if (padEl) padEl.classList.add('active');
+      return;
     }
-    return;
+    return; // Don't trigger piano or guitar when drums is active
+  }
+
+  // =========================================================================
+  // 2. ACTIVE INSTRUMENT: PIANO (Full QWERTY Chromatic Layout - 2+ Octaves)
+  // =========================================================================
+  if (activeInst === 'piano') {
+    // Quick Octave Transpose shortcuts: 1 (Octave Down), - or = (Octave Up)
+    if (keyUpper === '1') {
+      e.preventDefault();
+      if (window.touchController) window.touchController.shiftOctave(-1);
+      return;
+    }
+    if (keyUpper === '-' || rawKey === '-' || rawKey === '_' || keyUpper === '=') {
+      e.preventDefault();
+      if (window.touchController) window.touchController.shiftOctave(1);
+      return;
+    }
+
+    const mapItem = PIANO_FULL_KEY_MAP[keyUpper] || PIANO_FULL_KEY_MAP[rawKey];
+    if (mapItem) {
+      e.preventDefault();
+      const currentOctave = window.touchController ? window.touchController.pianoOctave : 3;
+      const midi = currentOctave * 12 + 12 + mapItem.offset;
+      activeHeldKeys.set(keyUpper, { type: 'piano', midi });
+      instrumentNoteOn(midi, 0.95);
+
+      // Visual highlight on on-screen piano key
+      const pianoKeyEl = document.querySelector(`.piano-key[data-midi="${midi}"]`);
+      if (pianoKeyEl) pianoKeyEl.classList.add('playing');
+      return;
+    }
+    return; // Don't trigger drums or guitar when piano is active
+  }
+
+  // =========================================================================
+  // 3. ACTIVE INSTRUMENT: GUITAR (Full 4-Row Fretboard, Open Strings & Chords)
+  // =========================================================================
+  if (activeInst === 'guitar') {
+    const guitarAction = GUITAR_FULL_KEY_MAP[keyUpper] || GUITAR_FULL_KEY_MAP[rawKey];
+    if (guitarAction) {
+      e.preventDefault();
+      if (guitarAction.type === 'string' || guitarAction.type === 'note') {
+        activeHeldKeys.set(keyUpper, { type: 'guitar', midi: guitarAction.midi });
+        instrumentNoteOn(guitarAction.midi, 0.95);
+
+        // Highlight matching fret on interactive fretboard
+        const fretEl = document.querySelector(`.fret-cell[data-midi="${guitarAction.midi}"]`);
+        if (fretEl) fretEl.classList.add('active');
+      } else if (guitarAction.type === 'chord') {
+        const chordItem = GUITAR_CHORDS_CATALOG[guitarAction.idx];
+        if (window.touchController) {
+          window.touchController.playChordVoicing(chordItem?.notes || [40, 47, 52, 55, 59, 64], true);
+        } else {
+          playGuitarKey(guitarAction);
+        }
+      }
+      return;
+    }
+    return; // Don't trigger drums or piano when guitar is active
   }
 });
 
@@ -985,6 +1039,11 @@ window.addEventListener('keyup', (e) => {
   // Release held drum key so it can be triggered on the next stroke
   if (heldDrumKeys.has(keyUpper)) {
     heldDrumKeys.delete(keyUpper);
+    const padObj = MPC_PADS_CONFIG.find((p) => p.key.toUpperCase() === keyUpper);
+    if (padObj) {
+      const padEl = document.getElementById(`ctrlMpcPad_${padObj.pad}`);
+      if (padEl) padEl.classList.remove('active');
+    }
   }
 
   // Sustain pedal release via Shift key
@@ -999,6 +1058,13 @@ window.addEventListener('keyup', (e) => {
     activeHeldKeys.delete(keyUpper);
     if (held.midi !== undefined) {
       instrumentNoteOff(held.midi);
+
+      // Remove visual highlights
+      const pianoKeyEl = document.querySelector(`.piano-key[data-midi="${held.midi}"]`);
+      if (pianoKeyEl) pianoKeyEl.classList.remove('playing');
+
+      const fretEl = document.querySelector(`.fret-cell[data-midi="${held.midi}"]`);
+      if (fretEl) fretEl.classList.remove('active');
     }
   }
 });
