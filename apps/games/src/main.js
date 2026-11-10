@@ -2,12 +2,13 @@
  * Dangling Dice Gaming Lab™ — Application Logic
  */
 
-import { GAMES_CATALOG, ACCESSORIES_CATALOG, SOFTWARE_GUIDE } from './gameData.js';
+import { GAMES_CATALOG, ACCESSORIES_CATALOG, SOFTWARE_GUIDE, AUDIO_SETUPS } from './gameData.js';
 
 // State
 let selectedGameId = 'warzone';
 let activeDashboardTab = 'audio';
 let activeGearCategory = 'all';
+let activeAudioSetupId = 'analog-35mm';
 
 // Toast Notification Helper
 function showToast(message, type = 'info') {
@@ -563,6 +564,105 @@ function renderSoftwareGuide() {
   ).join('');
 }
 
+// Render Audio Setup Isolator & Wizard
+function renderAudioSetupWizard() {
+  const selectorGrid = document.getElementById('audioSetupSelectorGrid');
+  const detailBox = document.getElementById('audioSetupDetailBox');
+  if (!selectorGrid || !detailBox) return;
+
+  // Render Selector Buttons
+  selectorGrid.innerHTML = AUDIO_SETUPS.map(
+    (s) => `
+    <button type="button" class="setup-selector-card ${activeAudioSetupId === s.id ? 'active' : ''}" onclick="window.selectAudioSetup('${s.id}')">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="setup-selector-icon">${s.icon}</span>
+        <span style="font-size: 0.65rem; color: var(--neon-cyan); font-weight: 700; text-transform: uppercase;">${escapeHtml(s.category)}</span>
+      </div>
+      <div class="setup-selector-title">${escapeHtml(s.shortTitle)}</div>
+      <div class="setup-selector-sub">${escapeHtml(s.badge)}</div>
+    </button>
+  `
+  ).join('');
+
+  // Render Detail for Active Setup
+  const setup = AUDIO_SETUPS.find((s) => s.id === activeAudioSetupId) || AUDIO_SETUPS[0];
+
+  detailBox.innerHTML = `
+    <div class="setup-detail-header">
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <div class="software-icon-wrap" style="width: 54px; height: 54px; font-size: 1.8rem; background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.4);">
+          ${setup.icon}
+        </div>
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">${escapeHtml(setup.title)}</h3>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Typical gear: <span style="color: #cbd5e1;">${escapeHtml(setup.examples)}</span>
+          </div>
+        </div>
+      </div>
+      <span class="pill-count" style="border-color: rgba(236, 72, 153, 0.5); color: #f472b6;">${escapeHtml(setup.badge)}</span>
+    </div>
+
+    <!-- 3 Meta Cards -->
+    <div class="setup-meta-grid">
+      <div class="setup-meta-card">
+        <div class="setup-meta-label">Equalizer APO Target Device</div>
+        <div class="setup-meta-val" style="color: var(--neon-cyan);">${escapeHtml(setup.configuratorCheck)}</div>
+      </div>
+      <div class="setup-meta-card">
+        <div class="setup-meta-label">Required Install Mode</div>
+        <div class="setup-meta-val" style="color: var(--neon-gold);">${escapeHtml(setup.installMode)}</div>
+      </div>
+      <div class="setup-meta-card">
+        <div class="setup-meta-label">Recommended Software</div>
+        <div class="setup-meta-val" style="color: #fff;">${escapeHtml(setup.softwareRecommendation)}</div>
+      </div>
+    </div>
+
+    <!-- 2 Column Instructions Grid -->
+    <div class="setup-instructions-grid">
+      <div class="setup-section-block">
+        <div class="setup-section-heading">
+          <span>🛠️ Tailored Installation Steps:</span>
+        </div>
+        <ol class="software-steps-list">
+          ${setup.steps.map((st) => `<li class="software-step-item">${st}</li>`).join('')}
+        </ol>
+      </div>
+
+      <div class="setup-section-block">
+        <div class="setup-section-heading">
+          <span>🎛️ Windows Sound Settings (mmsys.cpl):</span>
+        </div>
+        <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+          ${setup.windowsSettings.map((ws) => `<li>${ws}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Common Trap / Warning Callout -->
+    <div class="setup-warning-callout">
+      <div style="font-size: 1.25rem;">⚠️</div>
+      <div>
+        <strong style="color: #f59e0b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em;">Critical Hardware Trap &amp; Fix:</strong>
+        <p style="margin-top: 0.25rem;">${escapeHtml(setup.pitfalls)}</p>
+      </div>
+    </div>
+
+    <div class="software-actions" style="margin-top: 1.5rem;">
+      <button type="button" class="btn btn-primary btn-sm" onclick="window.downloadAudioSetupCheatSheet('${setup.id}')">
+        📥 Download ${escapeHtml(setup.shortTitle)} Guide (.txt)
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="window.copyAudioSetupChecklist('${setup.id}')">
+        📋 Copy Setup Checklist
+      </button>
+      <a href="#softwareSection" class="btn btn-secondary btn-sm">
+        View Software Downloads ↑
+      </a>
+    </div>
+  `;
+}
+
 // Security Escape Helper
 function escapeHtml(str) {
   if (!str) return '';
@@ -760,6 +860,58 @@ window.copySensValues = function (gameId) {
   copyToClipboard(`Horizontal Sens: ${p.horizontalSens}\nVertical Sens: ${p.verticalSens}\nMode: ${p.aimAssistType}`, '📋 Copied Sensitivity Specs!');
 };
 
+// Audio Setup Wizard Handlers
+window.selectAudioSetup = function (setupId) {
+  activeAudioSetupId = setupId;
+  renderAudioSetupWizard();
+};
+
+window.downloadAudioSetupCheatSheet = function (setupId) {
+  const setup = AUDIO_SETUPS.find((s) => s.id === setupId) || AUDIO_SETUPS[0];
+  const content = `==============================================================================
+DANGLING DICE GAMING LAB™ — AUDIO HARDWARE SETUP GUIDE
+Hardware Configuration: ${setup.title}
+Compatibility: ${setup.badge}
+Website: https://games.dangling-dice-studios.com/
+Discord: https://discord.gg/uFYMQahNZz
+==============================================================================
+
+CONNECTED HARDWARE EXAMPLES:
+${setup.examples}
+
+WINDOWS PLAYBACK DEVICE:
+${setup.windowsDeviceName}
+
+EQUALIZER APO CONFIGURATOR INSTRUCTIONS:
+- Target Device to Check: ${setup.configuratorCheck}
+- Install Mode: ${setup.installMode}
+
+RECOMMENDED SOFTWARE STACK:
+${setup.softwareRecommendation}
+
+STEP-BY-STEP SETUP INSTRUCTIONS:
+${setup.steps.map((st, i) => `${i + 1}. ${st.replace(/<[^>]+>/g, '')}`).join('\n')}
+
+WINDOWS SOUND CONTROL PANEL SETTINGS (mmsys.cpl):
+${setup.windowsSettings.map((ws, i) => `- ${ws.replace(/<[^>]+>/g, '')}`).join('\n')}
+
+CRITICAL PITFALL & HARDWARE TRAP:
+${setup.pitfalls}
+
+==============================================================================
+`;
+  downloadTextFile(`AUDIO_SETUP_${setup.id.toUpperCase().replace(/-/g, '_')}.txt`, content);
+};
+
+window.copyAudioSetupChecklist = function (setupId) {
+  const setup = AUDIO_SETUPS.find((s) => s.id === setupId) || AUDIO_SETUPS[0];
+  const text = `🎧 Setup: ${setup.title}\n` +
+    `Target: ${setup.configuratorCheck}\n` +
+    `Mode: ${setup.installMode}\n` +
+    `Pitfall: ${setup.pitfalls}`;
+  copyToClipboard(text, `📋 Copied setup checklist for ${setup.shortTitle}!`);
+};
+
 // Search Bar Input Listener
 const searchInput = document.getElementById('gameSearchInput');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
@@ -800,6 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderGamesCatalog('');
   renderGameDashboard();
   renderSoftwareGuide();
+  renderAudioSetupWizard();
   renderMasterAccessories('all');
 });
 
