@@ -800,6 +800,760 @@ bind d +mright`,
     },
     recommendedGear: ['ctrl-vader-4', 'iem-truthear-zero', 'grip-kontrolfreek'],
   },
+  {
+    id: 'tarkov',
+    title: 'Escape from Tarkov & Arena',
+    shortName: 'Tarkov',
+    genre: 'Hardcore Extraction Shooter',
+    engine: 'Custom Unity Engine',
+    badge: '🎒 #1 Extraction',
+    icon: '🪖',
+    bannerGradient: 'linear-gradient(135deg, rgba(180, 83, 9, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Hardcore ambient wind and rain cut, broken glass and crouch-sneak isolation, and stutter-free local.ini settings.',
+    audioProfile: {
+      profileName: 'Wind & Rain Floor Tamer + Glass/Wood Isolation',
+      targetMix: 'Binaural Audio (Headset Stereo)',
+      description: 'Cuts heavy wind howl, generator drones, and unsuppressed gunshot tinnitus while boosting wood creaks, glass crunch, and slow-walk creeping.',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'Air Drop Rumble' },
+        { freq: '64Hz', gain: -4, type: 'Cut', label: 'Generator Drone' },
+        { freq: '125Hz', gain: -5, type: 'Cut', label: 'Rain & Wind Mask' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Heavy Breathing Mud' },
+        { freq: '500Hz', gain: 0, type: 'Flat', label: 'Scav / PMC Voice' },
+        { freq: '1.2kHz', gain: 2, type: 'Boost', label: 'ADS Gun Rattle' },
+        { freq: '2.8kHz', gain: 7, type: 'Peak', label: 'Grass Creep & Bush Rustle' },
+        { freq: '4.2kHz', gain: 8, type: 'Peak', label: 'Broken Glass & Wood Footsteps' },
+        { freq: '8kHz', gain: -5, type: 'Cut', label: 'Unsuppressed Gunshot Protection' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'Air Whistle' },
+      ],
+      sonarValues: [
+        'Band 1 (50 Hz): -5.0 dB, Q: 1.2',
+        'Band 2 (120 Hz): -5.5 dB, Q: 1.4',
+        'Band 3 (1200 Hz): +2.5 dB, Q: 1.0',
+        'Band 4 (4200 Hz): +8.0 dB, Q: 1.8',
+        'Band 5 (8500 Hz): -5.0 dB, Q: 1.3',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF (Conflicts with Binaural Audio) | Volume Leveler: OFF | EQ: 32Hz(-5), 64Hz(-3), 125Hz(-4), 250Hz(-2), 500Hz(0), 1k(+1), 2k(+3), 4k(+7), 8k(-4), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -7; 32 -6; 64 -4; 125 -5; 250 -3; 500 0; 1200 2; 2800 7; 4200 8; 8000 -5; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'Steam Input Radial Quick-Meds & Precision Gyro',
+      curveType: 'Linear (M&K Emulation via Steam Input)',
+      leftStickDeadzoneMin: '0.04 (4%)',
+      rightStickDeadzoneMin: '0.02 (2% Gyro Assisted)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 (Instant ADS)',
+      rightTriggerDeadzone: '0.00 (Hair Trigger)',
+      horizontalSens: 'Mouse 800 DPI / 0.32 In-Game (1:1 Muscle Memory)',
+      verticalSens: '0.32 (0.28 Aiming Multiplier)',
+      aimAssistType: 'Zero Aim Assist (Pure Organic Crosshair Control)',
+      steamConfigCode: 'steam://controllerconfig/escape_from_tarkov_steamdeck_gyro_v1',
+      ds4xmlSnippet: `<LeftDeadzone>4</LeftDeadzone><RightDeadzone>2</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'local.ini',
+      targetPath: '%appdata%/Battlestate Games/Escape from Tarkov/Settings/local.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — Escape from Tarkov Max FPS & Latency Tweak
+{
+  "Graphics": {
+    "AutoCleanRAM": true,
+    "PhysicalCoresOnly": true,
+    "MipStreaming": false, // Eliminates texture load hitching during scope-in
+    "TextureQuality": 1,
+    "ShadowsQuality": 0,
+    "LODBias": 2,
+    "OverallVisibility": 1000,
+    "AntiAliasing": "TAA_High",
+    "NvidiaReflex": "OnAndBoost",
+    "HighQualityColor": false,
+    "ZBlur": false,
+    "ChromAberr": false,
+    "Noise": false
+  },
+  "Sound": {
+    "BinauralSound": true, // Essential for 360-degree elevation cues
+    "MusicVolume": 0,
+    "HideoutVolume": 5
+  }
+}`,
+      fpsTips: [
+        'Enable "Physical Cores Only" in EFT settings: Tarkov performs drastically better on physical CPU cores rather than hyperthreaded virtual threads.',
+        'Always set Binaural Sound to ON for 3D elevation cues, but turn off Windows Sonic / Dolby surround so sound passes uncolored.',
+        'Set Mip Streaming to false unless you have under 6GB VRAM, as texture mip swapping causes severe frame drops during optics scope-in.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'kb-wooting', 'mouse-viper-v3'],
+  },
+  {
+    id: 'rust',
+    title: 'Rust',
+    shortName: 'Rust',
+    genre: 'Survival / Base Raiding',
+    engine: 'Unity Engine',
+    badge: '☢️ Survival Titan',
+    icon: '🪓',
+    bannerGradient: 'linear-gradient(135deg, rgba(220, 38, 38, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Furnace & minicopter drone dampening, sheet metal vs wood footstep clarity, and the essential gc.buffer client.cfg fix.',
+    audioProfile: {
+      profileName: 'Airlock Footstep Isolation & Furnace Drone Tamer',
+      targetMix: 'Pure Stereo (Hi-Fi)',
+      description: 'Silences massive furnace humming, diesel quarry rumble, and patrol chopper blades so you can instantly detect someone sneaking at your airlock door.',
+      bands: [
+        { freq: '32Hz', gain: -5, type: 'Cut', label: 'Chopper Blade Boom' },
+        { freq: '64Hz', gain: -4, type: 'Cut', label: 'Large Furnace Drone' },
+        { freq: '125Hz', gain: -3, type: 'Cut', label: 'Campfire Mud' },
+        { freq: '250Hz', gain: 0, type: 'Flat', label: 'Footstep Bass Thud' },
+        { freq: '500Hz', gain: 1, type: 'Flat', label: 'Reloading Clicks' },
+        { freq: '1.5kHz', gain: 3, type: 'Boost', label: 'Sheet Metal Clang' },
+        { freq: '3.2kHz', gain: 7, type: 'Peak', label: 'Footstep Sprint & Ladder Mount' },
+        { freq: '4.5kHz', gain: 7, type: 'Peak', label: 'Code Lock Chirps & Syringes' },
+        { freq: '8kHz', gain: -4, type: 'Cut', label: 'AK-47 Spray Tamer' },
+        { freq: '16kHz', gain: -2, type: 'Cut', label: 'Wind Whistle' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -4.0 dB, Q: 1.0',
+        'Band 2 (140 Hz): -3.0 dB, Q: 1.2',
+        'Band 3 (1500 Hz): +3.0 dB, Q: 1.1',
+        'Band 4 (3400 Hz): +7.0 dB, Q: 1.6',
+        'Band 5 (8000 Hz): -4.0 dB, Q: 1.2',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-4), 64Hz(-3), 125Hz(-2), 250Hz(0), 500Hz(+1), 1k(+2), 2k(+4), 4k(+6), 8k(-3), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -6; 32 -5; 64 -4; 125 -3; 250 0; 500 1; 1500 3; 3200 7; 4500 7; 8000 -4; 16000 -2`,
+    },
+    controllerProfile: {
+      profileName: 'Linear Recoil Control & Analog Aiming',
+      curveType: 'Linear (1:1 Stick Rate)',
+      leftStickDeadzoneMin: '0.05 (5%)',
+      rightStickDeadzoneMin: '0.03 (3%)',
+      stickDeadzoneMax: '0.97',
+      leftTriggerDeadzone: '0.00 (Zero Deadzone ADS)',
+      rightTriggerDeadzone: '0.00 (Instant Fire)',
+      horizontalSens: '1.0 (Standard) / 0.4 ADS Multiplier',
+      verticalSens: '1.0 (Recoil Pulldown Equalized)',
+      aimAssistType: 'No Aim Assist on PC Servers',
+      steamConfigCode: 'steam://controllerconfig/252490/rust_competitive_recoil_v1',
+      ds4xmlSnippet: `<LeftDeadzone>5</LeftDeadzone><RightDeadzone>3</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'client.cfg',
+      targetPath: 'Steam/steamapps/common/Rust/cfg/client.cfg',
+      fileContent: `// Dangling Dice Gaming Lab™ — Rust Pro PvP & Anti-Stutter Config
+gc.buffer 2048 // Prevents garbage collector memory freezes mid-fight
+steps 60 // Maximizes client tick synchronization
+audio.game 1.0
+audio.voices 1.0
+audio.instruments 0.1 // Quiets guitar trolls
+graphics.shadowdistance 50
+effects.maxgibs 0 // Disables building debris ragdolls for instant sightlines
+graphics.branding false
+input.holdtime 0.2
+input.sensitivity 0.35`,
+      fpsTips: [
+        'Place "gc.buffer 2048" in your client.cfg or press F1 in-game: this stops Unity from freezing your screen when allocating memory during gunfights.',
+        'Set "effects.maxgibs 0" so when walls or doors break, they instantly disappear rather than creating smoking rubble that blocks your bullets.',
+        'Use audio.instruments 0.1 so teammates or proximity raiders playing pianos cannot mask stealth footsteps.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'kb-wooting', 'mouse-viper-v3'],
+  },
+  {
+    id: 'hunt-showdown',
+    title: 'Hunt: Showdown 1896',
+    shortName: 'Hunt 1896',
+    genre: 'PvPvE Extraction Shooter',
+    engine: 'CryEngine 5.11',
+    badge: '🤠 Master Soundscape',
+    icon: '🎯',
+    bannerGradient: 'linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'CryEngine binaural audio tuning: twig snaps, dog kennel traps, water splashes, and zero-virtualization stereo fidelity.',
+    audioProfile: {
+      profileName: 'Sound-Trap & Twig Snap Acoustic Isolation',
+      targetMix: '100% Stereo Only (CryEngine Native Binaural)',
+      description: 'The golden rule for Hunt: NEVER enable virtual surround. This curve cuts environmental swamp drone while magnifying animal sound-traps and pistol hammers.',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'Dark Sight Sub-Drone' },
+        { freq: '64Hz', gain: -3, type: 'Cut', label: 'Swamp Water Murk' },
+        { freq: '125Hz', gain: 1, type: 'Flat', label: 'Heavy Boot Water Splash' },
+        { freq: '250Hz', gain: -2, type: 'Cut', label: 'Dynamite Smoke Mud' },
+        { freq: '500Hz', gain: 0, type: 'Flat', label: 'Zombie Aggro Hiss' },
+        { freq: '1kHz', gain: 2, type: 'Boost', label: 'Hanging Chain Jingle' },
+        { freq: '2.4kHz', gain: 6, type: 'Peak', label: 'Crow Flap & Broken Glass' },
+        { freq: '3.8kHz', gain: 7, type: 'Peak', label: 'Twig Snap & Revolver Hammer Cock' },
+        { freq: '7.5kHz', gain: -4, type: 'Cut', label: 'Romero Shotgun Ear Blast' },
+        { freq: '16kHz', gain: -2, type: 'Cut', label: 'Night Fog Ambient Hiss' },
+      ],
+      sonarValues: [
+        'Band 1 (65 Hz): -4.0 dB, Q: 1.1',
+        'Band 2 (1000 Hz): +2.0 dB, Q: 1.0',
+        'Band 3 (2400 Hz): +6.0 dB, Q: 1.5',
+        'Band 4 (3800 Hz): +7.0 dB, Q: 1.7',
+        'Band 5 (7500 Hz): -4.0 dB, Q: 1.2',
+      ],
+      dolbyValues: 'Surround Virtualizer: MUST BE OFF | Volume Leveler: OFF | EQ: 32Hz(-5), 64Hz(-2), 125Hz(+1), 250Hz(-1), 500Hz(0), 1k(+2), 2k(+4), 4k(+6), 8k(-3), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -7; 32 -6; 64 -3; 125 1; 250 -2; 500 0; 1000 2; 2400 6; 3800 7; 7500 -4; 16000 -2`,
+    },
+    controllerProfile: {
+      profileName: 'Precision Lever-Action Curve & Micro-Adjustment',
+      curveType: 'Dual-Stage Exponential with Low Deadzone',
+      leftStickDeadzoneMin: '0.05 (5%)',
+      rightStickDeadzoneMin: '0.03 (3%)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 (Shoulder Aim)',
+      rightTriggerDeadzone: '0.00 (Instant Hammer Release)',
+      horizontalSens: 'Default 1.20 / ADS 0.65',
+      verticalSens: 'Default 1.00 / ADS 0.55',
+      aimAssistType: 'Standard Controller Assist (Tuned for Gunslinger mode)',
+      steamConfigCode: 'steam://controllerconfig/594650/hunt_showdown_gunslinger_precision_v1',
+      ds4xmlSnippet: `<LeftDeadzone>5</LeftDeadzone><RightDeadzone>3</RightDeadzone><SensitivityCurve>Exponential</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'attributes.xml',
+      targetPath: 'Steam/steamapps/common/Hunt Showdown/user/profiles/default/attributes.xml',
+      fileContent: `// Dangling Dice Gaming Lab™ — Hunt: Showdown 1896 Max Competitive Config
+<Attributes Version="34">
+  <Attr name="AudioOutputMode" value="2"/> <!-- Pure 2-Channel Stereo Output -->
+  <Attr name="MotionBlur" value="0"/>
+  <Attr name="FieldOfView" value="110"/>
+  <Attr name="ResolutionScale" value="100"/>
+  <Attr name="ObjectQuality" value="3"/> <!-- High: Keeps sound-traps and crows rendered at distance -->
+  <Attr name="TextureQuality" value="2"/>
+  <Attr name="LightingQuality" value="1"/>
+  <Attr name="ShadowQuality" value="1"/>
+  <Attr name="EffectQuality" value="1"/>
+  <Attr name="PostProcessQuality" value="1"/>
+</Attributes>`,
+      fpsTips: [
+        'DO NOT lower Object Quality below Medium or High: low object quality stops crows and kennels from rendering at 75m+, causing you to trigger invisible sound traps.',
+        'Keep AudioOutputMode strictly on Stereo: CryEngine has its own head-related transfer function (HRTF) calibrated for dual-ear delivery.',
+        'Disable Depth of Field and Motion Blur to keep iron sights razor-sharp during fast flicks.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
+  {
+    id: 'hell-let-loose',
+    title: 'Hell Let Loose',
+    shortName: 'HLL',
+    genre: 'WW2 Tactical MilSim',
+    engine: 'Unreal Engine 4',
+    badge: '🎖️ 50v50 Hardcore',
+    icon: '🪖',
+    bannerGradient: 'linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Artillery & bombing run tinnitus suppressor, trench boot clarity, and MaxChannels=128 Engine.ini tuning.',
+    audioProfile: {
+      profileName: 'Artillery Shock Tamer & Trench Step Isolation',
+      targetMix: 'Crisp Footsteps & Radio Clarity',
+      description: 'Surgically dampens 150mm artillery and bombing run sub-bass explosions so your ears do not fatigue while amplifying enemy trench boots and garrison radios.',
+      bands: [
+        { freq: '32Hz', gain: -7, type: 'Cut', label: 'Artillery & Katyusha Boom' },
+        { freq: '64Hz', gain: -5, type: 'Cut', label: 'Tiger Tank Diesel Drone' },
+        { freq: '125Hz', gain: -2, type: 'Cut', label: 'Distant Mortar Mud' },
+        { freq: '250Hz', gain: 0, type: 'Flat', label: 'Trench Mud Splash' },
+        { freq: '500Hz', gain: 1, type: 'Boost', label: 'Officer VOIP Command Clarity' },
+        { freq: '1kHz', gain: 3, type: 'Boost', label: 'Bolt-Action Chamber & Clip Ping' },
+        { freq: '2.2kHz', gain: 6, type: 'Peak', label: 'Grass Crawl & Hedgerow Rustle' },
+        { freq: '3.5kHz', gain: 7, type: 'Peak', label: 'Trench Boot Heel Strikes' },
+        { freq: '8kHz', gain: -6, type: 'Cut', label: 'MG42 Ear Ringer Softener' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'Artillery Whistle Cut' },
+      ],
+      sonarValues: [
+        'Band 1 (50 Hz): -6.0 dB, Q: 1.1',
+        'Band 2 (500 Hz): +1.5 dB, Q: 1.0',
+        'Band 3 (1000 Hz): +3.0 dB, Q: 1.2',
+        'Band 4 (3500 Hz): +7.0 dB, Q: 1.5',
+        'Band 5 (8000 Hz): -6.0 dB, Q: 1.4',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-6), 64Hz(-4), 125Hz(-1), 250Hz(0), 500Hz(+1), 1k(+2), 2k(+5), 4k(+6), 8k(-5), 16k(-3)',
+      peaceConfig: `GraphicEQ: 20 -8; 32 -7; 64 -5; 125 -2; 250 0; 500 1; 1000 3; 2200 6; 3500 7; 8000 -6; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'MilSim Long-Range Stability & Steady Aim',
+      curveType: 'Standard / Smooth Linear',
+      leftStickDeadzoneMin: '0.06 (6%)',
+      rightStickDeadzoneMin: '0.04 (4%)',
+      stickDeadzoneMax: '0.96',
+      leftTriggerDeadzone: '0.05 (Prevents accidental weapon raise)',
+      rightTriggerDeadzone: '0.00 (Instant Single Fire)',
+      horizontalSens: '38% (Look) / 22% (ADS Multiplier)',
+      verticalSens: '34% (Look) / 20% (ADS Multiplier)',
+      aimAssistType: 'Friction Only (No rotational pull in MilSim)',
+      steamConfigCode: 'steam://controllerconfig/686810/hell_let_loose_milsim_steady_v1',
+      ds4xmlSnippet: `<LeftDeadzone>6</LeftDeadzone><RightDeadzone>4</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'Engine.ini',
+      targetPath: '%LOCALAPPDATA%/HLL/Saved/Config/WindowsNoEditor/Engine.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — Hell Let Loose Pro MilSim Audio & Performance
+[/script/engine.audiosettings]
+bDisableMasterEQ=True
+MaxChannels=128 // Prevents voice chat and footstep audio cutouts during massive 50v50 artillery battles
+
+[SystemSettings]
+r.DefaultFeature.MotionBlur=0
+r.DefaultFeature.Bloom=0
+r.DefaultFeature.AntiAliasing=2
+r.FoliageDensityScale=0.60
+r.ShadowQuality=1
+r.ViewDistanceScale=1.4`,
+      fpsTips: [
+        'Setting MaxChannels=128 in Engine.ini prevents the famous UE4 audio drop bug during heavy 50-player engagements.',
+        'Keep ViewDistanceScale at 1.4+ so enemy infantry silhouettes render across hedgerows before they shoot you.',
+        'Disable Bloom and Motion Blur to eliminate scope-in blinding effects when peering out of dark bunkers.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
+  {
+    id: 'r6-siege',
+    title: "Tom Clancy's Rainbow Six Siege",
+    shortName: 'R6 Siege',
+    genre: 'Tactical CQC Shooter',
+    engine: 'Ubisoft Anvil Engine',
+    badge: '🛡️ Esports Tactical',
+    icon: '🧱',
+    bannerGradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Night Mode dynamic range compression tuning, drywall punch and drone scuff isolation, and 1:1 ADS sensitivity.',
+    audioProfile: {
+      profileName: 'Night Mode Sound-Scuff & Defuser Isolation',
+      targetMix: 'Night Mode (Dynamic Range Compression)',
+      description: 'Pairs perfectly with Siege Night Mode setting: dampens deafening breach charges and grenade booms while pulling quiet crouch-walk footsteps and plant sounds to the front.',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'Breach Charge Sub-Boom' },
+        { freq: '64Hz', gain: -2, type: 'Flat', label: '3-Armor Step Base' },
+        { freq: '125Hz', gain: 4, type: 'Boost', label: 'Crouch Walk Footsteps' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Concrete Debris Mud' },
+        { freq: '500Hz', gain: 0, type: 'Flat', label: 'Drone Motor Whir' },
+        { freq: '1.5kHz', gain: 4, type: 'Boost', label: 'Barbed Wire Rustle & Defuser Plant' },
+        { freq: '3.2kHz', gain: 7, type: 'Peak', label: 'Drywall Punch & Wood Splinter' },
+        { freq: '5kHz', gain: 5, type: 'Peak', label: 'C4 Velcro Rip & Nitro Beep' },
+        { freq: '9kHz', gain: -5, type: 'Cut', label: 'Flashbang Tinnitus Protection' },
+        { freq: '16kHz', gain: -2, type: 'Cut', label: 'High Air Hiss' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -3.0 dB, Q: 1.0',
+        'Band 2 (125 Hz): +4.0 dB, Q: 1.4',
+        'Band 3 (1500 Hz): +4.0 dB, Q: 1.2',
+        'Band 4 (3200 Hz): +7.0 dB, Q: 1.6',
+        'Band 5 (8500 Hz): -5.0 dB, Q: 1.3',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-5), 64Hz(-1), 125Hz(+3), 250Hz(-2), 500Hz(0), 1k(+2), 2k(+4), 4k(+6), 8k(-4), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -7; 32 -6; 64 -2; 125 4; 250 -3; 500 0; 1500 4; 3200 7; 5000 5; 9000 -5; 16000 -2`,
+    },
+    controllerProfile: {
+      profileName: 'Updated (Raw Linear) ADS Micro-Adjustment',
+      curveType: 'Updated Controller Curve (Pure Linear 1:1)',
+      leftStickDeadzoneMin: '0.04 (4%)',
+      rightStickDeadzoneMin: '0.03 (3%)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 (Instant ADS)',
+      rightTriggerDeadzone: '0.00 (Hair Trigger)',
+      horizontalSens: '55 - 75 (High Turn Speed)',
+      verticalSens: '30 - 45 (Recoil Compensation)',
+      aimAssistType: 'No Aim Assist in Multiplayer (Raw Crosshair Physics)',
+      steamConfigCode: 'steam://controllerconfig/359550/rainbow_six_siege_pro_linear_v1',
+      ds4xmlSnippet: `<LeftDeadzone>4</LeftDeadzone><RightDeadzone>3</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'GameSettings.ini',
+      targetPath: 'Documents/My Games/Rainbow Six - Siege/[Account_UUID]/GameSettings.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — Rainbow Six Siege Pro Settings
+[AUDIO]
+AudioProfile=1 // 1 = Night Mode (Maximizes quiet sound clarity over explosions)
+VoiceChatCaptureMode=1
+MuteOnUnfocused=0
+
+[INPUT]
+RawInputMouseKeyboard=1
+AimAssist=0
+
+[DISPLAY]
+VSync=0
+FPSLimit=0
+
+[HARDWARE_INFO]
+GPUAdapter=0`,
+      fpsTips: [
+        'Always set AudioProfile=1 (Night Mode) in Siege: Night mode automatically compresses the dynamic range, making distant footsteps just as loud as nearby shotgun blasts.',
+        'Enable RawInputMouseKeyboard=1 to bypass Windows desktop pointer scaling for pure sub-millisecond precision.',
+        'Never enable VSync as it introduces 2-3 frames of input buffering delay.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
+  {
+    id: 'dayz',
+    title: 'DayZ',
+    shortName: 'DayZ',
+    genre: 'Hardcore Survival',
+    engine: 'Enfusion / Real Virtuality',
+    badge: '🧟 Survival Legend',
+    icon: '🧭',
+    bannerGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Wind noise reduction, infected agro growls, long-range supersonic bullet crack directional pinpointing, and DayZ.cfg.',
+    audioProfile: {
+      profileName: 'Chernarus Wind Dampener & Sniper Crack Isolation',
+      targetMix: 'Pure Stereo (Hi-Fi)',
+      description: 'Removes the exhausting 100Hz wind drone on coastal and mountainous terrain while highlighting distant sniper shots, infected footsteps, and pine needle rustling.',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'Rain Storm Rumble' },
+        { freq: '64Hz', gain: -4, type: 'Cut', label: 'Coastal Wind Roar' },
+        { freq: '125Hz', gain: 1, type: 'Flat', label: 'Player Asphalt Sprint' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Heavy Breathing Mud' },
+        { freq: '500Hz', gain: 0, type: 'Flat', label: 'Hunger & Thirst Audio Cues' },
+        { freq: '1.2kHz', gain: 3, type: 'Boost', label: 'Infected Agro Snarl & Steps' },
+        { freq: '2.8kHz', gain: 6, type: 'Peak', label: 'Pine Needle & Stick Snaps' },
+        { freq: '4.8kHz', gain: 8, type: 'Peak', label: 'Long-Range Supersonic Bullet Crack' },
+        { freq: '8kHz', gain: -4, type: 'Cut', label: 'Point-Blank Shotgun Tamer' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'High Ambient Hiss' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -4.5 dB, Q: 1.1',
+        'Band 2 (1200 Hz): +3.0 dB, Q: 1.2',
+        'Band 3 (2800 Hz): +6.0 dB, Q: 1.5',
+        'Band 4 (4800 Hz): +8.0 dB, Q: 1.8',
+        'Band 5 (8000 Hz): -4.0 dB, Q: 1.2',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-5), 64Hz(-3), 125Hz(0), 250Hz(-2), 500Hz(0), 1k(+2), 2k(+4), 4k(+7), 8k(-3), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -7; 32 -6; 64 -4; 125 1; 250 -3; 500 0; 1200 3; 2800 6; 4800 8; 8000 -4; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'DayZ Steam Deck & Controller Layout',
+      curveType: 'Standard Linear with ADS Damping',
+      leftStickDeadzoneMin: '0.05 (5%)',
+      rightStickDeadzoneMin: '0.03 (3%)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 (Raise Weapon)',
+      rightTriggerDeadzone: '0.00 (Fire / Heavy Melee)',
+      horizontalSens: '0.85 (Smooth Tracking)',
+      verticalSens: '0.75 (Consistent Level)',
+      aimAssistType: 'No Aim Assist',
+      steamConfigCode: 'steam://controllerconfig/221100/dayz_standalone_survival_precision_v1',
+      ds4xmlSnippet: `<LeftDeadzone>5</LeftDeadzone><RightDeadzone>3</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'DayZ.cfg',
+      targetPath: 'Documents/DayZ/DayZ.cfg',
+      fileContent: `// Dangling Dice Gaming Lab™ — DayZ Max View Distance & Stutter Tweak
+language="English";
+Windowed=0;
+Render_W=1920;
+Render_H=1080;
+FSAASamples=0;
+postFX=0; // Removes blur and depth-of-field masking
+shadingQuality=1;
+shadowZDistance=40;
+viewDistance=2200; // Balances player spotting with high frame rate
+preferredObjectViewDistance=1400;`,
+      fpsTips: [
+        'Set postFX=0 in DayZ.cfg to remove motion blur and peripheral visual darkening when running.',
+        'Setting shadowZDistance=40 prevents unnecessary shadow rendering on distant trees, giving a massive 20-30 FPS boost in heavy forests.',
+        'Use stereo headphones with flat low-end to identify supersonic bullet cracks (4.8kHz) before the subsonic sound wave reaches you.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'kb-wooting', 'mouse-viper-v3'],
+  },
+  {
+    id: 'pubg',
+    title: 'PUBG: BATTLEGROUNDS',
+    shortName: 'PUBG',
+    genre: 'Tactical Battle Royale',
+    engine: 'Unreal Engine 4',
+    badge: '🍗 BR Pioneer',
+    icon: '🍳',
+    bannerGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Red zone blast dampening, grass crawl & barefoot step isolation, and Engine.ini audio limiter.',
+    audioProfile: {
+      profileName: 'Red Zone Blast Tamer & Grass Crawl Isolation',
+      targetMix: 'Stereo with Dynamic Range Safety',
+      description: 'PUBG has dangerously loud explosions and vehicle audio. This preset protects your hearing during red zones and drive-bys while boosting prone grass movement and scope unpinning.',
+      bands: [
+        { freq: '32Hz', gain: -8, type: 'Cut', label: 'Red Zone Artillery Boom' },
+        { freq: '64Hz', gain: -6, type: 'Cut', label: 'UAZ & Dacia Vehicle Drone' },
+        { freq: '125Hz', gain: 3, type: 'Boost', label: 'Barefoot & Wood Floor Slap' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Grenade Concussion Mud' },
+        { freq: '500Hz', gain: 0, type: 'Flat', label: 'Door Opening Creak' },
+        { freq: '1.4kHz', gain: 4, type: 'Boost', label: 'Grass Prone Crawl & Reload Clink' },
+        { freq: '3.4kHz', gain: 7, type: 'Peak', label: 'Footstep Heel Impact (30-50m)' },
+        { freq: '5.5kHz', gain: 5, type: 'Peak', label: 'Scope Unzoom & First-Aid Rip' },
+        { freq: '8.5kHz', gain: -6, type: 'Cut', label: 'Close Beryl / M4 Spray Tamer' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'Plane Flyover Whistle' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -6.0 dB, Q: 1.2',
+        'Band 2 (125 Hz): +3.0 dB, Q: 1.4',
+        'Band 3 (1400 Hz): +4.0 dB, Q: 1.1',
+        'Band 4 (3400 Hz): +7.0 dB, Q: 1.6',
+        'Band 5 (8500 Hz): -6.0 dB, Q: 1.5',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-7), 64Hz(-5), 125Hz(+2), 250Hz(-2), 500Hz(0), 1k(+2), 2k(+4), 4k(+6), 8k(-5), 16k(-3)',
+      peaceConfig: `GraphicEQ: 20 -9; 32 -8; 64 -6; 125 3; 250 -3; 500 0; 1400 4; 3400 7; 5500 5; 8500 -6; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'Type B (Pro ADS) Curve with Zero Acceleration',
+      curveType: 'Type B Controller Layout (Left Trigger ADS)',
+      leftStickDeadzoneMin: '0.05 (5%)',
+      rightStickDeadzoneMin: '0.03 (3%)',
+      stickDeadzoneMax: '0.98',
+      leftTriggerDeadzone: '0.00 (Instant Hold-to-ADS)',
+      rightTriggerDeadzone: '0.00 (Hair Trigger)',
+      horizontalSens: 'Sensitivity 8 (General) / 5 (1x Optics)',
+      verticalSens: 'Vertical Sensitivity Multiplier 1.10 (Recoil Aid)',
+      aimAssistType: 'No Aim Assist on PC',
+      steamConfigCode: 'steam://controllerconfig/578080/pubg_battlegrounds_type_b_linear_v1',
+      ds4xmlSnippet: `<LeftDeadzone>5</LeftDeadzone><RightDeadzone>3</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'GameUserSettings.ini',
+      targetPath: '%LOCALAPPDATA%/TslGame/Saved/Config/WindowsNoEditor/GameUserSettings.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — PUBG Pro Competitive Settings
+[/Script/TslGame.TslGameUserSettings]
+bUseVSync=False
+FrameRateLimit=0.000000
+ScreenScale=100.000000
+sg.ResolutionQuality=100.000000
+sg.ViewDistanceQuality=3 // High: Renders enemy parachute drops at distance
+sg.AntiAliasingQuality=2 // Medium: Smooths edges without blur
+sg.ShadowQuality=0 // Very Low: Spots enemies hiding under trees
+sg.PostProcessQuality=0
+sg.TextureQuality=2
+sg.EffectsQuality=0
+sg.FoliageQuality=0 // Very Low: Removes decorative bush density`,
+      fpsTips: [
+        'Set sg.FoliageQuality=0: this strips non-essential grass and bush meshes, making prone enemies immediately visible.',
+        'Set sg.ShadowQuality=0 to eliminate dark canopy shadows where campers blend into terrain.',
+        'Use a vertical sensitivity multiplier of 1.10 to make pulling down high-recoil guns (Beryl 762, SLR) effortless.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
+  {
+    id: 'the-finals',
+    title: 'THE FINALS',
+    shortName: 'THE FINALS',
+    genre: 'Destruction Movement Shooter',
+    engine: 'Unreal Engine 5 (Chaos Physics)',
+    badge: '💥 Fast-Paced Chaos',
+    icon: '🪙',
+    bannerGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Building collapse rubble dampener, stealth Light footsteps & cloaking audio cue isolation, and high-FPS UE5 config.',
+    audioProfile: {
+      profileName: 'Debris Shock Tamer & Light Class Stealth Audio',
+      targetMix: 'Enhanced Stereo Footstep Focus',
+      description: 'Chaos physics destructions create massive 30-80Hz rubble rumble. This profile cuts structural boom while amplifying Light class cloaking buzz, dash sounds, and defibrillators.',
+      bands: [
+        { freq: '32Hz', gain: -7, type: 'Cut', label: 'Rubble Collapse Sub-Bass' },
+        { freq: '64Hz', gain: -4, type: 'Cut', label: 'Cashout Siren Drone' },
+        { freq: '125Hz', gain: 2, type: 'Boost', label: 'Heavy Class Stomp Footsteps' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Falling Concrete Clutter' },
+        { freq: '500Hz', gain: 0, type: 'Flat', label: 'Announcer Crowd Tamer' },
+        { freq: '1.5kHz', gain: 3, type: 'Boost', label: 'Grappling Hook & Jump Pad Spring' },
+        { freq: '3.2kHz', gain: 7, type: 'Peak', label: 'Light Class Cloak Hum & Dash' },
+        { freq: '4.2kHz', gain: 7, type: 'Peak', label: 'Medium Defib Charge & Coin Clatter' },
+        { freq: '8kHz', gain: -5, type: 'Cut', label: 'RPG-7 Blast Softener' },
+        { freq: '16kHz', gain: -2, type: 'Cut', label: 'Laser Glint Hiss' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -4.0 dB, Q: 1.0',
+        'Band 2 (125 Hz): +2.0 dB, Q: 1.2',
+        'Band 3 (1500 Hz): +3.0 dB, Q: 1.1',
+        'Band 4 (3200 Hz): +7.0 dB, Q: 1.6',
+        'Band 5 (8000 Hz): -5.0 dB, Q: 1.3',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-6), 64Hz(-3), 125Hz(+1), 250Hz(-2), 500Hz(0), 1k(+2), 2k(+4), 4k(+7), 8k(-4), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -8; 32 -7; 64 -4; 125 2; 250 -3; 500 0; 1500 3; 3200 7; 4200 7; 8000 -5; 16000 -2`,
+    },
+    controllerProfile: {
+      profileName: 'Linear Hipfire & Rapid Micro-Flick Curve',
+      curveType: 'Linear with Zero Inner Deadzone',
+      leftStickDeadzoneMin: '0.03 (3%)',
+      rightStickDeadzoneMin: '0.02 (2%)',
+      stickDeadzoneMax: '0.99',
+      leftTriggerDeadzone: '0.00 (Instant Aim)',
+      rightTriggerDeadzone: '0.00 (Hair Trigger)',
+      horizontalSens: '350 (Horizontal Look) / 280 (Vertical Look)',
+      verticalSens: 'Zoom Sens Multiplier: 55%',
+      aimAssistType: 'Crosshair Magnetism & Snap Assist',
+      steamConfigCode: 'steam://controllerconfig/2073850/the_finals_linear_hipfire_v1',
+      ds4xmlSnippet: `<LeftDeadzone>3</LeftDeadzone><RightDeadzone>2</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'GameUserSettings.ini',
+      targetPath: '%LOCALAPPDATA%/Discovery/Saved/Config/WindowsNoEditor/GameUserSettings.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — THE FINALS Unreal 5 High-FPS Config
+[/Script/Discovery.DiscoveryGameUserSettings]
+ResolutionQuality=100.000000
+GlobalIlluminationQuality=0 // Disables Lumen compute overhead
+ShadowQuality=0
+PostProcessQuality=0
+TextureQuality=2
+EffectsQuality=0
+FoliageQuality=0
+NvidiaReflex=2 // On + Boost for sub-frame latency
+RayTracing=0`,
+      fpsTips: [
+        'Set GlobalIlluminationQuality=0 to turn off software Lumen: this grants a massive 30-40% boost in frame consistency during skyscraper collapses.',
+        'Use Nvidia Reflex On + Boost to prevent frame queues when Chaos destruction physics spike CPU utilization.',
+        'Listen for the 3.2kHz peak in our EQ: this gives away the electrical buzz of cloaked Light shotgunners sneaking behind your team.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
+  {
+    id: 'fortnite',
+    title: 'Fortnite: Battle Royale',
+    shortName: 'Fortnite',
+    genre: 'Battle Royale / Build & Zero Build',
+    engine: 'Unreal Engine 5.4 (Nanite/Lumen)',
+    badge: '👑 Global Sensation',
+    icon: '⛏️',
+    bannerGradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'Wood/brick/metal edit sound isolation, glider deploy whoosh dampener, and pro Linear 43% response curve.',
+    audioProfile: {
+      profileName: 'Building Piece Audio & Glider Whoosh Tamer',
+      targetMix: 'Visualize Sound Effects + Crisp Stereo',
+      description: 'Fortnite audio features loud storm roars and shockwave grenade blasts. This curve clears audio clutter to help you hear wall replacements, edit resets, and enemy glide drops.',
+      bands: [
+        { freq: '32Hz', gain: -5, type: 'Cut', label: 'Storm Eye Rumble Cut' },
+        { freq: '64Hz', gain: -3, type: 'Cut', label: 'Vehicle Nitro Hum' },
+        { freq: '125Hz', gain: 3, type: 'Boost', label: 'Enemy Sprint Footstep Base' },
+        { freq: '250Hz', gain: -2, type: 'Cut', label: 'Explosion Clutter' },
+        { freq: '500Hz', gain: 0, type: 'Flat', label: 'Chest Hum Vibrato' },
+        { freq: '1.5kHz', gain: 4, type: 'Boost', label: 'Pickaxe Swing & Wall Damage Clang' },
+        { freq: '3kHz', gain: 7, type: 'Peak', label: 'Building Placement & Edit Reset Click' },
+        { freq: '4.5kHz', gain: 6, type: 'Peak', label: 'Glider Deploy & Shockwave Grenade' },
+        { freq: '8.5kHz', gain: -5, type: 'Cut', label: 'Pump Shotgun Ear Piercing Cut' },
+        { freq: '16kHz', gain: -2, type: 'Cut', label: 'Air Drop Whistle' },
+      ],
+      sonarValues: [
+        'Band 1 (65 Hz): -3.0 dB, Q: 1.0',
+        'Band 2 (125 Hz): +3.0 dB, Q: 1.3',
+        'Band 3 (1500 Hz): +4.0 dB, Q: 1.2',
+        'Band 4 (3000 Hz): +7.0 dB, Q: 1.5',
+        'Band 5 (8500 Hz): -5.0 dB, Q: 1.4',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-4), 64Hz(-2), 125Hz(+2), 250Hz(-1), 500Hz(0), 1k(+2), 2k(+4), 4k(+6), 8k(-4), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -6; 32 -5; 64 -3; 125 3; 250 -2; 500 0; 1500 4; 3000 7; 4500 6; 8500 -5; 16000 -2`,
+    },
+    controllerProfile: {
+      profileName: 'Pro Linear 43% Speed with 5% Deadzones',
+      curveType: 'Linear (Consistent Muscle Memory)',
+      leftStickDeadzoneMin: '0.05 (5%)',
+      rightStickDeadzoneMin: '0.05 (5%)',
+      stickDeadzoneMax: '0.99',
+      leftTriggerDeadzone: '0.00 (Instant Aim)',
+      rightTriggerDeadzone: '0.00 (Hair Trigger)',
+      horizontalSens: 'Look Speed: 43% / ADS Speed: 8%',
+      verticalSens: 'Look Speed: 43% / ADS Speed: 8%',
+      aimAssistType: '100% Aim Assist Strength (Linear Pull)',
+      steamConfigCode: 'steam://controllerconfig/fortnite_linear_pro_43_v1',
+      ds4xmlSnippet: `<LeftDeadzone>5</LeftDeadzone><RightDeadzone>5</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'GameUserSettings.ini',
+      targetPath: '%LOCALAPPDATA%/FortniteGame/Saved/Config/WindowsClient/GameUserSettings.ini',
+      fileContent: `// Dangling Dice Gaming Lab™ — Fortnite Performance Mode Config
+[/Script/FortniteGame.FortGameUserSettings]
+bShowGrass=False
+bMotionBlur=False
+bShowFPS=True
+RenderingAPI=1 // Performance Mode (D3D11 Low-Memory)
+bUseVSync=False
+FrameRateLimit=240.000000
+sg.ResolutionQuality=100.000000
+sg.ViewDistanceQuality=2 // Epic or High for player models
+sg.AntiAliasingQuality=0
+sg.ShadowQuality=0
+sg.PostProcessQuality=0
+sg.TextureQuality=1
+sg.EffectsQuality=0`,
+      fpsTips: [
+        'Always turn ON "Visualize Sound Effects" in Fortnite Audio Settings: it gives a 360-degree HUD radar for footsteps and gliders while keeping our EQ active.',
+        'Use Performance Mode (RenderingAPI=1) to eliminate background rendering clutter and lower input delay by up to 15ms.',
+        'Linear 43% Look speed is the undisputed standard used by over 80% of top competitive controller pros.',
+      ],
+    },
+    recommendedGear: ['ctrl-dualsense-edge', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
+  {
+    id: 'arma-reforger',
+    title: 'Arma Reforger',
+    shortName: 'Arma Reforger',
+    genre: 'Tactical MilSim Sandbox',
+    engine: 'Bohemia Enfusion Engine',
+    badge: '🎖️ Next-Gen MilSim',
+    icon: '🪖',
+    bannerGradient: 'linear-gradient(135deg, rgba(20, 184, 166, 0.25), rgba(15, 23, 42, 0.95))',
+    summary: 'BTR diesel engine cut, supersonic bullet crack distance isolation, radio frequency clarity, and Enfusion config.',
+    audioProfile: {
+      profileName: 'Supersonic Crack Pinpointer & Diesel Engine Cut',
+      targetMix: 'Tactical Stereo (48kHz Hi-Fi)',
+      description: 'Enfusion engine audio models realistic speed-of-sound propagation. This curve silences BTR/LAV engine rumble while isolating supersonic bullet snaps and platoon radio clicks.',
+      bands: [
+        { freq: '32Hz', gain: -6, type: 'Cut', label: 'Mortar Blast Sub-Boom' },
+        { freq: '64Hz', gain: -5, type: 'Cut', label: 'BTR / Supply Truck Diesel Drone' },
+        { freq: '125Hz', gain: 0, type: 'Flat', label: 'Gravel Footstep Thud' },
+        { freq: '250Hz', gain: -3, type: 'Cut', label: 'Exhaust Mud' },
+        { freq: '500Hz', gain: 2, type: 'Boost', label: 'Von Platoon Radio Static' },
+        { freq: '1.2kHz', gain: 4, type: 'Boost', label: 'Magazine Reload & Bolt Lock' },
+        { freq: '2.8kHz', gain: 6, type: 'Peak', label: 'Tree Branch & Bush Movement' },
+        { freq: '4.8kHz', gain: 8, type: 'Peak', label: 'Supersonic Bullet Snaps' },
+        { freq: '8.5kHz', gain: -5, type: 'Cut', label: 'Unsuppressed PKM / M16 Ear Blast' },
+        { freq: '16kHz', gain: -3, type: 'Cut', label: 'Island Wind Mask' },
+      ],
+      sonarValues: [
+        'Band 1 (60 Hz): -5.0 dB, Q: 1.1',
+        'Band 2 (500 Hz): +2.0 dB, Q: 1.0',
+        'Band 3 (1200 Hz): +4.0 dB, Q: 1.2',
+        'Band 4 (4800 Hz): +8.0 dB, Q: 1.8',
+        'Band 5 (8500 Hz): -5.0 dB, Q: 1.3',
+      ],
+      dolbyValues: 'Surround Virtualizer: OFF | Volume Leveler: OFF | EQ: 32Hz(-5), 64Hz(-4), 125Hz(0), 250Hz(-2), 500Hz(+1), 1k(+3), 2k(+5), 4k(+7), 8k(-4), 16k(-2)',
+      peaceConfig: `GraphicEQ: 20 -7; 32 -6; 64 -5; 125 0; 250 -3; 500 2; 1200 4; 2800 6; 4800 8; 8500 -5; 16000 -3`,
+    },
+    controllerProfile: {
+      profileName: 'Enfusion Steady Aim & Vehicle Analog Steering',
+      curveType: 'Linear with High-Center Precision',
+      leftStickDeadzoneMin: '0.06 (6%)',
+      rightStickDeadzoneMin: '0.04 (4%)',
+      stickDeadzoneMax: '0.96',
+      leftTriggerDeadzone: '0.02 (Focus View)',
+      rightTriggerDeadzone: '0.00 (Hair Trigger Fire)',
+      horizontalSens: '32% Sensitivity / ADS 18%',
+      verticalSens: '28% Sensitivity / ADS 16%',
+      aimAssistType: 'Zero Aim Assist (Full Ballistic Trajectory)',
+      steamConfigCode: 'steam://controllerconfig/1874880/arma_reforger_steady_milsim_v1',
+      ds4xmlSnippet: `<LeftDeadzone>6</LeftDeadzone><RightDeadzone>4</RightDeadzone><SensitivityCurve>Linear</SensitivityCurve>`,
+    },
+    configProfile: {
+      fileName: 'ArmaReforger.json',
+      targetPath: 'Documents/My Games/ArmaReforger/profile/ArmaReforger.json',
+      fileContent: `// Dangling Dice Gaming Lab™ — Arma Reforger Enfusion Performance Preset
+{
+  "Audio": {
+    "OutputMode": "HeadphonesStereo",
+    "SampleRate": 48000,
+    "MaxAudioChannels": 128,
+    "RadioVolume": 1.0,
+    "EnvironmentVolume": 0.85
+  },
+  "Video": {
+    "Resolution": "1920x1080",
+    "WindowMode": "Borderless",
+    "VSync": false,
+    "GrassDistance": 50, // Prevents foliage lag in deep forests
+    "VolumetricClouds": "Low",
+    "ShadowQuality": "Low",
+    "PostProcessQuality": "Low"
+  }
+}`,
+      fpsTips: [
+        'Enfusion engine calculates realistic bullet crack propagation: listen for the 4.8kHz crack to know a round flew past your head, then turn toward the dull muzzle thud.',
+        'Set GrassDistance to 50 in heavy Everon forest zones to recover 15-20 FPS without losing enemy visibility.',
+        'Always set MaxAudioChannels to 128 to ensure proximity radio and vehicle engine audio don’t drop out in 64-player server battles.',
+      ],
+    },
+    recommendedGear: ['iem-truthear-zero', 'ctrl-vader-4', 'grip-kontrolfreek'],
+  },
 ];
 
 export const ACCESSORIES_CATALOG = [
