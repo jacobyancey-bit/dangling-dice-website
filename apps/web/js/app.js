@@ -1494,6 +1494,569 @@ function initCookieConsent() {
   } catch (e) {}
 }
 
+// ============================================================================
+// RETENTION & VIRAL HOOKS: Persona Switcher, Live Hero Playground & My Stash
+// ============================================================================
+
+let currentPersona = "creator";
+let selectedHeroFormat = "mp3-320";
+let miniSynthCtx = null;
+
+function getMiniSynthContext() {
+  if (!miniSynthCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      miniSynthCtx = new AudioCtx();
+    }
+  }
+  if (miniSynthCtx && miniSynthCtx.state === "suspended") {
+    miniSynthCtx.resume();
+  }
+  return miniSynthCtx;
+}
+
+// 1. Persona Switcher
+function setStudioPersona(persona) {
+  currentPersona = persona;
+  try {
+    localStorage.setItem("dds_persona", persona);
+  } catch (e) {}
+
+  const creatorTab = document.getElementById("personaCreatorTab");
+  const devTab = document.getElementById("personaDevTab");
+  const creatorView = document.getElementById("creatorHeroView");
+  const devView = document.getElementById("developerHeroView");
+
+  if (persona === "creator") {
+    if (creatorTab) creatorTab.classList.add("active");
+    if (devTab) devTab.classList.remove("active");
+    if (creatorView) creatorView.style.display = "block";
+    if (devView) devView.style.display = "none";
+    switchPlaygroundTab("mp3");
+  } else {
+    if (creatorTab) creatorTab.classList.remove("active");
+    if (devTab) devTab.classList.add("active");
+    if (creatorView) creatorView.style.display = "none";
+    if (devView) devView.style.display = "block";
+    switchPlaygroundTab("compute");
+  }
+}
+
+// 2. Hero Playground Tabs
+function switchPlaygroundTab(tab) {
+  const tabs = ["mp3", "sampler", "compute"];
+  tabs.forEach((t) => {
+    const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
+    const panel = document.getElementById(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (btn) btn.classList.toggle("active", t === tab);
+    if (panel) panel.style.display = t === tab ? "flex" : "none";
+  });
+}
+
+function selectHeroFormat(btnEl, format) {
+  selectedHeroFormat = format;
+  document.querySelectorAll(".hero-format-pill").forEach((pill) => {
+    pill.classList.toggle("active", pill === btnEl);
+  });
+}
+
+async function pasteToHeroInput() {
+  const input = document.getElementById("heroMediaInput");
+  if (!input) return;
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      input.value = text.trim();
+      window.showToast("URL pasted from clipboard!", "success");
+      input.focus();
+    }
+  } catch (e) {
+    input.focus();
+    window.showToast("Press Ctrl+V to paste your URL", "info");
+  }
+}
+
+async function executeHeroMediaExtract() {
+  const input = document.getElementById("heroMediaInput");
+  const rawUrl = input?.value?.trim();
+  const progressBox = document.getElementById("heroExtractProgress");
+  const progressBar = document.getElementById("heroProgressBarFill");
+  const progressStatus = document.getElementById("heroProgressStatus");
+  const resultBox = document.getElementById("heroExtractResult");
+  const btn = document.getElementById("heroExtractBtn");
+
+  if (!rawUrl) {
+    window.showToast("Please enter a YouTube or audio URL", "error");
+    input?.focus();
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⏳ Resolving Media Stream...";
+  }
+  if (progressBox) progressBox.style.display = "block";
+  if (resultBox) resultBox.style.display = "none";
+  if (progressBar) progressBar.style.width = "40%";
+  if (progressStatus) progressStatus.textContent = "Resolving high-speed media stream...";
+
+  try {
+    const res = await fetch(`${API_BASE}/media/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: rawUrl, format: selectedHeroFormat }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to resolve media URL");
+    }
+
+    if (progressBar) progressBar.style.width = "100%";
+    if (progressStatus) progressStatus.textContent = "Ready! Generating direct download link...";
+
+    const media = data.data;
+    const downloadUrl = media.downloadUrl || `${API_BASE}/media/download?token=${encodeURIComponent(media.streamToken || "")}`;
+
+    // Add to My Stash
+    addToStash({
+      id: Date.now(),
+      type: "Audio Track",
+      title: media.title || media.cleanTitle || "Extracted Track",
+      format: selectedHeroFormat.toUpperCase(),
+      url: downloadUrl,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    });
+
+    if (resultBox) {
+      resultBox.innerHTML = `
+        <div style="display: flex; gap: 0.65rem; align-items: center;">
+          <img src="${media.thumbnail || "/images/banner.jpg"}" alt="" style="width: 52px; height: 38px; object-fit: cover; border-radius: 4px;" />
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${escapeHtml(media.title || media.cleanTitle)}
+            </div>
+            <div style="font-size: 0.7rem; color: #10b981;">✓ 320kbps Audio Ready &bull; Saved in My Stash</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
+          <a href="${downloadUrl}" download="${escapeHtml(media.cleanTitle || 'Track')}" class="btn btn-sm btn-primary" style="flex: 1; justify-content: center;">
+            📥 Direct Download Now
+          </a>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="resetHeroExtractor()">
+            ✨ New Track
+          </button>
+        </div>
+      `;
+      resultBox.style.display = "flex";
+    }
+
+    window.showToast("Track resolved & saved to My Stash!", "success");
+  } catch (err) {
+    if (progressBar) progressBar.style.width = "100%";
+    if (progressStatus) progressStatus.textContent = `⚠️ Error: ${err.message}`;
+    window.showToast(err.message, "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "⚡ Extract & Save Track";
+    }
+  }
+}
+
+function resetHeroExtractor() {
+  const input = document.getElementById("heroMediaInput");
+  const progressBox = document.getElementById("heroExtractProgress");
+  const resultBox = document.getElementById("heroExtractResult");
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
+  if (progressBox) progressBox.style.display = "none";
+  if (resultBox) resultBox.style.display = "none";
+}
+
+// 3. WebAudio 4-Pad Sampler Synthesis
+function triggerSamplerPad(padName) {
+  const ctx = getMiniSynthContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+  const padBtn = document.querySelector(`.pad-${padName}`);
+  if (padBtn) {
+    padBtn.classList.add("pad-active");
+    setTimeout(() => padBtn.classList.remove("pad-active"), 120);
+  }
+
+  if (padName === "kick") {
+    // 808 Sub Kick
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(42, now + 0.12);
+    gain.gain.setValueAtTime(1.0, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.36);
+  } else if (padName === "snare") {
+    // Crisp Lo-Fi Snare (Noise + Tone burst)
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.18, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseBuffer.length; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "highpass";
+    filter.frequency.setValueAtTime(1000, now);
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.8, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+
+    const tone = ctx.createOscillator();
+    const toneGain = ctx.createGain();
+    tone.type = "triangle";
+    tone.frequency.setValueAtTime(180, now);
+    tone.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+    toneGain.gain.setValueAtTime(0.6, now);
+    toneGain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+    tone.connect(toneGain);
+    toneGain.connect(ctx.destination);
+    tone.start(now);
+    tone.stop(now + 0.1);
+  } else if (padName === "hihat") {
+    // Tape Sizzle Hi-Hat (Bandpassed short noise burst)
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseBuffer.length; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(7500, now);
+    filter.Q.setValueAtTime(2.5, now);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(now);
+  } else if (padName === "chord") {
+    // Chill Dm9 Chord (D3, F3, A3, C4, E4)
+    const freqs = [146.83, 174.61, 220.0, 261.63, 329.63];
+    freqs.forEach((f) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(f, now);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1400, now);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.0);
+    });
+  }
+}
+
+let grooveTimer = null;
+function playSamplerGrooveDemo() {
+  if (grooveTimer) return;
+  const ctx = getMiniSynthContext();
+  if (!ctx) return;
+
+  window.showToast("Playing 4-Bar Lo-Fi Groove...", "info");
+  const stepMs = 240; // ~125 BPM 8th notes
+  const pattern = [
+    ["kick", "chord"],
+    ["hihat"],
+    ["snare", "hihat"],
+    ["hihat"],
+    ["kick", "hihat"],
+    ["kick"],
+    ["snare", "hihat", "chord"],
+    ["hihat"],
+  ];
+
+  let currentStep = 0;
+  const totalReps = 2;
+  let rep = 0;
+
+  grooveTimer = setInterval(() => {
+    const hits = pattern[currentStep];
+    hits.forEach((pad) => triggerSamplerPad(pad));
+    currentStep++;
+    if (currentStep >= pattern.length) {
+      currentStep = 0;
+      rep++;
+      if (rep >= totalReps) {
+        clearInterval(grooveTimer);
+        grooveTimer = null;
+      }
+    }
+  }, stepMs);
+}
+
+// 4. Instant 1-Click Free Studio Sample Kit (.WAV Generator)
+function downloadFreeSampleKit() {
+  const ctx = getMiniSynthContext();
+  if (!ctx) return;
+
+  window.showToast("Synthesizing 100% royalty-free Lo-Fi Sound Kit...", "info");
+
+  // Render a clean 16-bit PCM WAV directly in browser
+  const sampleRate = 44100;
+  const durationSec = 1.2;
+  const numFrames = Math.floor(sampleRate * durationSec);
+  const audioBuffer = ctx.createBuffer(1, numFrames, sampleRate);
+  const channelData = audioBuffer.getChannelData(0);
+
+  // Synthesize a punchy 808 sub + warm chord transient into this WAV
+  for (let i = 0; i < numFrames; i++) {
+    const t = i / sampleRate;
+    const kickFreq = 140 * Math.exp(-t * 22) + 42;
+    const kickEnv = Math.exp(-t * 7);
+    const kickSample = Math.sin(2 * Math.PI * kickFreq * t) * kickEnv * 0.7;
+
+    const chordT = Math.exp(-t * 3.5);
+    const chordSample =
+      (Math.sin(2 * Math.PI * 146.83 * t) +
+        Math.sin(2 * Math.PI * 174.61 * t) +
+        Math.sin(2 * Math.PI * 220.0 * t) +
+        Math.sin(2 * Math.PI * 261.63 * t) +
+        Math.sin(2 * Math.PI * 329.63 * t)) *
+      0.08 *
+      chordT;
+
+    channelData[i] = Math.max(-1, Math.min(1, kickSample + chordSample));
+  }
+
+  // RIFF WAV Header creation
+  const buffer = new ArrayBuffer(44 + numFrames * 2);
+  const view = new DataView(buffer);
+  const writeStr = (offset, str) => {
+    for (let j = 0; j < str.length; j++) view.setUint8(offset + j, str.charCodeAt(j));
+  };
+
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + numFrames * 2, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // Mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, "data");
+  view.setUint32(40, numFrames * 2, true);
+
+  let offset = 44;
+  for (let i = 0; i < numFrames; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, channelData[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+
+  const blob = new Blob([buffer], { type: "audio/wav" });
+  const blobUrl = URL.createObjectURL(blob);
+  const tempLink = document.createElement("a");
+  tempLink.href = blobUrl;
+  tempLink.download = "Dangling_Dice_Studio_LoFi_Starter_Kit.wav";
+  document.body.appendChild(tempLink);
+  tempLink.click();
+  setTimeout(() => tempLink.remove(), 2000);
+
+  addToStash({
+    id: Date.now(),
+    type: "Sound Kit",
+    title: "Dangling Dice Studio Lo-Fi Starter Kit (.WAV)",
+    format: "16-BIT 44.1KHZ",
+    url: blobUrl,
+    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  });
+
+  window.showToast("🎁 Free Studio Sound Kit saved to your Downloads & My Stash!", "success");
+}
+
+// 5. Quick Compute Test
+async function runQuickComputeTest(testType) {
+  const codeEl = document.getElementById("computeOutputCode");
+  const latencyTag = document.getElementById("computeLatencyTag");
+  const labelEl = document.getElementById("computeEndpointLabel");
+
+  document.querySelectorAll(".compute-quick-btn").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+  if (testType === "schema") document.getElementById("btnTestSchema")?.classList.add("active");
+  if (testType === "luhn") document.getElementById("btnTestLuhn")?.classList.add("active");
+  if (testType === "loan") document.getElementById("btnTestLoan")?.classList.add("active");
+
+  const t0 = performance.now();
+  if (labelEl) {
+    labelEl.textContent =
+      testType === "schema"
+        ? "POST /v1/schema/infer"
+        : testType === "luhn"
+        ? "POST /v1/privacy/redact-pii"
+        : "POST /v1/finance/amortize";
+  }
+
+  try {
+    let payload = {};
+    let endpoint = "/v1/schema/infer";
+
+    if (testType === "schema") {
+      endpoint = "/v1/schema/infer";
+      payload = { sample: { userId: "550e8400-e29b-41d4-a716-446655440000", email: "producer@danglingdice.com", tier: "pro", active: true } };
+    } else if (testType === "luhn") {
+      endpoint = "/v1/privacy/redact-pii";
+      payload = { text: "Card: 4532-0150-1234-5678, SSN: 000-12-3456" };
+    } else {
+      endpoint = "/v1/finance/amortize";
+      payload = { principal: 250000, annualRatePct: 6.5, termYears: 30 };
+    }
+
+    const res = await fetch(`${API_BASE.replace('/api', '')}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const elapsed = Math.round(performance.now() - t0);
+    const data = await res.json();
+
+    if (latencyTag) latencyTag.textContent = `${elapsed}ms`;
+    if (codeEl) {
+      codeEl.querySelector("code").textContent = JSON.stringify(data, null, 2);
+    }
+
+    addToStash({
+      id: Date.now(),
+      type: "API Benchmark",
+      title: `${labelEl.textContent} (${elapsed}ms)`,
+      format: "JSON REST",
+      url: "#computeApiSuite",
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    });
+  } catch (err) {
+    const elapsed = Math.round(performance.now() - t0);
+    if (latencyTag) latencyTag.textContent = `${elapsed}ms`;
+    if (codeEl) {
+      codeEl.querySelector("code").textContent = JSON.stringify({ error: err.message, status: 500 }, null, 2);
+    }
+  }
+}
+
+// 6. "My Studio Stash" (Persistence Engine)
+function getStash() {
+  try {
+    const raw = localStorage.getItem("dds_stash");
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveStash(items) {
+  try {
+    localStorage.setItem("dds_stash", JSON.stringify(items.slice(0, 15)));
+  } catch (e) {}
+}
+
+function addToStash(item) {
+  const items = getStash();
+  items.unshift(item);
+  saveStash(items);
+  updateStashBadge();
+  renderStash();
+}
+
+function updateStashBadge() {
+  const count = getStash().length;
+  const badge = document.getElementById("stashCountBadge");
+  if (badge) badge.textContent = count;
+}
+
+function toggleMyStash(forceOpen) {
+  const drawer = document.getElementById("myStashDrawer");
+  if (!drawer) return;
+  const isOpen = drawer.style.display !== "none";
+  const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+  drawer.style.display = shouldOpen ? "flex" : "none";
+  if (shouldOpen) renderStash();
+}
+
+function renderStash() {
+  const list = document.getElementById("stashItemsList");
+  if (!list) return;
+  const items = getStash();
+
+  if (items.length === 0) {
+    list.innerHTML = `
+      <div class="stash-empty-msg">
+        <div>📁 Your Stash is empty.</div>
+        <div style="font-size: 0.72rem; margin-top: 0.35rem; color: var(--text-muted);">
+          Extract an audio track, tap the sampler, or download our free sound kit to save items here!
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = items
+    .map(
+      (item) => `
+    <div class="stash-item">
+      <div class="stash-item-meta">
+        <div class="stash-item-title">${escapeHtml(item.title)}</div>
+        <div class="stash-item-tag">${escapeHtml(item.type)} &bull; ${escapeHtml(item.format || '')} &bull; ${escapeHtml(item.timestamp || '')}</div>
+      </div>
+      ${
+        item.url.startsWith('#')
+          ? `<a href="${item.url}" class="stash-item-action" onclick="toggleMyStash(false)">View</a>`
+          : `<a href="${item.url}" download="${escapeHtml(item.title)}" class="stash-item-action">Download</a>`
+      }
+    </div>
+  `
+    )
+    .join("");
+}
+
+function clearMyStash() {
+  saveStash([]);
+  updateStashBadge();
+  renderStash();
+  window.showToast("Studio Stash cleared", "info");
+}
+
+// Keyboard shortcuts for sampler pads (1, 2, 3, 4, Q, W, E, R)
+window.addEventListener("keydown", (e) => {
+  const tag = e.target.tagName?.toLowerCase();
+  if (tag === "input" || tag === "textarea" || e.target.isContentEditable) return;
+
+  const key = e.key.toLowerCase();
+  if (key === "1" || key === "q") triggerSamplerPad("kick");
+  if (key === "2" || key === "w") triggerSamplerPad("snare");
+  if (key === "3" || key === "e") triggerSamplerPad("hihat");
+  if (key === "4" || key === "r") triggerSamplerPad("chord");
+});
+
 // Window bindings
 window.openDevSubmissionModal = openDevSubmissionModal;
 window.closeDevSubmissionModal = closeDevSubmissionModal;
@@ -1502,10 +2065,29 @@ window.openPrivacyModal = openPrivacyModal;
 window.closePrivacyModal = closePrivacyModal;
 window.closeCookieBanner = closeCookieBanner;
 
+// New Viral & Retention Window bindings
+window.setStudioPersona = setStudioPersona;
+window.switchPlaygroundTab = switchPlaygroundTab;
+window.selectHeroFormat = selectHeroFormat;
+window.pasteToHeroInput = pasteToHeroInput;
+window.executeHeroMediaExtract = executeHeroMediaExtract;
+window.resetHeroExtractor = resetHeroExtractor;
+window.triggerSamplerPad = triggerSamplerPad;
+window.playSamplerGrooveDemo = playSamplerGrooveDemo;
+window.downloadFreeSampleKit = downloadFreeSampleKit;
+window.runQuickComputeTest = runQuickComputeTest;
+window.toggleMyStash = toggleMyStash;
+window.clearMyStash = clearMyStash;
+
 // Startup
 window.addEventListener("DOMContentLoaded", async () => {
   initDockState();
   initCookieConsent();
+  updateStashBadge();
+  try {
+    const savedPersona = localStorage.getItem("dds_persona") || "creator";
+    setStudioPersona(savedPersona);
+  } catch (e) {}
   await checkHealth();
   await fetchResources();
   await fetchTechStack();

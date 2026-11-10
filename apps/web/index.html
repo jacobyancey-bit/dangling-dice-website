@@ -144,19 +144,191 @@
        Main Content Section
        ========================================================================== -->
   <main>
-    <!-- Hero Banner -->
-    <section class="hero-banner">
-      <img src="/images/banner.jpg" alt="Dangling Dice Studios™ Workspace" class="hero-img" />
-      <div class="hero-overlay">
-        <div class="hero-pill">Official Hub &bull; Dangling Dice Studios™</div>
-        <h1 class="hero-title">Where Beat Production Meets Code Craft, Phone Apps &amp; Developer Tools</h1>
-        <p class="hero-description">
-          Welcome to the creative nexus of Dangling Dice Studios™. Stream original instrumentals on <strong>Dangling Beats</strong>, download our smart mobile apps like the <strong>AI Calculator</strong> on Google Play, master full-stack software engineering, and test our free developer tools.
-        </p>
-        <div class="hero-actions">
-          <a href="#catalog" class="btn btn-primary">📚 Explore Studio Catalog</a>
-          <a href="#computeApiSuite" class="btn btn-secondary" style="border-color: rgba(251, 191, 36, 0.45); color: #fbbf24;">⚡ Free Developer Sandboxes &amp; APIs</a>
+    <!-- ======================================================================
+         Dynamic Hero Banner & Live Studio Playground (Split-Persona & Instant 3-Sec Hook)
+         ====================================================================== -->
+    <section class="hero-banner" id="heroSection">
+      <img src="/images/banner.jpg" alt="Dangling Dice Studios™ Workspace" class="hero-bg-img" />
+      <div class="hero-grid-container">
+        
+        <!-- Left Column: Value Proposition & Persona Switcher -->
+        <div class="hero-copy-column">
+          <!-- Persona Segmented Switcher -->
+          <div class="persona-switch-bar" role="tablist" aria-label="Select your studio persona">
+            <button type="button" id="personaCreatorTab" class="persona-switch-tab active" onclick="setStudioPersona('creator')">
+              <span class="persona-icon">🎧</span>
+              <span class="persona-label">
+                <span class="persona-title">Creators &amp; Producers</span>
+                <span class="persona-sub">Beats • 320k Audio • Free Sound Kits</span>
+              </span>
+            </button>
+            <button type="button" id="personaDevTab" class="persona-switch-tab" onclick="setStudioPersona('developer')">
+              <span class="persona-icon">⚡</span>
+              <span class="persona-label">
+                <span class="persona-title">Developers &amp; Builders</span>
+                <span class="persona-sub">Stateless APIs • 13 Sandboxes • RapidAPI</span>
+              </span>
+            </button>
+          </div>
+
+          <!-- Dynamic Persona Content: Creator View -->
+          <div id="creatorHeroView" class="persona-view active">
+            <div class="hero-pill hero-pill-pink">🎧 Creative Audio &amp; Media Studio</div>
+            <h1 class="hero-title">Produce Beats, Transcode Audio &amp; Sample Freely.</h1>
+            <p class="hero-description">
+              Zero subscriptions. Zero ads. Instant browser-based 16-pad drum controller, YouTube to 320kbps MP3 transcoder, Lo-Fi focus radio, and free sound starter kits.
+            </p>
+            <div class="hero-actions">
+              <a href="https://beats.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" class="btn btn-purple">🎛️ Open Beats Studio ↗</a>
+              <button type="button" class="btn btn-secondary" onclick="downloadFreeSampleKit()" style="border-color: rgba(244, 114, 182, 0.4); color: #f472b6;">
+                🎁 Free Studio Sound Kit (.WAV)
+              </button>
+              <a href="#catalog" class="btn btn-secondary">📚 Browse Releases</a>
+            </div>
+            <div class="hero-trust-badges">
+              <span>✓ 100% Free Forever</span>
+              <span>✓ No Account Required</span>
+              <span>✓ 320kbps Studio Master</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Persona Content: Developer View -->
+          <div id="developerHeroView" class="persona-view" style="display: none;">
+            <div class="hero-pill hero-pill-cyan">⚡ Low-Latency Compute &amp; APIs</div>
+            <h1 class="hero-title">Sub-15ms Microservices &amp; Developer Sandboxes.</h1>
+            <p class="hero-description">
+              Production REST APIs and in-browser sandboxes for JSON-to-Zod schema inference, GIS geospatial acreage calculations, Luhn PII credit card redaction, and financial amortization.
+            </p>
+            <div class="hero-actions">
+              <a href="#computeApiSuite" class="btn btn-primary">⚡ Test 13 Sandboxes</a>
+              <a href="https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="border-color: rgba(251, 191, 36, 0.45); color: #fbbf24;">
+                🚀 RapidAPI Hub ↗
+              </a>
+              <a href="/api/docs" target="_blank" class="btn btn-secondary">📖 OpenAPI Docs</a>
+            </div>
+            <div class="hero-trust-badges">
+              <span>✓ Sub-15ms Latency</span>
+              <span>✓ 21 Production Endpoints</span>
+              <span>✓ Zero Data Resale</span>
+            </div>
+          </div>
         </div>
+
+        <!-- Right Column: Live Above-the-Fold Playground Widget -->
+        <div class="hero-playground-column">
+          <div class="hero-playground-card">
+            <div class="playground-header">
+              <div class="playground-tabs" role="tablist">
+                <button type="button" class="playground-tab active" id="tabMp3Btn" onclick="switchPlaygroundTab('mp3')">
+                  🎵 MP3 Extractor
+                </button>
+                <button type="button" class="playground-tab" id="tabSamplerBtn" onclick="switchPlaygroundTab('sampler')">
+                  🥁 4-Pad Sampler
+                </button>
+                <button type="button" class="playground-tab" id="tabComputeBtn" onclick="switchPlaygroundTab('compute')">
+                  ⚡ API Speed Test
+                </button>
+              </div>
+              <div class="playground-live-badge">
+                <span class="live-dot"></span> <span id="playgroundPing">Ready</span>
+              </div>
+            </div>
+
+            <!-- Tab 1: Instant MP3 Transcoder Panel -->
+            <div id="panelMp3" class="playground-panel active">
+              <div class="playground-panel-desc">Paste any video or audio URL for instant clean 320kbps extraction:</div>
+              <div class="hero-input-group">
+                <input type="text" id="heroMediaInput" class="hero-text-input" placeholder="Paste YouTube link (https://youtube.com/watch?v=...)" />
+                <button type="button" id="heroPasteBtn" class="hero-paste-btn" onclick="pasteToHeroInput()" title="Paste from clipboard">📋 Paste</button>
+              </div>
+              <div class="hero-format-row">
+                <button type="button" class="hero-format-pill active" data-fmt="mp3-320" onclick="selectHeroFormat(this, 'mp3-320')">MP3 320k (Studio)</button>
+                <button type="button" class="hero-format-pill" data-fmt="mp3-128" onclick="selectHeroFormat(this, 'mp3-128')">MP3 128k (Fast)</button>
+                <button type="button" class="hero-format-pill" data-fmt="mp4" onclick="selectHeroFormat(this, 'mp4')">MP4 1080p</button>
+              </div>
+              <button type="button" id="heroExtractBtn" class="btn btn-primary hero-submit-btn" onclick="executeHeroMediaExtract()">
+                ⚡ Extract &amp; Save Track
+              </button>
+              <div id="heroExtractProgress" class="hero-progress-box" style="display: none;">
+                <div class="hero-progress-status" id="heroProgressStatus">Resolving stream...</div>
+                <div class="hero-progress-bar-wrap">
+                  <div class="hero-progress-bar-fill" id="heroProgressBarFill" style="width: 25%;"></div>
+                </div>
+              </div>
+              <div id="heroExtractResult" class="hero-result-box" style="display: none;">
+                <!-- Populated upon success -->
+              </div>
+            </div>
+
+            <!-- Tab 2: Instant 4-Pad Lo-Fi Sampler Panel -->
+            <div id="panelSampler" class="playground-panel" style="display: none;">
+              <div class="playground-panel-desc">Tap pads or press keyboard keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> (or <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd>):</div>
+              <div class="sampler-pads-grid">
+                <button type="button" class="sampler-pad pad-kick" data-pad="kick" onclick="triggerSamplerPad('kick')">
+                  <span class="pad-key">1 / Q</span>
+                  <span class="pad-title">808 KICK</span>
+                  <span class="pad-note">Sub 45Hz</span>
+                </button>
+                <button type="button" class="sampler-pad pad-snare" data-pad="snare" onclick="triggerSamplerPad('snare')">
+                  <span class="pad-key">2 / W</span>
+                  <span class="pad-title">LO-FI SNARE</span>
+                  <span class="pad-note">Vinyl Snap</span>
+                </button>
+                <button type="button" class="sampler-pad pad-hihat" data-pad="hihat" onclick="triggerSamplerPad('hihat')">
+                  <span class="pad-key">3 / E</span>
+                  <span class="pad-title">TAPE HI-HAT</span>
+                  <span class="pad-note">Analog Sizzle</span>
+                </button>
+                <button type="button" class="sampler-pad pad-chord" data-pad="chord" onclick="triggerSamplerPad('chord')">
+                  <span class="pad-key">4 / R</span>
+                  <span class="pad-title">CHILL CHORD</span>
+                  <span class="pad-note">Dm9 Rhodes</span>
+                </button>
+              </div>
+              <div class="sampler-actions-row">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="playSamplerGrooveDemo()">
+                  ▶ Play 4-Bar Lo-Fi Groove
+                </button>
+                <a href="https://beats.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-purple">
+                  🎛️ Open Full 16-Pad Studio ↗
+                </a>
+              </div>
+            </div>
+
+            <!-- Tab 3: Instant API Speed Test Panel -->
+            <div id="panelCompute" class="playground-panel" style="display: none;">
+              <div class="playground-panel-desc">Test real-time compute latency on production cluster:</div>
+              <div class="compute-quick-actions">
+                <button type="button" class="compute-quick-btn active" id="btnTestSchema" onclick="runQuickComputeTest('schema')">
+                  JSON-to-Zod
+                </button>
+                <button type="button" class="compute-quick-btn" id="btnTestLuhn" onclick="runQuickComputeTest('luhn')">
+                  PII / Luhn Redactor
+                </button>
+                <button type="button" class="compute-quick-btn" id="btnTestLoan" onclick="runQuickComputeTest('loan')">
+                  Loan Math
+                </button>
+              </div>
+              <div class="compute-result-preview">
+                <div class="compute-meta-header">
+                  <span id="computeEndpointLabel">POST /v1/schema/infer</span>
+                  <span class="compute-latency-tag" id="computeLatencyTag">12ms</span>
+                </div>
+                <pre id="computeOutputCode"><code>{
+  "success": true,
+  "inferredZod": "z.object({\n  userId: z.string().uuid(),\n  email: z.string().email(),\n  tier: z.enum(['free', 'pro'])\n})",
+  "durationMs": 11
+}</code></pre>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">21 REST endpoints live</span>
+                <a href="#computeApiSuite" class="btn btn-sm btn-primary">⚡ Explore 13 Sandboxes ↓</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1203,6 +1375,33 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
       </div>
     </div>
   </div>
+
+  <!-- Floating "My Stash" Persistence Drawer (Drives return visits & retention) -->
+  <div id="myStashDrawer" class="my-stash-drawer" style="display: none;">
+    <div class="stash-header">
+      <div class="stash-title-wrap">
+        <span class="stash-icon">📁</span>
+        <div>
+          <div class="stash-title">My Studio Stash</div>
+          <div class="stash-subtitle">Saved conversions, sound kits &amp; presets</div>
+        </div>
+      </div>
+      <button type="button" class="stash-close-btn" onclick="toggleMyStash(false)" title="Close Stash">&times;</button>
+    </div>
+    <div id="stashItemsList" class="stash-items-list">
+      <!-- Rendered dynamically from localStorage -->
+    </div>
+    <div class="stash-footer">
+      <button type="button" class="btn btn-sm btn-secondary" onclick="clearMyStash()">Clear Stash</button>
+      <span style="font-size: 0.72rem; color: var(--text-muted);">Saved in this browser</span>
+    </div>
+  </div>
+
+  <!-- Floating Stash Trigger Pill -->
+  <button type="button" id="myStashTrigger" class="my-stash-trigger" onclick="toggleMyStash()" title="Open My Studio Stash">
+    <span>📁 My Stash</span>
+    <span id="stashCountBadge" class="stash-badge">0</span>
+  </button>
 
   <!-- Toast Notification Container (10015.io inspired) -->
   <div id="toastContainer" class="toast-container"></div>
