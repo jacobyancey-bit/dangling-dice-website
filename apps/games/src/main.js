@@ -191,14 +191,20 @@ function renderGameDashboard() {
       </div>
 
       <div class="card-actions-row">
-        <button type="button" class="btn btn-primary" onclick="window.downloadPeaceConfig('${game.id}')">
-          📥 Download .peace Profile (Equalizer APO)
+        <button type="button" class="btn btn-primary" onclick="window.downloadApoTxtConfig('${game.id}')">
+          📥 Download .txt (Equalizer APO)
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.downloadPeaceConfig('${game.id}')">
+          📥 Download .peace (Peace GUI)
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.copyApoTxtConfig('${game.id}')">
+          📋 Copy config.txt Code
         </button>
         <button type="button" class="btn btn-secondary" onclick="window.copySonarValues('${game.id}')">
-          📋 Copy Sonar Parametric Values
+          📋 Copy Sonar Values
         </button>
         <button type="button" class="btn btn-secondary" onclick="window.copyDolbyValues('${game.id}')">
-          📋 Copy Dolby Atmos Settings
+          📋 Copy Dolby Atmos
         </button>
       </div>
 
@@ -541,8 +547,15 @@ function renderSoftwareGuide() {
         <a href="${tool.downloadUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
           📥 Official Download (${escapeHtml(tool.version)}) ↗
         </a>
+        ${
+          tool.id === 'equalizer-apo' || tool.id === 'peace-gui'
+            ? `<button type="button" class="btn btn-secondary btn-sm" onclick="window.downloadSetupGuideTxt()">
+                📄 Download Setup Guide (.txt)
+              </button>`
+            : ''
+        }
         <a href="${tool.officialSite}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
-          Documentation ↗
+          Docs ↗
         </a>
       </div>
     </div>
@@ -587,6 +600,113 @@ window.selectGameChip = function (chipId) {
 window.switchDashboardTab = function (tabName) {
   activeDashboardTab = tabName;
   renderGameDashboard();
+};
+
+window.downloadApoTxtConfig = function (gameId) {
+  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  if (!game) return;
+  const content = `# ==============================================================================
+# Dangling Dice Gaming Lab™ — Equalizer APO Native Configuration
+# Game: ${game.title}
+# Profile: ${game.audioProfile.profileName}
+# Target Mix: ${game.audioProfile.targetMix}
+#
+# QUICK INSTALLATION:
+# Option 1: Open C:\\Program Files\\EqualizerAPO\\config\\config.txt in Notepad,
+#           paste lines below, and press Ctrl+S. (Updates in real-time!)
+# Option 2: Place this file in C:\\Program Files\\EqualizerAPO\\config\\
+#           and add this line to your config.txt:
+#           Include: ${game.shortName.toLowerCase().replace(/\s+/g, '_')}_eq.txt
+# ==============================================================================
+
+Preamp: -3.0 dB
+${game.audioProfile.peaceConfig}
+`;
+  downloadTextFile(`${game.shortName.toLowerCase().replace(/\s+/g, '_')}_eq.txt`, content);
+};
+
+window.copyApoTxtConfig = function (gameId) {
+  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  if (!game) return;
+  const content = `# Dangling Dice Gaming Lab™ — ${game.shortName} Footstep Audio EQ
+Preamp: -3.0 dB
+${game.audioProfile.peaceConfig}`;
+  copyToClipboard(content, `📋 Copied Equalizer APO config text for ${game.shortName}!`);
+};
+
+window.downloadSetupGuideTxt = function () {
+  const guideContent = `==============================================================================
+DANGLING DICE GAMING LAB™ — EQUALIZER APO & PEACE GUI SETUP CHEAT SHEET
+Website: https://games.dangling-dice-studios.com/
+Discord: https://discord.gg/uFYMQahNZz
+==============================================================================
+
+WHAT IS EQUALIZER APO?
+----------------------
+Equalizer APO is a 100% free, open-source 32-bit floating-point parametric
+audio engine that hooks directly into the Windows audio pipeline with 0ms
+latency and zero CPU overhead.
+
+WHAT IS PEACE GUI?
+------------------
+Peace is the graphical slider interface and preset manager for Equalizer APO.
+Equalizer APO runs purely as a background text engine; Peace provides visual
+equalizer sliders, instant hotkeys, and 1-click preset importing.
+
+------------------------------------------------------------------------------
+STEP-BY-STEP INSTALLATION GUIDE (WINDOWS 10 / 11)
+------------------------------------------------------------------------------
+STEP 1: INSTALL EQUALIZER APO
+  1. Download EqualizerAPO64 from https://sourceforge.net/projects/equalizerapo/
+  2. Run the installer.
+  3. During setup, the "Configurator" window opens. Click the "Playback devices" tab.
+  4. Check the box ONLY for your active output device (e.g. Headphones or USB DAC).
+  5. Click OK.
+  6. CRITICAL: Restart your computer when prompted. The Windows audio filter
+     driver requires a reboot to hook into your sound card.
+
+STEP 2: INSTALL PEACE GUI
+  1. Download PeaceSetup.exe from https://sourceforge.net/projects/peace-equalizer-apo-extension/
+  2. Run PeaceSetup.exe and click "Install".
+  3. Choose "Start with Peace" and select the standard 10-band interface.
+
+STEP 3: HOW TO USE THE .TXT OR .PEACE FILES
+  METHOD A (Peace GUI - Easiest):
+    1. On https://games.dangling-dice-studios.com/, click "Download .peace" for your game.
+    2. In Peace GUI, click the "Import" button (bottom right).
+    3. Select your downloaded .peace (or .txt) file.
+    4. The 10 frequency sliders will immediately load. Click "Save".
+
+  METHOD B (Native Equalizer APO without Peace):
+    1. On our website, click "Download .txt" for your game (e.g. warzone_eq.txt).
+    2. Move the file to:
+       C:\\Program Files\\EqualizerAPO\\config\\
+    3. Open "config.txt" in Notepad from that same folder.
+    4. Add this single line to the bottom:
+       Include: warzone_eq.txt
+    5. Press Ctrl + S. The changes take effect immediately in real-time!
+
+------------------------------------------------------------------------------
+TROUBLESHOOTING & COMMON FIXES
+------------------------------------------------------------------------------
+PROBLEM: "I don't hear any difference when moving sliders in Peace."
+FIX:
+  1. Open C:\\Program Files\\EqualizerAPO\\Configurator.exe as Administrator.
+  2. Click on your active headphone device.
+  3. Check "Troubleshooting options".
+  4. Change "Install as" from "SFX/EFX" to "Install as LFX/GFX".
+  5. Click OK and restart your PC or the Windows Audio service.
+
+PROBLEM: "My volume is clipping or distorting when firing weapons."
+FIX:
+  Always keep the "Preamp" slider set to at least -3.0 dB to give the audio
+  stream digital headroom for our footstep frequency boosts.
+
+Need help or want custom EQ for your specific headset?
+Join our Discord: https://discord.gg/uFYMQahNZz
+==============================================================================
+`;
+  downloadTextFile('EQUALIZER_APO_SETUP_GUIDE.txt', guideContent);
 };
 
 window.downloadPeaceConfig = function (gameId) {
