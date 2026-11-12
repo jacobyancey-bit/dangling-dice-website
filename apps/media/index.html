@@ -299,6 +299,19 @@
             ☕ Buy Me a Coffee ($5)
           </a>
         </div>
+
+        <!-- Developer API Cross-Promotion Strip -->
+        <div style="margin-top: 0.65rem; padding: 0.55rem 0.85rem; background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.45rem;">
+            <span style="font-size: 1.1rem;">⚙️</span>
+            <div style="font-size: 0.76rem; color: #cbd5e1;">
+              <strong>Building an app?</strong> Access our Media & DSP Transcoder via the <span style="color: #67e8f9; font-weight: 700;">Dangling Dice API</span>.
+            </div>
+          </div>
+          <a href="https://dev.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4); font-size: 0.72rem; padding: 0.25rem 0.65rem; font-weight: 700;">
+            API Key & Docs ↗
+          </a>
+        </div>
       </section>
 
       <!-- Right Flank: Feature Boxes -->
@@ -513,15 +526,41 @@ console.log("Audio Stream:", data.downloadUrl);</code></pre>
         <div class="modal-coffee-left">
           <div class="coffee-icon-bounce">☕</div>
           <div>
-            <div class="modal-coffee-title">Love our 100% Ad-Free Converter?</div>
+            <div class="modal-coffee-title">Tired of sketchy popups and fake bitrates?</div>
             <p class="modal-coffee-sub">
-              Help us keep Dangling Dice free with zero ads or tracking. Buy us a coffee to support bandwidth!
+              Dangling Dice is 100% ad-free with zero trackers. If our tool saved you time and gave you clean studio audio, chip in a coffee to support our servers!
             </p>
           </div>
         </div>
-        <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-coffee" style="padding: 0.65rem 1.25rem; font-size: 0.88rem; flex-shrink: 0;">
-          ☕ Buy Me a Coffee
-        </a>
+        <div style="display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-end;">
+          <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-coffee" style="padding: 0.55rem 1.15rem; font-size: 0.85rem; flex-shrink: 0; font-weight: 700;">
+            ☕ Tip a Coffee ($5)
+          </a>
+          <div style="display: flex; gap: 0.35rem;">
+            <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: rgba(255,255,255,0.08); color: #f1f5f9; font-size: 0.7rem; padding: 0.2rem 0.5rem; border: 1px solid rgba(255,255,255,0.15);">
+              $3 Quick Tip
+            </a>
+            <a href="https://buymeacoffee.com/danglingdice" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: rgba(255,255,255,0.08); color: #f1f5f9; font-size: 0.7rem; padding: 0.2rem 0.5rem; border: 1px solid rgba(255,255,255,0.15);">
+              $10 Supporter
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contextual Creator Perks (Shown upon successful download) -->
+      <div id="modalContextualPerks" style="display: none; margin-top: 0.75rem; padding: 0.75rem 0.95rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.3rem;">🚀</span>
+            <div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Distribute your beat or remix to Spotify & Apple Music</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Keep 100% of your royalties with our exclusive creator partner link.</div>
+            </div>
+          </div>
+          <a href="https://dangling-dice-studios.com/go/distrokid" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #10b981; color: #000; font-weight: 700; font-size: 0.74rem;">
+            Claim 7% Off DistroKid ↗
+          </a>
+        </div>
       </div>
 
       <!-- Modal Footer / Convert Again Action -->

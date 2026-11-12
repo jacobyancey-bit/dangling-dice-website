@@ -18,6 +18,27 @@ if (!fs.existsSync(tempDir)) {
 // In-memory registry of ready-to-deliver files for instant downloads
 const readyFiles = new Map();
 
+// Active in-flight transcode concurrency guard per IP (max 2 active streams per IP)
+const activeIpTranscodes = new Map();
+
+function acquireIpTranscodeSlot(ip) {
+  if (!ip) return true;
+  const current = activeIpTranscodes.get(ip) || 0;
+  if (current >= 2) return false;
+  activeIpTranscodes.set(ip, current + 1);
+  return true;
+}
+
+function releaseIpTranscodeSlot(ip) {
+  if (!ip) return;
+  const current = activeIpTranscodes.get(ip) || 0;
+  if (current <= 1) {
+    activeIpTranscodes.delete(ip);
+  } else {
+    activeIpTranscodes.set(ip, current - 1);
+  }
+}
+
 // Periodic sweep to clean up temporary conversion files older than 15 minutes
 const cleanupTimer = setInterval(() => {
   const now = Date.now();
@@ -566,6 +587,22 @@ export const streamMediaDownload = async (req, res) => {
   if (!url || !isValidMediaUrl(url)) {
     return res.status(400).send('Invalid or unauthorized media URL');
   }
+
+  const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
+  if (!acquireIpTranscodeSlot(clientIp)) {
+    return res.status(429).send('Too many active transcoding requests. Please wait for your current download to complete.');
+  }
+
+  let slotReleased = false;
+  const releaseSlotOnce = () => {
+    if (!slotReleased) {
+      slotReleased = true;
+      releaseIpTranscodeSlot(clientIp);
+    }
+  };
+
+  req.on('close', releaseSlotOnce);
+  res.on('finish', releaseSlotOnce);
 
   const ytid = extractYouTubeId(url);
   const targetUrl = ytid ? `https://www.youtube.com/watch?v=${ytid}` : url.trim();

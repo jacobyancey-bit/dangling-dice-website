@@ -226,6 +226,8 @@ async function startDownloadWithOverlay(media) {
   }
   if (modalDoneControls) modalDoneControls.style.display = 'none';
   if (modalWarningCard) modalWarningCard.style.display = 'none';
+  const modalContextualPerks = document.getElementById('modalContextualPerks');
+  if (modalContextualPerks) modalContextualPerks.style.display = 'none';
 
   // Incremental visual progress ticker
   let currentPct = 15;
@@ -299,6 +301,13 @@ async function startDownloadWithOverlay(media) {
     }
 
     showToast(`✅ Downloaded ${media.cleanTitle}!`, 'success');
+    
+    // Reveal high-converting partner creator perks inside modal
+    const modalContextualPerks = document.getElementById('modalContextualPerks');
+    if (modalContextualPerks) {
+      modalContextualPerks.style.display = 'block';
+    }
+
     checkDownloadMilestoneForTip();
   } catch (err) {
     clearInterval(progressTimer);
