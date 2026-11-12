@@ -1652,6 +1652,31 @@ export const ACCESSORIES_CATALOG = [
 
 export const SOFTWARE_GUIDE = [
   {
+    id: 'omnisound-suite',
+    name: 'OmniSound Suite™',
+    category: '360° Spatial Audio Radar & Hearing Protection',
+    price: '100% Free • Standalone Windows App',
+    license: 'Dangling Dice Studios™',
+    icon: '🎯',
+    badge: '👑 Official In-House Flagship',
+    downloadUrl: 'https://github.com/jacobyancey-bit/dangling-dice-website/releases/download/v1.0.0-omnisound/AudioRadarSuite.exe',
+    officialSite: 'https://games.dangling-dice-studios.com/#omniSoundSection',
+    version: 'v1.0.0 (Windows 10/11 x64)',
+    description: 'Our all-in-one in-house desktop application that replaces Equalizer APO, Peace GUI, and SoundSight ($12) with a unified, lightweight HUD overlay. Delivers real-time 360° spatial directional audio radar, color-coded sound classification, and an intelligent hearing protection compressor.',
+    whyNeedIt: 'Skip the 50 cryptic sliders and broken config files of legacy software. OmniSound Suite captures game audio directly via zero-latency Windows WASAPI loopback with 100% anti-cheat safety (no DLL injection, zero game memory reads).',
+    steps: [
+      'Download <strong>AudioRadarSuite.exe</strong> directly from our verified GitHub Release.',
+      'No complicated installer or driver patching required: launch the standalone executable.',
+      'Select your active gaming playback audio device from the top dropdown.',
+      'Choose your preferred HUD Radar Overlay style (360° Circular Radar, Compass Ribbon, Threat Edge Arcs, or Minimalist Dots).',
+      'Toggle <strong>Hearing Protection</strong> to tame deafening muzzle blasts while boosting subtle enemy footstep transients.',
+    ],
+    troubleshooting: [
+      'OmniSound runs as an ultra-light transparent HUD overlay (`WS_EX_TRANSPARENT`), allowing full mouse click-through in borderless windowed games.',
+      'Ensure your game audio output is configured to 5.1/7.1 surround or 48kHz stereo for maximum directional accuracy.',
+    ],
+  },
+  {
     id: 'equalizer-apo',
     name: 'Equalizer APO',
     category: 'Audio Core DSP Engine',
