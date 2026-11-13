@@ -45,5 +45,8 @@
   },
   "dependencies": {
     "compression": "^1.8.2"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
   }
 }

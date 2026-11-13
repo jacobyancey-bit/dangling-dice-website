@@ -464,10 +464,14 @@ export const resolveMediaInfo = async (req, res) => {
       const videoDetails = info.videoDetails;
       const durationSeconds = parseInt(videoDetails.lengthSeconds, 10) || 0;
 
-      if (durationSeconds > 1200) {
+      // Bandwidth Guardrails: Audio capped at 15 mins (was 20), Video capped at 7 mins to prevent multi-gigabyte bandwidth drains on Render
+      const maxDuration = ext === 'mp4' ? 420 : 900; // 7 mins for video, 15 mins for audio
+      if (durationSeconds > maxDuration) {
         return res.status(400).json({
           success: false,
-          message: 'Media duration exceeds maximum allowed length of 20 minutes for free public conversion.',
+          message: ext === 'mp4'
+            ? 'Video length exceeds the 7-minute limit for free 1080p conversion. Please choose MP3 audio or select a shorter clip.'
+            : 'Media length exceeds the 15-minute limit for free public conversion.',
         });
       }
 
