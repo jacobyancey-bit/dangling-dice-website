@@ -6,6 +6,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
+import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -35,6 +36,20 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// High-performance gzip/brotli payload compression (reduces text/json/html bandwidth by 65-80%)
+app.use(
+  compression({
+    filter: (req, res) => {
+      // Do not compress already-compressed audio/video streams
+      if (req.path.startsWith('/api/media/download') || req.path.startsWith('/media/download')) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+    threshold: 1024, // only compress responses above 1KB
+  })
+);
 
 // Disable HTTP 304 ETag caching so all API endpoints return fresh 200 OK payloads
 app.set('etag', false);
@@ -289,32 +304,57 @@ app.use((req, res, next) => {
     });
   }
 
+  // Aggressive long-term caching for static assets (CSS, JS bundles, images, icons, fonts)
+  // Prevents browsers, CDNs, and crawlers from repeatedly re-downloading static files on Render
+  const staticOptions = {
+    maxAge: '7d', // 7 days browser/CDN cache
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, filePath) => {
+      // Fingerprinted Vite production assets in /assets/ can be cached immutably for 1 year
+      if (filePath.includes(path.sep + 'assets' + path.sep)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (filePath.endsWith('.html')) {
+        // HTML entry files get short cache with revalidation
+        res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+      } else if (filePath.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/i)) {
+        // Images and logos get 7 days cache
+        res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400');
+      }
+    },
+  };
+
   if (isDevSubdomain && fs.existsSync(devDistPath)) {
-    return express.static(devDistPath)(req, res, () => {
+    return express.static(devDistPath, staticOptions)(req, res, () => {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
       res.sendFile(path.join(devDistPath, 'index.html'));
     });
   }
 
   if (isGamesSubdomain && fs.existsSync(gamesDistPath)) {
-    return express.static(gamesDistPath)(req, res, () => {
+    return express.static(gamesDistPath, staticOptions)(req, res, () => {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
       res.sendFile(path.join(gamesDistPath, 'index.html'));
     });
   }
 
   if (isBeatsSubdomain && fs.existsSync(beatsDistPath)) {
-    return express.static(beatsDistPath)(req, res, () => {
+    return express.static(beatsDistPath, staticOptions)(req, res, () => {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
       res.sendFile(path.join(beatsDistPath, 'index.html'));
     });
   }
 
   if (isMediaSubdomain && fs.existsSync(mediaDistPath)) {
-    return express.static(mediaDistPath)(req, res, () => {
+    return express.static(mediaDistPath, staticOptions)(req, res, () => {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
       res.sendFile(path.join(mediaDistPath, 'index.html'));
     });
   }
 
   if (fs.existsSync(webDistPath)) {
-    return express.static(webDistPath)(req, res, () => {
+    return express.static(webDistPath, staticOptions)(req, res, () => {
+      res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
       res.sendFile(path.join(webDistPath, 'index.html'));
     });
   }
