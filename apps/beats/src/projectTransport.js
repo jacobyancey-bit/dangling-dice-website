@@ -179,7 +179,14 @@ class ProjectTransport {
 
   schedulerLoop() {
     const ctx = instrumentEngine.getAudioContext();
-    while (this.next16thNoteTime < ctx.currentTime + this.scheduleAheadTime) {
+    // Catch-up safeguard: if tab was throttled/minimized and clock drifted > 250ms, fast-forward to now
+    if (ctx.currentTime - this.next16thNoteTime > 0.25) {
+      this.next16thNoteTime = ctx.currentTime;
+    }
+
+    let iterations = 0;
+    while (this.next16thNoteTime < ctx.currentTime + this.scheduleAheadTime && iterations < 32) {
+      iterations++;
       if (this.isCountIn) {
         this.scheduleCountInStep(this.next16thNoteTime, this.countInStep);
         this.advanceCountIn();
@@ -311,12 +318,26 @@ class ProjectTransport {
     } else if (targetTrack === 'piano') {
       const note = data.note;
       if (!note) return;
-      this.tracks.piano.push({
-        step: currentStep,
-        note: note,
-        durationSteps: data.durationSteps || 2,
-        velocity: data.velocity || 0.85,
-      });
+      // Overdub without stacking duplicate notes on the exact same step & pitch
+      const existingIdx = this.tracks.piano.findIndex((n) => n.step === currentStep && n.note === note);
+      if (existingIdx !== -1) {
+        this.tracks.piano[existingIdx] = {
+          step: currentStep,
+          note: note,
+          durationSteps: data.durationSteps || 2,
+          velocity: data.velocity || 0.85,
+        };
+      } else {
+        // Enforce maximum event count ceiling to prevent unbounded memory growth
+        if (this.tracks.piano.length < 2048) {
+          this.tracks.piano.push({
+            step: currentStep,
+            note: note,
+            durationSteps: data.durationSteps || 2,
+            velocity: data.velocity || 0.85,
+          });
+        }
+      }
       this.notify('trackUpdated', { track: 'piano', items: this.tracks.piano });
     }
   }
