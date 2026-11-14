@@ -57,7 +57,10 @@ import {
   GUITAR_FULL_KEY_MAP
 } from './touchController.js';
 
+import { projectTransport } from './projectTransport.js';
+
 window.touchController = touchController;
+window.projectTransport = projectTransport;
 window.setControllerInstrument = (id) => touchController.setInstrument(id);
 window.navControllerInstrument = (dir) => touchController.navInstrument(dir);
 window.setControllerMode = (id) => touchController.setMode(id);
@@ -167,8 +170,11 @@ midiEngine.onStatusChange((status) => {
 let tapTimes = [];
 
 function handleMasterBpmChange(val) {
-  const bpm = Math.max(40, Math.min(280, parseInt(val) || 120));
+  const bpm = Math.max(40, Math.min(280, parseInt(val) || 90));
   progressionBpm = bpm;
+  if (projectTransport && projectTransport.bpm !== bpm) {
+    projectTransport.bpm = bpm;
+  }
 
   const progInput = document.getElementById('progressionBpmInput');
   const calcInput = document.getElementById('calcBpmInput');
@@ -342,6 +348,12 @@ function handleMpcPadHit(padNum, velocity = 0.9) {
   if (mpcBankMode === 'drums') {
     // Trigger authentic multi-piece kit drum sound
     instrumentEngine.playDrumPad(padNum, velocity);
+    if (projectTransport && projectTransport.isRecording) {
+      const kit = instrumentEngine.getDrumKit();
+      const padConfig = kit?.pads ? kit.pads[padNum] : null;
+      const soundKey = padConfig?.sound || 'kick_punchy';
+      projectTransport.recordLiveEvent('drums', { type: soundKey, velocity });
+    }
   } else if (mpcBankMode === 'slices') {
     if (!chopperAudioBuffer) {
       loadDemoBreakbeat();
@@ -435,6 +447,10 @@ const heldDrumKeys = new Set();
 
 function instrumentNoteOn(midi, velocity = 0.95) {
   instrumentEngine.noteOn(midi, velocity);
+
+  if (projectTransport && projectTransport.isRecording && projectTransport.armedTrack === 'piano') {
+    projectTransport.recordLiveEvent('piano', { note: midi, velocity });
+  }
 
   // Visual highlight on 25-key piano
   const keyEl = document.querySelector(`.piano-key[data-midi="${midi}"]`);
@@ -2161,7 +2177,13 @@ function renderEuclideanTracks() {
         ${tr.pattern
           .map(
             (p, idx) => `
-          <div class="euclidean-step ${p === 1 ? 'pulse' : ''}" id="eStep_${tr.id}_${idx}" style="${p === 1 ? `background: ${tr.color}; border-color: ${tr.color};` : ''}"></div>
+          <div 
+            class="euclidean-step ${p === 1 ? 'pulse' : ''}" 
+            id="eStep_${tr.id}_${idx}" 
+            onclick="window.toggleEuclideanStepBlock('${tr.id}', ${idx})"
+            title="Step ${idx + 1}: Click to toggle hit"
+            style="cursor: pointer; ${p === 1 ? `background: ${tr.color}; border-color: ${tr.color};` : ''}"
+          ></div>
         `
           )
           .join('')}
@@ -2183,6 +2205,24 @@ function renderEuclideanTracks() {
     .join('');
 }
 
+function toggleEuclideanStepBlock(trackId, stepIdx) {
+  const tr = euclideanTracks.find((t) => t.id === trackId);
+  if (!tr) return;
+  if (!tr.pattern || tr.pattern.length !== tr.steps) {
+    tr.pattern = calculateEuclideanPattern(tr.steps, tr.pulses);
+  }
+  tr.pattern[stepIdx] = tr.pattern[stepIdx] === 1 ? 0 : 1;
+  tr.pulses = tr.pattern.filter((p) => p === 1).length;
+
+  // Audition toggled hit if activated
+  if (tr.pattern[stepIdx] === 1) {
+    playSynthesizedDrum(tr.type);
+  }
+
+  renderEuclideanTracks();
+}
+window.toggleEuclideanStepBlock = toggleEuclideanStepBlock;
+
 function updateEuclideanTrack(trackId, steps, pulses) {
   const tr = euclideanTracks.find((t) => t.id === trackId);
   if (!tr) return;
@@ -2192,6 +2232,11 @@ function updateEuclideanTrack(trackId, steps, pulses) {
 }
 
 function toggleEuclideanPlayback() {
+  const ctx = instrumentEngine.getAudioContext();
+  if (ctx.state === 'suspended') {
+    ctx.resume();
+  }
+
   const btn = document.getElementById('euclideanPlayBtn');
   if (euclideanPlaying) {
     euclideanPlaying = false;
@@ -2205,7 +2250,7 @@ function toggleEuclideanPlayback() {
   euclideanPlaying = true;
   if (btn) btn.innerHTML = '⏹ Stop Loop';
 
-  const bpm = progressionBpm || 120;
+  const bpm = projectTransport ? projectTransport.bpm : (progressionBpm || 90);
   const sixteenthMs = (60000 / bpm) / 4;
   euclideanCurrentStep = 0;
 
@@ -2700,6 +2745,369 @@ window.sendTakeToSampler = sendTakeToSampler;
 window.sendTakeToSlicer = sendTakeToSlicer;
 window.dismissRecordedTake = dismissRecordedTake;
 
+// ============================================================================
+// Multitrack Project Sequencer & MIDI Piano Roll Architecture
+// ============================================================================
+
+let editorActiveBar = 0; // 0, 1, 2, ... up to projectTransport.loopBars - 1
+let editorCurrentView = 'drums'; // 'drums' | 'piano'
+
+const DRUM_GRID_ROWS = [
+  { key: 'kick_punchy', name: 'Kick Drum (Z)', color: '#ec4899' },
+  { key: 'snare_acoustic', name: 'Snare (C)', color: '#38bdf8' },
+  { key: 'hat_closed', name: 'Closed Hat (D)', color: '#fbbf24' },
+  { key: 'clap', name: 'Clap / Perc (V)', color: '#34d399' },
+];
+
+const PIANO_ROLL_NOTES = [
+  { midi: 72, name: 'C5', isBlack: false },
+  { midi: 71, name: 'B4', isBlack: false },
+  { midi: 70, name: 'A#4', isBlack: true },
+  { midi: 69, name: 'A4', isBlack: false },
+  { midi: 68, name: 'G#4', isBlack: true },
+  { midi: 67, name: 'G4', isBlack: false },
+  { midi: 66, name: 'F#4', isBlack: true },
+  { midi: 65, name: 'F4', isBlack: false },
+  { midi: 64, name: 'E4', isBlack: false },
+  { midi: 63, name: 'D#4', isBlack: true },
+  { midi: 62, name: 'D4', isBlack: false },
+  { midi: 61, name: 'C#4', isBlack: true },
+  { midi: 60, name: 'C4', isBlack: false },
+];
+
+function renderDrumGrid() {
+  const container = document.getElementById('drumGridRows');
+  if (!container) return;
+
+  const barStartStep = editorActiveBar * 16;
+  let html = '';
+
+  DRUM_GRID_ROWS.forEach((row) => {
+    html += `<div class="drum-grid-row">
+      <div class="drum-grid-label">
+        <span style="color: ${row.color};">●</span>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 4px; flex: 1;">${row.name}</span>
+      </div>
+      <div class="drum-grid-steps">`;
+
+    for (let i = 0; i < 16; i++) {
+      const stepIdx = barStartStep + i;
+      const isHit = projectTransport.hasDrumStep(row.key, stepIdx);
+      const isBeatStart = i % 4 === 0;
+      const hitStyle = isHit 
+        ? `background: ${row.color}; border-color: ${row.color}; color: #000; box-shadow: 0 0 10px ${row.color};` 
+        : '';
+
+      html += `<div 
+        class="drum-grid-step ${isBeatStart ? 'beat-start' : ''} ${isHit ? 'active-hit' : ''}" 
+        data-step="${stepIdx}" 
+        data-channel="${row.key}"
+        onclick="window.toggleDrumGridStep('${row.key}', ${stepIdx})"
+        style="${hitStyle}"
+        title="${row.name} - Step ${i + 1} (Absolute: ${stepIdx + 1})"
+      >${i + 1}</div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+  updateActiveTrackEventCount();
+}
+
+function toggleDrumGridStep(soundKey, stepIdx) {
+  projectTransport.toggleDrumStep(soundKey, stepIdx);
+  if (projectTransport.hasDrumStep(soundKey, stepIdx)) {
+    instrumentEngine.playDrumSound(soundKey);
+  }
+  renderDrumGrid();
+}
+window.toggleDrumGridStep = toggleDrumGridStep;
+
+function renderPianoRoll() {
+  const container = document.getElementById('pianoRollRows');
+  if (!container) return;
+
+  const barStartStep = editorActiveBar * 16;
+  let html = '';
+
+  PIANO_ROLL_NOTES.forEach((p) => {
+    html += `<div class="piano-roll-row">
+      <div class="piano-roll-key-label ${p.isBlack ? 'black-key' : 'white-key'}">
+        <span>${p.name}</span>
+        <span style="font-size: 0.6rem; opacity: 0.6;">${p.midi}</span>
+      </div>
+      <div class="piano-roll-steps">`;
+
+    for (let i = 0; i < 16; i++) {
+      const stepIdx = barStartStep + i;
+      const isNote = projectTransport.hasPianoNote(stepIdx, p.midi);
+      const isBeatStart = i % 4 === 0;
+
+      html += `<div 
+        class="piano-roll-cell ${isBeatStart ? 'beat-start' : ''} ${isNote ? 'active-note' : ''}" 
+        data-step="${stepIdx}" 
+        data-midi="${p.midi}"
+        onclick="window.togglePianoRollNote(${stepIdx}, ${p.midi})"
+        title="${p.name} (MIDI ${p.midi}) - Step ${i + 1}"
+      ></div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+  updateActiveTrackEventCount();
+}
+
+function togglePianoRollNote(stepIdx, midi) {
+  projectTransport.togglePianoNote(stepIdx, midi);
+  renderPianoRoll();
+}
+window.togglePianoRollNote = togglePianoRollNote;
+
+function switchEditorView(view) {
+  editorCurrentView = view;
+  const drumSec = document.getElementById('drumGridSection');
+  const pianoSec = document.getElementById('pianoRollSection');
+  const drumBtn = document.getElementById('editorViewDrumsBtn');
+  const pianoBtn = document.getElementById('editorViewPianoBtn');
+
+  if (view === 'drums') {
+    if (drumSec) drumSec.style.display = 'block';
+    if (pianoSec) pianoSec.style.display = 'none';
+    if (drumBtn) {
+      drumBtn.className = 'btn btn-sm active';
+      drumBtn.style.background = 'rgba(245, 158, 11, 0.2)';
+      drumBtn.style.color = '#fbbf24';
+      drumBtn.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+    }
+    if (pianoBtn) {
+      pianoBtn.className = 'btn btn-secondary btn-sm';
+      pianoBtn.style.background = '';
+      pianoBtn.style.color = '';
+      pianoBtn.style.borderColor = '';
+    }
+    renderDrumGrid();
+  } else {
+    if (drumSec) drumSec.style.display = 'none';
+    if (pianoSec) pianoSec.style.display = 'block';
+    if (pianoBtn) {
+      pianoBtn.className = 'btn btn-sm active';
+      pianoBtn.style.background = 'rgba(236, 72, 153, 0.2)';
+      pianoBtn.style.color = '#f472b6';
+      pianoBtn.style.borderColor = 'rgba(236, 72, 153, 0.5)';
+    }
+    if (drumBtn) {
+      drumBtn.className = 'btn btn-secondary btn-sm';
+      drumBtn.style.background = '';
+      drumBtn.style.color = '';
+      drumBtn.style.borderColor = '';
+    }
+    renderPianoRoll();
+  }
+  updateActiveTrackEventCount();
+}
+window.switchEditorView = switchEditorView;
+
+function setEditorActiveBar(barIdx) {
+  editorActiveBar = Math.max(0, Math.min(projectTransport.loopBars - 1, Number(barIdx) || 0));
+  document.querySelectorAll('.bar-select-btn').forEach((btn) => {
+    const b = Number(btn.getAttribute('data-bar'));
+    if (b === editorActiveBar) {
+      btn.className = 'btn btn-sm active bar-select-btn';
+    } else {
+      btn.className = 'btn btn-secondary btn-sm bar-select-btn';
+    }
+  });
+
+  if (editorCurrentView === 'drums') {
+    renderDrumGrid();
+  } else {
+    renderPianoRoll();
+  }
+}
+window.setEditorActiveBar = setEditorActiveBar;
+
+function updateBarSelectorButtons() {
+  const wrap = document.getElementById('editorBarSelectorWrap');
+  if (!wrap) return;
+  const bars = projectTransport.loopBars;
+  let html = `<span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-right: 0.25rem;">Bar Page:</span>`;
+  for (let b = 0; b < bars; b++) {
+    const isActive = b === editorActiveBar;
+    html += `<button type="button" class="btn ${isActive ? 'btn-sm active' : 'btn-secondary btn-sm'} bar-select-btn" data-bar="${b}" onclick="window.setEditorActiveBar(${b})" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Bar ${b + 1}</button>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function updateActiveTrackEventCount() {
+  const countEl = document.getElementById('activeTrackEventCount');
+  if (!countEl) return;
+  const pianoEvents = projectTransport.tracks.piano ? projectTransport.tracks.piano.length : 0;
+  const drumEvents = projectTransport.tracks.drums ? projectTransport.tracks.drums.length : 0;
+  countEl.textContent = `Piano: ${pianoEvents} notes • Drums: ${drumEvents} hits (${projectTransport.totalSteps} steps total)`;
+}
+
+function toggleTrackMute(trackId) {
+  const isMuted = projectTransport.toggleTrackMute(trackId);
+  const labelEl = document.getElementById(`${trackId}MuteLabel`);
+  if (labelEl) {
+    labelEl.textContent = isMuted ? 'MUTED' : 'ON';
+    labelEl.style.color = isMuted ? '#f87171' : '#34d399';
+  }
+}
+window.toggleTrackMute = toggleTrackMute;
+
+function quantizeCurrentTrack() {
+  projectTransport.quantizeTrack(projectTransport.armedTrack);
+  if (editorCurrentView === 'drums') renderDrumGrid();
+  else renderPianoRoll();
+  showToast(`Quantized ${projectTransport.armedTrack} track to 1/16th grid`, 'success');
+}
+window.quantizeCurrentTrack = quantizeCurrentTrack;
+
+function clearCurrentTrack() {
+  projectTransport.clearTrack(projectTransport.armedTrack);
+  if (editorCurrentView === 'drums') renderDrumGrid();
+  else renderPianoRoll();
+  showToast(`Cleared ${projectTransport.armedTrack} track`, 'info');
+}
+window.clearCurrentTrack = clearCurrentTrack;
+
+function openCalculatorsDirectly(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  window.switchTheoryTab('calculators');
+  const calcEl = document.getElementById('calculatorsView');
+  if (calcEl) {
+    calcEl.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+window.openCalculatorsDirectly = openCalculatorsDirectly;
+
+function initProjectTransportWireup() {
+  projectTransport.subscribe((event, data) => {
+    if (event === 'step') {
+      const barEl = document.getElementById('playheadBarDisplay');
+      const beatEl = document.getElementById('playheadBeatDisplay');
+      const stepEl = document.getElementById('playheadStepDisplay');
+      if (barEl) barEl.textContent = data.bar;
+      if (beatEl) beatEl.textContent = data.beat;
+      if (stepEl) stepEl.textContent = String((data.step % 16) + 1).padStart(2, '0');
+
+      // Grid active step column sweep
+      const stepIdx = data.step;
+      const stepBar = Math.floor(stepIdx / 16);
+      if (stepBar === editorActiveBar) {
+        document.querySelectorAll('.drum-grid-step.current').forEach((el) => el.classList.remove('current'));
+        document.querySelectorAll(`.drum-grid-step[data-step="${stepIdx}"]`).forEach((el) => el.classList.add('current'));
+
+        document.querySelectorAll('.piano-roll-cell.current').forEach((el) => el.classList.remove('current'));
+        document.querySelectorAll(`.piano-roll-cell[data-step="${stepIdx}"]`).forEach((el) => el.classList.add('current'));
+      }
+    } else if (event === 'playState') {
+      const playBtn = document.getElementById('projectPlayBtn');
+      const recBtn = document.getElementById('projectRecBtn');
+      if (playBtn) {
+        if (data.isPlaying) {
+          playBtn.innerHTML = '⏹ STOP';
+          playBtn.style.background = '#ef4444';
+          playBtn.style.color = '#fff';
+        } else {
+          playBtn.innerHTML = '▶ PLAY';
+          playBtn.style.background = 'linear-gradient(135deg, #10b981, #06b6d4)';
+          playBtn.style.color = '#000';
+          document.querySelectorAll('.drum-grid-step.current, .piano-roll-cell.current').forEach((el) => el.classList.remove('current'));
+        }
+      }
+      if (recBtn && !data.isRecording) {
+        recBtn.classList.remove('active');
+        recBtn.style.background = '';
+      }
+    } else if (event === 'recordState') {
+      const recBtn = document.getElementById('projectRecBtn');
+      if (recBtn) {
+        if (data.isRecording) {
+          recBtn.classList.add('active');
+          recBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+        } else {
+          recBtn.classList.remove('active');
+          recBtn.style.background = '';
+        }
+      }
+    } else if (event === 'bpm') {
+      handleMasterBpmChange(data.bpm);
+    } else if (event === 'loopBars') {
+      updateBarSelectorButtons();
+      renderDrumGrid();
+      renderPianoRoll();
+    } else if (event === 'armedTrack') {
+      const pianoBtn = document.getElementById('armPianoTrackBtn');
+      const drumsBtn = document.getElementById('armDrumsTrackBtn');
+      if (data.armedTrack === 'piano') {
+        if (pianoBtn) {
+          pianoBtn.className = 'btn btn-sm active';
+          pianoBtn.style.background = 'rgba(236, 72, 153, 0.2)';
+          pianoBtn.style.color = '#f472b6';
+          pianoBtn.style.border = '1px solid rgba(236, 72, 153, 0.5)';
+        }
+        if (drumsBtn) {
+          drumsBtn.className = 'btn btn-secondary btn-sm';
+          drumsBtn.style.background = '';
+          drumsBtn.style.color = '';
+          drumsBtn.style.border = '';
+        }
+      } else {
+        if (drumsBtn) {
+          drumsBtn.className = 'btn btn-sm active';
+          drumsBtn.style.background = 'rgba(245, 158, 11, 0.2)';
+          drumsBtn.style.color = '#fbbf24';
+          drumsBtn.style.border = '1px solid rgba(245, 158, 11, 0.5)';
+        }
+        if (pianoBtn) {
+          pianoBtn.className = 'btn btn-secondary btn-sm';
+          pianoBtn.style.background = '';
+          pianoBtn.style.color = '';
+          pianoBtn.style.border = '';
+        }
+      }
+    } else if (event === 'metronome') {
+      const metroLabel = document.getElementById('projectMetroLabel');
+      const metroBtn = document.getElementById('projectMetroBtn');
+      if (metroLabel) {
+        metroLabel.textContent = data.enabled ? 'ON' : 'OFF';
+        metroLabel.style.color = data.enabled ? '#34d399' : '#94a3b8';
+      }
+      if (metroBtn) {
+        metroBtn.style.borderColor = data.enabled ? '#34d399' : '';
+      }
+    } else if (event === 'countInTick') {
+      const countEl = document.getElementById('projectCountInBadge');
+      if (countEl) {
+        countEl.textContent = `Count-in: Beat ${data.beat} / ${data.total}`;
+        countEl.style.color = '#fbbf24';
+        countEl.style.background = 'rgba(245, 158, 11, 0.2)';
+      }
+    } else if (event === 'countInFinished') {
+      const countEl = document.getElementById('projectCountInBadge');
+      if (countEl) {
+        countEl.textContent = '1-Bar Count-in';
+        countEl.style.color = '#94a3b8';
+        countEl.style.background = 'rgba(255,255,255,0.06)';
+      }
+    } else if (event === 'trackUpdated') {
+      if (editorCurrentView === 'drums') renderDrumGrid();
+      else renderPianoRoll();
+      updateActiveTrackEventCount();
+    }
+  });
+
+  renderDrumGrid();
+  renderPianoRoll();
+  updateBarSelectorButtons();
+  updateActiveTrackEventCount();
+}
+
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
   renderMpcPads();
@@ -2707,6 +3115,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTheoryTools();
   renderInstrumentSettingsRack();
   loadDemoBreakbeat(); // Pre-slice demo breakbeat for immediate Bank B slice auditioning
+  initProjectTransportWireup();
 
   // Instant Audio Unlock on first user gesture
   const unlockAudio = () => {
@@ -2735,6 +3144,11 @@ document.addEventListener("DOMContentLoaded", () => {
   runRoomModesCalc();
   init808Designer();
   initSamplerUI();
+
+  // Route to calculators if hash matches #calculators
+  if (window.location.hash === '#calculators') {
+    setTimeout(() => openCalculatorsDirectly(), 150);
+  }
 
   // Auto-listen if Web MIDI was previously granted
   if (navigator.requestMIDIAccess) {

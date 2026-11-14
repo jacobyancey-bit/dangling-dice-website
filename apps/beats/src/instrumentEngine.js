@@ -1318,9 +1318,54 @@ class InstrumentEngine {
     return `Pad ${padNumber}`;
   }
 
+  /**
+   * Schedule drum sound at an exact Web Audio timeline timestamp
+   * Essential for 0-jitter sequencer playback and metronome sync
+   */
+  playDrumSoundScheduled(soundKey, scheduledTime, velocity = 0.9) {
+    const ctx = this.getAudioContext();
+    const t = scheduledTime !== undefined ? scheduledTime : ctx.currentTime;
+    const vel = Math.max(0.1, Math.min(1.0, velocity));
+
+    // Map common drum aliases
+    let key = (soundKey || 'kick').toLowerCase();
+    if (key === 'kick' || key === 'kick_acoustic') key = 'kick_punchy';
+    else if (key === 'snare') key = 'snare_acoustic';
+    else if (key === 'hat' || key === 'hihat') key = 'hat_closed';
+    else if (key === 'perc') key = 'woodblock';
+
+    const drumBuf = sampleEngine.getAcousticDrumSample(key);
+    if (drumBuf) {
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer = drumBuf;
+      gain.gain.setValueAtTime(vel * 0.95, t);
+      src.connect(gain);
+      gain.connect(this.masterGain || ctx.destination);
+      src.start(t);
+      return;
+    }
+
+    // Direct synthesized sound fallback at scheduled time t
+    this.playDrumSoundAtTime(key, t, vel);
+  }
+
+  playNoteScheduled(midiNote, scheduledTime, duration = 0.4, velocity = 0.85) {
+    const ctx = this.getAudioContext();
+    const t = scheduledTime !== undefined ? scheduledTime : ctx.currentTime;
+    const delayFromNow = Math.max(0, (t - ctx.currentTime) * 1000);
+    setTimeout(() => {
+      this.playNote(midiNote, duration, velocity);
+    }, delayFromNow);
+  }
+
   playDrumSound(soundKey, velocity = 0.9) {
     const ctx = this.getAudioContext();
-    const t = ctx.currentTime;
+    this.playDrumSoundAtTime(soundKey, ctx.currentTime, velocity);
+  }
+
+  playDrumSoundAtTime(soundKey, t, velocity = 0.9) {
+    const ctx = this.getAudioContext();
     const vel = Math.max(0.1, Math.min(1.0, velocity));
 
     // Check if real acoustic drum sample is available

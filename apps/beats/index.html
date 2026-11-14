@@ -52,6 +52,9 @@
           <a href="https://dev.dangling-dice-studios.com/" class="nav-link" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;">
             💻 Dev Suite
           </a>
+          <a href="#calculators" class="nav-link" onclick="window.openCalculatorsDirectly(event)" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399;" title="Audio Engineering & Mixing Calculators">
+            🧮 Audio Calculators
+          </a>
           <a href="#theoryTools" class="nav-link" style="border-color: rgba(236, 72, 153, 0.4); color: #f472b6;">
             🎛️ Studio Suite
           </a>
@@ -80,16 +83,78 @@
           </p>
         </div>
 
-        <!-- Master Studio Clock & Transport -->
-        <div class="studio-transport-box">
-          <div class="transport-stat">
-            <span class="transport-label">Master Tempo</span>
+        <!-- Master Project Clock, Transport & Multitrack Workflow Deck -->
+        <div class="studio-transport-box" style="flex-wrap: wrap; gap: 0.85rem; align-items: center; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(236, 72, 153, 0.35); padding: 0.85rem 1.25rem; border-radius: var(--radius-md);">
+          <!-- Transport Controls: Play / Stop / Record -->
+          <div style="display: flex; gap: 0.45rem; align-items: center;">
+            <button id="projectPlayBtn" type="button" class="btn btn-primary btn-sm" onclick="window.projectTransport.togglePlay()" style="background: linear-gradient(135deg, #10b981, #06b6d4); color: #000; font-weight: 800; padding: 0.45rem 1rem;">
+              ▶ PLAY
+            </button>
+            <button id="projectStopBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.projectTransport.stop()" style="font-weight: 700; padding: 0.45rem 0.75rem;">
+              ⏹ STOP
+            </button>
+            <button id="projectRecBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.projectTransport.toggleRecord()" style="font-weight: 800; padding: 0.45rem 0.85rem; border-color: rgba(239, 68, 68, 0.4); color: #ef4444;" title="Record performance into project loop">
+              <span id="projectRecDot" class="rec-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; margin-right: 4px;"></span> REC
+            </button>
+          </div>
+
+          <!-- Metronome & Count-in -->
+          <div style="display: flex; gap: 0.35rem; align-items: center; border-left: 1px solid var(--border-subtle); padding-left: 0.75rem;">
+            <button id="projectMetroBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.projectTransport.toggleMetronome()" style="font-size: 0.76rem; padding: 0.35rem 0.65rem;" title="Toggle Metronome Click">
+              🔔 CLICK: <span id="projectMetroLabel" style="color: #94a3b8;">OFF</span>
+            </button>
+            <span id="projectCountInBadge" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; background: rgba(255,255,255,0.06); border-radius: 4px; color: #94a3b8;">
+              1-Bar Count-in
+            </span>
+          </div>
+
+          <!-- Master Tempo BPM -->
+          <div class="transport-stat" style="border-left: 1px solid var(--border-subtle); padding-left: 0.75rem;">
+            <span class="transport-label">Project BPM</span>
             <div style="display: flex; align-items: baseline; gap: 0.35rem;">
-              <input type="number" id="masterBpmInput" class="theory-select" value="120" min="40" max="280" style="width: 75px; font-size: 1.15rem; font-weight: 800;" onchange="window.handleMasterBpmChange(this.value)" />
-              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">BPM</span>
+              <input type="number" id="masterBpmInput" class="theory-select" value="90" min="40" max="280" style="width: 65px; font-size: 1.05rem; font-weight: 800; padding: 2px 4px;" onchange="window.projectTransport.setBpm(this.value)" />
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">BPM</span>
             </div>
           </div>
 
+          <!-- Loop Length Selector -->
+          <div class="transport-stat">
+            <span class="transport-label">Loop Length</span>
+            <select id="projectLoopBarsSelect" class="theory-select" style="font-size: 0.8rem; font-weight: 700; padding: 3px 6px;" onchange="window.projectTransport.setLoopBars(this.value)">
+              <option value="1">1 Bar (16 steps)</option>
+              <option value="2">2 Bars (32 steps)</option>
+              <option value="4" selected>4 Bars (64 steps)</option>
+              <option value="8">8 Bars (128 steps)</option>
+              <option value="16">16 Bars (256 steps)</option>
+            </select>
+          </div>
+
+          <!-- Armed Track Selector -->
+          <div class="transport-stat" style="border-left: 1px solid var(--border-subtle); padding-left: 0.75rem;">
+            <span class="transport-label">Recording Track</span>
+            <div style="display: flex; gap: 0.25rem;">
+              <button id="armPianoTrackBtn" type="button" class="btn btn-sm active" onclick="window.projectTransport.setArmedTrack('piano')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.5);">
+                🎹 Piano Track
+              </button>
+              <button id="armDrumsTrackBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.projectTransport.setArmedTrack('drums')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">
+                🥁 Drum Track
+              </button>
+            </div>
+          </div>
+
+          <!-- Playhead Clock Display -->
+          <div style="margin-left: auto; display: flex; align-items: baseline; gap: 0.4rem; font-family: monospace; background: #000; padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <span style="font-size: 0.72rem; color: #64748b;">BAR</span>
+            <span id="playheadBarDisplay" style="font-size: 1.1rem; color: #34d399; font-weight: 800;">1</span>
+            <span style="font-size: 0.72rem; color: #64748b;">BEAT</span>
+            <span id="playheadBeatDisplay" style="font-size: 1.1rem; color: #67e8f9; font-weight: 800;">1</span>
+            <span style="font-size: 0.72rem; color: #64748b;">STEP</span>
+            <span id="playheadStepDisplay" style="font-size: 0.85rem; color: #f472b6; font-weight: 700;">01</span>
+          </div>
+        </div>
+
+        <!-- Secondary Controls & Audio Instrument -->
+        <div class="studio-transport-box" style="margin-top: 0.5rem;">
           <div class="transport-stat">
             <span class="transport-label">Tap Tempo</span>
             <button type="button" class="btn btn-secondary btn-sm" onclick="window.tapTempo()" style="font-weight: 800; padding: 0.35rem 0.75rem;">
@@ -147,6 +212,69 @@
             <button id="masterRecBtn" type="button" class="btn btn-secondary btn-sm studio-rec-btn" onclick="window.toggleStudioRecording()" title="Record Studio Take (WAV Audio Capture)">
               <span id="recDot" class="rec-dot"></span> <span id="recBtnLabel">● REC TAKE</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Project Multitrack Sequencer & MIDI Piano Roll Workspace Deck -->
+        <div id="projectSequencerWorkspace" class="project-sequencer-deck" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: var(--radius-md); padding: 1rem; margin-top: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
+            <!-- View Mode Switcher: 16-Step Drum Grid vs MIDI Piano Roll -->
+            <div style="display: flex; gap: 0.45rem; align-items: center;">
+              <span style="font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 0.25rem;">Editor:</span>
+              <button id="editorViewDrumsBtn" type="button" class="btn btn-sm active" onclick="window.switchEditorView('drums')" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.5); font-weight: 800; font-size: 0.75rem; padding: 0.35rem 0.75rem;">
+                🥁 16-Step Drum Grid
+              </button>
+              <button id="editorViewPianoBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.switchEditorView('piano')" style="font-weight: 800; font-size: 0.75rem; padding: 0.35rem 0.75rem;">
+                🎹 MIDI Piano Roll
+              </button>
+            </div>
+
+            <!-- Bar Selector (when loop length > 1 bar) -->
+            <div id="editorBarSelectorWrap" style="display: flex; gap: 0.25rem; align-items: center;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-right: 0.25rem;">Bar Page:</span>
+              <button type="button" class="btn btn-sm active bar-select-btn" data-bar="0" onclick="window.setEditorActiveBar(0)" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Bar 1</button>
+              <button type="button" class="btn btn-secondary btn-sm bar-select-btn" data-bar="1" onclick="window.setEditorActiveBar(1)" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Bar 2</button>
+              <button type="button" class="btn btn-secondary btn-sm bar-select-btn" data-bar="2" onclick="window.setEditorActiveBar(2)" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Bar 3</button>
+              <button type="button" class="btn btn-secondary btn-sm bar-select-btn" data-bar="3" onclick="window.setEditorActiveBar(3)" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Bar 4</button>
+            </div>
+
+            <!-- Track Mutes, Quantize & MIDI Download -->
+            <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+              <button id="trackMutePianoBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.toggleTrackMute('piano')" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;" title="Mute or unmute piano track">
+                Piano: <span id="pianoMuteLabel" style="color: #34d399; font-weight: 700;">ON</span>
+              </button>
+              <button id="trackMuteDrumsBtn" type="button" class="btn btn-secondary btn-sm" onclick="window.toggleTrackMute('drums')" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;" title="Mute or unmute drum track">
+                Drums: <span id="drumsMuteLabel" style="color: #34d399; font-weight: 700;">ON</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.quantizeCurrentTrack()" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(147, 51, 234, 0.4); color: #c084fc; font-weight: 700;" title="Snap all recorded notes to the nearest 16th grid">
+                ⚡ Quantize 1/16
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.clearCurrentTrack()" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; color: #f87171;" title="Clear events from active track">
+                🗑️ Clear Track
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.projectTransport.exportProjectMidi()" style="font-size: 0.72rem; padding: 0.25rem 0.75rem; border-color: rgba(6, 182, 212, 0.5); color: #67e8f9; font-weight: 800;" title="Download full multitrack performance as Standard MIDI File (.mid)">
+                ⬇️ Export Project MIDI
+              </button>
+            </div>
+          </div>
+
+          <!-- 1. 16-Step Drum Grid Sequencer Surface -->
+          <div id="drumGridSection">
+            <div id="drumGridRows" style="display: flex; flex-direction: column; gap: 0.45rem;">
+              <!-- Dynamically populated via main.js -->
+            </div>
+          </div>
+
+          <!-- 2. MIDI Piano Roll Visual Clip Editor -->
+          <div id="pianoRollSection" style="display: none;">
+            <div id="pianoRollRows" style="display: flex; flex-direction: column; gap: 2px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+              <!-- Dynamically populated via main.js -->
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.65rem; font-size: 0.72rem; color: var(--text-muted);">
+            <span>💡 <strong>Live &amp; Step Sync:</strong> Play keyboard keys (<kbd>Z</kbd>-<kbd>V</kbd>, <kbd>A</kbd>-<kbd>F</kbd>) or on-screen pads to overdub drums; play <kbd>T</kbd>-<kbd>]</kbd> to overdub piano notes. Click any step cell to toggle.</span>
+            <span id="activeTrackEventCount" style="font-weight: 700; color: #38bdf8;">0 notes recorded</span>
           </div>
         </div>
       </div>

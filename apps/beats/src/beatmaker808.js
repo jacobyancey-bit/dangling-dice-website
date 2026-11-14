@@ -5,18 +5,10 @@
 
 import { encodeStandardMidiFile } from './theoryEngine.js';
 import { audioBufferToWav } from './sampleChopper.js';
-
-let synthAudioCtx = null;
+import { instrumentEngine } from './instrumentEngine.js';
 
 function getSynthAudioContext() {
-  if (!synthAudioCtx) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    synthAudioCtx = new AudioCtx();
-  }
-  if (synthAudioCtx.state === 'suspended') {
-    synthAudioCtx.resume();
-  }
-  return synthAudioCtx;
+  return instrumentEngine.getAudioContext();
 }
 
 // -------------------------------------------------------------
