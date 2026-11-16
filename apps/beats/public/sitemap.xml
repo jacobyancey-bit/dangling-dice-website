@@ -3,16 +3,9 @@
   <!-- Dangling Beats Studio™: Canonical Home -->
   <url>
     <loc>https://beats.dangling-dice-studios.com/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-  </url>
-  <!-- Public AI Discovery -->
-  <url>
-    <loc>https://beats.dangling-dice-studios.com/llms.txt</loc>
-    <lastmod>2026-11-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
 </urlset>
 

@@ -3,23 +3,9 @@
   <!-- Dangling Dice Dev Suite™: Canonical Home -->
   <url>
     <loc>https://dev.dangling-dice-studios.com/</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-  </url>
-  <!-- OpenAPI 3.0 Documentation Spec -->
-  <url>
-    <loc>https://api.dangling-dice-studios.com/openapi.json</loc>
-    <lastmod>2026-11-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <!-- Public AI Discovery -->
-  <url>
-    <loc>https://dev.dangling-dice-studios.com/llms.txt</loc>
-    <lastmod>2026-11-10</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
 </urlset>
 
