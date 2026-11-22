@@ -145,9 +145,9 @@ app.get(['/.well-known/discord', '/.well-known/discord.txt'], (req, res) => {
   res.send('dh=1249865747f1f8a9daec742ba9b4bbc5dd950ae9');
 });
 
-// Dedicated Subdomain Sitemap & Robots Discovery Engine
+// Dedicated Subdomain Sitemap, Robots & app-ads.txt Discovery Engine
 // Ensures crawlers always receive valid XML/TXT payloads and never fall through to SPA index.html
-app.get(['/sitemap.xml', '/sitemap-index.xml', '/robots.txt'], (req, res, next) => {
+app.get(['/sitemap.xml', '/sitemap-index.xml', '/robots.txt', '/app-ads.txt'], (req, res, next) => {
   const hostname = (req.hostname || '').toLowerCase();
   const filename = req.path.replace('/', '');
   

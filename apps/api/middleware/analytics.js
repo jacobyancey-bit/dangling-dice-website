@@ -155,6 +155,7 @@ function isNonApiTraffic(req) {
     p === '/admin.html' ||
     p === '/manifest.json' ||
     p === '/robots.txt' ||
+    p === '/app-ads.txt' ||
     p === '/sitemap.xml' ||
     p.startsWith('/images/') ||
     p.startsWith('/assets/') ||
