@@ -1,0 +1,331 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Music Theory, Chord Progression & MIDI Generator API",
+    "version": "1.0.0",
+    "description": "Sub-millisecond computational music theory, acoustic physics, chord voicing generator, modal scale resolver with guitar fretboard mapping, BPM delay timing, and on-the-fly Standard MIDI File (SMF 0) binary synthesis. Built for music production apps, VST/DAW developers, AI composition tools, and beatmakers.",
+    "contact": {
+      "name": "Dangling Dice Studios™ Engineering",
+      "url": "https://dangling-dice-studios.com/",
+      "email": "jacob.yancey@danglingdicestudios.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.dangling-dice-studios.com",
+      "description": "Production Dedicated Gateway"
+    },
+    {
+      "url": "https://dangling-dice-studios.com",
+      "description": "Production Fallback Gateway"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Chord Progressions",
+      "description": "Generate emotional and genre-specific chord progressions with Roman numerals and MIDI voicings"
+    },
+    {
+      "name": "Scales & Modes",
+      "description": "Resolve notes, intervals, frequencies in Hz, and instrument fretboard diagrams"
+    },
+    {
+      "name": "Acoustic Physics",
+      "description": "BPM-synced delay calculations, reverb pre-delays, and sample durations"
+    },
+    {
+      "name": "MIDI Synthesis",
+      "description": "Generate valid binary Standard MIDI Files (.mid) or Base64 sequences for DAWs"
+    },
+    {
+      "name": "Audio Visualization",
+      "description": "Normalize audio waveform peaks for audio players and waveform visualizers"
+    }
+  ],
+  "paths": {
+    "/v1/music/progression": {
+      "post": {
+        "operationId": "generateChordProgression",
+        "tags": ["Chord Progressions"],
+        "summary": "Generate chord progression with MIDI voicings and Roman numerals",
+        "description": "Generates harmonically rich chord progressions across genres (Lofi, Trap, Neo-Soul, Synthwave, Math Rock, Ambient). Returns chord names, Roman numeral analysis, root offsets, exact MIDI pitch arrays, and Hz frequencies.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preset": {
+                    "type": "string",
+                    "description": "Genre/mood preset",
+                    "enum": ["lofi_chill", "synthwave", "dark_trap", "math_rock", "ambient_dream", "neo_soul", "jazz_standard", "pop_hit"],
+                    "default": "lofi_chill"
+                  },
+                  "key": {
+                    "type": "string",
+                    "description": "Root musical key (transposes progression seamlessly)",
+                    "example": "F"
+                  },
+                  "baseOctave": {
+                    "type": "integer",
+                    "description": "Octave for chord roots (default 3)",
+                    "default": 3
+                  }
+                }
+              },
+              "examples": {
+                "lofiInF": {
+                  "summary": "Lofi Chill Progression in F Minor",
+                  "value": {
+                    "preset": "lofi_chill",
+                    "key": "F",
+                    "baseOctave": 3
+                  }
+                },
+                "darkTrap": {
+                  "summary": "Dark Trap Progression in C Minor",
+                  "value": {
+                    "preset": "dark_trap",
+                    "key": "C",
+                    "baseOctave": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chord progression generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "engine": { "type": "string", "example": "music" },
+                    "latencyMs": { "type": "number", "example": 0.42 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "preset": { "type": "string", "example": "lofi_chill" },
+                        "genre": { "type": "string", "example": "Lofi & Chillhop" },
+                        "key": { "type": "string", "example": "F" },
+                        "scale": { "type": "string", "example": "minor" },
+                        "recommendedBpm": { "type": "integer", "example": 88 },
+                        "chordCount": { "type": "integer", "example": 6 },
+                        "chords": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string", "example": "Bbm9" },
+                              "numeral": { "type": "string", "example": "iv9" },
+                              "root": { "type": "string", "example": "Bb" },
+                              "midiNotes": { "type": "array", "items": { "type": "integer" }, "example": [34, 46, 49, 53, 56, 60] },
+                              "frequenciesHz": { "type": "array", "items": { "type": "number" } },
+                              "noteNames": { "type": "array", "items": { "type": "string" }, "example": ["Bb", "Db", "F", "Ab", "C"] }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/music/scale": {
+      "get": {
+        "operationId": "resolveMusicalScale",
+        "tags": ["Scales & Modes"],
+        "summary": "Resolve scale notes, frequencies in Hz, and fretboard positions",
+        "description": "Computes exact intervals, note names, octave 3 & 4 frequencies (Hz), and instrument fretboard coordinates across all church modes, minor/major pentatonics, harmonic minor, and phrygian dominant.",
+        "parameters": [
+          {
+            "name": "root",
+            "in": "query",
+            "required": false,
+            "description": "Root note",
+            "schema": {
+              "type": "string",
+              "enum": ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"],
+              "default": "C"
+            }
+          },
+          {
+            "name": "scale",
+            "in": "query",
+            "required": false,
+            "description": "Scale or mode identifier",
+            "schema": {
+              "type": "string",
+              "enum": ["minor", "major", "dorian", "phrygian", "lydian", "mixolydian", "harmonic_minor", "phrygian_dominant", "minor_pentatonic", "major_pentatonic"],
+              "default": "minor"
+            }
+          },
+          {
+            "name": "tuning",
+            "in": "query",
+            "required": false,
+            "description": "Instrument tuning for fretboard mapping",
+            "schema": {
+              "type": "string",
+              "enum": ["guitar_standard", "guitar_drop_d", "bass_standard", "ukulele"],
+              "default": "guitar_standard"
+            }
+          },
+          {
+            "name": "maxFret",
+            "in": "query",
+            "required": false,
+            "description": "Maximum fret depth to compute",
+            "schema": {
+              "type": "integer",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scale resolved successfully"
+          }
+        }
+      }
+    },
+    "/v1/music/delay-calc": {
+      "get": {
+        "operationId": "calculateDelayTimes",
+        "tags": ["Acoustic Physics"],
+        "summary": "Calculate BPM-synced delay times, reverb pre-delays, and Hz frequencies",
+        "description": "Translates any BPM (Beats Per Minute) into exact milliseconds for straight, dotted, and triplet divisions (from whole notes 1/1 down to 1/64 notes), matching LFO frequencies in Hz and reverb pre-delay calculations.",
+        "parameters": [
+          {
+            "name": "bpm",
+            "in": "query",
+            "required": false,
+            "description": "Tempo in BPM (20 to 320)",
+            "schema": {
+              "type": "number",
+              "default": 120
+            }
+          },
+          {
+            "name": "sampleRate",
+            "in": "query",
+            "required": false,
+            "description": "Audio sample rate in Hz (e.g. 44100, 48000, 96000)",
+            "schema": {
+              "type": "integer",
+              "default": 44100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delay timings computed successfully"
+          }
+        }
+      }
+    },
+    "/v1/music/midi": {
+      "post": {
+        "operationId": "synthesizeMidiFile",
+        "tags": ["MIDI Synthesis"],
+        "summary": "Synthesize binary Standard MIDI File (.mid) or Base64 sequence",
+        "description": "Generates a fully valid Standard MIDI File (SMF Type 0) containing note-on, note-off, delta-time events, and tempo metadata. Returns downloadable binary audio/midi or Base64 for instant browser DAW playback.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bpm": { "type": "number", "default": 120 },
+                  "title": { "type": "string", "default": "Dangling Beats Sequence" },
+                  "format": { "type": "string", "enum": ["json", "binary"], "default": "json" },
+                  "notes": {
+                    "type": "array",
+                    "description": "List of MIDI notes to synthesize",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "pitch": { "type": "integer", "example": 60 },
+                        "durationTicks": { "type": "integer", "default": 480 },
+                        "velocity": { "type": "integer", "default": 96 }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "bpm": 128,
+                "title": "Lead Synth Arp",
+                "format": "json",
+                "notes": [
+                  { "pitch": 60, "durationTicks": 240, "velocity": 100 },
+                  { "pitch": 63, "durationTicks": 240, "velocity": 95 },
+                  { "pitch": 67, "durationTicks": 240, "velocity": 90 },
+                  { "pitch": 70, "durationTicks": 240, "velocity": 85 }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MIDI file synthesized successfully"
+          }
+        }
+      }
+    },
+    "/v1/media/waveform": {
+      "post": {
+        "operationId": "generateWaveformPeaks",
+        "tags": ["Audio Visualization"],
+        "summary": "Extract normalized RMS waveform peak bars for audio visualizers",
+        "description": "Processes raw audio sample peaks and normalizes them into float values between 0.0 and 1.0, partitioned into target bar counts for waveform player components.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["peaks"],
+                "properties": {
+                  "peaks": {
+                    "type": "array",
+                    "items": { "type": "number" },
+                    "description": "Array of raw amplitude numbers"
+                  },
+                  "bars": {
+                    "type": "integer",
+                    "default": 64,
+                    "description": "Target number of visual bars"
+                  }
+                }
+              },
+              "example": {
+                "peaks": [0.12, 0.45, 0.88, 0.34, 0.91, 0.15, 0.72],
+                "bars": 32
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Waveform peaks normalized successfully"
+          }
+        }
+      }
+    }
+  }
+}
