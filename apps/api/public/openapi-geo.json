@@ -1,0 +1,246 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GIS Land Acreage, Polygon Math & Map Coordinates API",
+    "version": "1.0.0",
+    "description": "High-precision geospatial computation engine (<2ms latency). Calculates exact surveyed land acreage, hectares, square footage, perimeter lengths, and polygon centroid from GPS coordinates. Features high-accuracy Haversine distance, initial bearing, spherical midpoint, ray-casting point-in-polygon geofencing, and WireGuard VPN tunnel configuration generators. Built for real estate tech, agriculture mapping, drone flight planning, and GIS logistics.",
+    "contact": {
+      "name": "Dangling Dice Studios™ Engineering",
+      "url": "https://dangling-dice-studios.com/",
+      "email": "jacob.yancey@danglingdicestudios.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.dangling-dice-studios.com",
+      "description": "Production Dedicated Gateway"
+    },
+    {
+      "url": "https://dangling-dice-studios.com",
+      "description": "Production Fallback Gateway"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Parcel & Acreage Math",
+      "description": "Calculate exact land acreage, square footage, perimeter, and centroid from polygon vertices"
+    },
+    {
+      "name": "Distance & Bearing",
+      "description": "Haversine spherical distance, compass bearings, and path midpoints"
+    },
+    {
+      "name": "Geofencing",
+      "description": "Ray-casting point-in-polygon boundary validation"
+    },
+    {
+      "name": "VPN Infrastructure",
+      "description": "Cryptographic WireGuard mesh configuration generation"
+    }
+  ],
+  "paths": {
+    "/v1/geo/parcel-metrics": {
+      "post": {
+        "operationId": "calculateParcelAcreage",
+        "tags": ["Parcel & Acreage Math"],
+        "summary": "Calculate surveyed land acreage, hectares, square feet, perimeter & centroid",
+        "description": "Computes exact polygon surface area over the Earth's ellipsoidal curvature using spherical excess math. Returns acreage, hectares, square meters, square feet, perimeter lengths, and geometric centroid.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["coordinates"],
+                "properties": {
+                  "coordinates": {
+                    "type": "array",
+                    "description": "Array of polygon vertices (minimum 3 points). Supports [lng, lat] arrays or {lat, lng} objects.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "lat": { "type": "number", "example": 35.6895 },
+                        "lng": { "type": "number", "example": 139.6917 }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "coordinates": [
+                  { "lat": 30.2672, "lng": -97.7431 },
+                  { "lat": 30.2700, "lng": -97.7431 },
+                  { "lat": 30.2700, "lng": -97.7400 },
+                  { "lat": 30.2672, "lng": -97.7400 }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parcel metrics computed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "engine": { "type": "string", "example": "geo" },
+                    "latencyMs": { "type": "number", "example": 0.45 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "acreage": { "type": "number", "example": 19.82 },
+                        "hectares": { "type": "number", "example": 8.02 },
+                        "squareFeet": { "type": "number", "example": 863334.12 },
+                        "squareMeters": { "type": "number", "example": 80206.5 },
+                        "perimeterFeet": { "type": "number", "example": 3724.8 },
+                        "perimeterMeters": { "type": "number", "example": 1135.32 },
+                        "centroid": {
+                          "type": "object",
+                          "properties": {
+                            "lat": { "type": "number", "example": 30.2686 },
+                            "lng": { "type": "number", "example": -97.7415 }
+                          }
+                        },
+                        "vertexCount": { "type": "integer", "example": 4 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/geo/distance": {
+      "post": {
+        "operationId": "calculateDistanceBearing",
+        "tags": ["Distance & Bearing"],
+        "summary": "Calculate Haversine distance, initial compass bearing & path midpoint",
+        "description": "Computes great-circle distance between two GPS coordinates with meter, kilometer, mile, and foot precision. Returns initial bearing degrees, compass card direction (N, NE, SW, etc.), and the exact spherical midpoint.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "object",
+                    "properties": {
+                      "lat": { "type": "number", "example": 40.7128 },
+                      "lng": { "type": "number", "example": -74.006 }
+                    }
+                  },
+                  "to": {
+                    "type": "object",
+                    "properties": {
+                      "lat": { "type": "number", "example": 34.0522 },
+                      "lng": { "type": "number", "example": -118.2437 }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "from": { "lat": 40.7128, "lng": -74.006 },
+                "to": { "lat": 34.0522, "lng": -118.2437 }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Distance and bearing computed successfully"
+          }
+        }
+      }
+    },
+    "/v1/geo/point-in-polygon": {
+      "post": {
+        "operationId": "checkPointInPolygon",
+        "tags": ["Geofencing"],
+        "summary": "Geofencing check: determine if GPS point is inside polygon boundary",
+        "description": "Runs high-speed ray-casting point-in-polygon verification to determine whether a target coordinate is located within a custom geofence.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["point", "polygon"],
+                "properties": {
+                  "point": {
+                    "type": "object",
+                    "properties": {
+                      "lat": { "type": "number", "example": 30.2685 },
+                      "lng": { "type": "number", "example": -97.7415 }
+                    }
+                  },
+                  "polygon": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "lat": { "type": "number" },
+                        "lng": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "point": { "lat": 30.2685, "lng": -97.7415 },
+                "polygon": [
+                  { "lat": 30.2672, "lng": -97.7431 },
+                  { "lat": 30.2700, "lng": -97.7431 },
+                  { "lat": 30.2700, "lng": -97.7400 },
+                  { "lat": 30.2672, "lng": -97.7400 }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Geofence containment verified successfully"
+          }
+        }
+      }
+    },
+    "/v1/geo/wireguard-config": {
+      "post": {
+        "operationId": "generateWireGuardConfig",
+        "tags": ["VPN Infrastructure"],
+        "summary": "Generate cryptographic WireGuard client & server configuration files",
+        "description": "Generates cryptographically secure Curve25519 keypairs, preshared keys, subnet IP allocations, and formatted .conf files for WireGuard VPN setups.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "endpoint": { "type": "string", "example": "vpn.dangling-dice.com:51820" },
+                  "clientIp": { "type": "string", "example": "10.0.0.2/32" },
+                  "dns": { "type": "string", "example": "1.1.1.1, 1.0.0.1" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "WireGuard config generated successfully"
+          }
+        }
+      }
+    }
+  }
+}
