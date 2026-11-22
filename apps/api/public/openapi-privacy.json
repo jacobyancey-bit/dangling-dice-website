@@ -1,0 +1,287 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Data Privacy, PII Redactor & LLM Guardrail API",
+    "version": "1.0.0",
+    "description": "High-performance, stateless PII sanitization and data privacy firewall (<15ms latency). Redacts emails, phone numbers, Social Security Numbers, Luhn-validated credit card numbers, IPv4 addresses, API keys, and HIPAA telemetry. Zero data retention—ensuring 100% GDPR, CCPA, and PCI-DSS compliance. Ideal as a privacy middleware guardrail before passing user prompts to OpenAI, Anthropic Claude, or local LLMs.",
+    "contact": {
+      "name": "Dangling Dice Studios™ Engineering",
+      "url": "https://dangling-dice-studios.com/",
+      "email": "jacob.yancey@danglingdicestudios.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.dangling-dice-studios.com",
+      "description": "Production Dedicated Gateway"
+    },
+    {
+      "url": "https://dangling-dice-studios.com",
+      "description": "Production Fallback Gateway"
+    }
+  ],
+  "tags": [
+    {
+      "name": "PII Redaction",
+      "description": "Text sanitization, regex masking, and LLM privacy guardrails"
+    },
+    {
+      "name": "Data Validation",
+      "description": "Luhn Mod-10 credit card checksum verification and network detection"
+    },
+    {
+      "name": "Structured Data Masking",
+      "description": "Recursive JSON key scrubber for logging and compliance"
+    },
+    {
+      "name": "Healthcare & Telemetry",
+      "description": "HIPAA PHI stripper and ad-tech tracking parameter scrubber"
+    }
+  ],
+  "paths": {
+    "/v1/privacy/redact": {
+      "post": {
+        "operationId": "redactPiiText",
+        "tags": ["PII Redaction"],
+        "summary": "Redact PII (Emails, Phones, SSNs, Credit Cards, API Keys, IPs)",
+        "description": "Detects and redacts sensitive PII and developer secrets from unstructured text. Credit cards are verified using the Luhn algorithm to prevent false positives.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Contact John Doe at john.doe@company.io or 555-234-5678. Card: 4532-0151-1283-0366, SSN: 123-45-6789. Stripe key: sk_live_51NABC1234567890."
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": ["placeholder", "mask", "hash"],
+                    "default": "placeholder",
+                    "description": "'placeholder' replaces with [REDACTED_TYPE], 'mask' preserves safe context (e.g. j***@company.io), 'hash' produces a deterministic 32-bit FNV-1a hex digest."
+                  },
+                  "categories": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["email", "phone", "ssn", "credit_card", "ipv4", "api_key"]
+                    },
+                    "description": "Optional list of categories to scan for. Defaults to all categories."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Text successfully sanitized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "engine": { "type": "string", "example": "privacy" },
+                    "durationMs": { "type": "number", "example": 1.4 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sanitizedText": {
+                          "type": "string",
+                          "example": "Contact John Doe at [REDACTED_EMAIL] or [REDACTED_PHONE]. Card: [REDACTED_CREDIT_CARD], SSN: [REDACTED_SSN]. Stripe key: [REDACTED_API_KEY]."
+                        },
+                        "countsByCategory": {
+                          "type": "object",
+                          "properties": {
+                            "email": { "type": "integer", "example": 1 },
+                            "phone": { "type": "integer", "example": 1 },
+                            "ssn": { "type": "integer", "example": 1 },
+                            "credit_card": { "type": "integer", "example": 1 },
+                            "ipv4": { "type": "integer", "example": 0 },
+                            "api_key": { "type": "integer", "example": 1 }
+                          }
+                        },
+                        "matches": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "category": { "type": "string" },
+                              "replacement": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload format"
+          }
+        }
+      }
+    },
+    "/v1/privacy/validate-luhn": {
+      "post": {
+        "operationId": "validateLuhnNumber",
+        "tags": ["Data Validation"],
+        "summary": "Verify Credit Card Checksum (Luhn Mod-10) & Identify Network",
+        "description": "Verifies whether a numeric sequence passes the Mod-10 Luhn checksum, detects the card network (Visa, Mastercard, Amex, Discover, JCB, Diners), and returns a masked number.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["number"],
+                "properties": {
+                  "number": {
+                    "type": "string",
+                    "example": "4532 0151 1283 0366"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "isValid": { "type": "boolean", "example": true },
+                        "network": { "type": "string", "example": "visa" },
+                        "maskedNumber": { "type": "string", "example": "************0366" },
+                        "digitCount": { "type": "integer", "example": 16 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/privacy/mask-json": {
+      "post": {
+        "operationId": "maskSensitiveJson",
+        "tags": ["Structured Data Masking"],
+        "summary": "Recursively Mask Passwords, Tokens & Secrets in JSON Payloads",
+        "description": "Deep-traverses any nested JSON payload and masks values matching sensitive keys (password, token, secret, ssn, apiKey, bearerToken).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["payload"],
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "example": {
+                      "user": "developer_test",
+                      "password": "super_secret_password_123",
+                      "metadata": {
+                        "apiToken": "sk_live_999999999999",
+                        "active": true
+                      }
+                    }
+                  },
+                  "sensitiveKeys": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Optional list of additional keys to mask. Defaults to common security keys."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sanitized JSON payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "maskedPayload": { "type": "object" },
+                        "redactedKeyPaths": {
+                          "type": "array",
+                          "items": { "type": "string" },
+                          "example": ["password", "metadata.apiToken"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/privacy/hipaa-scrub": {
+      "post": {
+        "operationId": "scrubHipaaTelemetry",
+        "tags": ["Healthcare & Telemetry"],
+        "summary": "Strip HIPAA PHI & Ad-Tech Tracking Parameters from Telemetry",
+        "description": "Scrubs Protected Health Information (PHI) and strips third-party ad trackers (fbclid, gclid, utm_*) from event payloads to guarantee HIPAA compliance.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["payload"],
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "example": {
+                      "event": "dosage_logged",
+                      "patientName": "John Doe",
+                      "dosageMg": 50,
+                      "fbclid": "IwAR3exampleTrackingId"
+                    }
+                  },
+                  "queryUrl": {
+                    "type": "string",
+                    "example": "https://app.example.com/log?utm_source=meta&fbclid=IwAR3exampleTrackingId"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sanitized healthcare event payload"
+          }
+        }
+      }
+    }
+  }
+}

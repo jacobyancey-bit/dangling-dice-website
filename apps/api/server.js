@@ -243,8 +243,9 @@ app.use('/media', apiLimiter, mediaRoutes);
 app.use('/affiliates', apiLimiter, affiliateRoutes);
 app.use('/showcase', apiLimiter, showcaseRoutes);
 app.get('/oembed', apiLimiter, getOEmbed);
-app.get('/openapi.json', (req, res) => {
-  const specPath = path.join(__dirname, 'public', 'openapi.json');
+app.get(['/openapi.json', '/openapi-privacy.json'], (req, res) => {
+  const filename = req.path.includes('privacy') ? 'openapi-privacy.json' : 'openapi.json';
+  const specPath = path.join(__dirname, 'public', filename);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=86400');
   res.sendFile(specPath);
@@ -271,7 +272,7 @@ app.use((req, res, next) => {
     p.startsWith('/affiliates') ||
     p.startsWith('/showcase') ||
     p.startsWith('/oembed') ||
-    p.startsWith('/openapi.json')
+    p.startsWith('/openapi')
   ) {
     return next();
   }
