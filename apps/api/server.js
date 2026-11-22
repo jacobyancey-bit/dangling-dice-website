@@ -243,12 +243,13 @@ app.use('/media', apiLimiter, mediaRoutes);
 app.use('/affiliates', apiLimiter, affiliateRoutes);
 app.use('/showcase', apiLimiter, showcaseRoutes);
 app.get('/oembed', apiLimiter, getOEmbed);
-app.get(['/openapi.json', '/openapi-privacy.json', '/openapi-music.json', '/openapi-schema.json', '/openapi-geo.json'], (req, res) => {
+app.get(['/openapi.json', '/openapi-privacy.json', '/openapi-music.json', '/openapi-schema.json', '/openapi-geo.json', '/openapi-finance.json'], (req, res) => {
   let filename = 'openapi.json';
   if (req.path.includes('privacy')) filename = 'openapi-privacy.json';
   else if (req.path.includes('music')) filename = 'openapi-music.json';
   else if (req.path.includes('schema')) filename = 'openapi-schema.json';
   else if (req.path.includes('geo')) filename = 'openapi-geo.json';
+  else if (req.path.includes('finance')) filename = 'openapi-finance.json';
   const specPath = path.join(__dirname, 'public', filename);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=86400');

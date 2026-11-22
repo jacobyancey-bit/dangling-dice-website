@@ -1,0 +1,259 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Financial Math, Loan Amortization & Cashflow API",
+    "version": "1.0.0",
+    "description": "High-precision financial calculations and lending analytics engine (<1ms latency). Calculates monthly loan amortization schedules, extra payment interest savings, compound interest with periodic contributions, Net Present Value (NPV), Internal Rate of Return (IRR), payback period, and software project cost estimates. Built for fintech apps, mortgage calculators, real estate investment modeling, and SaaS billing tools.",
+    "contact": {
+      "name": "Dangling Dice Studios™ Engineering",
+      "url": "https://dangling-dice-studios.com/",
+      "email": "jacob.yancey@danglingdicestudios.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.dangling-dice-studios.com",
+      "description": "Production Dedicated Gateway"
+    },
+    {
+      "url": "https://dangling-dice-studios.com",
+      "description": "Production Fallback Gateway"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Loan Amortization",
+      "description": "Monthly mortgage and loan payoff schedules, principal/interest breakdown, and payoffs"
+    },
+    {
+      "name": "Extra Payment Savings",
+      "description": "Simulate acceleration of mortgage payoff and total interest savings"
+    },
+    {
+      "name": "Compound Interest",
+      "description": "Periodic contributions, future value projections, and interest accrual"
+    },
+    {
+      "name": "Cashflow & Investment",
+      "description": "Net Present Value (NPV), Internal Rate of Return (IRR), Payback Period, and ROI"
+    },
+    {
+      "name": "Project Cost Scoping",
+      "description": "Software architecture cost and timeline estimation models"
+    }
+  ],
+  "paths": {
+    "/v1/finance/amortization": {
+      "post": {
+        "operationId": "calculateLoanAmortization",
+        "tags": ["Loan Amortization"],
+        "summary": "Calculate monthly loan amortization schedule & interest breakdown",
+        "description": "Computes fixed monthly loan payment, total interest paid, total payment amount, and full month-by-month amortization schedule.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["principal", "annualRatePercent", "termMonths"],
+                "properties": {
+                  "principal": { "type": "number", "example": 350000, "description": "Total loan principal amount" },
+                  "annualRatePercent": { "type": "number", "example": 6.5, "description": "Annual interest rate percentage" },
+                  "termMonths": { "type": "integer", "example": 360, "description": "Loan term in months (e.g. 360 for 30 years)" }
+                }
+              },
+              "example": {
+                "principal": 350000,
+                "annualRatePercent": 6.5,
+                "termMonths": 360
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Amortization schedule calculated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "engine": { "type": "string", "example": "finance" },
+                    "latencyMs": { "type": "number", "example": 0.42 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "monthlyPayment": { "type": "number", "example": 2212.24 },
+                        "totalInterest": { "type": "number", "example": 446405.12 },
+                        "totalPayment": { "type": "number", "example": 796405.12 },
+                        "schedule": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "month": { "type": "integer", "example": 1 },
+                              "payment": { "type": "number", "example": 2212.24 },
+                              "principal": { "type": "number", "example": 316.41 },
+                              "interest": { "type": "number", "example": 1895.83 },
+                              "remainingBalance": { "type": "number", "example": 349683.59 }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/finance/extra-payments": {
+      "post": {
+        "operationId": "simulateExtraPayments",
+        "tags": ["Extra Payment Savings"],
+        "summary": "Simulate extra monthly principal payments and interest savings",
+        "description": "Calculates how many months earlier a loan will be paid off and how much total interest is saved by paying extra towards the principal each month.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["principal", "annualRatePercent", "termMonths", "extraMonthlyPayment"],
+                "properties": {
+                  "principal": { "type": "number", "example": 350000 },
+                  "annualRatePercent": { "type": "number", "example": 6.5 },
+                  "termMonths": { "type": "integer", "example": 360 },
+                  "extraMonthlyPayment": { "type": "number", "example": 300 }
+                }
+              },
+              "example": {
+                "principal": 350000,
+                "annualRatePercent": 6.5,
+                "termMonths": 360,
+                "extraMonthlyPayment": 300
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extra payment simulation completed successfully"
+          }
+        }
+      }
+    },
+    "/v1/finance/compound-interest": {
+      "post": {
+        "operationId": "calculateCompoundInterest",
+        "tags": ["Compound Interest"],
+        "summary": "Calculate future value with compound interest and recurring contributions",
+        "description": "Projects investment growth over time with initial principal, recurring monthly contributions, and flexible compounding frequencies.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["principal", "annualRatePercent", "years"],
+                "properties": {
+                  "principal": { "type": "number", "example": 10000 },
+                  "annualRatePercent": { "type": "number", "example": 8.0 },
+                  "years": { "type": "integer", "example": 20 },
+                  "monthlyContribution": { "type": "number", "example": 500 },
+                  "compoundingFrequency": { "type": "string", "enum": ["monthly", "annually", "quarterly", "daily"], "default": "monthly" }
+                }
+              },
+              "example": {
+                "principal": 10000,
+                "annualRatePercent": 8.0,
+                "years": 20,
+                "monthlyContribution": 500,
+                "compoundingFrequency": "monthly"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Compound interest projected successfully"
+          }
+        }
+      }
+    },
+    "/v1/finance/cashflow": {
+      "post": {
+        "operationId": "calculateCashFlowMetrics",
+        "tags": ["Cashflow & Investment"],
+        "summary": "Calculate Net Present Value (NPV), Internal Rate of Return (IRR) & ROI",
+        "description": "Evaluates commercial project and real estate cash flows, computing NPV at a target discount rate, IRR percentage, total net profit, and payback period.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "discountRatePercent": { "type": "number", "example": 8.0, "default": 8.0 },
+                  "cashFlows": {
+                    "type": "array",
+                    "description": "Initial investment (negative number) followed by periodic cash returns",
+                    "items": { "type": "number" },
+                    "example": [-50000, 15000, 18000, 22000, 25000]
+                  }
+                }
+              },
+              "example": {
+                "discountRatePercent": 8.0,
+                "cashFlows": [-50000, 15000, 18000, 22000, 25000]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cash flow metrics calculated successfully"
+          }
+        }
+      }
+    },
+    "/v1/finance/project-scope": {
+      "post": {
+        "operationId": "estimateProjectScope",
+        "tags": ["Project Cost Scoping"],
+        "summary": "Estimate software development hours, costs & delivery timeline",
+        "description": "Generates breakdown estimates for engineering, QA, DevOps, design hours, and cost brackets based on project category and feature requirements.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "category": { "type": "string", "enum": ["WEBSITE_CREATION", "FULLSTACK", "MOBILE_APPS", "ECOMMERCE", "CUSTOM_INTEGRATION"], "default": "FULLSTACK" },
+                  "complexity": { "type": "string", "enum": ["simple", "moderate", "complex"], "default": "moderate" }
+                }
+              },
+              "example": {
+                "category": "FULLSTACK",
+                "complexity": "moderate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project scope estimated successfully"
+          }
+        }
+      }
+    }
+  }
+}
