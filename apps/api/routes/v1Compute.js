@@ -700,5 +700,10 @@ router.delete('/auth/keys/:key', async (req, res) => {
   }
 });
 
+// Graceful fallback redirect for browsers and search crawlers attempting GET on POST-only endpoints
+router.get('*', (req, res) => {
+  return res.redirect(302, 'https://dangling-dice-studios.com/#computeApiSuite');
+});
+
 export default router;
 
