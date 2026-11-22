@@ -481,7 +481,7 @@ window.inspectMongoUri = function (uri) {
 
 window.loadSampleUri = function () {
   const sample =
-    "mongodb+srv://studio_admin:MyPass123!@dangling-cluster.nnmqrde.mongodb.net/dangling_dice_db?retryWrites=true&w=majority";
+    "mongodb+srv://demo_user:SamplePassword123!@cluster0.abcde.mongodb.net/sample_database?retryWrites=true&w=majority";
   const input = document.getElementById("uriInput");
   if (input) {
     input.value = sample;
