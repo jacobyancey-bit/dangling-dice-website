@@ -33,8 +33,16 @@ Dangling Dice Studios™ is an independent software development, music productio
 
 ---
 
-## Public Developer APIs
+## Public Developer APIs & Marketplace Listings
 
+### RapidAPI Public Marketplace Listings
+- **Data Privacy, PII Redactor & LLM Guardrail API**: https://rapidapi.com/JacobYancey-zSna1bjQ-/api/data-privacy-pii-redactor-and-llm-guardrail-api
+- **Music Theory, Chord Progression & MIDI API**: https://rapidapi.com/JacobYancey-zSna1bjQ-/api/music-theory-chord-progression-and-midi-api
+- **Schema Transformer, Code Generator & DB API**: https://rapidapi.com/JacobYancey-zSna1bjQ-/api/schema-transformer-code-generator-and-db-api
+- **GIS Land Acreage, Polygon Math & GPS API**: https://rapidapi.com/JacobYancey-zSna1bjQ-/api/gis-land-acreage-polygon-math-and-gps-api
+- **Financial Math, Loan Amortization & Cashflow API**: https://rapidapi.com/JacobYancey-zSna1bjQ-/api/financial-math-loan-amortization-and-cashflow-api
+
+### Direct Studio Endpoints
 - `GET https://dangling-dice-studios.com/api/health`: Real-time system diagnostics, MongoDB connection state, and live request/crawler telemetry.
 - `GET https://dangling-dice-studios.com/api/items`: Full catalog of beats, tutorials, and applications (JSON).
 - `GET https://dangling-dice-studios.com/api/affiliates`: Verified developer tools, cloud hosting discounts, and partner perks.
