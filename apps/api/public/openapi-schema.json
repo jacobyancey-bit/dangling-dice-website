@@ -1,0 +1,182 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Schema Transformer, Code Generator & DB Tooling API",
+    "version": "1.0.0",
+    "description": "Sub-millisecond schema inference and code generation engine (<5ms latency). Converts raw JSON into TypeScript interfaces, Zod runtime schemas, JSON Schema Draft-07, and Postgres DDL tables. Converts SQL CREATE TABLE statements into TypeScript types and Zod schemas, and parses database connection URIs. Built for developer productivity tools, form builders, CLI utilities, and backend microservices.",
+    "contact": {
+      "name": "Dangling Dice Studios™ Engineering",
+      "url": "https://dangling-dice-studios.com/",
+      "email": "jacob.yancey@danglingdicestudios.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.dangling-dice-studios.com",
+      "description": "Production Dedicated Gateway"
+    },
+    {
+      "url": "https://dangling-dice-studios.com",
+      "description": "Production Fallback Gateway"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Schema Inference",
+      "description": "Infer TypeScript, Zod, JSON Schema, and SQL DDL directly from JSON"
+    },
+    {
+      "name": "SQL to TypeScript",
+      "description": "Translate SQL CREATE TABLE DDL into TypeScript interfaces and Zod validation"
+    },
+    {
+      "name": "Database URI Inspection",
+      "description": "Parse database connection strings into structured parameters"
+    }
+  ],
+  "paths": {
+    "/v1/schema/infer": {
+      "post": {
+        "operationId": "inferSchemaFromJson",
+        "tags": ["Schema Inference"],
+        "summary": "Infer TypeScript, Zod, JSON Schema, and SQL from raw JSON",
+        "description": "Takes any JSON object or array and automatically synthesizes strict TypeScript interfaces, Zod schema validation code, JSON Schema (Draft-07), and PostgreSQL CREATE TABLE DDL.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["jsonInput"],
+                "properties": {
+                  "jsonInput": {
+                    "description": "Raw JSON object, array, or JSON string to analyze",
+                    "oneOf": [
+                      { "type": "object" },
+                      { "type": "array" },
+                      { "type": "string" }
+                    ]
+                  },
+                  "rootName": {
+                    "type": "string",
+                    "description": "Name for the root TypeScript interface or table",
+                    "default": "UserRecord"
+                  }
+                }
+              },
+              "example": {
+                "rootName": "UserAccount",
+                "jsonInput": {
+                  "id": "e3a89047-920f-48d6-ba0a-7fb8fbe2a09c",
+                  "username": "coder42",
+                  "email": "dev@dangling-dice.com",
+                  "active": true,
+                  "reputation": 1420,
+                  "joinedAt": "2026-11-22T10:00:00.000Z",
+                  "settings": {
+                    "theme": "dark",
+                    "notifications": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Schema inferred successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "engine": { "type": "string", "example": "schema" },
+                    "latencyMs": { "type": "number", "example": 0.8 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "typescript": { "type": "string" },
+                        "zod": { "type": "string" },
+                        "jsonSchema": { "type": "object" },
+                        "sqlDdl": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/schema/sql-to-ts": {
+      "post": {
+        "operationId": "convertSqlToTypescript",
+        "tags": ["SQL to TypeScript"],
+        "summary": "Convert SQL CREATE TABLE DDL to TypeScript interfaces & Zod schemas",
+        "description": "Parses SQL CREATE TABLE definitions, determines column types, handles nullability and primary keys, and emits TypeScript interfaces and Zod schemas.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sql"],
+                "properties": {
+                  "sql": {
+                    "type": "string",
+                    "description": "SQL CREATE TABLE statement"
+                  }
+                }
+              },
+              "example": {
+                "sql": "CREATE TABLE billing_orders (\n  id UUID PRIMARY KEY,\n  customer_email VARCHAR(255) NOT NULL,\n  amount_cents INTEGER NOT NULL,\n  is_paid BOOLEAN NOT NULL,\n  notes TEXT,\n  created_at TIMESTAMPTZ NOT NULL\n);"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SQL converted to TypeScript successfully"
+          }
+        }
+      }
+    },
+    "/v1/schema/inspect-uri": {
+      "post": {
+        "operationId": "inspectDatabaseUri",
+        "tags": ["Database URI Inspection"],
+        "summary": "Parse and validate database connection URI strings",
+        "description": "Parses Postgres, MySQL, MongoDB, Redis, or CockroachDB connection strings into protocol, host, port, database, and connection parameters without leaking secrets in logs.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["uri"],
+                "properties": {
+                  "uri": {
+                    "type": "string",
+                    "description": "Database connection URI",
+                    "example": "postgresql://dbuser:mypassword@db.cluster.render.com:5432/production_db?sslmode=require"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Database URI inspected successfully"
+          }
+        }
+      }
+    }
+  }
+}
