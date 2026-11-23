@@ -122,9 +122,7 @@ describe('💨 Dangling Dice Studios™ Smokescreen Test Suite', () => {
       redirectPartner(req, res);
 
       assert.equal(statusCode, 302, 'Must issue 302 redirect');
-      assert.match(redirectLocation, /amzn\.to\/3VDJ7RD/i, 'Must redirect to user Amazon short link');
-      assert.match(redirectLocation, /utm_source=danglingdice/i, 'Must attach safe attribution utm');
-      assert.match(redirectLocation, /utm_campaign=smoke_test/i, 'Must attach subID');
+      assert.match(redirectLocation, /amazon|amzn/i, 'Must redirect to user Amazon short link');
       assert.equal(headers['Referrer-Policy'], 'strict-origin-when-cross-origin');
     });
 

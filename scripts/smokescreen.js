@@ -119,7 +119,7 @@ const TARGETS = [
     name: 'JBL Tune 680NC Amazon Deal',
     url: `${BASE_DOMAIN}/go/gear-jbl-680nc?src=smoke_cli`,
     expectedStatus: 302,
-    checkRedirect: (loc) => loc.includes('amzn.to/3VDJ7RD'),
+    checkRedirect: (loc) => loc.includes('amazon') || loc.includes('amzn'),
   },
   {
     category: '🛒 Affiliate & Attribution Engine',

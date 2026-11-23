@@ -131,7 +131,7 @@ const PARTNER_DIRECTORY = {
   // --------------------------------------------------------------------------
   'gear-truthear-red': {
     name: 'Truthear x Crinacle Zero:RED Dual Dynamic IEM',
-    targetUrl: 'https://www.amazon.com/s?k=Truthear+x+Crinacle+Zero%3ARED+IEM&crid=14KHKJ232ZCEF&sprefix=truthear+x+crinacle+zero+red+iem%2Caps%2C294&linkCode=ll2&tag=danglingdices-20&linkId=ef3e55cb575a391445a263aad1746b80&language=en_US&ref_=as_li_ss_tl',
+    targetUrl: 'https://link.amazon/B06fKR4Id',
     category: 'Gaming Gear & Accessories',
     description: 'Dual dynamic driver in-ear monitors calibrated for competitive audio separation and footstep clarity.',
     perkBadge: 'Studio Footstep King',
@@ -140,7 +140,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-tangzu-waner': {
     name: 'Tangzu Wan’er S.G Studio Gaming IEM',
-    targetUrl: 'https://link.amazon/B0i9Qcu4g',
+    targetUrl: 'https://link.amazon/B065eAwxi',
     category: 'Gaming Gear & Accessories',
     description: 'Sub-$25 budget-champion in-ear monitors with pinpoint spatial imaging for CS2, Valorant, and Apex.',
     perkBadge: 'Sub-$25 Budget Champion',
@@ -149,7 +149,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-vader-4-pro': {
     name: 'Flydigi Vader 4 Pro Controller (Hall Effect)',
-    targetUrl: 'https://link.amazon/B053ySo5d',
+    targetUrl: 'https://link.amazon/B02yw6zYq',
     category: 'Gaming Gear & Accessories',
     description: 'Hall-Effect anti-drift controller with adjustable thumbstick tension rings and 1000Hz polling rate.',
     perkBadge: 'Anti-Drift Hall Effect',
@@ -185,7 +185,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-viper-v3-pro': {
     name: 'Razer Viper V3 Pro Ultra-Lightweight 8000Hz Mouse',
-    targetUrl: 'https://link.amazon/B09tq1G0F',
+    targetUrl: 'https://link.amazon/B00okznev',
     category: 'Gaming Gear & Accessories',
     description: '54-gram ultra-lightweight esports mouse with genuine 8000Hz polling rate and optical Gen-3 switches.',
     perkBadge: '54g Pro Esports Mouse',
@@ -194,7 +194,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-jbl-680nc': {
     name: 'JBL Tune 680NC Adaptive Noise Cancelling Headphones',
-    targetUrl: 'https://amzn.to/3VDJ7RD',
+    targetUrl: 'https://link.amazon/B08Olf1eT',
     category: 'Audio Gear & Studio Monitors',
     description: 'Wireless adaptive active noise cancelling headphones with JBL Pure Bass sound, dual beamforming mics, and up to 70 hours of battery life.',
     perkBadge: 'Adaptive ANC & 70H Battery',
@@ -203,7 +203,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-jbl-tune-680nc': {
     name: 'JBL Tune 680NC Adaptive Noise Cancelling Headphones',
-    targetUrl: 'https://amzn.to/3VDJ7RD',
+    targetUrl: 'https://link.amazon/B08Olf1eT',
     category: 'Audio Gear & Studio Monitors',
     description: 'Wireless adaptive active noise cancelling headphones with JBL Pure Bass sound, dual beamforming mics, and up to 70 hours of battery life.',
     perkBadge: 'Adaptive ANC & 70H Battery',
@@ -212,7 +212,7 @@ const PARTNER_DIRECTORY = {
   },
   'jbl-680nc': {
     name: 'JBL Tune 680NC Adaptive Noise Cancelling Headphones',
-    targetUrl: 'https://amzn.to/3VDJ7RD',
+    targetUrl: 'https://link.amazon/B08Olf1eT',
     category: 'Audio Gear & Studio Monitors',
     description: 'Wireless adaptive active noise cancelling headphones with JBL Pure Bass sound, dual beamforming mics, and up to 70 hours of battery life.',
     perkBadge: 'Adaptive ANC & 70H Battery',

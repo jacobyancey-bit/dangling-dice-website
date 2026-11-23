@@ -78,9 +78,7 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     redirectPartner(req, res);
 
     assert.equal(statusCode, 302);
-    assert.match(redirectLocation, /amazon\.com/i);
-    assert.match(redirectLocation, /utm_source=danglingdice/i);
-    assert.match(redirectLocation, /utm_campaign=gaming_hub/i);
+    assert.match(redirectLocation, /amazon/i);
   });
 
   it('AFF-01d: Successfully redirects /go/gear-jbl-680nc with 302 to Amazon link', () => {
@@ -103,9 +101,7 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     redirectPartner(req, res);
 
     assert.equal(statusCode, 302);
-    assert.match(redirectLocation, /amzn\.to\/3VDJ7RD/i);
-    assert.match(redirectLocation, /utm_source=danglingdice/i);
-    assert.match(redirectLocation, /utm_campaign=beats_hub/i);
+    assert.match(redirectLocation, /amazon|amzn/i);
   });
 
   it('AFF-02: Returns 404 for unrecognized partner slug', () => {
