@@ -295,9 +295,14 @@ app.use((req, res, next) => {
   const isGamesSubdomain = hostname.startsWith('games.') || hostname.startsWith('gaming.') || hostname.startsWith('tools.') || req.query.subdomain === 'games' || req.path === '/games' || req.path.startsWith('/games/');
 
   // Dedicated Machine API Gateway (Subdomain: api.dangling-dice-studios.com)
-  // Ensures machine clients receive pure JSON payloads with zero HTML/CSS overhead
+  // If a human browser visits directly, smoothly redirect to the interactive Developer Sandboxes UI;
+  // machine clients (cURL, fetch, scripts) receive pure JSON payloads with zero HTML/CSS overhead.
   if (isApiSubdomain) {
     if (req.path === '/' || req.path === '/api') {
+      const acceptsHtml = req.headers.accept && req.headers.accept.includes('text/html') && !req.headers.accept.includes('application/json');
+      if (acceptsHtml && req.query.format !== 'json') {
+        return res.redirect(302, 'https://dev.dangling-dice-studios.com/#sandboxes');
+      }
       req.url = '/';
       return apiRoutes(req, res, next);
     }
