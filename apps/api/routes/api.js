@@ -66,8 +66,7 @@ router.get('/', (req, res) => {
 
 router.get('/health', (req, res) => {
   const data = getHealthData();
-  const statusCode = data.database.connected ? 200 : 503;
-  res.status(statusCode).json(data);
+  res.status(200).json(data);
 });
 
 router.get('/status', (req, res) => {

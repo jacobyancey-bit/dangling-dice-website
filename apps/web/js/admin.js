@@ -119,8 +119,8 @@ function showDashboard() {
 async function fetchTelemetry() {
   try {
     const res = await fetch(`${API_BASE}/health`);
-    if (!res.ok) return;
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
+    if (!data) return;
     const analytics = data.analytics || {};
 
     const statApiPulls = document.getElementById('statApiPulls');
@@ -147,8 +147,8 @@ async function fetchTelemetry() {
     const rapidEl = document.getElementById('telemetryRapidApiHits');
     if (rapidEl) rapidEl.textContent = (analytics.apiChannels?.rapidapi || 0).toLocaleString();
 
-    const postmanEl = document.getElementById('telemetryPostmanHits');
-    if (postmanEl) postmanEl.textContent = (analytics.apiChannels?.postman || 0).toLocaleString();
+    const directEl = document.getElementById('telemetryDirectHits');
+    if (directEl) directEl.textContent = (analytics.apiChannels?.direct || 0).toLocaleString();
 
     const uptimeEl = document.getElementById('apiUptimeBadge');
     if (uptimeEl) {

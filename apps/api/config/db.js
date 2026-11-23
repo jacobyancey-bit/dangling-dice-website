@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { initializeDailyMetrics } from '../middleware/analytics.js';
 
 /**
  * Connect to MongoDB instance using Mongoose.
@@ -18,6 +19,7 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`[Database] MongoDB Connected successfully: ${conn.connection.host}`);
+    await initializeDailyMetrics();
   } catch (error) {
     console.error(`[Database Error] Connection failed: ${error.message}`);
     if (process.env.NODE_ENV === 'test') {

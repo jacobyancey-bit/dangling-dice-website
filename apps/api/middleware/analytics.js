@@ -35,6 +35,28 @@ const metrics = {
 const MAX_RECENT_HISTORY = 20;
 
 /**
+ * Robustly inspect request headers, query parameters, referer and user-agent
+ * to detect any incoming calls from RapidAPI marketplace proxy.
+ */
+export function isRapidApiRequest(req) {
+  if (!req || !req.headers) return false;
+  const ua = String(req.headers['user-agent'] || '').toLowerCase();
+  if (ua.includes('rapidapi')) return true;
+  for (const h of Object.keys(req.headers)) {
+    if (h.startsWith('x-rapidapi') || h.includes('rapidapi')) {
+      return true;
+    }
+  }
+  const referer = String(req.headers['referer'] || '').toLowerCase();
+  if (referer.includes('rapidapi.com')) return true;
+  const origin = String(req.headers['origin'] || '').toLowerCase();
+  if (origin.includes('rapidapi.com')) return true;
+  const src = String(req.query?.src || req.query?.source || '').toLowerCase();
+  if (src.includes('rapidapi')) return true;
+  return false;
+}
+
+/**
  * Identify the category and specific bot from User-Agent
  */
 function classifyUserAgent(ua = '') {
@@ -135,15 +157,8 @@ function isNonApiTraffic(req) {
   const p = (req.originalUrl || req.url || req.path || '').split('?')[0].toLowerCase();
   const rawUa = (req.headers['user-agent'] || '').toLowerCase();
 
-  // If request carries RapidAPI or Postman identifiers, it is ALWAYS legitimate API traffic!
-  if (
-    req.headers['x-rapidapi-key'] ||
-    req.headers['x-rapidapi-host'] ||
-    req.headers['x-rapidapi-proxy-secret'] ||
-    rawUa.includes('rapidapi') ||
-    req.headers['postman-token'] ||
-    rawUa.includes('postman')
-  ) {
+  // If request carries RapidAPI identifiers, it is ALWAYS legitimate API traffic!
+  if (isRapidApiRequest(req)) {
     return false;
   }
 
@@ -225,17 +240,9 @@ export const analyticsMiddleware = (req, res, next) => {
     metrics.crawlers[classification.category] = (metrics.crawlers[classification.category] || 0) + 1;
   }
 
-  // Track API marketplace channel source (RapidAPI vs Postman vs Web vs Direct)
-  const uaLower = rawUa.toLowerCase();
-  if (
-    req.headers['x-rapidapi-key'] ||
-    req.headers['x-rapidapi-host'] ||
-    req.headers['x-rapidapi-proxy-secret'] ||
-    uaLower.includes('rapidapi')
-  ) {
+  // Track API marketplace channel source (RapidAPI vs Web vs Direct)
+  if (isRapidApiRequest(req)) {
     metrics.apiChannels.rapidapi += 1;
-  } else if (req.headers['postman-token'] || uaLower.includes('postman')) {
-    metrics.apiChannels.postman += 1;
   } else if (classification.category === 'browsers') {
     metrics.apiChannels.web += 1;
   } else {
@@ -300,6 +307,40 @@ export const getAnalyticsSummary = () => {
     recentActivity: metrics.recentActivity.slice(0, 15),
   };
 };
+
+/**
+ * Initialize and restore today's metrics from MongoDB DailyAnalytics collection upon startup
+ */
+export async function initializeDailyMetrics() {
+  if (mongoose.connection?.readyState !== 1) return;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  try {
+    const existing = await DailyAnalytics.findOne({ date: todayStr });
+    if (existing) {
+      metrics.totalRequests = Math.max(metrics.totalRequests, existing.totalRequests || 0);
+      if (existing.crawlers) {
+        metrics.crawlers.ai = Math.max(metrics.crawlers.ai, existing.crawlers.ai || 0);
+        metrics.crawlers.search = Math.max(metrics.crawlers.search, existing.crawlers.search || 0);
+        metrics.crawlers.social = Math.max(metrics.crawlers.social, existing.crawlers.social || 0);
+        metrics.crawlers.browsers = Math.max(metrics.crawlers.browsers, existing.crawlers.browsers || 0);
+        metrics.crawlers.tools = Math.max(metrics.crawlers.tools, existing.crawlers.tools || 0);
+      }
+      if (existing.apiChannels) {
+        metrics.apiChannels.rapidapi = Math.max(metrics.apiChannels.rapidapi, existing.apiChannels.rapidapi || 0);
+        metrics.apiChannels.web = Math.max(metrics.apiChannels.web, existing.apiChannels.web || 0);
+        metrics.apiChannels.direct = Math.max(metrics.apiChannels.direct, existing.apiChannels.direct || 0);
+      }
+      if (existing.endpoints) {
+        const epObj = existing.endpoints instanceof Map ? Object.fromEntries(existing.endpoints) : existing.endpoints;
+        for (const [ep, count] of Object.entries(epObj)) {
+          metrics.endpoints[ep] = Math.max(metrics.endpoints[ep] || 0, count);
+        }
+      }
+    }
+  } catch (err) {
+    // Graceful startup fallback
+  }
+}
 
 /**
  * Persist current metrics snapshot to MongoDB DailyAnalytics collection

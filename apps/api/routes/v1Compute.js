@@ -52,22 +52,15 @@ import {
   revokeApiKeyRecord,
 } from '../models/ApiKey.js';
 import { optionalApiKey, requireApiKey } from '../middleware/apiKeyMiddleware.js';
+import { isRapidApiRequest } from '../middleware/analytics.js';
 
 const router = express.Router();
 
 function detectChannelSource(req) {
-  const ua = String(req.headers['user-agent'] || '').toLowerCase();
-  if (
-    req.headers['x-rapidapi-key'] ||
-    req.headers['x-rapidapi-host'] ||
-    req.headers['x-rapidapi-proxy-secret'] ||
-    ua.includes('rapidapi')
-  ) {
+  if (isRapidApiRequest(req)) {
     return 'RAPIDAPI';
   }
-  if (req.headers['postman-token'] || ua.includes('postman')) {
-    return 'POSTMAN';
-  }
+  const ua = String(req.headers['user-agent'] || '').toLowerCase();
   if (req.headers.origin || req.headers.referer || ua.includes('mozilla')) {
     return 'WEB_SANDBOX';
   }
