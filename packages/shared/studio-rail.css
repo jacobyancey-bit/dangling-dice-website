@@ -280,6 +280,61 @@
   margin: 0.5rem 0.75rem;
 }
 
+/* Bottom Utility Group / Stash Section */
+.rail-bottom-group {
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.rail-item.rail-stash-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  color: #94a3b8;
+}
+
+.rail-item.rail-stash-btn:hover {
+  background: rgba(6, 182, 212, 0.12);
+  color: var(--neon-cyan, #06b6d4);
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.rail-item.rail-stash-btn .stash-count-badge {
+  background: rgba(6, 182, 212, 0.25);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+}
+
+/* Anchored Studio Stash Flyout Drawer (Positioned under/alongside left rail) */
+body.has-studio-rail .my-stash-drawer {
+  position: fixed !important;
+  left: 70px !important;
+  bottom: 20px !important;
+  right: auto !important;
+  top: auto !important;
+  width: 360px !important;
+  max-width: calc(100vw - 90px) !important;
+  max-height: 480px !important;
+  background: rgba(12, 17, 28, 0.96) !important;
+  border: 1px solid rgba(6, 182, 212, 0.35) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(6, 182, 212, 0.15) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  z-index: 1050 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Hide legacy bottom-right trigger since it is now in the rail */
+.my-stash-trigger {
+  display: none !important;
+}
+
 /* 3. Mobile Navigation Dock (< 768px) */
 @media (max-width: 768px) {
   .dds-studio-rail {

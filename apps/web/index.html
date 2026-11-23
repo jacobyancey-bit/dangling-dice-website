@@ -174,6 +174,17 @@
         <span class="rail-text">YouTube</span>
       </a>
     </div>
+
+    <div class="rail-divider"></div>
+
+    <!-- Studio Stash Docked Under Side Rail Navigation -->
+    <div class="rail-nav-group rail-bottom-group">
+      <button type="button" class="rail-item rail-stash-btn" onclick="toggleMyStash()" title="My Studio Stash (Saved conversions &amp; sound kits)">
+        <span class="rail-icon">📁</span>
+        <span class="rail-text">My Stash</span>
+        <span id="stashCountBadge" class="rail-badge stash-count-badge">0</span>
+      </button>
+    </div>
   </nav>
   <!-- ==========================================================================
        Site Header Section
@@ -1432,102 +1443,7 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
     </div>
   </div>
 
-  <!-- Backdrop for Mobile Bottom Sheet Station Drawer -->
-  <div id="dockBackdrop" class="dock-backdrop" onclick="togglePlaylistDrawer()" style="display: none;"></div>
-
-  <!-- Persistent Floating Audio Dock (Lofi Girl & Background Radio inspired with Station Selector) -->
-  <div id="beatsDock" class="beats-dock">
-    <!-- Playlist & Station Drawer -->
-    <div id="dockPlaylistDrawer" class="dock-playlist-drawer" style="display: none;">
-      <div class="dock-playlist-header">
-        <div style="display: flex; align-items: center; gap: 0.4rem;">
-          <span style="font-size: 1rem;">📻</span>
-          <span style="font-size: 0.82rem; font-weight: 800; color: #fff;">Radio Stations &amp; Playlists</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.35rem;">
-          <button type="button" class="dock-submit-beat-btn" onclick="toggleCustomStationForm()" title="Add any YouTube playlist or video" style="padding: 0.15rem 0.45rem; font-size: 0.65rem;">
-            + Add Playlist
-          </button>
-          <button type="button" class="dock-close-btn" onclick="togglePlaylistDrawer()" title="Close stations">&times;</button>
-        </div>
-      </div>
-
-      <!-- Inline Add Playlist Form (expandable) -->
-      <div id="dockAddStationForm" style="display: none; padding: 0.65rem 0.85rem; background: rgba(0, 0, 0, 0.45); border-bottom: 1px solid rgba(236, 72, 153, 0.25);">
-        <div style="font-size: 0.72rem; font-weight: 700; color: #f472b6; margin-bottom: 0.35rem;">Add Any YouTube Playlist or Video Link</div>
-        <input type="text" id="customStationTitle" placeholder="Playlist / Station Name (e.g. My Beats)" style="width: 100%; font-size: 0.75rem; padding: 0.35rem 0.5rem; background: #070a10; border: 1px solid var(--border-subtle); border-radius: 4px; color: #fff; margin-bottom: 0.35rem; box-sizing: border-box;" />
-        <input type="url" id="customStationUrl" placeholder="https://www.youtube.com/playlist?list=... or video link" style="width: 100%; font-size: 0.75rem; padding: 0.35rem 0.5rem; background: #070a10; border: 1px solid var(--border-subtle); border-radius: 4px; color: #fff; margin-bottom: 0.5rem; box-sizing: border-box;" />
-        <div style="display: flex; justify-content: flex-end; gap: 0.4rem;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCustomStationForm()" style="height: 26px; padding: 0 0.5rem; font-size: 0.7rem;">Cancel</button>
-          <button type="button" class="btn btn-purple btn-sm" onclick="submitCustomStation()" style="height: 26px; padding: 0 0.65rem; font-size: 0.7rem;">Add &amp; Play ▶</button>
-        </div>
-      </div>
-
-      <div class="dock-playlist-content">
-        <!-- Custom User Playlists -->
-        <div id="customStationsSection" style="display: none; margin-bottom: 0.85rem;">
-          <div class="dock-playlist-section-label">🎵 My Added Playlists</div>
-          <div id="customStationsList" class="dock-stations-list">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-
-        <!-- Official Studio Stations -->
-        <div class="dock-playlist-section-label">🎧 Official Dangling Beats Playlists</div>
-        <div id="officialStationsList" class="dock-stations-list">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Indie Music Producers -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; margin-bottom: 0.35rem;">
-          <span class="dock-playlist-section-label" style="margin: 0;">⭐ Featured Indie Music Producers</span>
-          <button type="button" onclick="openDevSubmissionModal('Audio &amp; Music'); togglePlaylistDrawer();" class="dock-submit-beat-btn">
-            + Submit Beats
-          </button>
-        </div>
-        <div id="indieStationsList" class="dock-stations-list">
-          <!-- Populated dynamically from /api/showcase -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Mini Video Drawer (Streams directly in corner while allowing full site usage) -->
-    <div id="dockVideoDrawer" class="dock-video-drawer" style="display: none;">
-      <iframe
-        id="dockIframe"
-        class="dock-iframe"
-        src=""
-        title="Dangling Beats Radio Player"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen>
-      </iframe>
-    </div>
-
-    <!-- Dock Controls Row -->
-    <div class="dock-controls-row">
-      <div class="beats-visualizer">
-        <span class="beats-bar"></span>
-        <span class="beats-bar"></span>
-        <span class="beats-bar"></span>
-        <span class="beats-bar"></span>
-      </div>
-      <div class="beats-dock-full" onclick="togglePlaylistDrawer()" title="Click to switch radio station">
-        <div id="dockTrackTitle" class="dock-track-title">
-          Dangling Beats &bull; Lo-Fi Drive
-        </div>
-        <div id="dockTrackSubtitle" class="dock-track-subtitle">
-          Lo-Fi Focus Radio &bull; Tap to switch
-        </div>
-      </div>
-      <div class="dock-controls-actions">
-        <button id="dockPlayBtn" class="btn btn-purple btn-dock-play" onclick="toggleDockAudio()">▶ Play</button>
-        <button id="dockCinemaBtn" class="beats-dock-icon-btn dock-cinema-trigger-btn" onclick="openCurrentStationCinema()" title="Open Full Cinema Mode">⛶</button>
-        <button class="beats-dock-min-btn" onclick="toggleDockMinimize()" title="Minimize / Expand">—</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Floating "My Stash" Persistence Drawer (Drives return visits & retention) -->
+  <!-- Studio Stash Persistence Drawer (Anchored to side rail navigation) -->
   <div id="myStashDrawer" class="my-stash-drawer" style="display: none;">
     <div class="stash-header">
       <div class="stash-title-wrap">
@@ -1547,12 +1463,6 @@ console.log("Download Stream:", data.downloadUrl);</code></pre>
       <span style="font-size: 0.72rem; color: var(--text-muted);">Saved in this browser</span>
     </div>
   </div>
-
-  <!-- Floating Stash Trigger Pill -->
-  <button type="button" id="myStashTrigger" class="my-stash-trigger" onclick="toggleMyStash()" title="Open My Studio Stash">
-    <span>📁 My Stash</span>
-    <span id="stashCountBadge" class="stash-badge">0</span>
-  </button>
 
   <!-- Toast Notification Container (10015.io inspired) -->
   <div id="toastContainer" class="toast-container"></div>
