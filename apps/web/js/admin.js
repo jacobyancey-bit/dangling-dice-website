@@ -432,68 +432,204 @@ async function dispatchDiscordBroadcast() {
   }
 }
 
+const OMNIPOST_PRESETS = {
+  beats: {
+    title: 'Dangling Beats Studio — 100% Free Browser DAW & MIDI Generator',
+    link: 'https://beats.dangling-dice-studios.com/',
+    category: 'Beats & Audio',
+    desc: 'Complete in-browser music workstation: 16-pad drum machine, chord progression MIDI generator, delay/reverb timing calculators, and Web MIDI controller support. No accounts, zero subscriptions, instant studio master audio.',
+    question: 'What DAW do you produce in (FL Studio, Ableton, Logic, or Reaper), and what tool would speed up your workflow most?'
+  },
+  media: {
+    title: 'Free 320kbps YouTube to MP3 Converter — 100% Ad-Free & Zero Logs',
+    link: 'https://media.dangling-dice-studios.com/',
+    category: 'Developer Tools',
+    desc: 'Tired of closing 5 scam popup tabs just to grab an audio sample for FL Studio or Ableton? We built a fast, ad-free 320kbps in-browser converter for beatmakers and video editors. Direct downloads with zero tracking.',
+    question: 'What audio format or sample rate do you prefer when grabbing reference tracks for your projects?'
+  },
+  games: {
+    title: 'OmniSound Directional Audio Radar & Gaming Audio Lab',
+    link: 'https://games.dangling-dice-studios.com/',
+    category: 'Affiliate Deals',
+    desc: 'Tired of muddy in-game audio where you cannot hear enemy footsteps over deafening gunfire? We mapped competitive EQ curves and real-time directional audio HUD profiles for competitive FPS games with zero anti-cheat penalties.',
+    question: 'What competitive game has the worst default audio mix right now? (Warzone, Apex, Valorant, or CS2?)'
+  },
+  dev: {
+    title: '13 Free In-Browser Developer Sandboxes & Sub-15ms REST Compute',
+    link: 'https://dev.dangling-dice-studios.com/',
+    category: 'Developer Tools',
+    desc: 'Free interactive developer utilities right in your browser: JSON-to-Zod schema transformer, GIS parcel acreage calculator, Luhn PII credit card redactor, and loan amortization engine with zero telemetry tracking.',
+    question: 'What repetitive utility or script do you wish you did not have to write from scratch every project?'
+  },
+  calculator: {
+    title: 'AI Calculator on Google Play — Camera Math Solver & Step-by-Step Arithmetic',
+    link: 'https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator',
+    category: 'Mobile Apps',
+    desc: 'Published our standalone AI Calculator on Google Play. Snap a photo of handwritten homework or complex equations to get step-by-step arithmetic and algebra explanations instantly.',
+    question: 'What math topic or formula gives you the biggest headache to solve?'
+  },
+  gear_jbl: {
+    title: 'JBL Tune 680NC Adaptive Noise-Cancelling Headphones (Prime Deal)',
+    link: 'https://dangling-dice-studios.com/go/gear-jbl-680nc',
+    category: 'Affiliate Deals',
+    desc: 'Detailed studio review and breakdown of the JBL Tune 680NC wireless adaptive noise-cancelling headphones: punchy low-end response, 44-hour battery life, and ultra-lightweight comfort for long coding or beatmaking sessions.',
+    question: 'Do you prefer over-ear studio monitoring headphones or lightweight IEMs for focus sessions?'
+  }
+};
+
+let currentEngagementQuestion = '';
+
+function applyOmnipostPreset(presetKey) {
+  const p = OMNIPOST_PRESETS[presetKey];
+  if (!p) return;
+  const titleEl = document.getElementById('broadcastTitle');
+  const linkEl = document.getElementById('broadcastLink');
+  const descEl = document.getElementById('broadcastDesc');
+  const catEl = document.getElementById('broadcastCategory');
+
+  if (titleEl) titleEl.value = p.title;
+  if (linkEl) linkEl.value = p.link;
+  if (descEl) descEl.value = p.desc;
+  if (catEl) catEl.value = p.category;
+  currentEngagementQuestion = p.question;
+
+  generateAllOmnipostFormats();
+  logAdmin(`Applied Omnipost preset: "${p.title}"`, true);
+}
+
+function generateFromSmartPrompt() {
+  const textInput = document.getElementById('smartPromptText');
+  const linkInput = document.getElementById('smartPromptLink');
+  const text = (textInput?.value || '').trim();
+  let link = (linkInput?.value || '').trim();
+
+  if (!text) {
+    alert('Please enter what you want to announce in the prompt box!');
+    if (textInput) textInput.focus();
+    return;
+  }
+
+  const lower = text.toLowerCase();
+  let category = 'Studio Update';
+  let defaultLink = 'https://dangling-dice-studios.com/';
+  let question = 'What feature or tool should we drop next? Let us know below!';
+
+  if (/\b(beat|beats|music|drum|drums|midi|fl studio|ableton|logic|chord|chords|808|sample|samples|synth|tempo|bpm)\b/.test(lower)) {
+    category = 'Beats & Audio';
+    defaultLink = 'https://beats.dangling-dice-studios.com/';
+    question = 'What DAW do you produce in (FL Studio, Ableton, Logic, Reaper), and what sound kit should I drop next?';
+  } else if (/\b(game|gaming|fps|radar|omnisound|footstep|footsteps|headphone|headphones|iem|iems|controller|keyboard|jbl|aim)\b/.test(lower)) {
+    category = 'Affiliate Deals';
+    defaultLink = 'https://games.dangling-dice-studios.com/';
+    question = 'What competitive FPS game has the most frustrating audio mix right now? (Warzone, Apex, Valorant, CS2)';
+  } else if (/\b(convert|converter|mp3|mp4|youtube|transcode|transcoder|extract|video|download)\b/.test(lower)) {
+    category = 'Developer Tools';
+    defaultLink = 'https://media.dangling-dice-studios.com/';
+    question = 'What format and sample rate do you prefer when grabbing audio samples or reference tracks?';
+  } else if (/\b(api|apis|code|json|schema|zod|developer|sandbox|sandboxes|typescript|compute|database|sql|acreage|polygon|redact)\b/.test(lower)) {
+    category = 'Developer Tools';
+    defaultLink = 'https://dev.dangling-dice-studios.com/';
+    question = 'What repetitive developer utility or boilerplate script do you find yourself writing over and over?';
+  } else if (/\b(calculator|math|algebra|homework|camera|ocr|android|play store|formula)\b/.test(lower)) {
+    category = 'Mobile Apps';
+    defaultLink = 'https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator';
+    question = 'What math formula or problem type gives you the biggest headache to solve?';
+  }
+
+  if (!link) {
+    link = defaultLink;
+    if (linkInput) linkInput.value = link;
+  }
+
+  // Capitalize clean title
+  let cleanTitle = text.replace(/^added\s+/i, 'New: ')
+                       .replace(/^built\s+/i, 'Released: ')
+                       .replace(/^dropped\s+/i, 'Fresh Drop: ')
+                       .replace(/^announcing\s+/i, 'Announcing: ');
+  cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
+  if (!cleanTitle.includes('—') && !cleanTitle.includes('-')) {
+    cleanTitle += ' — Dangling Dice Studios™';
+  }
+
+  const desc = `${text}. Built 100% ad-free and open for creators and developers without paywalls, bloatware, or sketchy trackers. Instant access directly in your browser.`;
+
+  const titleEl = document.getElementById('broadcastTitle');
+  const linkEl = document.getElementById('broadcastLink');
+  const descEl = document.getElementById('broadcastDesc');
+  const catEl = document.getElementById('broadcastCategory');
+
+  if (titleEl) titleEl.value = cleanTitle;
+  if (linkEl) linkEl.value = link;
+  if (descEl) descEl.value = desc;
+  if (catEl) catEl.value = category;
+  currentEngagementQuestion = question;
+
+  generateAllOmnipostFormats();
+  logAdmin(`Generated Omnipost from prompt: "${cleanTitle}"`, true);
+}
+
 function generateAllOmnipostFormats() {
   const title = document.getElementById('broadcastTitle')?.value || 'Dangling Dice Studios™ Update';
-  const link = document.getElementById('broadcastLink')?.value || 'https://media.dangling-dice-studios.com';
+  const link = document.getElementById('broadcastLink')?.value || 'https://dangling-dice-studios.com';
   const desc = document.getElementById('broadcastDesc')?.value || '';
+  const category = document.getElementById('broadcastCategory')?.value || 'Studio Update';
+  const question = currentEngagementQuestion || 'What feature or tool should we build next? Let us know below!';
 
-  // 1. Reddit (Helpful tone, markdown bullets, soft link at end)
+  // 1. Reddit (Community-focused, value first, soft link, discussion question)
   const redditEl = document.getElementById('redditPreview');
   if (redditEl) {
-    redditEl.value = `Hey producers and creators,\n\n${desc}\n\nKey features:\n• 100% Ad-Free (Zero spam redirects or fake download buttons)\n• Studio Master 320kbps MP3 audio & 1080p MP4 video\n• Drag and drop straight into your DAW (FL Studio / Ableton)\n\nCheck it out here if you need it for your workflow: ${link}\n\nHope this helps save some time!`;
+    redditEl.value = `Hey everyone,\n\n${desc}\n\nKey highlights:\n• 100% Ad-Free (Zero popup tabs, trackers, or paywalls)\n• Built lightweight for instant performance and clean workflow\n• Live now at: ${link}\n\nQuestion for the community: ${question}\n\nWould love your feedback or feature ideas!`;
   }
 
   // 2. YouTube Community & Video Description
   const ytEl = document.getElementById('youtubePreview');
   if (ytEl) {
-    ytEl.value = `🚀 ${title.toUpperCase()} is LIVE!\n\n${desc}\n\n⚡ Try it now for free: ${link}\n🎧 Stream Dangling Beats: https://dangling-dice-studios.com/#beatsStudio\n💻 Developer API: https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api\n\nDrop a comment with what tool or sound kit you want next! 🎲`;
+    ytEl.value = `🚀 ${title.toUpperCase()} is LIVE!\n\n${desc}\n\n⚡ Test it out free: ${link}\n🎧 Studio Catalog: https://dangling-dice-studios.com/#catalog\n💬 Community Discord: https://discord.gg/uFYMQahNZz\n\n💬 QUESTION OF THE DROP: ${question} Drop your thoughts in the comments below! 👇`;
   }
 
-  // 3. Twitter / X Thread (Hook + Value in Tweet 1, Link in Tweet 2 to bypass algorithm suppression)
+  // 3. Twitter / X Thread (Hook in Tweet 1, Link in Reply Tweet to maximize algorithmic reach)
   const twEl = document.getElementById('twitterPreview');
   if (twEl) {
-    twEl.value = `[TWEET 1/2]\n${title} ⚡\n\n${desc.slice(0, 150)}...\n\n#beatmaker #flstudio #producer #audio\n\n---\n[TWEET 2/2 (Reply)]\nGrab the direct tool here (100% ad-free & private):\n${link}`;
+    twEl.value = `[TWEET 1/2]\n${title} ⚡\n\n${desc.slice(0, 160)}...\n\n💬 ${question}\n\n#danglingdice #buildinpublic #tools #creators\n\n---\n[TWEET 2/2 (Reply)]\nTry it free here (100% ad-free & private):\n${link}`;
   }
 
   // 4. Facebook (Groups & Pages - High Engagement with Emoji Highlights & Community Hook)
   const fbEl = document.getElementById('facebookPreview');
   if (fbEl) {
-    fbEl.value = `🚀 ${title} is officially live!\n\n${desc}\n\nWhat makes this different:\n⚡ 100% Ad-Free (Zero spam redirects or fake buttons)\n🎧 Studio Master 320kbps MP3 & 1080p MP4 quality\n🎹 Drag-and-drop straight into your DAW (FL Studio, Ableton, Premiere)\n🔒 100% In-Browser Privacy — zero activity logs\n\n👉 Test it out for free here: ${link}\n💬 Join our creator Discord: https://discord.gg/uFYMQahNZz\n\nWhat is your go-to software for sampling audio right now? Let us know below! 👇`;
+    fbEl.value = `🚀 ${title} is officially live!\n\n${desc}\n\nWhat makes this different:\n⚡ 100% Ad-Free (No spam redirects or paywalls)\n🔒 Zero data logging & privacy first\n🎯 Instant browser-based workflow\n\n👉 Test it out for free here: ${link}\n\n💬 Community Question: ${question} Let us know in the comments below! 👇`;
   }
 
-  // 5. Instagram (Reels, Carousels & Stories - Save CTA + Trending Producer Tags)
+  // 5. Instagram (Reels, Carousels & Stories - Save CTA + Trending Tags)
   const igEl = document.getElementById('instagramPreview');
   if (igEl) {
-    igEl.value = `Stop closing 5 scam tabs just to grab an audio sample 💀\n\n${desc}\n\nWe built a 100% ad-free, high-speed media converter for music producers and video creators:\n🎵 320kbps Studio Master MP3\n🎬 1080p Full HD MP4\n⚡ Drops straight into your Downloads folder\n\n👉 Tap the link in our bio to use it free: ${link}\n💾 Save this post for your next late-night studio session!\n\n#flstudio #musicproducer #beatmaker #producerlife #sampling #hiphopproducer #audiotools #beatstars #vstplugins #danglingbeats`;
+    igEl.value = `${title} 🚀\n\n${desc}\n\n⚡ 100% ad-free & privacy first\n💾 Save this post for your next session!\n👉 Link in bio: ${link}\n\n💬 Drop a comment: ${question}\n\n#flstudio #musicproducer #beatmaker #developer #webdev #indiedev #danglingdice`;
   }
 
-  // 6. TikTok (3-Second Visual Hook Script + Caption + Viral FYP Tags)
+  // 6. TikTok (3-Second Visual Hook Script + Caption + FYP Tags)
   const ttEl = document.getElementById('tiktokPreview');
   if (ttEl) {
-    ttEl.value = `[ON-SCREEN TEXT HOOK]\nPOV: You finally found a YouTube to MP3 converter that DOESN'T have virus popups 😭\n\n[CAPTION]\nFinally built this for my own FL Studio sessions. 320kbps audio, 1-click download, 100% ad-free ⚡ Link in bio!\n\n#producertok #flstudio #beatmaker #musicproducer #sampleflip #producerlife #flstudiotips #audiotools #fyp`;
+    ttEl.value = `[ON-SCREEN HOOK (0-3s)]\nPOV: When you finally find a studio tool that DOESN'T make you sign up or close 5 ad popups 😭\n\n[CAPTION]\n${desc.slice(0, 100)}... 100% free & ad-free! Link in bio ⚡\n\n${question}\n\n#producer #flstudio #webdev #indiedev #audiotools #fyp`;
   }
 
   // 7. Dev.to / Hashnode Technical Article
   const devtoEl = document.getElementById('devtoPreview');
   if (devtoEl) {
     devtoEl.value = `---
-title: Building ${title} — Clean Architecture & In-Browser Media Processing
+title: ${title}
 published: true
 tags: webdev, javascript, node, programming
 ---
 
-## The Problem
+## Overview
 ${desc}
 
-## How We Built It
-We engineered a clean monorepo architecture leveraging:
-- Express & Fastify sub-15ms compute engines
-- Node.js & FFmpeg 320kbps audio extraction pipeline
-- Zero server-side activity logs to guarantee user privacy
+## Why We Built This
+Most legacy tools in this space are clogged with invasive advertisements, paywalls, and heavy tracking scripts. We built this with a sub-15ms clean architecture, zero dependencies on predatory ad-tech, and direct browser performance.
 
-Try it live here: ${link}
+Live demo: ${link}
 
-Would love your architectural feedback or feature requests in the comments!`;
+## Discussion
+${question}`;
   }
 
   // 8. GitHub Public-APIs Pull Request Formatter
@@ -847,6 +983,8 @@ window.handleEditSubmit = handleEditSubmit;
 window.handleDelete = handleDelete;
 window.dispatchDiscordBroadcast = dispatchDiscordBroadcast;
 window.generateAllOmnipostFormats = generateAllOmnipostFormats;
+window.applyOmnipostPreset = applyOmnipostPreset;
+window.generateFromSmartPrompt = generateFromSmartPrompt;
 window.copyOmnipost = copyOmnipost;
 window.openProductHuntModal = openProductHuntModal;
 window.closeProductHuntModal = closeProductHuntModal;

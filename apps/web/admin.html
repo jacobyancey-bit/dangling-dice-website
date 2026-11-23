@@ -139,6 +139,56 @@
           Compose your studio update once. Broadcast directly to your connected Discord channel with 1 click, or instantly copy tailored formats for Reddit, YouTube Community, and Twitter/X with zero third-party software.
         </p>
 
+        <!-- Section A: 1-Click Studio Quick Presets -->
+        <div style="margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.4rem;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #fbbf24;">⚡ 1-Click Studio Presets (Instant Fill):</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Click any hub to populate all fields &amp; response hooks instantly</div>
+          </div>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('beats')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(236,72,153,0.4); color: #f472b6;">
+              🎛️ Beats Studio DAW
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('media')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(59,130,246,0.4); color: #60a5fa;">
+              🎵 320k Media Transcoder
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('games')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(16,185,129,0.4); color: #10b981;">
+              🎯 Gaming Audio Radar
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('dev')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(6,182,212,0.4); color: var(--neon-cyan);">
+              💻 Dev Hub Sandboxes
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('calculator')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(245,158,11,0.4); color: #fbbf24;">
+              📱 AI Calculator (Play Store)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('gear_jbl')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(239,68,68,0.4); color: #f87171;">
+              🎧 JBL 680NC Gear Deal
+            </button>
+          </div>
+        </div>
+
+        <!-- Section B: Smart 1-Box Prompt Generator (Just say what you want!) -->
+        <div style="margin-bottom: 1.25rem; padding: 1rem 1.15rem; background: linear-gradient(135deg, rgba(168, 85, 247, 0.09), rgba(6, 182, 212, 0.09)); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: var(--radius-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.4rem;">
+            <div style="font-size: 0.82rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
+              <span>✨</span> Smart Prompt Generator &bull; Just Say What You Want
+            </div>
+            <span class="pill-tag pill-tag-purple" style="font-size: 0.68rem;">Auto-generates high-response hooks &amp; questions</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
+            <input type="text" id="smartPromptText" class="form-input" style="font-size: 0.82rem; padding: 0.55rem 0.75rem;" placeholder="What do you want to announce? (e.g. 'Added 16-pad drum machine with MIDI export and free lo-fi kit')" />
+            <input type="url" id="smartPromptLink" class="form-input" style="font-size: 0.82rem; padding: 0.55rem 0.75rem;" placeholder="Optional URL (or leave blank to auto-detect)" />
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="font-size: 0.72rem; color: var(--text-muted);">
+              💡 <em>Automatically generates interactive questions at the end of posts to get comments &amp; replies!</em>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="generateFromSmartPrompt()" style="background: linear-gradient(135deg, #a855f7, #06b6d4); color: #000; font-weight: 800; padding: 0.45rem 1.1rem;">
+              ✨ Generate Omnipost Magic
+            </button>
+          </div>
+        </div>
+
         <!-- Composer Form -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group" style="margin-bottom: 0;">
