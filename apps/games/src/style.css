@@ -2,6 +2,8 @@
  * Dangling Dice Gaming Lab™ — Core Stylesheet
  */
 
+@import "./studio-rail.css";
+
 :root {
   --bg-dark: #07090e;
   --bg-card: rgba(15, 23, 42, 0.85);
