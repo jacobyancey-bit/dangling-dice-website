@@ -131,7 +131,7 @@ const PARTNER_DIRECTORY = {
   // --------------------------------------------------------------------------
   'gear-truthear-red': {
     name: 'Truthear x Crinacle Zero:RED Dual Dynamic IEM',
-    targetUrl: 'https://www.amazon.com/s?k=Truthear+x+Crinacle+Zero+RED',
+    targetUrl: 'https://www.amazon.com/s?k=Truthear+x+Crinacle+Zero%3ARED+IEM&crid=14KHKJ232ZCEF&sprefix=truthear+x+crinacle+zero+red+iem%2Caps%2C294&linkCode=ll2&tag=danglingdices-20&linkId=ef3e55cb575a391445a263aad1746b80&language=en_US&ref_=as_li_ss_tl',
     category: 'Gaming Gear & Accessories',
     description: 'Dual dynamic driver in-ear monitors calibrated for competitive audio separation and footstep clarity.',
     perkBadge: 'Studio Footstep King',
