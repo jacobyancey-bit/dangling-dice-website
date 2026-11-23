@@ -31,6 +31,6 @@
   <text x="620" y="218" font-family="monospace" font-size="15" fill="#94a3b8" text-anchor="middle">MongoDB • SQL</text>
 
   <text x="400" y="84" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="800" fill="#f8fafc" text-anchor="middle" letter-spacing="1.5">DANGLING DICE CODING MASTERCLASS</text>
-  <rect x="170" y="335" width="460" height="52" rx="26" fill="#0f172a" stroke="url(#cyanBlue)" stroke-width="2"/>
-  <text x="400" y="368" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#38bdf8" text-anchor="middle" letter-spacing="1">FULL-STACK ARCHITECTURE &amp; OPEN SOURCE</text>
+  <rect x="90" y="335" width="620" height="54" rx="27" fill="#0f172a" stroke="url(#cyanBlue)" stroke-width="2.5"/>
+  <text x="400" y="369" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" fill="#38bdf8" text-anchor="middle" letter-spacing="1.2">FULL-STACK ARCHITECTURE &amp; OPEN SOURCE</text>
 </svg>

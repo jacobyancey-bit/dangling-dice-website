@@ -24,6 +24,6 @@
   <text x="140" y="212" font-family="monospace" font-size="18" fill="#67e8f9">"engine": <tspan fill="#fbbf24">"Dangling Dice Stateless Compute"</tspan>,</text>
   <text x="140" y="246" font-family="monospace" font-size="18" fill="#67e8f9">"endpoints": <tspan fill="#f472b6">21</tspan>, "latency": <tspan fill="#10b981">"4.2ms"</tspan></text>
   <text x="140" y="280" font-family="monospace" font-size="18" fill="#67e8f9">"hub": <tspan fill="#fef08a">"RapidAPI &amp; Postman Verified"</tspan></text>
-  <rect x="170" y="352" width="460" height="50" rx="25" fill="#111a2e" stroke="#fbbf24" stroke-width="2"/>
-  <text x="400" y="383" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#fbbf24" text-anchor="middle" letter-spacing="1.5">21 REST ENDPOINTS &amp; 13 SANDBOXES</text>
+  <rect x="120" y="352" width="560" height="50" rx="25" fill="#111a2e" stroke="#fbbf24" stroke-width="2"/>
+  <text x="400" y="383" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800" fill="#fbbf24" text-anchor="middle" letter-spacing="1.2">21 REST ENDPOINTS &amp; 13 SANDBOXES</text>
 </svg>

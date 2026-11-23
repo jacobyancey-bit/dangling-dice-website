@@ -34,7 +34,7 @@
     <rect x="480" y="25" width="16" height="110" rx="8"/>
     <rect x="512" y="55" width="16" height="50" rx="8"/>
   </g>
-  <rect x="160" y="340" width="480" height="54" rx="27" fill="#131b2e" stroke="#ec4899" stroke-width="2"/>
-  <text x="400" y="374" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="800" fill="#f8fafc" text-anchor="middle" letter-spacing="1">320KBPS MP3 &amp; 1080P MP4 CONVERTER</text>
+  <rect x="120" y="340" width="560" height="54" rx="27" fill="#131b2e" stroke="#ec4899" stroke-width="2"/>
+  <text x="400" y="374" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="800" fill="#f8fafc" text-anchor="middle" letter-spacing="1">320KBPS MP3 &amp; 1080P MP4 CONVERTER</text>
   <text x="400" y="88" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="800" fill="#f472b6" text-anchor="middle" letter-spacing="2">DANGLING DICE MEDIA STUDIO</text>
 </svg>
