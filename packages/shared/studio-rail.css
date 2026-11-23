@@ -395,3 +395,107 @@ body.has-studio-rail .my-stash-drawer {
     border-radius: 4px 4px 0 0;
   }
 }
+
+/* ============================================================================
+   3. Streamlined Header & Prominent Left Brand Typography
+   Removes redundant top navbar links (now elegantly housed in the studio rail)
+   and elevates the left brand icon and typography with prominent sizing.
+   ============================================================================ */
+header {
+  padding: 0.95rem 2rem !important;
+  min-height: 84px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+header .nav-container,
+header .gaming-header-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+header .nav-links {
+  display: none !important;
+}
+
+.brand {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 1.25rem !important;
+  text-decoration: none !important;
+}
+
+/* Prominent Brand Logo Icon */
+.brand img,
+.brand .brand-logo-img {
+  width: 78px !important;
+  height: 78px !important;
+  min-width: 78px !important;
+  max-height: 78px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.35)) !important;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s ease !important;
+}
+
+.brand:hover img,
+.brand:hover .brand-logo-img {
+  transform: scale(1.08) rotate(-2deg) !important;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 24px rgba(236, 72, 153, 0.5)) !important;
+}
+
+/* Bold, Impactful Brand Title */
+.brand .brand-title,
+.brand .brand-text h1,
+.brand h1 {
+  font-size: 1.85rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+}
+
+/* Clear, Legible Tagline Subtitle */
+.brand .brand-tagline,
+.brand .brand-text p,
+.brand p {
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  margin: 0.25rem 0 0 0 !important;
+  opacity: 0.85 !important;
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 0.75rem 1rem !important;
+    min-height: 64px !important;
+  }
+
+  .brand {
+    gap: 0.85rem !important;
+  }
+
+  .brand img,
+  .brand .brand-logo-img {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    max-height: 52px !important;
+  }
+
+  .brand .brand-title,
+  .brand .brand-text h1,
+  .brand h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .brand .brand-tagline,
+  .brand .brand-text p,
+  .brand p {
+    font-size: 0.76rem !important;
+  }
+}
+
