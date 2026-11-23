@@ -1558,6 +1558,19 @@ sg.EffectsQuality=0`,
 
 export const ACCESSORIES_CATALOG = [
   {
+    id: 'headphones-jbl-680nc',
+    title: 'JBL Tune 680NC Adaptive Noise Cancelling Headphones',
+    category: 'audio',
+    categoryLabel: '🎧 Studio & Gaming Audio',
+    tag: '🔋 70-Hr Battery • Adaptive ANC',
+    price: '$129.95',
+    rating: '4.9 ★',
+    desc: 'Wireless adaptive active noise cancelling with signature JBL Pure Bass sound. Eliminates room distraction for studio beatmaking, late-night code sessions, and spatial audio in FPS shooters.',
+    specs: 'Adaptive Noise Cancelling • Up to 70 Hours Battery • Speed Charge (5m = 3h) • Multi-Point Bluetooth 5.3',
+    link: '/go/gear-jbl-680nc',
+    icon: '🎧',
+  },
+  {
     id: 'iem-truthear-zero',
     title: 'Truthear x Crinacle Zero:RED (Dual Dynamic Driver)',
     category: 'audio',

@@ -192,6 +192,33 @@ const PARTNER_DIRECTORY = {
     icon: '🖱️',
     featured: true,
   },
+  'gear-jbl-680nc': {
+    name: 'JBL Tune 680NC Adaptive Noise Cancelling Headphones',
+    targetUrl: 'https://amzn.to/3VDJ7RD',
+    category: 'Audio Gear & Studio Monitors',
+    description: 'Wireless adaptive active noise cancelling headphones with JBL Pure Bass sound, dual beamforming mics, and up to 70 hours of battery life.',
+    perkBadge: 'Adaptive ANC & 70H Battery',
+    icon: '🎧',
+    featured: true,
+  },
+  'gear-jbl-tune-680nc': {
+    name: 'JBL Tune 680NC Adaptive Noise Cancelling Headphones',
+    targetUrl: 'https://amzn.to/3VDJ7RD',
+    category: 'Audio Gear & Studio Monitors',
+    description: 'Wireless adaptive active noise cancelling headphones with JBL Pure Bass sound, dual beamforming mics, and up to 70 hours of battery life.',
+    perkBadge: 'Adaptive ANC & 70H Battery',
+    icon: '🎧',
+    featured: true,
+  },
+  'jbl-680nc': {
+    name: 'JBL Tune 680NC Adaptive Noise Cancelling Headphones',
+    targetUrl: 'https://amzn.to/3VDJ7RD',
+    category: 'Audio Gear & Studio Monitors',
+    description: 'Wireless adaptive active noise cancelling headphones with JBL Pure Bass sound, dual beamforming mics, and up to 70 hours of battery life.',
+    perkBadge: 'Adaptive ANC & 70H Battery',
+    icon: '🎧',
+    featured: true,
+  },
 };
 
 /**
@@ -220,9 +247,9 @@ export const redirectPartner = (req, res) => {
   target.searchParams.set('utm_medium', 'affiliate');
   target.searchParams.set('utm_campaign', cleanSource);
 
-  // Attach Amazon Associate Tracking Tag (Default: danglingdice-20)
-  const amazonTag = process.env.AMAZON_ASSOCIATE_TAG || process.env.AMAZON_AFFILIATE_TAG || 'danglingdice-20';
-  if (target.hostname.includes('amazon.') && amazonTag) {
+  // Attach Amazon Associate Tracking Tag (Default: danglingdices-20)
+  const amazonTag = process.env.AMAZON_ASSOCIATE_TAG || process.env.AMAZON_AFFILIATE_TAG || 'danglingdices-20';
+  if ((target.hostname.includes('amazon.') || target.hostname.includes('amzn.to')) && amazonTag && !target.searchParams.has('tag')) {
     target.searchParams.set('tag', amazonTag);
   }
 

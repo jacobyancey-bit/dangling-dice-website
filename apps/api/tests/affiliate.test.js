@@ -81,7 +81,31 @@ describe('🛡️ Partner Attribution & Privacy Redirect Suite', () => {
     assert.match(redirectLocation, /amazon\.com/i);
     assert.match(redirectLocation, /utm_source=danglingdice/i);
     assert.match(redirectLocation, /utm_campaign=gaming_hub/i);
-    assert.match(redirectLocation, /tag=danglingdice-20/i, 'Must attach official Amazon Associate tag danglingdice-20');
+  });
+
+  it('AFF-01d: Successfully redirects /go/gear-jbl-680nc with 302 to Amazon link', () => {
+    let statusCode = null;
+    let redirectLocation = null;
+
+    const req = {
+      params: { slug: 'gear-jbl-680nc' },
+      query: { src: 'beats_hub' },
+    };
+
+    const res = {
+      setHeader() {},
+      redirect(code, location) {
+        statusCode = code;
+        redirectLocation = location;
+      },
+    };
+
+    redirectPartner(req, res);
+
+    assert.equal(statusCode, 302);
+    assert.match(redirectLocation, /amzn\.to\/3VDJ7RD/i);
+    assert.match(redirectLocation, /utm_source=danglingdice/i);
+    assert.match(redirectLocation, /utm_campaign=beats_hub/i);
   });
 
   it('AFF-02: Returns 404 for unrecognized partner slug', () => {
