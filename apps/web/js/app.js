@@ -2041,4 +2041,26 @@ window.addEventListener("DOMContentLoaded", async () => {
   await fetchResources();
   await fetchTechStack();
   await fetchDevShowcase();
+
+  // Smooth-scroll on hash or click
+  if (window.location.hash) {
+    const targetEl = document.querySelector(window.location.hash);
+    if (targetEl) {
+      setTimeout(() => targetEl.scrollIntoView({ behavior: "smooth", block: "start" }), 180);
+    }
+  }
+
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
+      const href = this.getAttribute("href");
+      if (href && href.length > 1) {
+        const el = document.querySelector(href);
+        if (el) {
+          e.preventDefault();
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          try { history.pushState(null, null, href); } catch (err) {}
+        }
+      }
+    });
+  });
 });
