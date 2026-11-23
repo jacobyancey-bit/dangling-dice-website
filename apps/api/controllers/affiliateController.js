@@ -140,7 +140,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-tangzu-waner': {
     name: 'Tangzu Wan’er S.G Studio Gaming IEM',
-    targetUrl: 'https://www.amazon.com/s?k=Tangzu+Waner+S.G+IEM',
+    targetUrl: 'https://link.amazon/B0i9Qcu4g',
     category: 'Gaming Gear & Accessories',
     description: 'Sub-$25 budget-champion in-ear monitors with pinpoint spatial imaging for CS2, Valorant, and Apex.',
     perkBadge: 'Sub-$25 Budget Champion',
@@ -149,7 +149,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-vader-4-pro': {
     name: 'Flydigi Vader 4 Pro Controller (Hall Effect)',
-    targetUrl: 'https://www.amazon.com/s?k=Flydigi+Vader+4+Pro',
+    targetUrl: 'https://link.amazon/B053ySo5d',
     category: 'Gaming Gear & Accessories',
     description: 'Hall-Effect anti-drift controller with adjustable thumbstick tension rings and 1000Hz polling rate.',
     perkBadge: 'Anti-Drift Hall Effect',
@@ -158,7 +158,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-dualsense-edge': {
     name: 'PlayStation DualSense Edge Wireless Controller',
-    targetUrl: 'https://www.amazon.com/s?k=PlayStation+DualSense+Edge+Wireless+Controller',
+    targetUrl: 'https://link.amazon/B034CXVo5',
     category: 'Gaming Gear & Accessories',
     description: 'Official Sony pro controller with swappable analog stick modules, trigger stop locks, and back paddles.',
     perkBadge: 'Official Pro Controller',
@@ -167,7 +167,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-kontrolfreek-galaxy': {
     name: 'KontrolFreek FPS Freek Galaxy Thumbstick Risers',
-    targetUrl: 'https://www.amazon.com/s?k=KontrolFreek+FPS+Freek+Galaxy',
+    targetUrl: 'https://link.amazon/B08fUcWSM',
     category: 'Gaming Gear & Accessories',
     description: 'Mixed-height thumbstick risers adding +120% range of motion for micro-adjustments in FPS shooters.',
     perkBadge: 'Precision Aim Mod',
@@ -176,7 +176,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-rapid-trigger-kb': {
     name: 'Wooting 60HE+ / DrunkDeer Rapid-Trigger Keyboard',
-    targetUrl: 'https://www.amazon.com/s?k=DrunkDeer+A75+Rapid+Trigger+Keyboard',
+    targetUrl: 'https://link.amazon/B02vEAd0w',
     category: 'Gaming Gear & Accessories',
     description: 'Magnetic Hall-Effect analog switches with 0.1mm rapid trigger for instant counter-strafing.',
     perkBadge: '0.1mm Rapid Trigger',
@@ -185,7 +185,7 @@ const PARTNER_DIRECTORY = {
   },
   'gear-viper-v3-pro': {
     name: 'Razer Viper V3 Pro Ultra-Lightweight 8000Hz Mouse',
-    targetUrl: 'https://www.amazon.com/s?k=Razer+Viper+V3+Pro',
+    targetUrl: 'https://link.amazon/B09tq1G0F',
     category: 'Gaming Gear & Accessories',
     description: '54-gram ultra-lightweight esports mouse with genuine 8000Hz polling rate and optical Gen-3 switches.',
     perkBadge: '54g Pro Esports Mouse',
@@ -256,6 +256,12 @@ export const redirectPartner = (req, res) => {
   // Set privacy and security headers
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Cache-Control', 'no-store, max-age=0');
+
+  // Handle Amazon AppLink domains (link.amazon) that reject extra URL query params
+  if (target.hostname.includes('link.amazon')) {
+    console.log(`[Affiliate Redirect] partner=${slug} src=${cleanSource} (direct link.amazon)`);
+    return res.redirect(302, partner.targetUrl);
+  }
 
   // Anonymous metric logging (zero personal information recorded)
   console.log(`[Affiliate Redirect] partner=${slug} src=${cleanSource} time=${new Date().toISOString()}`);
