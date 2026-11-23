@@ -446,25 +446,34 @@ header .nav-links {
   min-width: 78px !important;
   max-height: 78px !important;
   object-fit: contain !important;
-  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.35)) !important;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s ease !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25)) !important;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .brand:hover img,
 .brand:hover .brand-logo-img {
-  transform: scale(1.08) rotate(-2deg) !important;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 24px rgba(236, 72, 153, 0.5)) !important;
+  transform: scale(1.06) rotate(-2deg) !important;
 }
 
-/* Bold, Impactful Brand Title */
+/* Bold, Impactful Brand Title — 100% Solid Visible White (Zero Darkness / Zero Text-Clip Glitch) */
 .brand .brand-title,
 .brand .brand-text h1,
-.brand h1 {
+.brand h1,
+.brand .brand-name-colored {
   font-size: 1.85rem !important;
   font-weight: 850 !important;
-  letter-spacing: -0.025em !important;
-  line-height: 1.15 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.25 !important;
   margin: 0 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  filter: none !important;
+  display: block !important;
 }
 
 /* Clear, Legible Tagline Subtitle */
@@ -476,7 +485,12 @@ header .nav-links {
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
   margin: 0.25rem 0 0 0 !important;
-  opacity: 0.85 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  opacity: 1 !important;
 }
 
 @media (max-width: 768px) {

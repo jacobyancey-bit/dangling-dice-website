@@ -126,13 +126,14 @@ body::before {
 }
 
 .brand-name-colored {
-  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 30%, #f43f5e 70%, #fbbf24 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 12px rgba(56, 189, 248, 0.35));
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  filter: none;
   font-weight: 900;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.015em;
 }
 
 .brand-tag-gaming {
