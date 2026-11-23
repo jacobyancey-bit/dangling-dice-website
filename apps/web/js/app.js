@@ -146,8 +146,9 @@ window.filterCategory = function (cat) {
       (cat === "All" && text.includes("All")) ||
       (cat === "Coding Tutorials" && text.includes("Coding")) ||
       (cat === "Beats & Audio" && text.includes("Beats")) ||
-      (cat === "Mobile Apps" && text.includes("Mobile Apps")) ||
-      (cat === "Developer Tools" && text.includes("Dev Tools"));
+      (cat === "Mobile Apps" && text.includes("Mobile")) ||
+      (cat === "Studio Games" && text.includes("Games")) ||
+      (cat === "Developer Tools" && (text.includes("Dev Tools") || text.includes("Web Apps")));
     btn.classList.toggle("active", matches);
   });
   renderCatalog();
@@ -315,9 +316,15 @@ function renderCatalog() {
       let actionButtons = "";
 
       if (item.isTool) {
+        const isGithub = targetUrl.includes("github.com");
+        const actionLabel = isInternalAnchor
+          ? "Explore Sandboxes ⚡"
+          : isGithub
+            ? "View on GitHub ↗"
+            : "Launch Web App ↗";
         actionButtons = `
-        <a href="${escapeHtml(targetUrl)}" onclick="event.stopPropagation();" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn btn-primary btn-sm" style="min-width: 152px;">
-          ${isInternalAnchor ? "Explore Sandboxes ⚡" : "Launch Web App ↗"}
+        <a href="${escapeHtml(targetUrl)}" onclick="event.stopPropagation();" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn ${isGithub ? "btn-secondary" : "btn-primary"} btn-sm" style="min-width: 152px;">
+          ${actionLabel}
         </a>
       `;
       } else if (ytEmbed) {
