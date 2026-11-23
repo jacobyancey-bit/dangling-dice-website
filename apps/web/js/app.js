@@ -1819,72 +1819,14 @@ function playSamplerGrooveDemo() {
   }, stepMs);
 }
 
-// 4. Instant 1-Click Free Studio Sample Kit (.WAV Generator)
+// 4. Instant 1-Click Free Studio Sample Kit (.WAV & .ZIP Download)
 function downloadFreeSampleKit() {
-  const ctx = getMiniSynthContext();
-  if (!ctx) return;
+  window.showToast("🎁 Downloading Free Studio Sound Kit (.WAV) — 8-Bar Lo-Fi Master (85 BPM)...", "info");
 
-  window.showToast("Synthesizing 100% royalty-free Lo-Fi Sound Kit...", "info");
-
-  // Render a clean 16-bit PCM WAV directly in browser
-  const sampleRate = 44100;
-  const durationSec = 1.2;
-  const numFrames = Math.floor(sampleRate * durationSec);
-  const audioBuffer = ctx.createBuffer(1, numFrames, sampleRate);
-  const channelData = audioBuffer.getChannelData(0);
-
-  // Synthesize a punchy 808 sub + warm chord transient into this WAV
-  for (let i = 0; i < numFrames; i++) {
-    const t = i / sampleRate;
-    const kickFreq = 140 * Math.exp(-t * 22) + 42;
-    const kickEnv = Math.exp(-t * 7);
-    const kickSample = Math.sin(2 * Math.PI * kickFreq * t) * kickEnv * 0.7;
-
-    const chordT = Math.exp(-t * 3.5);
-    const chordSample =
-      (Math.sin(2 * Math.PI * 146.83 * t) +
-        Math.sin(2 * Math.PI * 174.61 * t) +
-        Math.sin(2 * Math.PI * 220.0 * t) +
-        Math.sin(2 * Math.PI * 261.63 * t) +
-        Math.sin(2 * Math.PI * 329.63 * t)) *
-      0.08 *
-      chordT;
-
-    channelData[i] = Math.max(-1, Math.min(1, kickSample + chordSample));
-  }
-
-  // RIFF WAV Header creation
-  const buffer = new ArrayBuffer(44 + numFrames * 2);
-  const view = new DataView(buffer);
-  const writeStr = (offset, str) => {
-    for (let j = 0; j < str.length; j++) view.setUint8(offset + j, str.charCodeAt(j));
-  };
-
-  writeStr(0, "RIFF");
-  view.setUint32(4, 36 + numFrames * 2, true);
-  writeStr(8, "WAVE");
-  writeStr(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // Mono
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeStr(36, "data");
-  view.setUint32(40, numFrames * 2, true);
-
-  let offset = 44;
-  for (let i = 0; i < numFrames; i++, offset += 2) {
-    const s = Math.max(-1, Math.min(1, channelData[i]));
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-
-  const blob = new Blob([buffer], { type: "audio/wav" });
-  const blobUrl = URL.createObjectURL(blob);
+  const wavUrl = "/downloads/dangling-dice-studio-sound-kit.wav";
   const tempLink = document.createElement("a");
-  tempLink.href = blobUrl;
-  tempLink.download = "Dangling_Dice_Studio_LoFi_Starter_Kit.wav";
+  tempLink.href = wavUrl;
+  tempLink.download = "Dangling_Dice_Studio_LoFi_Kit_85BPM.wav";
   document.body.appendChild(tempLink);
   tempLink.click();
   setTimeout(() => tempLink.remove(), 2000);
@@ -1892,13 +1834,13 @@ function downloadFreeSampleKit() {
   addToStash({
     id: Date.now(),
     type: "Sound Kit",
-    title: "Dangling Dice Studio Lo-Fi Starter Kit (.WAV)",
-    format: "16-BIT 44.1KHZ",
-    url: blobUrl,
+    title: "Dangling Dice Studio 8-Bar Lo-Fi Kit (85 BPM .WAV)",
+    format: "16-BIT 44.1KHZ PCM MASTER",
+    url: wavUrl,
     timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   });
 
-  window.showToast("🎁 Free Studio Sound Kit saved to your Downloads & My Stash!", "success");
+  window.showToast("✅ Full 8-Bar Studio Sound Kit (.WAV) saved to Downloads & My Stash!", "success");
 }
 
 // 5. Quick Compute Test
