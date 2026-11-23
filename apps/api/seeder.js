@@ -71,7 +71,7 @@ const seedData = async () => {
         title: 'Dangling Dice Central REST API & 13 Developer Sandboxes',
         description: '21 production REST API endpoints and 13 interactive browser sandboxes covering JSON-to-Zod schema inference, GIS polygon acreage math, Luhn PII redaction, and financial amortization.',
         category: 'Developer Tools',
-        mediaUrl: 'https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api',
+        mediaUrl: 'https://rapidapi.com/user/JacobYancey-zSna1bjQ-',
         imageUrl: '/images/thumb_compute_api.svg',
         tags: ['REST API', 'RapidAPI', 'TypeScript', 'Sandboxes', 'DevTools'],
         price: 0,

@@ -100,7 +100,7 @@ const PARTNER_DIRECTORY = {
   },
   rapidapi: {
     name: 'Dangling Dice API on RapidAPI',
-    targetUrl: 'https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api',
+    targetUrl: 'https://rapidapi.com/user/JacobYancey-zSna1bjQ-',
     category: 'Developer Tools',
     description: 'Official developer REST API for audio/video conversion and studio catalog. Free tier with 100 requests/mo.',
     perkBadge: '100 Free Monthly Pulls',

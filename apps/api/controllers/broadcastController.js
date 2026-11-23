@@ -57,7 +57,7 @@ export async function executeDiscordBroadcast({ title, description, link, catego
           },
           {
             name: '⚡ Developer API',
-            value: '[RapidAPI Hub](https://rapidapi.com/jacob-yancey-z5na1bjQ/api/dangling-dice-studios-central-api)',
+            value: '[RapidAPI Hub](https://rapidapi.com/user/JacobYancey-zSna1bjQ-)',
             inline: true
           }
         ],
