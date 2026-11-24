@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutor Calculator — Step-by-Step Math Solver, Photo Scanner &amp; Graphing Calculator</title>
+  <meta name="description" content="Tutor Calculator is an Android scientific calculator, graphing tool, and step-by-step math tutor. Type or scan any math problem to learn every step clearly." />
+  <link rel="canonical" href="https://dangling-dice-studios.com/tutor-calculator/" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0A1628" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://dangling-dice-studios.com/tutor-calculator/" />
+  <meta property="og:title" content="Tutor Calculator — Step-by-Step Math Solver &amp; Scientific Calculator" />
+  <meta property="og:description" content="Snap a photo or type any math problem for clear, step-by-step explanations. Includes scientific &amp; graphing calculators, unit converter, and PDF study sheets." />
+  <meta property="og:image" content="https://dangling-dice-studios.com/tutor-calculator/icon.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tutor Calculator — Step-by-Step Math Solver &amp; Graphing Calculator" />
+  <meta name="twitter:description" content="Snap a photo or type any math problem to see clear, step-by-step solutions." />
+  <meta name="twitter:image" content="https://dangling-dice-studios.com/tutor-calculator/icon.png" />
+
+  <link rel="icon" type="image/png" href="/tutor-calculator/icon.png" />
+
+  <!-- Structured Data: SoftwareApplication + FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Tutor Calculator",
+        "operatingSystem": "ANDROID",
+        "applicationCategory": "EducationalApplication",
+        "url": "https://dangling-dice-studios.com/tutor-calculator/",
+        "downloadUrl": "https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator",
+        "image": "https://dangling-dice-studios.com/tutor-calculator/icon.png",
+        "description": "Step-by-step math tutor, camera photo math scanner, scientific and graphing calculator, and unit & currency converter.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Dangling Dice Studios",
+          "url": "https://dangling-dice-studios.com/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is Tutor Calculator free to use?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. You can use the calculator and free daily step-by-step explanations with no account required. Upgrade to Pro anytime for unlimited explanations, no ads, custom graphing, unit & currency conversion, and PDF study sheet exports."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can Tutor Calculator scan handwritten math problems?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Use the built-in live camera scanner or upload a photo from your gallery to scan printed or handwritten algebra, arithmetic, geometry, and calculus problems."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Are my uploaded math photos kept private?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Uploaded problem photos are processed securely and temporarily only to generate your step-by-step explanation, and are never used for advertising or model training."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #070d1a;
+      --surface: #0f1b33;
+      --border: rgba(59, 130, 246, 0.25);
+      --blue: #2563eb;
+      --blue-bright: #3b82f6;
+      --gold: #f59e0b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: radial-gradient(circle at top center, #0f254a 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.05rem; }
+    .brand img { width: 38px; height: 38px; border-radius: 10px; }
+    .nav-links { display: flex; gap: 20px; font-size: 0.92rem; color: var(--muted); }
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      padding: 64px 0 48px;
+      text-align: center;
+    }
+    .hero-icon {
+      width: 112px;
+      height: 112px;
+      border-radius: 26px;
+      box-shadow: 0 18px 50px rgba(37, 99, 235, 0.45);
+      margin-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 18px;
+    }
+    .hero p {
+      max-width: 640px;
+      margin: 0 auto 30px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    .cta-group { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--blue-bright), var(--blue));
+      color: #fff;
+      font-weight: 700;
+      padding: 15px 28px;
+      border-radius: 14px;
+      font-size: 1rem;
+      box-shadow: 0 10px 28px rgba(37, 99, 235, 0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(37, 99, 235, 0.55); }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text);
+      font-weight: 600;
+      padding: 15px 24px;
+      border-radius: 14px;
+      font-size: 1rem;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    section { padding: 48px 0; }
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+    }
+    .card h3 { font-size: 1.1rem; margin-bottom: 8px; color: #fff; }
+    .card p { font-size: 0.95rem; color: var(--muted); }
+
+    .pro-box {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(37, 99, 235, 0.18));
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 22px;
+      padding: 36px 28px;
+      text-align: center;
+    }
+    .pro-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 24px auto 28px;
+      max-width: 760px;
+      text-align: left;
+    }
+    .pro-list li {
+      background: rgba(7, 13, 26, 0.55);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+    }
+
+    .faq { max-width: 760px; margin: 0 auto; display: grid; gap: 14px; }
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .faq-item h3 { font-size: 1.02rem; margin-bottom: 6px; }
+    .faq-item p { font-size: 0.94rem; color: var(--muted); }
+
+    footer {
+      margin-top: 40px;
+      padding: 28px 0 40px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    footer a { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a class="brand" href="/">
+        <img src="/tutor-calculator/icon.png" alt="Tutor Calculator icon" />
+        <span>Tutor Calculator</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#pro">Pro</a>
+        <a href="#faq">FAQ</a>
+        <a href="/">Dangling Dice Studios</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <img class="hero-icon" src="/tutor-calculator/icon.png" alt="Tutor Calculator App Icon" width="112" height="112" />
+        <div><span class="badge">Android App • Free to Start • No Account Needed</span></div>
+        <h1>Step-by-Step Math Tutor &amp; Scientific Calculator</h1>
+        <p>
+          Type a math problem or snap a photo to see clear, step-by-step explanations — not just the final answer.
+          Built for students, parents, and self-learners.
+        </p>
+        <div class="cta-group">
+          <a class="btn-primary" href="https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator" target="_blank" rel="noopener">
+            Get it on Google Play
+          </a>
+          <a class="btn-secondary" href="#features">Explore Features</a>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2>Everything You Need for Math Homework</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Step-by-Step Math Tutor</h3>
+            <p>Clear explanations for arithmetic, algebra, geometry, calculus, fractions, logarithms, and more — plus interactive Hint Mode.</p>
+          </article>
+          <article class="card">
+            <h3>Camera &amp; Photo Scanner</h3>
+            <p>Snap printed or handwritten math problems with the live camera scanner or pick an image from your gallery.</p>
+          </article>
+          <article class="card">
+            <h3>Scientific &amp; Graphing Calculators</h3>
+            <p>Solve equations, factorials, roots, and trig functions, or plot interactive graphs like parabolas and trig curves.</p>
+          </article>
+          <article class="card">
+            <h3>Unit &amp; Currency Converter</h3>
+            <p>Convert length, weight, temperature, volume, speed, time, data, energy, pressure, and live currencies in seconds.</p>
+          </article>
+          <article class="card">
+            <h3>PDF Study Sheets &amp; History</h3>
+            <p>Save your calculation and tutor history automatically, and export clean PDF study sheets to print or share.</p>
+          </article>
+          <article class="card">
+            <h3>Privacy-First by Design</h3>
+            <p>Start immediately with no account required. Uploaded photos are processed temporarily to solve your problem — never for ads or training.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="pro">
+        <div class="pro-box">
+          <h2>Upgrade to Tutor Calculator Pro</h2>
+          <p style="color: var(--muted); max-width: 600px; margin: 0 auto;">
+            Start free with daily explanations, or unlock the full toolkit with Pro:
+          </p>
+          <ul class="pro-list">
+            <li>✓ Unlimited step-by-step math solutions</li>
+            <li>✓ Ad-free scientific &amp; graphing modes</li>
+            <li>✓ Unit &amp; currency converter + custom themes</li>
+            <li>✓ Export solutions as PDF study sheets</li>
+          </ul>
+          <a class="btn-primary" href="https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator" target="_blank" rel="noopener">
+            Download Tutor Calculator on Google Play
+          </a>
+        </div>
+      </section>
+
+      <section id="faq">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq">
+          <div class="faq-item">
+            <h3>Is Tutor Calculator free?</h3>
+            <p>Yes! You can use the calculator and free daily step-by-step explanations at no cost with no sign-up required. Upgrade to Pro anytime for unlimited explanations, ad-free use, custom graphing, unit &amp; currency conversion, and PDF exports.</p>
+          </div>
+          <div class="faq-item">
+            <h3>Does it work with handwritten math problems?</h3>
+            <p>Yes. Use the live camera scanner or choose a photo from your gallery to scan both printed worksheets and neat handwritten problems.</p>
+          </div>
+          <div class="faq-item">
+            <h3>How is my privacy protected?</h3>
+            <p>Your math photos are only processed temporarily to generate your step-by-step explanation and are never used for advertising or AI training.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        © 2026 <a href="/">Dangling Dice Studios™</a> •
+        <a href="https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator" target="_blank" rel="noopener">Google Play</a> •
+        <a href="mailto:support.danglingdicestudios@gmail.com">Support</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
