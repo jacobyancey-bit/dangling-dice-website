@@ -43,13 +43,14 @@ async function handleAdminLogin(e) {
   clearAlert('loginAlert');
   const email = document.getElementById('adminEmail').value;
   const password = document.getElementById('adminPassword').value;
+  const turnstileToken = document.querySelector('#adminLoginForm [name="cf-turnstile-response"]')?.value || '';
 
   try {
     logAdmin(`Authenticating ${email}...`);
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, 'cf-turnstile-response': turnstileToken }),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message || 'Login failed');

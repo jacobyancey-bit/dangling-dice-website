@@ -18,6 +18,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="./src/style.css" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
   <!-- Open Graph / Social SEO -->
   <meta property="og:type" content="website" />
@@ -758,6 +759,8 @@
           <label class="form-label" for="appTags">Tech Stack Tags (Comma separated)</label>
           <input type="text" id="appTags" class="form-input" placeholder="TypeScript, React, Node.js" />
         </div>
+
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAGTLV_EVOrymGKEf" data-action="turnstile-spin-v2" style="margin-top: 1rem; margin-bottom: 0.5rem;"></div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
           <button type="button" id="cancelSubmitBtn" class="btn btn-secondary">Cancel</button>

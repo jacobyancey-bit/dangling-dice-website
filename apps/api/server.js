@@ -109,6 +109,7 @@ app.use(
           'https://dangling-dice-studios.com',
           'https://www.youtube.com',
           'https://www.youtube-nocookie.com',
+          'https://challenges.cloudflare.com',
         ],
         scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
@@ -125,6 +126,7 @@ app.use(
           'https://js.stripe.com',
           'https://*.dangling-dice-studios.com',
           'https://dangling-dice-studios.com',
+          'https://challenges.cloudflare.com',
         ],
         connectSrc: [
           "'self'",
@@ -137,6 +139,7 @@ app.use(
           'https://tonejs.github.io',
           'https://raw.githubusercontent.com',
           'https://cdn.jsdelivr.net',
+          'https://challenges.cloudflare.com',
         ],
         upgradeInsecureRequests: [],
       },

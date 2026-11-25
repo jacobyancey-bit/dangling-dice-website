@@ -6,6 +6,7 @@ import {
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
+import { requireTurnstile } from '../middleware/turnstile.js';
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.post('/register', authLimiter, registerUser);
  * @desc    Authenticate user credentials & return JWT
  * @access  Public (Protected by rate limiter)
  */
-router.post('/login', authLimiter, loginUser);
+router.post('/login', authLimiter, requireTurnstile, loginUser);
 
 /**
  * @route   GET /api/auth/profile

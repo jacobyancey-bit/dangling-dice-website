@@ -1440,6 +1440,7 @@ async function handleDevSubmission(e) {
         authorName,
         authorSocial,
         techStack,
+        "cf-turnstile-response": document.querySelector('#devSubmissionForm [name="cf-turnstile-response"]')?.value || '',
       }),
     });
 

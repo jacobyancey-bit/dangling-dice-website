@@ -11,12 +11,13 @@ import {
   forceRotateNow,
 } from '../controllers/showcaseController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
+import { requireTurnstile } from '../middleware/turnstile.js';
 
 const router = express.Router();
 
 // Public routes
 router.get('/', getPublicShowcase);
-router.post('/submit', submitDevProject);
+router.post(['/', '/submit'], requireTurnstile, submitDevProject);
 
 // Admin-only management routes
 router.get('/admin', protect, admin, getAdminShowcase);

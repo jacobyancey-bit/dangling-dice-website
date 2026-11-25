@@ -14,7 +14,7 @@ const DUMMY_SECRET = '1x0000000000000000000000000000000AA';
  * @param {string} remoteIp - Optional remote client IP address
  */
 export async function verifyTurnstileToken(token, remoteIp = null) {
-  const secretKey = process.env.TURNSTILE_SECRET_KEY || DUMMY_SECRET;
+  const secretKey = process.env.TURNSTILE_SECRET || process.env.TURNSTILE_SECRET_KEY || DUMMY_SECRET;
 
   // In test mode or when using official dummy pass token, pass immediately
   if (process.env.NODE_ENV === 'test' || token === 'XXXX.DUMMY.TOKEN.XXXX') {
@@ -49,8 +49,8 @@ export async function verifyTurnstileToken(token, remoteIp = null) {
  * Express middleware to guard critical endpoints against automated bots
  */
 export const requireTurnstile = async (req, res, next) => {
-  // If not in production or Turnstile is explicitly disabled, bypass
-  if (process.env.NODE_ENV === 'test' || !process.env.TURNSTILE_SECRET_KEY) {
+  // If not in production or Turnstile is explicitly disabled / unconfigured, bypass gracefully
+  if (process.env.NODE_ENV === 'test' || (!process.env.TURNSTILE_SECRET && !process.env.TURNSTILE_SECRET_KEY)) {
     return next();
   }
 

@@ -654,12 +654,22 @@ function setupModal() {
       const repoUrl = document.getElementById('appRepo').value.trim();
       const tagsStr = document.getElementById('appTags').value.trim();
       const tags = tagsStr ? tagsStr.split(',').map((t) => t.trim()).filter(Boolean) : [];
+      const turnstileToken = document.querySelector('#submitAppForm [name="cf-turnstile-response"]')?.value || '';
 
       try {
         const res = await fetch('/api/showcase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, author, description, category, url, repoUrl, tags }),
+          body: JSON.stringify({
+            title,
+            author,
+            description,
+            category,
+            url,
+            repoUrl,
+            tags,
+            'cf-turnstile-response': turnstileToken,
+          }),
         });
 
         if (res.ok) {
