@@ -61,6 +61,7 @@ const getHealthData = () => {
       orders: '/api/orders (GET customer purchases)',
       affiliates: '/api/affiliates (partner directory & privacy redirects)',
       media: '/api/media/convert (YouTube to MP3/MP4 extraction)',
+      compliance: '/api/compliance (zero-retention privacy & legal governance)',
     },
   };
 };
@@ -76,6 +77,36 @@ router.get('/health', (req, res) => {
 
 router.get('/status', (req, res) => {
   res.status(200).json(getHealthData());
+});
+
+/**
+ * Pillar 8: Zero-Retention Privacy, GDPR/CCPA Posture & DMCA Compliance Endpoint
+ */
+router.get('/compliance', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.status(200).json({
+    success: true,
+    studio: 'Dangling Dice Studios™',
+    version: '1.0.0',
+    compliance: {
+      zeroDataRetention: true,
+      cookieFreeAnalytics: true,
+      ipMasking: 'GDPR / CCPA compliant (IPv4 /24 subnet masking, IPv6 /48 masking)',
+      serverStorage: 'Ephemeral in-memory pipes (Zero local disk persistence for media transcoding streams)',
+      subprocessors: [
+        { name: 'Cloudflare', purpose: 'Edge CDN, DDoS protection, Turnstile bot shield, and Zero-Egress R2 Asset Storage' },
+        { name: 'Render', purpose: 'Stateless container hosting & API compute' },
+        { name: 'MongoDB Atlas', purpose: 'Persistent multi-region database (account & license records only)' },
+        { name: 'Stripe', purpose: 'PCI-DSS Level 1 certified payment processing' },
+      ],
+      dmcaNotice: {
+        policy: 'Format shifting & personal media transcoding under US Fair Use (17 U.S.C. § 107) and DMCA § 512 Safe Harbor',
+        designatedAgentEmail: 'support@dangling-dice-studios.com',
+      },
+      botShield: 'Cloudflare Turnstile privacy-first CAPTCHA alternative',
+    },
+    timestamp: new Date().toISOString(),
+  });
 });
 
 /**
