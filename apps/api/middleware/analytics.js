@@ -5,12 +5,15 @@
  */
 
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 import DailyAnalytics from '../models/DailyAnalytics.js';
 
 const startTime = new Date();
 
 const metrics = {
   totalRequests: 0,
+  totalDurationMs: 0,
+  avgResponseTimeMs: 0,
   startedAt: startTime.toISOString(),
   lastRequestAt: null,
   crawlers: {
@@ -211,10 +214,26 @@ function isNonApiTraffic(req) {
 }
 
 /**
- * Express middleware to track incoming requests
+ * Express middleware to track incoming requests, inject request correlation IDs,
+ * and track high-precision performance telemetry
  */
 export const analyticsMiddleware = (req, res, next) => {
   const start = performance.now();
+  const requestId = req.headers['x-request-id'] || `dds_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+  req.id = requestId;
+  res.setHeader('X-Request-Id', requestId);
+
+  // Hook writeHead to inject high-precision latency & W3C Server-Timing headers
+  const originalWriteHead = res.writeHead;
+  res.writeHead = function (...args) {
+    if (!res.headersSent) {
+      const elapsed = Math.round(performance.now() - start);
+      res.setHeader('X-Response-Time', `${elapsed}ms`);
+      res.setHeader('Server-Timing', `total;dur=${elapsed}`);
+    }
+    return originalWriteHead.apply(this, args);
+  };
+
   const rawUa = req.headers['user-agent'] || 'Unknown';
   const classification = classifyUserAgent(rawUa);
 
@@ -259,6 +278,8 @@ export const analyticsMiddleware = (req, res, next) => {
   // Track response completion
   res.on('finish', () => {
     const duration = Math.round(performance.now() - start);
+    metrics.totalDurationMs = (metrics.totalDurationMs || 0) + duration;
+    metrics.avgResponseTimeMs = Math.round(metrics.totalDurationMs / (metrics.totalRequests || 1));
     const code = res.statusCode;
     metrics.statusCodes[code] = (metrics.statusCodes[code] || 0) + 1;
 
@@ -296,6 +317,7 @@ export const getAnalyticsSummary = () => {
 
   return {
     totalRequests: metrics.totalRequests,
+    avgResponseTimeMs: metrics.avgResponseTimeMs || 0,
     uptimeSeconds,
     startedAt: metrics.startedAt,
     lastRequestAt: metrics.lastRequestAt,

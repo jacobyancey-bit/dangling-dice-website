@@ -1,3 +1,5 @@
+import { sendErrorAlert } from '../utils/alertManager.js';
+
 /**
  * Middleware to catch requests made to non-existent routes (404)
  */
@@ -40,9 +42,17 @@ export const errorHandler = (err, req, res, next) => {
       .join(', ');
   }
 
+  // SRE Sentinel: Dispatch automated Discord alert for unexpected 500 Internal Server Errors
+  if (statusCode >= 500) {
+    sendErrorAlert({ error: err, req });
+  }
+
+  const requestId = req.id || req.headers?.['x-request-id'];
+
   res.json({
     success: false,
     message,
+    ...(requestId ? { requestId } : {}),
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 };
