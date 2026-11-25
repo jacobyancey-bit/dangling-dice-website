@@ -44,6 +44,8 @@
     { "name": "Gaming & RNG", "description": "Provably fair cryptographic dice rolling and global high score leaderboards" },
     { "name": "Developer Utilities", "description": "OpenGraph link preview scraper, vector SVG QR codes, and URL shortener" },
     { "name": "API Key Management", "description": "Developer portal API key provisioning, rate limiting, and quota inspection" },
+    { "name": "Storage & Assets", "description": "Cloudflare R2 zero-egress presigned asset download redirection" },
+    { "name": "Compliance & Privacy", "description": "GDPR/CCPA compliance, zero-retention posture, and DMCA policy" },
     { "name": "Connected Ecosystem", "description": "DaaS stealth web scraper job dispatcher and Marketing Leviathan local AI generator" },
     { "name": "System & Telemetry", "description": "Real-time health diagnostics, database state, and request counters" }
   ],
@@ -821,6 +823,41 @@
         },
         "responses": {
           "200": { "description": "API Key token, rate limit, and quota information" }
+        }
+      }
+    },
+    "/api/compliance": {
+      "get": {
+        "operationId": "getComplianceStatus",
+        "tags": ["Compliance & Privacy"],
+        "summary": "Retrieve Studio Zero-Retention & GDPR Compliance Posture",
+        "description": "Returns verified real-time declarations for zero data retention, cookie-free analytics, GDPR/CCPA IP masking, and DMCA safe harbor governance.",
+        "responses": {
+          "200": {
+            "description": "Compliance status and active subprocessor declarations"
+          }
+        }
+      }
+    },
+    "/api/storage/download/{filename}": {
+      "get": {
+        "operationId": "downloadStorageAsset",
+        "tags": ["Storage & Assets"],
+        "summary": "Download Asset via Zero-Egress Cloudflare R2 Presigned Redirect",
+        "description": "Issues an HTTP 302 redirect directly to a Cloudflare R2 edge presigned URL, offloading 100% of egress bandwidth.",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "description": "Object key/filename in the R2 asset bucket",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "302": { "description": "Direct redirection to Cloudflare R2 edge presigned URL" },
+          "404": { "description": "Asset key not found in bucket" },
+          "503": { "description": "Cloudflare R2 storage credentials not configured" }
         }
       }
     }
