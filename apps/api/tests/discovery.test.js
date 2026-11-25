@@ -141,5 +141,38 @@ describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
     assert.strictEqual(primaryServer.url, 'https://api.dangling-dice-studios.com');
     assert.ok(primaryServer.description.includes('Dedicated API Gateway'));
   });
+
+  it('DISC-08: Staff UI feature flags lock all flags for public and allow staff with secret', async () => {
+    const apiModule = await import('../routes/api.js');
+    const router = apiModule.default;
+    const flagsLayer = router.stack.find((l) => l.route && l.route.path === '/ui/flags' && l.route.methods.get);
+    assert.ok(flagsLayer, 'Expected /ui/flags route on api router');
+
+    // Public request (no staff credentials)
+    let publicStatus = null;
+    let publicJson = null;
+    const mockPublicRes = {
+      status(c) { publicStatus = c; return this; },
+      json(data) { publicJson = data; return this; },
+    };
+    flagsLayer.route.stack[0].handle({ headers: {}, query: {} }, mockPublicRes);
+
+    assert.strictEqual(publicJson.success, true);
+    assert.strictEqual(publicJson.isStaff, false);
+    assert.strictEqual(publicJson.flags.commandPalette, false);
+    assert.strictEqual(publicJson.flags.sandboxRunner, false);
+
+    // Staff request (with staff secret)
+    let staffJson = null;
+    const mockStaffRes = {
+      json(data) { staffJson = data; return this; },
+    };
+    flagsLayer.route.stack[0].handle({ headers: { 'x-staff-token': 'dds_staff_2026' }, query: {} }, mockStaffRes);
+
+    assert.strictEqual(staffJson.success, true);
+    assert.strictEqual(staffJson.isStaff, true);
+    assert.strictEqual(staffJson.flags.commandPalette, true);
+    assert.strictEqual(staffJson.flags.sandboxRunner, true);
+  });
 });
 

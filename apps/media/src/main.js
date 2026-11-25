@@ -3,6 +3,8 @@
  * 1-Click Fast URL to MP3 Transcoder
  */
 
+import { initStaffCommandPalette } from '@dangling-dice/shared';
+
 // Universal PWA Service Worker Registration
 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
   window.addEventListener('load', () => {
@@ -565,3 +567,6 @@ function dismissBmcTip(isSupporter) {
 }
 
 window.dismissBmcTip = dismissBmcTip;
+
+// Initialize Hidden Staff Command Palette (Ctrl+K)
+initStaffCommandPalette();

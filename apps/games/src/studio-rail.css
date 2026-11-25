@@ -524,3 +524,209 @@ header .nav-links {
   }
 }
 
+/* ============================================================================
+   WCAG 2.1 AA Accessible Focus Rings & High-Contrast Motion Fallbacks
+   ============================================================================ */
+:focus-visible {
+  outline: 2px solid #06b6d4 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.45) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   Skeleton Shimmer Loaders (Asset & Waveform Placeholders)
+   ============================================================================ */
+@keyframes ddsShimmerAnim {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.dds-shimmer,
+.dds-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(6, 182, 212, 0.12) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: ddsShimmerAnim 1.6s infinite ease-in-out !important;
+  border-radius: 8px !important;
+}
+
+/* ============================================================================
+   Staff Command Palette (Ctrl+K / Cmd+K) — Hidden from Public Users
+   ============================================================================ */
+.dds-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 100000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 1rem 2rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dds-palette-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dds-palette-modal {
+  width: 100%;
+  max-width: 640px;
+  background: rgba(13, 18, 28, 0.96);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 35px rgba(6, 182, 212, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-12px) scale(0.98);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dds-palette-backdrop.open .dds-palette-modal {
+  transform: translateY(0) scale(1);
+}
+
+.dds-palette-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dds-palette-search-icon {
+  font-size: 1.25rem;
+  opacity: 0.85;
+}
+
+.dds-palette-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 1.05rem;
+  font-family: inherit;
+}
+
+.dds-palette-input::placeholder {
+  color: #64748b;
+}
+
+.dds-palette-esc {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-family: monospace;
+}
+
+.dds-palette-list {
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.dds-palette-group-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  padding: 0.4rem 0.6rem 0.2rem;
+  text-transform: uppercase;
+}
+
+.dds-palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #f1f5f9;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: all 0.15s ease;
+}
+
+.dds-palette-item.active,
+.dds-palette-item:hover {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.35);
+  color: #fff;
+}
+
+.dds-palette-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dds-palette-item-icon {
+  font-size: 1.15rem;
+}
+
+.dds-palette-item-tag {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.dds-palette-footer {
+  padding: 0.65rem 1.25rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.dds-palette-footer-keys {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.dds-palette-badge-staff {
+  background: rgba(6, 182, 212, 0.2);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.68rem;
+}
+

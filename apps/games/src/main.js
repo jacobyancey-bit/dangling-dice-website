@@ -2,6 +2,8 @@
  * Dangling Dice Gaming Lab™ — Application Logic
  */
 
+import { initStaffCommandPalette } from '@dangling-dice/shared';
+
 // Universal PWA Service Worker Registration
 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
   window.addEventListener('load', () => {
@@ -1723,4 +1725,7 @@ window.playDiceDuel = playDiceDuel;
 
 // Initialize streak count on boot
 updateStreakBadge();
+
+// Initialize Hidden Staff Command Palette (Ctrl+K)
+initStaffCommandPalette();
 

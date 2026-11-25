@@ -65,6 +65,403 @@ export function initPwaServiceWorker() {
 }
 
 /**
+ * Universal Staff Gate & Command Palette Engine (Ctrl+K / Cmd+K)
+ * Hidden by default from normal users.
+ * Unlocks via secret query ?staff=dds_internal, Ctrl+Shift+D, or clicking logo 5 times.
+ */
+export function initStaffCommandPalette() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  const STAFF_STORAGE_KEY = 'dds_staff_mode';
+
+  // 1. Secret URL Query Trigger
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('staff') === 'dds_internal' || urlParams.get('preview') === 'staff' || urlParams.get('admin') === '1') {
+      localStorage.setItem(STAFF_STORAGE_KEY, 'true');
+      urlParams.delete('staff');
+      urlParams.delete('preview');
+      urlParams.delete('admin');
+      const newQuery = urlParams.toString();
+      const cleanUrl = window.location.pathname + (newQuery ? '?' + newQuery : '') + window.location.hash;
+      window.history.replaceState({}, document.title, cleanUrl);
+      setTimeout(() => {
+        if (typeof window.showToast === 'function') {
+          window.showToast('🎲 Staff Access Mode Unlocked (Private Preview Enabled)', 'success');
+        }
+      }, 300);
+    }
+  } catch {}
+
+  function isStaff() {
+    return localStorage.getItem(STAFF_STORAGE_KEY) === 'true';
+  }
+
+  function toggleStaffMode() {
+    const nextState = !isStaff();
+    if (nextState) {
+      localStorage.setItem(STAFF_STORAGE_KEY, 'true');
+      if (typeof window.showToast === 'function') {
+        window.showToast('🎲 Staff Access Mode Unlocked (Private Preview Enabled)', 'success');
+      }
+      mountPalette();
+      updateRailItem();
+      toggleStaffSections(true);
+    } else {
+      localStorage.removeItem(STAFF_STORAGE_KEY);
+      if (typeof window.showToast === 'function') {
+        window.showToast('🔒 Staff Mode Locked (Public View)', 'info');
+      }
+      closePalette();
+      updateRailItem();
+      toggleStaffSections(false);
+    }
+  }
+
+  // 2. Secret Logo Click Trigger (5 clicks in 2.5s)
+  let clickCount = 0;
+  let clickTimer = null;
+  const setupLogoTrigger = () => {
+    const brandEls = document.querySelectorAll('.rail-brand, .brand');
+    brandEls.forEach((el) => {
+      el.addEventListener('click', (e) => {
+        clickCount++;
+        clearTimeout(clickTimer);
+        if (clickCount >= 5) {
+          e.preventDefault();
+          clickCount = 0;
+          toggleStaffMode();
+          return;
+        }
+        clickTimer = setTimeout(() => {
+          clickCount = 0;
+        }, 2500);
+      });
+    });
+  };
+
+  // 3. Mount / Remove Staff Rail Item
+  function updateRailItem() {
+    const railNav = document.querySelector('.dds-studio-rail .rail-nav-group:last-of-type') || document.querySelector('.dds-studio-rail');
+    let staffItem = document.getElementById('railStaffItem');
+
+    if (isStaff()) {
+      if (!staffItem && railNav) {
+        staffItem = document.createElement('a');
+        staffItem.href = 'javascript:void(0)';
+        staffItem.id = 'railStaffItem';
+        staffItem.className = 'rail-item rail-staff';
+        staffItem.title = 'Staff Command Palette (Ctrl+K)';
+        staffItem.innerHTML = `
+          <span class="rail-icon">⚡</span>
+          <span class="rail-text">Staff (Ctrl+K)</span>
+          <span class="rail-badge" style="background:#06b6d4;color:#000;font-weight:700;">STAFF</span>
+        `;
+        staffItem.addEventListener('click', (e) => {
+          e.preventDefault();
+          openPalette();
+        });
+        railNav.appendChild(staffItem);
+      }
+    } else if (staffItem) {
+      staffItem.remove();
+    }
+  }
+
+  // 4. Toggle Staff-Only Sections in the Page (like Sandbox Playground in dev hub)
+  function toggleStaffSections(active) {
+    document.querySelectorAll('[data-staff-only="true"], #staffSandboxPlayground').forEach((el) => {
+      el.style.display = active ? '' : 'none';
+    });
+  }
+
+  // 5. Palette DOM Setup
+  let backdrop = null;
+  let input = null;
+  let list = null;
+  let activeIndex = 0;
+  let filteredActions = [];
+
+  const COMMANDS = [
+    // Navigation
+    { id: 'nav-hq', group: 'Studio Hubs', title: 'Main Studio HQ', icon: '🏠', tag: 'HUB', action: () => { window.location.href = 'https://dangling-dice-studios.com/'; } },
+    { id: 'nav-beats', group: 'Studio Hubs', title: 'Beats Studio & DAW', icon: '🎛️', tag: 'HUB', action: () => { window.location.href = 'https://beats.dangling-dice-studios.com/'; } },
+    { id: 'nav-games', group: 'Studio Hubs', title: 'Gaming Hub & OmniSound', icon: '🎯', tag: 'HUB', action: () => { window.location.href = 'https://games.dangling-dice-studios.com/'; } },
+    { id: 'nav-media', group: 'Studio Hubs', title: 'Media Converter Hub', icon: '🎵', tag: 'HUB', action: () => { window.location.href = 'https://media.dangling-dice-studios.com/'; } },
+    { id: 'nav-dev', group: 'Studio Hubs', title: 'Developer Hub & APIs', icon: '💻', tag: 'HUB', action: () => { window.location.href = 'https://dev.dangling-dice-studios.com/'; } },
+    // Staff Diagnostics & Railway
+    {
+      id: 'staff-sandbox',
+      group: 'Railway & Staff Diagnostics',
+      title: 'Open Railway Live Sandbox Console',
+      icon: '🧪',
+      tag: 'RAILWAY',
+      action: () => {
+        closePalette();
+        const playground = document.getElementById('staffSandboxPlayground');
+        if (playground) {
+          playground.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          window.location.href = 'https://dev.dangling-dice-studios.com/#staffSandboxPlayground';
+        }
+      },
+    },
+    {
+      id: 'staff-ping-api',
+      group: 'Railway & Staff Diagnostics',
+      title: 'Ping Central API Health & Latency',
+      icon: '📊',
+      tag: 'TELEMETRY',
+      action: async () => {
+        closePalette();
+        const t0 = performance.now();
+        try {
+          const res = await fetch('https://dangling-dice-studios.com/api', { signal: AbortSignal.timeout(4000) });
+          const latency = Math.round(performance.now() - t0);
+          const data = await res.json();
+          if (typeof window.showToast === 'function') {
+            window.showToast(`⚡ Central API ${data.status.toUpperCase()} (${latency}ms) — DB: ${data.database?.status}`, 'success');
+          }
+        } catch (err) {
+          if (typeof window.showToast === 'function') {
+            window.showToast(`❌ API Health Ping Failed: ${err.message}`, 'error');
+          }
+        }
+      },
+    },
+    {
+      id: 'staff-toast-demo',
+      group: 'Railway & Staff Diagnostics',
+      title: 'Fire Glassmorphism Toast Demo',
+      icon: '🔔',
+      tag: 'UI/UX',
+      action: () => {
+        closePalette();
+        if (typeof window.showToast === 'function') {
+          window.showToast('✨ High-Performance Glassmorphism Toast Active!', 'success');
+        }
+      },
+    },
+    {
+      id: 'staff-clear-cache',
+      group: 'Railway & Staff Diagnostics',
+      title: 'Flush Local Storage & Studio Stash',
+      icon: '🧹',
+      tag: 'DEV',
+      action: () => {
+        closePalette();
+        try {
+          localStorage.removeItem('dds_stash');
+          localStorage.removeItem('dds_persona');
+          if (typeof window.showToast === 'function') {
+            window.showToast('🧹 Local stash and persona preferences cleared', 'info');
+          }
+        } catch {}
+      },
+    },
+    {
+      id: 'staff-lock',
+      group: 'Staff Security',
+      title: 'Lock Staff Mode (Exit Private Preview)',
+      icon: '🔒',
+      tag: 'SECURITY',
+      action: () => {
+        toggleStaffMode();
+      },
+    },
+  ];
+
+  function mountPalette() {
+    if (document.getElementById('ddsStaffPaletteBackdrop')) return;
+
+    backdrop = document.createElement('div');
+    backdrop.id = 'ddsStaffPaletteBackdrop';
+    backdrop.className = 'dds-palette-backdrop';
+    backdrop.innerHTML = `
+      <div class="dds-palette-modal" role="dialog" aria-modal="true" aria-label="Staff Command Palette">
+        <div class="dds-palette-header">
+          <span class="dds-palette-search-icon">🔍</span>
+          <input type="text" class="dds-palette-input" placeholder="Type a command or search hub... (Esc to close)" />
+          <span class="dds-palette-esc">ESC</span>
+        </div>
+        <div class="dds-palette-list" id="ddsPaletteList"></div>
+        <div class="dds-palette-footer">
+          <div class="dds-palette-footer-keys">
+            <span><strong>↑↓</strong> Navigate</span>
+            <span><strong>↵</strong> Select</span>
+            <span><strong>Esc</strong> Close</span>
+          </div>
+          <span class="dds-palette-badge-staff">STAFF PRIVATE PREVIEW</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(backdrop);
+    input = backdrop.querySelector('.dds-palette-input');
+    list = backdrop.querySelector('#ddsPaletteList');
+
+    // Close on backdrop click
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closePalette();
+    });
+
+    // Input search filter
+    input.addEventListener('input', () => {
+      renderList(input.value.trim().toLowerCase());
+    });
+
+    // Keyboard navigation inside input
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closePalette();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (filteredActions.length > 0) {
+          activeIndex = (activeIndex + 1) % filteredActions.length;
+          highlightActive();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (filteredActions.length > 0) {
+          activeIndex = (activeIndex - 1 + filteredActions.length) % filteredActions.length;
+          highlightActive();
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredActions[activeIndex]) {
+          filteredActions[activeIndex].action();
+        }
+      }
+    });
+  }
+
+  function renderList(query = '') {
+    if (!list) return;
+    list.innerHTML = '';
+    filteredActions = COMMANDS.filter((cmd) => {
+      if (!query) return true;
+      return cmd.title.toLowerCase().includes(query) || cmd.group.toLowerCase().includes(query) || cmd.tag.toLowerCase().includes(query);
+    });
+
+    if (filteredActions.length === 0) {
+      list.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #64748b; font-size: 0.85rem;">No matching commands found.</div>`;
+      return;
+    }
+
+    let lastGroup = null;
+    filteredActions.forEach((cmd, idx) => {
+      if (cmd.group !== lastGroup) {
+        lastGroup = cmd.group;
+        const groupEl = document.createElement('div');
+        groupEl.className = 'dds-palette-group-title';
+        groupEl.textContent = cmd.group;
+        list.appendChild(groupEl);
+      }
+
+      const itemEl = document.createElement('div');
+      itemEl.className = `dds-palette-item ${idx === activeIndex ? 'active' : ''}`;
+      itemEl.setAttribute('data-index', idx);
+      itemEl.innerHTML = `
+        <div class="dds-palette-item-left">
+          <span class="dds-palette-item-icon">${cmd.icon}</span>
+          <span>${cmd.title}</span>
+        </div>
+        <span class="dds-palette-item-tag">${cmd.tag}</span>
+      `;
+
+      itemEl.addEventListener('mouseenter', () => {
+        activeIndex = idx;
+        highlightActive();
+      });
+
+      itemEl.addEventListener('click', () => {
+        cmd.action();
+      });
+
+      list.appendChild(itemEl);
+    });
+
+    highlightActive();
+  }
+
+  function highlightActive() {
+    if (!list) return;
+    const items = list.querySelectorAll('.dds-palette-item');
+    items.forEach((item, idx) => {
+      if (idx === activeIndex) {
+        item.classList.add('active');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('active');
+      }
+    });
+  }
+
+  function openPalette() {
+    if (!isStaff()) return;
+    mountPalette();
+    renderList('');
+    activeIndex = 0;
+    backdrop.classList.add('open');
+    setTimeout(() => {
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    }, 50);
+  }
+
+  function closePalette() {
+    if (backdrop) {
+      backdrop.classList.remove('open');
+    }
+  }
+
+  function togglePalette() {
+    if (backdrop && backdrop.classList.contains('open')) {
+      closePalette();
+    } else {
+      openPalette();
+    }
+  }
+
+  // 6. Global Key Listeners
+  window.addEventListener('keydown', (e) => {
+    // Ctrl+Shift+D or Cmd+Shift+D: Secret Toggle Staff Mode
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+      e.preventDefault();
+      toggleStaffMode();
+      return;
+    }
+
+    // Ctrl+K or Cmd+K: Open Palette ONLY if staff mode is active
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      if (isStaff()) {
+        e.preventDefault();
+        togglePalette();
+      }
+    }
+  });
+
+  // Setup on page load
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', () => {
+      setupLogoTrigger();
+      updateRailItem();
+      toggleStaffSections(isStaff());
+    });
+  } else {
+    setupLogoTrigger();
+    updateRailItem();
+    toggleStaffSections(isStaff());
+  }
+
+  // Expose global methods for staff
+  window.openCommandPalette = openPalette;
+  window.toggleStaffMode = toggleStaffMode;
+}
+
+/**
  * Curated Affiliate & Partner Categories
  */
 export const AFFILIATE_CATEGORIES = [

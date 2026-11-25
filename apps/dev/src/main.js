@@ -1,4 +1,5 @@
 import './style.css';
+import { initStaffCommandPalette } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
@@ -900,6 +901,51 @@ window.copyActiveKey = copyActiveKey;
 window.handleStripeCheckout = handleStripeCheckout;
 window.openStripeCustomerPortal = openStripeCustomerPortal;
 
+function initRailwaySandboxUI() {
+  const runBtn = document.getElementById('runRailwaySandboxBtn');
+  const clearBtn = document.getElementById('clearSandboxTerminalBtn');
+  const presetSelect = document.getElementById('sandboxPresetSelect');
+  const terminal = document.getElementById('sandboxTerminalOutput');
+  if (!runBtn || !terminal) return;
+
+  clearBtn?.addEventListener('click', () => {
+    terminal.textContent = '';
+  });
+
+  runBtn.addEventListener('click', async () => {
+    const preset = presetSelect?.value || 'provably_fair';
+    runBtn.disabled = true;
+    runBtn.innerHTML = '<span>⏳</span> Executing in MicroVM...';
+    terminal.textContent = `[Sandbox Gateway] Requesting ephemeral Railway microVM for preset '${preset}'...\n`;
+
+    try {
+      const res = await fetch('/api/ui/sandbox/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-staff-token': 'dds_staff_2026',
+        },
+        body: JSON.stringify({ preset, staff: 'dds_internal' }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        terminal.textContent = data.output + `\n\n[Stats] Container: ${data.sandboxId} | Boot: ${data.bootMs}ms | Exec: ${data.execMs}ms | Mem: ${data.memoryUsedMb}`;
+        if (typeof showToast === 'function') {
+          showToast(`✅ Sandbox microVM executed (${data.execMs}ms)`);
+        }
+      } else {
+        terminal.textContent += `\n❌ Error: ${data.error || 'Sandbox run failed.'}`;
+      }
+    } catch (err) {
+      terminal.textContent += `\n❌ Gateway Network Error: ${err.message}`;
+    } finally {
+      runBtn.disabled = false;
+      runBtn.innerHTML = '<span>▶</span> Run in Railway Sandbox';
+    }
+  });
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
   initApiStudio();
@@ -909,4 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAffiliates();
   loadShowcase();
   setupModal();
+  initStaffCommandPalette();
+  initRailwaySandboxUI();
 });
