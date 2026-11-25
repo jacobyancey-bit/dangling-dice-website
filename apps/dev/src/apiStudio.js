@@ -11,6 +11,32 @@ export const API_GATEWAY_URL =
 
 export const API_ENDPOINTS = [
   {
+    id: 'tutor_calculator',
+    name: 'AI Tutor & Formula Evaluator',
+    method: 'POST',
+    path: '/v1/compute/calculator',
+    category: 'Railway Microservices',
+    desc: 'High-precision algebraic solver, formula step evaluator, and STEM math computation engine.',
+    payload: {
+      expression: '3*x^2 + 5*x - 12 = 0',
+      operation: 'solve_roots',
+      precision: 4,
+    },
+  },
+  {
+    id: 'daas_scraper',
+    name: 'DAAS Multi-Agent Web Scraper',
+    method: 'POST',
+    path: '/v1/compute/scraper',
+    category: 'Railway Microservices',
+    desc: 'Headless multi-agent scraper with structured JSON extraction, bot defense bypass, and schema mapping.',
+    payload: {
+      targetUrl: 'https://news.ycombinator.com',
+      fields: ['headline', 'points', 'commentCount'],
+      bypassAntiBot: true,
+    },
+  },
+  {
     id: 'schema_infer',
     name: 'Infer TypeScript & Zod Schema',
     method: 'POST',

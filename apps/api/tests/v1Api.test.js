@@ -223,6 +223,58 @@ describe('⚡ Dangling Dice Studios™ Public API Suite (V1)', () => {
         assert.ok(peak >= 0.0 && peak <= 1.0);
       });
     });
+
+    it('API-14: Railway Tutor-Calculator microservice resolves quadratic equations and returns steps', async () => {
+      const v1Module = await import('../routes/v1Compute.js');
+      const router = v1Module.default;
+      const calcLayer = router.stack.find((l) => l.route && l.route.path && l.route.path.includes('/compute/calculator'));
+      assert.ok(calcLayer, 'Expected /compute/calculator route on v1 router');
+
+      let responseStatus = 200;
+      let responseBody = null;
+      const mockRes = {
+        setHeader() {},
+        status(code) { responseStatus = code; return this; },
+        json(data) { responseBody = data; return this; },
+      };
+
+      await calcLayer.route.stack[0].handle({
+        body: { expression: '3*x^2 + 5*x - 12 = 0', operation: 'solve_roots' },
+        headers: {},
+      }, mockRes);
+
+      assert.equal(responseStatus, 200);
+      assert.equal(responseBody.success, true);
+      assert.ok(Array.isArray(responseBody.data.roots));
+      assert.equal(responseBody.data.roots.length, 2);
+      assert.ok(responseBody.data.steps.length >= 3);
+      assert.equal(responseBody.data.provider, 'Railway Tutor-Calculator Microservice');
+    });
+
+    it('API-15: Railway DAAS Scraper extracts structured metadata with SSRF protection', async () => {
+      const v1Module = await import('../routes/v1Compute.js');
+      const router = v1Module.default;
+      const scraperLayer = router.stack.find((l) => l.route && l.route.path && l.route.path.includes('/compute/scraper'));
+      assert.ok(scraperLayer, 'Expected /compute/scraper route on v1 router');
+
+      let responseStatus = 200;
+      let responseBody = null;
+      const mockRes = {
+        setHeader() {},
+        status(code) { responseStatus = code; return this; },
+        json(data) { responseBody = data; return this; },
+      };
+
+      await scraperLayer.route.stack[0].handle({
+        body: { targetUrl: 'https://news.ycombinator.com', fields: ['title', 'score'] },
+        headers: {},
+      }, mockRes);
+
+      assert.equal(responseStatus, 200);
+      assert.equal(responseBody.success, true);
+      assert.ok(responseBody.data.extractedData);
+      assert.equal(responseBody.data.provider, 'Railway DAAS-Scraper Multi-Agent Engine');
+    });
   });
 });
 

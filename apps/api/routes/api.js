@@ -17,6 +17,8 @@ import {
 } from '../controllers/broadcastController.js';
 import { getAnalyticsSummary } from '../middleware/analytics.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
+import { getRedisStatus } from '../config/redis.js';
+import { getStorageStatus } from '../config/storage.js';
 
 const router = express.Router();
 
@@ -43,6 +45,8 @@ const getHealthData = () => {
       name: mongoose.connection.name || 'dangling_dice_db',
       host: mongoose.connection.host || '127.0.0.1',
     },
+    redis: getRedisStatus(),
+    storage: getStorageStatus(),
     analytics: getAnalyticsSummary(),
     endpoints: {
       health: '/api/health (live health & telemetry metrics)',
