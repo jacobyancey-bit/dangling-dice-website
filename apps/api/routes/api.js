@@ -8,6 +8,7 @@ import affiliateRoutes from './affiliateRoutes.js';
 import mediaRoutes from './mediaRoutes.js';
 import showcaseRoutes from './showcaseRoutes.js';
 import v1ComputeRoutes from './v1Compute.js';
+import storageRoutes from './storageRoutes.js';
 import { getOEmbed } from '../controllers/oembedController.js';
 import {
   sendDiscordBroadcast,
@@ -220,6 +221,7 @@ router.use('/affiliates', affiliateRoutes);
 router.use('/media', mediaRoutes);
 router.use('/showcase', showcaseRoutes);
 router.use('/v1', v1ComputeRoutes);
+router.use('/storage', storageRoutes);
 router.post('/broadcast/discord', protect, admin, sendDiscordBroadcast);
 router.get('/broadcast/scheduled', protect, admin, getScheduledPosts);
 router.post('/broadcast/scheduled', protect, admin, createScheduledPost);
