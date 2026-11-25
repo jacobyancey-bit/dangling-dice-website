@@ -15,6 +15,15 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
 }
 
+// Ensure FFmpeg binary has executable permissions on Linux container runtimes (Render / Cloud)
+try {
+  if (ffmpegPath && fs.existsSync(ffmpegPath)) {
+    fs.chmodSync(ffmpegPath, 0o755);
+  }
+} catch (e) {
+  // Ignore permission errors on Windows / read-only systems
+}
+
 // In-memory registry of ready-to-deliver files for instant downloads
 const readyFiles = new Map();
 
@@ -204,6 +213,11 @@ async function fetchFromExtractionGateway(targetUrl, format) {
           },
           signal: AbortSignal.timeout(12000),
         });
+
+        if (response.status === 401 || response.status === 403) {
+          console.warn(`[Extraction Gateway] RapidAPI key unauthorized or unsubscribed (HTTP ${response.status}). Skipping gateway.`);
+          break;
+        }
 
         if (response.ok) {
           const data = await response.json();
@@ -525,33 +539,65 @@ export const resolveMediaInfo = async (req, res) => {
 };
 
 export const debugStream = async (req, res) => {
-  const url = req.query.url || 'https://www.youtube.com/watch?v=Db7ZrUtuCxU';
+  const url = req.query.url || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
   try {
     const ytid = extractYouTubeId(url);
     const host = (process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com').trim();
-    const subpath = `/dl?id=${encodeURIComponent(ytid || 'Db7ZrUtuCxU')}`;
+    const subpath = `/dl?id=${encodeURIComponent(ytid || 'dQw4w9WgXcQ')}`;
     const fullUrl = `https://${host}${subpath}`;
     const key = (process.env.RAPIDAPI_KEY || '').trim().replace(/^['"]|['"]$/g, '');
 
-    const rapidRes = await fetch(fullUrl, {
-      headers: {
-        'x-rapidapi-key': key,
-        'x-rapidapi-host': host,
-      },
-      signal: AbortSignal.timeout(12000),
-    });
+    let rapidResult = null;
+    if (key) {
+      try {
+        const rapidRes = await fetch(fullUrl, {
+          headers: {
+            'x-rapidapi-key': key,
+            'x-rapidapi-host': host,
+          },
+          signal: AbortSignal.timeout(6000),
+        });
+        rapidResult = {
+          status: rapidRes.status,
+          bodyText: (await rapidRes.text()).slice(0, 300),
+        };
+      } catch (rErr) {
+        rapidResult = { error: rErr.message };
+      }
+    }
 
-    const status = rapidRes.status;
-    const bodyText = await rapidRes.text();
+    let ffmpegVersion = null;
+    try {
+      const proc = spawn(ffmpegPath, ['-version']);
+      let out = '';
+      proc.stdout.on('data', (d) => { out += d.toString(); });
+      await new Promise((resolve) => proc.on('close', resolve));
+      ffmpegVersion = out.split('\n')[0] || 'Unknown';
+    } catch (fErr) {
+      ffmpegVersion = `Error: ${fErr.message}`;
+    }
+
+    let ytdlDetails = null;
+    try {
+      const info = await Promise.race([
+        ytdl.getInfo(url),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_3S')), 3000)),
+      ]);
+      ytdlDetails = {
+        title: info?.videoDetails?.title,
+        duration: info?.videoDetails?.lengthSeconds,
+        formatsCount: info?.formats?.length,
+      };
+    } catch (yErr) {
+      ytdlDetails = { error: yErr.message };
+    }
 
     return res.json({
       success: true,
-      hasRapidKey: !!process.env.RAPIDAPI_KEY,
-      keyLength: key.length,
-      rapidHost: host,
-      fullUrl,
-      status,
-      bodyText,
+      ffmpegPath,
+      ffmpegVersion,
+      ytdlDetails,
+      rapidResult,
     });
   } catch (e) {
     if (!res.headersSent) {
@@ -618,7 +664,7 @@ export const streamMediaDownload = async (req, res) => {
 
     let headersSent = false;
     const sendDownloadHeaders = () => {
-      if (!headersSent) {
+      if (!headersSent && !res.headersSent) {
         headersSent = true;
         res.setHeader('Content-Disposition', `attachment; filename="${cleanName}.${ext}"`);
         res.setHeader('Content-Type', isMp4 ? 'video/mp4' : 'audio/mpeg');
@@ -666,9 +712,11 @@ export const streamMediaDownload = async (req, res) => {
     }
 
     if (isMp4) {
-      // MP4 Streaming Transcoding Pipeline
-      // Merges high-definition video track with crystal-clear AAC audio
+      // MP4 Streaming Transcoding Pipeline (Fragmented MP4 for instant streaming)
       let ffmpeg;
+      let videoStream = null;
+      let ffmpegStderr = '';
+
       try {
         const info = await ytdl.getInfo(targetUrl);
         const videoFormats = info.formats.filter((f) => f.hasVideo && !f.hasAudio);
@@ -679,6 +727,9 @@ export const streamMediaDownload = async (req, res) => {
         audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
         const bestAudio = audioFormats.find((f) => f.container === 'mp4') || audioFormats[0];
 
+        const browserUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+        const browserHeaders = 'Origin: https://www.youtube.com\r\nReferer: https://www.youtube.com/\r\n';
+
         if (bestVideo?.url && bestAudio?.url) {
           const isVideoMp4 = bestVideo.container === 'mp4';
           const vArgs = isVideoMp4
@@ -686,10 +737,14 @@ export const streamMediaDownload = async (req, res) => {
             : ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23'];
 
           ffmpeg = spawn(ffmpegPath, [
+            '-user_agent', browserUA,
+            '-headers', browserHeaders,
             '-reconnect', '1',
             '-reconnect_streamed', '1',
             '-reconnect_delay_max', '5',
             '-i', bestVideo.url,
+            '-user_agent', browserUA,
+            '-headers', browserHeaders,
             '-reconnect', '1',
             '-reconnect_streamed', '1',
             '-reconnect_delay_max', '5',
@@ -702,8 +757,7 @@ export const streamMediaDownload = async (req, res) => {
             'pipe:1',
           ]);
         } else {
-          // Fallback single stream
-          const videoStream = ytdl.download(targetUrl, {
+          videoStream = ytdl.download(targetUrl, {
             quality: Quality.HighestVideo,
             filter: { hasVideo: true },
           });
@@ -718,13 +772,10 @@ export const streamMediaDownload = async (req, res) => {
           ]);
 
           videoStream.pipe(ffmpeg.stdin);
-          req.on('close', () => {
-            if (!videoStream.destroyed) videoStream.destroy();
-          });
           videoStream.on('error', (err) => {
             console.error('[Video Stream Error]', err.message);
             try { ffmpeg.kill(); } catch (e) {}
-            if (!headersSent) {
+            if (!headersSent && !res.headersSent) {
               res.status(502).send('YouTube stream unavailable for this video');
             } else {
               res.end();
@@ -733,32 +784,57 @@ export const streamMediaDownload = async (req, res) => {
         }
 
         const mp4Timeout = setTimeout(() => {
-          if (!headersSent) {
+          if (!headersSent && !res.headersSent) {
             try { ffmpeg?.kill(); } catch (e) {}
+            if (videoStream) try { videoStream.destroy(); } catch (e) {}
             res.status(504).send('Video stream timed out from provider. Please try again.');
           }
-        }, 25000);
+        }, 30000);
 
-        ffmpeg.stdout.once('data', () => {
-          clearTimeout(mp4Timeout);
-          sendDownloadHeaders();
+        ffmpeg.stderr.on('data', (d) => {
+          ffmpegStderr += d.toString();
         });
-        ffmpeg.stdout.pipe(res);
+
+        let firstChunk = true;
+        ffmpeg.stdout.on('data', (chunk) => {
+          if (firstChunk) {
+            firstChunk = false;
+            clearTimeout(mp4Timeout);
+            sendDownloadHeaders();
+          }
+          res.write(chunk);
+        });
+
+        ffmpeg.stdout.on('end', () => {
+          clearTimeout(mp4Timeout);
+          if (firstChunk) {
+            if (!headersSent && !res.headersSent) {
+              console.error('[MP4 Empty Stream Exit]', ffmpegStderr.slice(-300));
+              res.status(502).send('Video stream unavailable or empty from provider');
+            } else {
+              res.end();
+            }
+          } else {
+            res.end();
+          }
+        });
 
         req.on('close', () => {
           clearTimeout(mp4Timeout);
-          try { ffmpeg.kill(); } catch (e) {}
+          if (videoStream && !videoStream.destroyed) videoStream.destroy();
+          try { ffmpeg?.kill(); } catch (e) {}
         });
 
         res.on('finish', () => {
           clearTimeout(mp4Timeout);
-          try { ffmpeg.kill(); } catch (e) {}
+          if (videoStream && !videoStream.destroyed) videoStream.destroy();
+          try { ffmpeg?.kill(); } catch (e) {}
         });
 
         ffmpeg.on('error', (err) => {
           clearTimeout(mp4Timeout);
-          console.error('[FFmpeg Error]', err.message);
-          if (!headersSent) {
+          console.error('[FFmpeg Process Error]', err.message);
+          if (!headersSent && !res.headersSent) {
             res.status(500).send('Transcoding pipeline error');
           } else {
             res.end();
@@ -766,86 +842,87 @@ export const streamMediaDownload = async (req, res) => {
         });
       } catch (videoErr) {
         console.error('[MP4 Resolution Error]', videoErr.message);
-        if (!headersSent) {
+        if (!headersSent && !res.headersSent) {
           res.status(502).send('Failed to resolve video stream');
         } else {
           res.end();
         }
       }
     } else {
-      // Genuine LAME MP3 Transcoding Pipeline with ID3v2 metadata
+      // High-Speed LAME MP3 Transcoding Pipeline with ID3v2 metadata
       const bitrate = format === 'mp3-192' ? '192k' : '320k';
+      let ffmpeg;
+      let audioStream = null;
+      let ffmpegStderr = '';
+
       try {
-        const info = await ytdl.getInfo(targetUrl);
-        const audioFormats = info.formats.filter((f) => f.hasAudio);
-        audioFormats.sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0));
-        const bestAudio = audioFormats.find((f) => f.container === 'mp4') || audioFormats[0];
+        // Stream audio directly through ytdl multi-client engine piped to ffmpeg
+        audioStream = ytdl.download(targetUrl, {
+          quality: Quality.HighestAudio,
+          filter: { hasAudio: true },
+        });
 
-        let ffmpeg;
-        let audioStream = null;
+        ffmpeg = spawn(ffmpegPath, [
+          '-i', 'pipe:0',
+          '-vn',
+          '-acodec', 'libmp3lame',
+          '-b:a', bitrate,
+          '-compression_level', '0',
+          '-threads', '0',
+          '-id3v2_version', '3',
+          '-write_id3v1', '1',
+          '-flush_packets', '1',
+          '-f', 'mp3',
+          'pipe:1',
+        ]);
 
-        if (bestAudio?.url) {
-          ffmpeg = spawn(ffmpegPath, [
-            '-reconnect', '1',
-            '-reconnect_streamed', '1',
-            '-reconnect_delay_max', '5',
-            '-i', bestAudio.url,
-            '-vn',
-            '-acodec', 'libmp3lame',
-            '-b:a', bitrate,
-            '-compression_level', '0',
-            '-threads', '0',
-            '-id3v2_version', '3',
-            '-write_id3v1', '1',
-            '-flush_packets', '1',
-            '-f', 'mp3',
-            'pipe:1',
-          ]);
-        } else {
-          audioStream = ytdl.download(targetUrl, {
-            quality: Quality.HighestAudio,
-            filter: { hasAudio: true },
-          });
+        audioStream.pipe(ffmpeg.stdin);
 
-          ffmpeg = spawn(ffmpegPath, [
-            '-i', 'pipe:0',
-            '-vn',
-            '-acodec', 'libmp3lame',
-            '-b:a', bitrate,
-            '-compression_level', '0',
-            '-threads', '0',
-            '-id3v2_version', '3',
-            '-write_id3v1', '1',
-            '-flush_packets', '1',
-            '-f', 'mp3',
-            'pipe:1',
-          ]);
-
-          audioStream.pipe(ffmpeg.stdin);
-          audioStream.on('error', (err) => {
-            console.error('[Audio Stream Error]', err.message);
-            try { ffmpeg.kill(); } catch (e) {}
-            if (!headersSent) {
-              res.status(502).send('YouTube stream blocked or restricted by provider for this track');
-            } else {
-              res.end();
-            }
-          });
-        }
+        audioStream.on('error', (err) => {
+          console.error('[Audio Stream Error]', err.message);
+          try { ffmpeg.kill(); } catch (e) {}
+          if (!headersSent && !res.headersSent) {
+            res.status(502).send('Audio stream restricted or unavailable from provider for this track');
+          } else {
+            res.end();
+          }
+        });
 
         const mp3Timeout = setTimeout(() => {
-          if (!headersSent) {
+          if (!headersSent && !res.headersSent) {
             try { ffmpeg.kill(); } catch (e) {}
             if (audioStream) try { audioStream.destroy(); } catch (e) {}
             res.status(504).send('Audio extraction timed out from provider. Please try again.');
           }
-        }, 25000);
+        }, 30000);
 
-        ffmpeg.stdout.once('data', () => {
-          clearTimeout(mp3Timeout);
-          sendDownloadHeaders();
+        ffmpeg.stderr.on('data', (d) => {
+          ffmpegStderr += d.toString();
         });
-        ffmpeg.stdout.pipe(res);
+
+        let firstChunk = true;
+        ffmpeg.stdout.on('data', (chunk) => {
+          if (firstChunk) {
+            firstChunk = false;
+            clearTimeout(mp3Timeout);
+            sendDownloadHeaders();
+          }
+          res.write(chunk);
+        });
+
+        ffmpeg.stdout.on('end', () => {
+          clearTimeout(mp3Timeout);
+          if (firstChunk) {
+            if (!headersSent && !res.headersSent) {
+              console.error('[MP3 Empty Stream Exit]', ffmpegStderr.slice(-300));
+              res.status(502).send('Audio stream empty or restricted by provider for this track');
+            } else {
+              res.end();
+            }
+          } else {
+            res.end();
+          }
+        });
 
         req.on('close', () => {
           clearTimeout(mp3Timeout);
@@ -861,16 +938,16 @@ export const streamMediaDownload = async (req, res) => {
 
         ffmpeg.on('error', (err) => {
           clearTimeout(mp3Timeout);
-          console.error('[FFmpeg Error]', err.message);
-          if (!headersSent) {
+          console.error('[FFmpeg Process Error]', err.message);
+          if (!headersSent && !res.headersSent) {
             res.status(500).send('Transcoding pipeline error');
           } else {
             res.end();
           }
         });
       } catch (audioErr) {
-        console.error('[MP3 Resolution Error]', audioErr.message);
-        if (!headersSent) {
+        console.error('[MP3 Pipeline Error]', audioErr.message);
+        if (!headersSent && !res.headersSent) {
           res.status(502).send('Failed to resolve audio stream from provider');
         } else {
           res.end();
