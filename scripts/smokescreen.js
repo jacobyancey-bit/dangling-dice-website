@@ -63,6 +63,13 @@ const TARGETS = [
   },
   {
     category: '⚡ API Gateway & Health',
+    name: 'Container Liveness Probe (/live)',
+    url: isLocal ? `${BASE_DOMAIN}/live` : 'https://api.dangling-dice-studios.com/live',
+    expectedStatus: 200,
+    checkBody: (body) => body.includes('"status":"alive"') || body.includes('alive'),
+  },
+  {
+    category: '⚡ API Gateway & Health',
     name: 'Public API Catalog Directory',
     url: isLocal ? `${BASE_DOMAIN}/api/affiliates` : 'https://api.dangling-dice-studios.com/api/affiliates',
     expectedStatus: 200,

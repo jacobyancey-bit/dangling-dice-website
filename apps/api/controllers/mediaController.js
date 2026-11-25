@@ -6,6 +6,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
+import { cobaltBreaker, rapidApiBreaker } from '../utils/circuitBreaker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -185,39 +186,43 @@ async function fetchFromExtractionGateway(targetUrl, format) {
   const isMp4 = String(format).startsWith('mp4');
 
   // Provider 1: Cobalt Gateway (Self-hosted or private instance)
-  if (process.env.COBALT_API_URL) {
+  if (process.env.COBALT_API_URL && !cobaltBreaker.isOpen()) {
     try {
-      const base = process.env.COBALT_API_URL.replace(/\/+$/, '');
-      const response = await fetch(base, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          ...(process.env.COBALT_API_KEY ? { 'Authorization': `Bearer ${process.env.COBALT_API_KEY}` } : {}),
-        },
-        body: JSON.stringify({
-          url: targetUrl,
-          downloadMode: isMp4 ? 'auto' : 'audio',
-          audioFormat: 'mp3',
-          audioBitrate: format === 'mp3-192' ? '192' : '320',
-        }),
-        signal: AbortSignal.timeout(12000),
-      });
+      const res = await cobaltBreaker.execute(async () => {
+        const base = process.env.COBALT_API_URL.replace(/\/+$/, '');
+        const response = await fetch(base, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            ...(process.env.COBALT_API_KEY ? { 'Authorization': `Bearer ${process.env.COBALT_API_KEY}` } : {}),
+          },
+          body: JSON.stringify({
+            url: targetUrl,
+            downloadMode: isMp4 ? 'auto' : 'audio',
+            audioFormat: 'mp3',
+            audioBitrate: format === 'mp3-192' ? '192' : '320',
+          }),
+          signal: AbortSignal.timeout(12000),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        const streamUrl = data.url;
-        if (streamUrl) {
-          return { streamUrl, source: 'cobalt' };
+        if (response.ok) {
+          const data = await response.json();
+          const streamUrl = data.url;
+          if (streamUrl) {
+            return { streamUrl, source: 'cobalt' };
+          }
         }
-      }
+        return null;
+      });
+      if (res) return res;
     } catch (err) {
       console.warn('[Extraction Gateway] Cobalt call failed:', err.message);
     }
   }
 
   // Provider 2: RapidAPI YouTube-to-MP3 Gateway (Audio formats only)
-  if (!isMp4 && process.env.RAPIDAPI_KEY) {
+  if (!isMp4 && process.env.RAPIDAPI_KEY && !rapidApiBreaker.isOpen()) {
     const key = process.env.RAPIDAPI_KEY.trim().replace(/^['"]|['"]$/g, '');
     const host = (process.env.RAPIDAPI_HOST || 'youtube-mp36.p.rapidapi.com').trim().replace(/^['"]|['"]$/g, '');
     const ytid = extractYouTubeId(targetUrl);
@@ -238,39 +243,45 @@ async function fetchFromExtractionGateway(targetUrl, format) {
     for (const subpath of candidatePaths) {
       try {
         const fullUrl = `https://${host}${subpath.startsWith('/') ? subpath : '/' + subpath}`;
-        const response = await fetch(fullUrl, {
-          headers: {
-            'x-rapidapi-key': key,
-            'x-rapidapi-host': host,
-          },
-          signal: AbortSignal.timeout(12000),
+        const rapidResult = await rapidApiBreaker.execute(async () => {
+          const response = await fetch(fullUrl, {
+            headers: {
+              'x-rapidapi-key': key,
+              'x-rapidapi-host': host,
+            },
+            signal: AbortSignal.timeout(12000),
+          });
+
+          if (response.status === 401 || response.status === 403) {
+            console.warn(`[Extraction Gateway] RapidAPI key unauthorized or unsubscribed (HTTP ${response.status}). Skipping gateway.`);
+            return { unauthorized: true };
+          }
+
+          if (response.ok) {
+            const data = await response.json();
+            const streamUrl =
+              data.link ||
+              data.downloadUrl ||
+              data.url ||
+              data.mp3_url ||
+              data.result?.download_url ||
+              data.data?.downloadUrl;
+
+            if (streamUrl) {
+              return {
+                streamUrl,
+                title: data.title,
+                artist: data.uploader || data.artist,
+                duration: data.duration,
+                source: 'rapidapi',
+              };
+            }
+          }
+          return null;
         });
 
-        if (response.status === 401 || response.status === 403) {
-          console.warn(`[Extraction Gateway] RapidAPI key unauthorized or unsubscribed (HTTP ${response.status}). Skipping gateway.`);
-          break;
-        }
-
-        if (response.ok) {
-          const data = await response.json();
-          const streamUrl =
-            data.link ||
-            data.downloadUrl ||
-            data.url ||
-            data.mp3_url ||
-            data.result?.download_url ||
-            data.data?.downloadUrl;
-
-          if (streamUrl) {
-            return {
-              streamUrl,
-              title: data.title,
-              artist: data.uploader || data.artist,
-              duration: data.duration,
-              source: 'rapidapi',
-            };
-          }
-        }
+        if (rapidResult?.unauthorized) break;
+        if (rapidResult?.streamUrl) return rapidResult;
       } catch (err) {
         console.warn(`[Extraction Gateway] RapidAPI path ${subpath} failed:`, err.message);
       }

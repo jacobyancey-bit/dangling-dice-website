@@ -6,6 +6,7 @@
  */
 
 import ScheduledPost from '../models/ScheduledPost.js';
+import { discordBreaker } from '../utils/circuitBreaker.js';
 
 /**
  * Core helper to dispatch visual embed to Discord webhook
@@ -70,18 +71,21 @@ export async function executeDiscordBroadcast({ title, description, link, catego
     ]
   };
 
-  const discordRes = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(discordPayload)
+  return await discordBreaker.execute(async () => {
+    const discordRes = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(discordPayload),
+      signal: AbortSignal.timeout(8000), // 8s timeout guard
+    });
+
+    if (!discordRes.ok) {
+      const errText = await discordRes.text();
+      throw new Error(`Discord rejected webhook (${discordRes.status}): ${errText}`);
+    }
+
+    return true;
   });
-
-  if (!discordRes.ok) {
-    const errText = await discordRes.text();
-    throw new Error(`Discord rejected webhook (${discordRes.status}): ${errText}`);
-  }
-
-  return true;
 }
 
 /**

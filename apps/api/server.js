@@ -10,6 +10,8 @@ import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
+import redisClient from './config/redis.js';
 
 import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
@@ -37,6 +39,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+let isShuttingDown = false;
 
 // Security: strip Express fingerprint from response headers
 app.disable('x-powered-by');
@@ -285,6 +288,30 @@ app.use('/api/v1', apiLimiter, v1ComputeRoutes);
 
 // Direct root aliases for OpenAPI, RapidAPI & developer convenience
 // Guarantees calls like GET /health, GET /items, POST /media/convert, GET /oembed succeed instantly with pure JSON
+app.get(['/live', '/livez'], (req, res) => {
+  if (isShuttingDown) {
+    return res.status(503).json({ status: 'shutting_down' });
+  }
+  res.status(200).json({ status: 'alive', uptime: Math.floor(process.uptime()), timestamp: new Date().toISOString() });
+});
+
+app.get(['/ready', '/readyz'], (req, res) => {
+  const dbConnected = mongoose.connection.readyState === 1;
+  if (!dbConnected || isShuttingDown) {
+    return res.status(503).json({
+      status: 'not_ready',
+      database: dbConnected ? 'connected' : 'disconnected',
+      shuttingDown: isShuttingDown,
+    });
+  }
+  res.status(200).json({
+    status: 'ready',
+    database: 'connected',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get(['/health', '/status'], apiLimiter, (req, res, next) => {
   req.url = '/health';
   apiRoutes(req, res, next);
@@ -328,6 +355,8 @@ app.use((req, res, next) => {
     p.startsWith('/go') ||
     p.startsWith('/health') ||
     p.startsWith('/status') ||
+    p.startsWith('/live') ||
+    p.startsWith('/ready') ||
     p.startsWith('/items') ||
     p.startsWith('/media') ||
     p.startsWith('/affiliates') ||
@@ -474,12 +503,62 @@ if (NODE_ENV === 'test') {
   server.unref();
 }
 
-// Handle unhandled Promise rejections gracefully
-process.on('unhandledRejection', (err) => {
-  console.error(`[Unhandled Rejection Error]: ${err.message}`);
-  // Close server & exit process
-  server.close(() => process.exit(1));
-});
+/**
+ * ----------------------------------------------------
+ * DevOps & SRE: Graceful Shutdown & Signal Trapping
+ * ----------------------------------------------------
+ */
+export const gracefulShutdown = async (signal = 'SIGTERM') => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`[Server] Received ${signal}. Draining connections for graceful shutdown...`);
+
+  // Stop accepting new connections
+  server.close(async () => {
+    console.log('[Server] HTTP connections drained.');
+    try {
+      if (mongoose.connection.readyState === 1) {
+        await mongoose.connection.close(false);
+        console.log('[Database] MongoDB connection pool closed cleanly.');
+      }
+      if (redisClient && typeof redisClient.quit === 'function') {
+        await redisClient.quit();
+        console.log('[Cache] Redis connection closed cleanly.');
+      }
+      console.log('[Server] Graceful shutdown complete. Exiting.');
+      if (process.env.NODE_ENV !== 'test') {
+        process.exit(0);
+      }
+    } catch (err) {
+      console.error('[Server] Error during graceful shutdown:', err.message);
+      if (process.env.NODE_ENV !== 'test') {
+        process.exit(1);
+      }
+    }
+  });
+
+  // Forced shutdown watchdog timer (10s maximum wait)
+  setTimeout(() => {
+    console.error('[Server] Forced shutdown timeout (10s) reached. Exiting immediately.');
+    if (process.env.NODE_ENV !== 'test') {
+      process.exit(1);
+    }
+  }, 10000).unref();
+};
+
+if (process.env.NODE_ENV !== 'test') {
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  process.on('unhandledRejection', (err) => {
+    console.error(`[Unhandled Rejection Captured]:`, err?.message || err);
+  });
+
+  process.on('uncaughtException', (err) => {
+    console.error(`[Uncaught Exception Captured]:`, err?.message || err);
+    gracefulShutdown('uncaughtException');
+  });
+}
 
 export default app;
 export { server };
