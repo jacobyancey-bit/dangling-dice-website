@@ -2,6 +2,13 @@
 // Dangling Beats Studio™ — Specialized Music & Producer Radio Application
 // ============================================================================
 
+// Universal PWA Service Worker Registration
+if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 import {
   NOTE_NAMES,
   SCALE_DEFINITIONS,

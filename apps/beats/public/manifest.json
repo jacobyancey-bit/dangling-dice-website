@@ -1,0 +1,26 @@
+{
+  "name": "Dangling Beats Studio™",
+  "short_name": "Dangling Beats",
+  "description": "In-browser audio workstation, chord MIDI generator, 808 synth, and drum sequencer.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#8b5cf6",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "audio", "entertainment", "productivity"]
+}

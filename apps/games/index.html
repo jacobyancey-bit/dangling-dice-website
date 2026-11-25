@@ -19,6 +19,10 @@
 
   <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32" />
   <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#eab308" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -298,6 +302,117 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         Provably Fair 3D Dice Arena & Live Duels Section
+         ======================================================================== -->
+    <section class="section-container" id="diceDuelArenaSection" style="margin-top: 1.5rem; margin-bottom: 2.5rem;">
+      <div class="dice-arena-card">
+        <div class="section-header" style="margin-bottom: 1.5rem;">
+          <div>
+            <div class="pill-tag pill-tag-yellow">🎲 Studio Games &bull; Cryptographic RNG</div>
+            <h2 class="section-title">Provably Fair Dice Arena &amp; Live Duels</h2>
+            <p class="section-desc">
+              Battle the studio AI bot or test your luck in provably fair dice duels. Every roll is deterministically generated using HMAC-SHA256 and client-side verifiable.
+            </p>
+          </div>
+          <div class="arena-streak-badge" id="arenaStreakBadge">
+            🔥 Streak: <span id="arenaStreakCount">0</span> Wins
+          </div>
+        </div>
+
+        <div class="arena-controls-row">
+          <div class="arena-control-group">
+            <label for="arenaDiceType" class="arena-label">Dice Type</label>
+            <select id="arenaDiceType" class="arena-select">
+              <option value="6">Classic d6 (1 - 6)</option>
+              <option value="20" selected>RPG d20 (1 - 20)</option>
+              <option value="100">Percentile d100 (1 - 100)</option>
+            </select>
+          </div>
+
+          <div class="arena-control-group">
+            <label for="arenaClientSeed" class="arena-label">Client Seed (Your Entropy)</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="arenaClientSeed" class="arena-input" value="dds_player_entropy" />
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.randomizeClientSeed()" title="Generate Random Seed">🎲</button>
+            </div>
+          </div>
+
+          <div class="arena-control-group" style="align-self: flex-end;">
+            <button type="button" id="rollDiceDuelBtn" class="btn btn-primary" onclick="window.playDiceDuel()" style="padding: 0.75rem 1.75rem; font-weight: 800; font-size: 1rem;">
+              ⚔️ Roll &amp; Duel
+            </button>
+          </div>
+        </div>
+
+        <!-- Arena Duel Cards Row -->
+        <div class="arena-duel-grid">
+          <!-- Player 1 Card -->
+          <div class="arena-player-card" id="playerOneCard">
+            <div class="player-header">
+              <span class="player-avatar">🧑‍💻</span>
+              <div>
+                <div class="player-name">You (Player)</div>
+                <div class="player-status" id="playerStatus">Ready</div>
+              </div>
+            </div>
+            <div class="dice-display-box" id="playerDiceBox">
+              <span class="dice-roll-number" id="playerRollNum">-</span>
+            </div>
+            <div class="score-badge" id="playerScoreBadge">Rounds Won: 0</div>
+          </div>
+
+          <!-- VS Column -->
+          <div class="arena-vs-column">
+            <div class="vs-badge">VS</div>
+            <div class="arena-round-indicator" id="arenaRoundIndicator">Best of 3 Rounds</div>
+          </div>
+
+          <!-- Opponent Bot Card -->
+          <div class="arena-player-card" id="playerTwoCard">
+            <div class="player-header">
+              <span class="player-avatar">🤖</span>
+              <div>
+                <div class="player-name">Byte (Studio Bot)</div>
+                <div class="player-status" id="botStatus">Challenging</div>
+              </div>
+            </div>
+            <div class="dice-display-box" id="botDiceBox">
+              <span class="dice-roll-number" id="botRollNum">-</span>
+            </div>
+            <div class="score-badge" id="botScoreBadge">Rounds Won: 0</div>
+          </div>
+        </div>
+
+        <!-- Duel Match Status Banner -->
+        <div id="duelMatchBanner" class="duel-match-banner" style="display: none;">
+          <span id="duelMatchText">Match in Progress</span>
+        </div>
+
+        <!-- Cryptographic Proof Accordion -->
+        <div class="arena-proof-box">
+          <div class="proof-header" onclick="window.toggleProofDetails()">
+            <span>🔒 Provably Fair Cryptographic Audit Proof</span>
+            <span id="proofToggleIcon">▼</span>
+          </div>
+          <div id="proofDetailsContent" class="proof-content" style="display: none;">
+            <div class="proof-row">
+              <span class="proof-label">Server Seed Hash (SHA-256):</span>
+              <code id="proofServerHash">Roll to generate</code>
+            </div>
+            <div class="proof-row">
+              <span class="proof-label">HMAC-SHA256 Signature:</span>
+              <code id="proofHmac">Roll to generate</code>
+            </div>
+            <div class="proof-row">
+              <span class="proof-label">Status:</span>
+              <span style="color: #34d399; font-weight: 700;">✓ Mathematically Verifiable &bull; Zero Manipulation</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

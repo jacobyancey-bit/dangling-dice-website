@@ -13,6 +13,10 @@
   <meta name="google-site-verification" content="yIhZRI7ZSPg4aY6zqFjSt_Fmq-NutQqyqH9nXlCHIjo" />
   <meta name="msvalidate.01" content="F09245C0F56D374D33561FD87DF0A914" />
   <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#06b6d4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="./src/style.css" />
 
   <!-- Open Graph / Social SEO -->
@@ -503,9 +507,14 @@
               <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Active API Key:</span>
               <span id="activeKeyTierBadge" class="hero-pill" style="font-size: 0.65rem; padding: 0.15rem 0.5rem; background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: var(--neon-emerald);">FREE TIER</span>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.copyActiveKey()">
-              📋 Copy Key
-            </button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.copyActiveKey()">
+                📋 Copy Key
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.openStripeCustomerPortal()" title="Manage invoices, receipts, and subscription tier in Stripe Portal">
+                ⚙️ Billing Portal
+              </button>
+            </div>
           </div>
           <code id="activeKeyString" style="color: var(--neon-cyan); font-family: monospace; font-size: 0.9rem; word-break: break-all;">dds_live_...</code>
           <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">

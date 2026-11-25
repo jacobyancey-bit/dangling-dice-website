@@ -3,6 +3,13 @@
  * 1-Click Fast URL to MP3 Transcoder
  */
 
+// Universal PWA Service Worker Registration
+if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
   ? 'http://localhost:5000/api'
   : '/api';
@@ -229,25 +236,39 @@ async function startDownloadWithOverlay(media) {
   const modalContextualPerks = document.getElementById('modalContextualPerks');
   if (modalContextualPerks) modalContextualPerks.style.display = 'none';
 
-  // Incremental visual progress ticker
-  let currentPct = 15;
-  const progressTimer = setInterval(() => {
-    if (currentPct < 85) {
-      currentPct += (85 - currentPct) * 0.15;
-      const rounded = Math.round(currentPct);
-      if (modalProgressBarFill) modalProgressBarFill.style.width = `${rounded}%`;
-      if (modalPercentText) modalPercentText.textContent = `${rounded}%`;
-      if (rounded > 40 && rounded < 70 && modalStatusText) {
-        modalStatusText.textContent = '⚡ Transcoding master audio stream...';
-      } else if (rounded >= 70 && modalStatusText) {
-        modalStatusText.textContent = '📦 Packaging file for Downloads folder...';
-      }
-    }
-  }, 400);
-
   const freshDownloadUrl = media.downloadUrl.includes('&_t=')
     ? media.downloadUrl.replace(/&_t=\d+/, `&_t=${Date.now()}`)
     : `${media.downloadUrl}&_t=${Date.now()}`;
+
+  const tokenMatch = freshDownloadUrl.match(/[?&]_t=(\d+)/);
+  const streamToken = tokenMatch ? tokenMatch[1] : null;
+
+  // Real-time server telemetry + visual progress ticker
+  let currentPct = 15;
+  const progressTimer = setInterval(async () => {
+    if (streamToken) {
+      try {
+        const pRes = await fetch(`${API_BASE}/media/progress?token=${streamToken}`);
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          if (pData.pct && pData.pct > currentPct) {
+            currentPct = pData.pct;
+          }
+        }
+      } catch {}
+    }
+    if (currentPct < 90) {
+      currentPct += (90 - currentPct) * 0.15;
+    }
+    const rounded = Math.round(currentPct);
+    if (modalProgressBarFill) modalProgressBarFill.style.width = `${rounded}%`;
+    if (modalPercentText) modalPercentText.textContent = `${rounded}%`;
+    if (rounded > 35 && rounded < 75 && modalStatusText) {
+      modalStatusText.textContent = '⚡ Transcoding master audio stream...';
+    } else if (rounded >= 75 && modalStatusText) {
+      modalStatusText.textContent = '📦 Packaging file for Downloads folder...';
+    }
+  }, 450);
 
   try {
     const res = await fetch(freshDownloadUrl);

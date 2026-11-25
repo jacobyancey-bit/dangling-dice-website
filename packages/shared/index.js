@@ -52,6 +52,19 @@ export const TOOL_TYPES = [
 ];
 
 /**
+ * Universal Progressive Web App (PWA) Service Worker Initializer
+ */
+export function initPwaServiceWorker() {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.debug('[PWA] Service worker registration skipped:', err.message);
+      });
+    });
+  }
+}
+
+/**
  * Curated Affiliate & Partner Categories
  */
 export const AFFILIATE_CATEGORIES = [

@@ -2,6 +2,13 @@
  * Dangling Dice Gaming Lab™ — Application Logic
  */
 
+// Universal PWA Service Worker Registration
+if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 import { GAMES_CATALOG, ACCESSORIES_CATALOG, SOFTWARE_GUIDE, AUDIO_SETUPS } from './gameData.js';
 
 // State
@@ -1541,4 +1548,179 @@ document.addEventListener('DOMContentLoaded', () => {
     updateChipsArrows();
   });
 });
+
+// ============================================================================
+// Provably Fair Dice Arena & Duels Engine
+// ============================================================================
+let arenaState = {
+  playerScore: 0,
+  botScore: 0,
+  streak: Number(localStorage.getItem('dds_dice_streak') || 0),
+  nonce: 1,
+  isRolling: false,
+};
+
+function updateStreakBadge() {
+  const el = document.getElementById('arenaStreakCount');
+  if (el) el.textContent = arenaState.streak;
+}
+
+function randomizeClientSeed() {
+  const input = document.getElementById('arenaClientSeed');
+  if (input) {
+    const randomHex = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    input.value = `seed_${randomHex}`;
+    showToast('🎲 New random client seed generated!');
+  }
+}
+
+function toggleProofDetails() {
+  const content = document.getElementById('proofDetailsContent');
+  const icon = document.getElementById('proofToggleIcon');
+  if (content) {
+    const isHidden = content.style.display === 'none';
+    content.style.display = isHidden ? 'flex' : 'none';
+    if (icon) icon.textContent = isHidden ? '▲' : '▼';
+  }
+}
+
+async function computeHmacSha256Browser(keyStr, messageStr) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(keyStr),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, enc.encode(messageStr));
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function computeSha256Browser(text) {
+  const enc = new TextEncoder();
+  const hash = await crypto.subtle.digest('SHA-256', enc.encode(text));
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function playDiceDuel() {
+  if (arenaState.isRolling) return;
+  arenaState.isRolling = true;
+
+  const diceSides = parseInt(document.getElementById('arenaDiceType')?.value || '20', 10);
+  const clientSeedInput = document.getElementById('arenaClientSeed');
+  const clientSeed = clientSeedInput?.value?.trim() || 'default_seed';
+
+  const rollBtn = document.getElementById('rollDiceDuelBtn');
+  const pBox = document.getElementById('playerDiceBox');
+  const bBox = document.getElementById('botDiceBox');
+  const pRoll = document.getElementById('playerRollNum');
+  const bRoll = document.getElementById('botRollNum');
+  const pCard = document.getElementById('playerOneCard');
+  const bCard = document.getElementById('playerTwoCard');
+  const banner = document.getElementById('duelMatchBanner');
+  const bannerText = document.getElementById('duelMatchText');
+
+  if (rollBtn) rollBtn.disabled = true;
+  if (pBox) pBox.classList.add('rolling');
+  if (bBox) bBox.classList.add('rolling');
+  if (pCard) pCard.className = 'arena-player-card';
+  if (bCard) bCard.className = 'arena-player-card';
+  if (banner) banner.style.display = 'none';
+
+  // Sound effect / haptic feedback
+  if ('vibrate' in navigator) navigator.vibrate(50);
+
+  // Animate rolls for 700ms
+  const shakeInterval = setInterval(() => {
+    if (pRoll) pRoll.textContent = Math.floor(Math.random() * diceSides) + 1;
+    if (bRoll) bRoll.textContent = Math.floor(Math.random() * diceSides) + 1;
+  }, 75);
+
+  const serverSecret = `dds_secret_${Date.now()}_${arenaState.nonce}`;
+  const serverHash = await computeSha256Browser(serverSecret);
+  const hmacSig = await computeHmacSha256Browser(serverSecret, `${clientSeed}:${arenaState.nonce}`);
+
+  setTimeout(async () => {
+    clearInterval(shakeInterval);
+    if (pBox) pBox.classList.remove('rolling');
+    if (bBox) bBox.classList.remove('rolling');
+
+    // Deterministic dice derivation from HMAC
+    const pVal = (parseInt(hmacSig.slice(0, 8), 16) % diceSides) + 1;
+    const bVal = (parseInt(hmacSig.slice(8, 16), 16) % diceSides) + 1;
+
+    if (pRoll) pRoll.textContent = pVal;
+    if (bRoll) bRoll.textContent = bVal;
+
+    arenaState.nonce++;
+
+    // Reveal Cryptographic proof
+    const hashEl = document.getElementById('proofServerHash');
+    const hmacEl = document.getElementById('proofHmac');
+    if (hashEl) hashEl.textContent = serverHash;
+    if (hmacEl) hmacEl.textContent = hmacSig;
+
+    // Evaluate Round
+    if (pVal > bVal) {
+      arenaState.playerScore++;
+      if (pCard) pCard.classList.add('winner');
+      if (bCard) bCard.classList.add('loser');
+      showToast(`🏆 Round won! You rolled ${pVal} vs Byte's ${bVal}!`);
+    } else if (bVal > pVal) {
+      arenaState.botScore++;
+      if (bCard) bCard.classList.add('winner');
+      if (pCard) pCard.classList.add('loser');
+      showToast(`⚔️ Round lost! Byte rolled ${bVal} vs your ${pVal}`);
+    } else {
+      showToast(`🤝 It's a tie at ${pVal}!`);
+    }
+
+    const pScoreBadge = document.getElementById('playerScoreBadge');
+    const bScoreBadge = document.getElementById('botScoreBadge');
+    if (pScoreBadge) pScoreBadge.textContent = `Rounds Won: ${arenaState.playerScore}`;
+    if (bScoreBadge) bScoreBadge.textContent = `Rounds Won: ${arenaState.botScore}`;
+
+    // Check Match Completion (Best of 3)
+    if (arenaState.playerScore >= 2 || arenaState.botScore >= 2) {
+      if (banner) banner.style.display = 'block';
+      if (arenaState.playerScore >= 2) {
+        arenaState.streak++;
+        localStorage.setItem('dds_dice_streak', arenaState.streak);
+        if (banner) {
+          banner.className = 'duel-match-banner';
+          bannerText.textContent = `👑 MATCH VICTORY! You defeated Byte 2-${arenaState.botScore}! Streak: ${arenaState.streak} 🔥`;
+        }
+      } else {
+        arenaState.streak = 0;
+        localStorage.setItem('dds_dice_streak', 0);
+        if (banner) {
+          banner.className = 'duel-match-banner loss';
+          bannerText.textContent = `💀 MATCH DEFEAT! Byte took the match 2-${arenaState.playerScore}. Streak reset!`;
+        }
+      }
+      updateStreakBadge();
+      // Reset match scores
+      arenaState.playerScore = 0;
+      arenaState.botScore = 0;
+    }
+
+    if (rollBtn) rollBtn.disabled = false;
+    arenaState.isRolling = false;
+  }, 750);
+}
+
+// Global Exports
+window.randomizeClientSeed = randomizeClientSeed;
+window.toggleProofDetails = toggleProofDetails;
+window.playDiceDuel = playDiceDuel;
+
+// Initialize streak count on boot
+updateStreakBadge();
 

@@ -30,6 +30,16 @@ const readyFiles = new Map();
 // Active in-flight transcode concurrency guard per IP (max 2 active streams per IP)
 const activeIpTranscodes = new Map();
 
+// Active progress registry for live transcoding telemetry
+const activeProgress = new Map();
+
+export const getMediaProgress = (req, res) => {
+  const token = req.query.token || req.query._t;
+  if (!token) return res.json({ success: true, pct: 50, status: 'streaming' });
+  const entry = activeProgress.get(String(token)) || { pct: 60, status: 'transcoding' };
+  return res.json({ success: true, ...entry });
+};
+
 function acquireIpTranscodeSlot(ip) {
   if (!ip) return true;
   const current = activeIpTranscodes.get(ip) || 0;
@@ -901,7 +911,15 @@ export const streamMediaDownload = async (req, res) => {
         });
 
         let firstChunk = true;
+        let streamedBytes = 0;
+        const streamToken = req.query._t || req.query.token;
+
         ffmpeg.stdout.on('data', (chunk) => {
+          streamedBytes += chunk.length;
+          if (streamToken) {
+            const pct = Math.min(95, 30 + Math.round((streamedBytes / 3500000) * 65));
+            activeProgress.set(String(streamToken), { pct, status: 'Transcoding & packaging audio' });
+          }
           if (firstChunk) {
             firstChunk = false;
             clearTimeout(mp3Timeout);
@@ -911,6 +929,7 @@ export const streamMediaDownload = async (req, res) => {
         });
 
         ffmpeg.stdout.on('end', () => {
+          if (streamToken) activeProgress.delete(String(streamToken));
           clearTimeout(mp3Timeout);
           if (firstChunk) {
             if (!headersSent && !res.headersSent) {

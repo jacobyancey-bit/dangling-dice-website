@@ -20,6 +20,7 @@ import affiliateRoutes from './routes/affiliateRoutes.js';
 import showcaseRoutes from './routes/showcaseRoutes.js';
 import { getOEmbed } from './controllers/oembedController.js';
 import { redirectPartner } from './controllers/affiliateController.js';
+import { generateOgCard } from './controllers/ogController.js';
 import { findAndTrackShortUrl } from './models/ShortUrl.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -243,6 +244,7 @@ app.use('/media', apiLimiter, mediaRoutes);
 app.use('/affiliates', apiLimiter, affiliateRoutes);
 app.use('/showcase', apiLimiter, showcaseRoutes);
 app.get('/oembed', apiLimiter, getOEmbed);
+app.get(['/api/og/card', '/og-card.svg', '/og-card'], apiLimiter, generateOgCard);
 app.get(['/openapi.json', '/openapi-privacy.json', '/openapi-music.json', '/openapi-schema.json', '/openapi-geo.json', '/openapi-finance.json'], (req, res) => {
   let filename = 'openapi.json';
   if (req.path.includes('privacy')) filename = 'openapi-privacy.json';
@@ -316,20 +318,26 @@ app.use((req, res, next) => {
   }
 
   // Aggressive long-term caching for static assets (CSS, JS bundles, images, icons, fonts)
-  // Prevents browsers, CDNs, and crawlers from repeatedly re-downloading static files on Render
+  // Prevents browsers, CDNs, and crawlers from repeatedly re-downloading static files on Render / Cloudflare
   const staticOptions = {
-    maxAge: '7d', // 7 days browser/CDN cache
+    maxAge: '7d', // 7 days browser/CDN cache default
     etag: true,
     lastModified: true,
     setHeaders: (res, filePath) => {
-      // Fingerprinted Vite production assets in /assets/ can be cached immutably for 1 year
-      if (filePath.includes(path.sep + 'assets' + path.sep)) {
+      const normalizedPath = filePath.replace(/\\/g, '/');
+      if (normalizedPath.endsWith('/sw.js') || normalizedPath.endsWith('service-worker.js')) {
+        // Service workers must NEVER be cached long-term to ensure immediate app updates
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      } else if (normalizedPath.endsWith('/manifest.json') || normalizedPath.endsWith('.webmanifest')) {
+        res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+      } else if (normalizedPath.includes('/assets/')) {
+        // Fingerprinted Vite production assets in /assets/ can be cached immutably for 1 year
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      } else if (filePath.endsWith('.html')) {
+      } else if (normalizedPath.endsWith('.html')) {
         // HTML entry files get short cache with revalidation
         res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
-      } else if (filePath.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/i)) {
-        // Images and logos get 7 days cache
+      } else if (normalizedPath.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|woff2|ttf|mp3|wav)$/i)) {
+        // Media assets and logos get 7 days cache with 24hr stale-while-revalidate window
         res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400');
       }
     },

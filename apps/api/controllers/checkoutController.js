@@ -323,3 +323,57 @@ export const getMyOrders = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Create a Stripe Customer Billing Portal session for self-service subscription/invoice management
+ * @route   POST /api/checkout/portal
+ * @access  Public (Customer Email / Customer ID verification)
+ */
+export const createPortalSession = async (req, res, next) => {
+  try {
+    const { email, customerId, returnUrl } = req.body || {};
+    if (!email && !customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer email or Stripe customerId is required to access the billing portal.',
+      });
+    }
+
+    const stripe = getStripe();
+    let targetCustomerId = customerId;
+
+    if (!targetCustomerId && email) {
+      const customers = await stripe.customers.list({
+        email: email.trim().toLowerCase(),
+        limit: 1,
+      });
+      if (customers.data && customers.data.length > 0) {
+        targetCustomerId = customers.data[0].id;
+      }
+    }
+
+    if (!targetCustomerId) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active Stripe billing profile found for this email address. Please make a purchase or subscribe first.',
+      });
+    }
+
+    const clientBase = process.env.CLIENT_URL || 'https://dangling-dice-studios.com';
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: targetCustomerId,
+      return_url: returnUrl || `${clientBase}/#sandboxes`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      url: portalSession.url,
+    });
+  } catch (err) {
+    console.error('[Stripe Portal Error]', err.message);
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to generate billing portal session.',
+    });
+  }
+};

@@ -2,6 +2,13 @@
  * Dangling Dice Studios™ — Public Catalog & Developer Tools Client Application
  */
 
+// Universal PWA Service Worker Registration
+if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 const API_BASE =
   (window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1") &&

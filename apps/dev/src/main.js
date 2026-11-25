@@ -1,4 +1,11 @@
 import './style.css';
+
+// Universal PWA Service Worker Registration
+if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 import {
   API_GATEWAY_URL,
   API_ENDPOINTS,
@@ -831,6 +838,43 @@ async function initBillingStudio() {
   }
 }
 
+async function openStripeCustomerPortal() {
+  const emailInput = document.getElementById('devKeyEmailInput');
+  let email = (emailInput?.value || localStorage.getItem('dds_developer_email') || '').trim();
+
+  if (!email || !email.includes('@')) {
+    email = prompt('Enter the email address associated with your Stripe billing profile:') || '';
+    if (!email || !email.includes('@')) {
+      showToast('A valid email address is required to locate your billing profile.');
+      return;
+    }
+    if (emailInput) emailInput.value = email;
+    localStorage.setItem('dds_developer_email', email);
+  }
+
+  showToast('Connecting to Stripe Customer Billing Portal...');
+
+  try {
+    const res = await fetch(`${API_GATEWAY_URL}/api/checkout/portal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        returnUrl: window.location.href,
+      }),
+    });
+
+    const json = await res.json();
+    if (json.success && json.url) {
+      window.location.href = json.url;
+    } else {
+      showToast(json.message || 'No active Stripe billing profile found for this email.');
+    }
+  } catch (err) {
+    showToast(`Billing Portal error: ${err.message}`);
+  }
+}
+
 // Global Exports for HTML Onclicks
 window.switchDevSection = switchDevSection;
 window.handleEndpointSelect = handleEndpointSelect;
@@ -854,6 +898,7 @@ window.setCronPreset = setCronPreset;
 window.handleGenerateFreeKey = handleGenerateFreeKey;
 window.copyActiveKey = copyActiveKey;
 window.handleStripeCheckout = handleStripeCheckout;
+window.openStripeCustomerPortal = openStripeCustomerPortal;
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
