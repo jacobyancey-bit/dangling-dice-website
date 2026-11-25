@@ -66,6 +66,7 @@ export const createCheckoutSession = async (req, res, next) => {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
+      allow_promotion_codes: true,
       customer_email: customerEmail,
       client_reference_id: req.user?._id?.toString() || undefined,
       line_items: [
@@ -162,6 +163,7 @@ export const createApiSubscriptionSession = async (req, res, next) => {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
+      allow_promotion_codes: true,
       customer_email: customerEmail,
       line_items: [
         {

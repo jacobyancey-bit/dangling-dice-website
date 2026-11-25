@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createCheckoutSession,
   createApiSubscriptionSession,
+  createPortalSession,
   handleWebhook,
   getOrderBySessionId,
   getMyOrders,
@@ -267,6 +268,28 @@ describe('💳 Stripe Checkout & Monetization Engine Suite', () => {
       assert.equal(updated.tier, 'ultra');
       assert.equal(updated.monthlyQuota, 25000);
       assert.equal(updated.rateLimitPerMin, 1200);
+    });
+
+    it('CHK-09: Rejects createPortalSession when both email and customerId are missing with 400', async () => {
+      let statusCode = null;
+      let jsonBody = null;
+
+      const req = { body: {} };
+      const res = {
+        status(code) {
+          statusCode = code;
+          return this;
+        },
+        json(data) {
+          jsonBody = data;
+          return this;
+        },
+      };
+
+      await createPortalSession(req, res, () => {});
+      assert.equal(statusCode, 400);
+      assert.equal(jsonBody?.success, false);
+      assert.match(jsonBody?.message, /Customer email or Stripe customerId is required/i);
     });
   });
 });
