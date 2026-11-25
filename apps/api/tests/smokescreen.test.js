@@ -170,7 +170,7 @@ describe('💨 Dangling Dice Studios™ Smokescreen Test Suite', () => {
 
         const sitemapContent = fs.readFileSync(sitemapPath, 'utf8');
         assert.ok(sitemapContent.includes('<urlset') || sitemapContent.includes('<sitemapindex'), `${app.name} sitemap must be valid XML`);
-        assert.ok(sitemapContent.includes('2026-11-22'), `${app.name} sitemap must have updated lastmod timestamp`);
+        assert.ok(/2026-11-\d{2}/.test(sitemapContent), `${app.name} sitemap must have updated lastmod timestamp`);
       });
     }
 

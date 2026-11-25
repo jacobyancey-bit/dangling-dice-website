@@ -1,11 +1,15 @@
 # Dangling Dice Studios™
 > Where beat production meets code craft, phone apps, and developer tools.
 
-Dangling Dice Studios™ is an independent software development, music production, and cloud developer tooling platform founded by Jacob Yancey.
+Dangling Dice Studios™ is an independent software development, music production, gaming audio lab, and cloud developer tooling platform founded by Jacob Yancey.
 
-## Official Web Properties
-- **Main Hub**: https://dangling-dice-studios.com/
-- **Media Converter (MP3/MP4)**: https://media.dangling-dice-studios.com/
+## Official Web Properties & Multi-Tenant Subdomains
+- **Main Studio Portal**: https://dangling-dice-studios.com/
+- **Beats Studio & Audio Lab**: https://beats.dangling-dice-studios.com/
+- **Media Converter (320kbps MP3 / 1080p MP4)**: https://media.dangling-dice-studios.com/
+- **Developer Suite & Sandboxes**: https://dev.dangling-dice-studios.com/
+- **Gaming Lab (Footstep EQ & Game Configs)**: https://games.dangling-dice-studios.com/
+- **Dedicated Public API Gateway**: https://api.dangling-dice-studios.com/
 - **YouTube Channel**: https://www.youtube.com/@danglingdicestudios
 - **Google Play Store**: https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator
 - **GitHub**: https://github.com/jacobyancey-bit
@@ -14,21 +18,30 @@ Dangling Dice Studios™ is an independent software development, music productio
 
 ## Core Services & Capabilities
 
-### 1. Dangling Beats Studio (YouTube Music & Radio)
-- Produces original lo-fi, chillhop, dark trap, synthwave, and study beats.
-- Featured release: "Lo-Fi Drive" playlist (YouTube ID: `PLAg2ptU_xF5c`).
-- Built-in persistent floating radio player directly on the main website.
+### 1. Dangling Beats Studio (Audio Workstation & MIDI Lab)
+- URL: `https://beats.dangling-dice-studios.com/`
+- Full in-browser audio workstation: Chord Progression MIDI Generator, Modal Scale Fretboard, Delay/Reverb BPM Timing Calculators, Audio Loop Chopper, Euclidean Sequencer, and Web MIDI USB Hardware Controller.
+- Multitrack MIDI export (.mid) and chopped WAV sample stems download.
+- Zero-egress audio asset delivery powered by Cloudflare R2 object storage (`dangling-dice-assets`).
 
 ### 2. URL to MP3 / MP4 High-Speed Media Converter
-- Free online media extraction tool at `https://media.dangling-dice-studios.com/`.
-- Extracts high-bitrate MP3 audio (192 kbps and 320 kbps) and MP4 video directly from YouTube and creator URLs.
-- Zero popups, zero intrusive ads, no spam redirects. Automatically routes downloaded files directly to the user's local Downloads folder.
+- URL: `https://media.dangling-dice-studios.com/`
+- In-browser media extraction tool with zero popups, zero intrusive ads, and zero server logging.
+- Extracts clean 320kbps MP3 audio and 1080p MP4 video directly to the user's local Downloads folder.
 
-### 3. Developer Utilities & Network Tools
-- **WireGuard VPN Generator**: Instant in-kernel client tunnel configuration templates with zero server logs.
-- **MongoDB Connection URI Inspector**: Real-time client-side MongoDB connection string sanitizer, password symbol escaper, and `.env` generator.
+### 3. Developer Suite & Compute Sandboxes
+- URL: `https://dev.dangling-dice-studios.com/`
+- Sub-15ms REST API microservices, interactive code sandboxes, and developer tools.
+- Connected Railway MicroVM execution playground:
+  - Quadratic equation solver & symbolic tutor
+  - Multi-agent web metadata scraper with SSRF protection
+- Full OpenAPI 3.0.3 specification at `https://api.dangling-dice-studios.com/openapi.json`.
 
-### 4. Android Mobile Applications
+### 4. Gaming Lab & Audio Configs
+- URL: `https://games.dangling-dice-studios.com/`
+- Free competitive game settings catalog: 10-band footstep EQ curves for SteelSeries Sonar & Equalizer APO, controller deadzones & response curves, and CS2 autoexec configurations.
+
+### 5. Android Mobile Applications
 - **AI Calculator**: Published on Google Play Store with smart equation recognition and step-by-step problem solver.
 
 ---
@@ -42,29 +55,12 @@ Dangling Dice Studios™ is an independent software development, music productio
 - **GIS Land Acreage, Polygon Math & GPS API**: https://rapidapi.com/JacobYancey-zSna1bjQ-/api/gis-land-acreage-polygon-math-and-gps-api
 - **Financial Math, Loan Amortization & Cashflow API**: https://rapidapi.com/JacobYancey-zSna1bjQ-/api/financial-math-loan-amortization-and-cashflow-api
 
-### Direct Studio Endpoints
-- `GET https://dangling-dice-studios.com/api/health`: Real-time system diagnostics, MongoDB connection state, and live request/crawler telemetry.
-- `GET https://dangling-dice-studios.com/api/items`: Full catalog of beats, tutorials, and applications (JSON).
-- `GET https://dangling-dice-studios.com/api/affiliates`: Verified developer tools, cloud hosting discounts, and partner perks.
-- `GET https://dangling-dice-studios.com/api/oembed`: Standard oEmbed 1.0 endpoint for rich previews on Discord, Reddit, and Twitter.
-- `POST https://media.dangling-dice-studios.com/api/media/convert`: Media validation and stream resolution endpoint.
-
----
-
-## Stateless Compute API Platform & Free In-Browser Sandboxes (`@dangling-dice/engine-*`)
-Deterministic, sub-15ms TypeScript compute engines available as free browser utilities (`https://tools.dangling-dice-studios.com`) and metered REST APIs (`https://api.dangling-dice-studios.com/v1/*`):
-
-- **Schema Inference Engine (`@dangling-dice/engine-schema`)**:
-  - Sandbox: `https://tools.dangling-dice-studios.com/tools/json-to-zod` & `/tools/sql-to-typescript`
-  - API: `POST /v1/schema/infer` (JSON → Zod, TypeScript, JSON Schema, Postgres DDL) & `POST /v1/schema/sql-to-ts`
-- **Geospatial & Parcel Acreage Engine (`@dangling-dice/engine-geo`)**:
-  - Sandbox: `https://tools.dangling-dice-studios.com/tools/polygon-acreage-calculator` & `/tools/coordinate-distance-bearing`
-  - API: `POST /v1/geo/parcel-metrics`, `POST /v1/geo/distance`, `POST /v1/geo/point-in-polygon`
-- **PII Redaction & Luhn Validation Engine (`@dangling-dice/engine-privacy`)**:
-  - Sandbox: `https://tools.dangling-dice-studios.com/tools/pii-redactor` & `/tools/json-secret-masker`
-  - API: `POST /v1/privacy/redact`, `POST /v1/privacy/validate-luhn`, `POST /v1/privacy/mask-json`
-- **Financial Amortization & Cashflow Engine (`@dangling-dice/engine-finance`)**:
-  - Sandbox: `https://tools.dangling-dice-studios.com/tools/loan-amortization-calculator` & `/tools/compound-interest-calculator`
-  - API: `POST /v1/finance/amortization`, `POST /v1/finance/extra-payments`, `POST /v1/finance/compound-interest`, `POST /v1/finance/cashflow`
-
-
+### Direct Studio API Endpoints
+- `GET https://api.dangling-dice-studios.com/live`: Kubernetes / Docker / Render sub-5ms liveness probe.
+- `GET https://api.dangling-dice-studios.com/ready`: Database & cache readiness probe.
+- `GET https://api.dangling-dice-studios.com/health`: Real-time system diagnostics, MongoDB connection state, and live request/crawler telemetry.
+- `GET https://api.dangling-dice-studios.com/api/storage/status`: Zero-egress Cloudflare R2 object storage status.
+- `GET https://api.dangling-dice-studios.com/api/storage/download/:filename`: Direct 302 edge redirect download for sound kits and audio stems.
+- `POST https://api.dangling-dice-studios.com/v1/compute/calculator`: Railway-connected symbolic calculator microservice.
+- `POST https://api.dangling-dice-studios.com/v1/compute/scraper`: Multi-agent structured web scraper microservice.
+- `GET https://dangling-dice-studios.com/api/oembed`: Standard oEmbed 1.0 endpoint for rich Discord, Reddit, and Twitter previews.
