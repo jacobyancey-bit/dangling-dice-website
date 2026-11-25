@@ -193,5 +193,16 @@ describe('🔒 Security & Authorization Negative Regression Suite', () => {
       assert.equal(status, 403, 'Non-admin users must be blocked from broadcast routes');
       assert.equal(body.success, false);
     });
+
+    it('NEG-10: SSRF safety check blocks IPv6-mapped IPv4, ULA, octal, and DNS rebinding domains', async () => {
+      const { isSafeOutboundUrl } = await import('../engines/tools.js');
+      assert.equal(isSafeOutboundUrl('http://[::ffff:127.0.0.1]/admin'), false);
+      assert.equal(isSafeOutboundUrl('http://0177.0.0.1/flag'), false);
+      assert.equal(isSafeOutboundUrl('http://2130706433/'), false);
+      assert.equal(isSafeOutboundUrl('http://make-it.traefik.me/'), false);
+      assert.equal(isSafeOutboundUrl('http://metadata.google.internal/'), false);
+      assert.equal(isSafeOutboundUrl('http://100.64.0.1/internal'), false);
+      assert.equal(isSafeOutboundUrl('https://dangling-dice-studios.com'), true);
+    });
   });
 });

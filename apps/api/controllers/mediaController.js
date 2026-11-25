@@ -86,22 +86,44 @@ function isValidMediaUrl(urlStr) {
 
     const host = parsed.hostname.toLowerCase();
 
-    // Comprehensive SSRF check against RFC 1918, loopbacks, IPv6, cloud metadata, and DNS rebinding
+    // Comprehensive SSRF check against RFC 1918, loopbacks, IPv6, cloud metadata, octal/hex, and DNS rebinding
     const isPrivateOrLocal =
       host === 'localhost' ||
       host === '0.0.0.0' ||
       host === '127.0.0.1' ||
       host === '[::1]' ||
       host === '::1' ||
+      host === '[::]' ||
+      host === '::' ||
       host.endsWith('.local') ||
       host.endsWith('.internal') ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.arpa') ||
       /^127\./.test(host) ||
       /^10\./.test(host) ||
       /^192\.168\./.test(host) ||
       /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
       /^169\.254\./.test(host) ||
+      /^100\.(6[4-9]|[7-9][0-9]|1[0-1][0-9]|12[0-7])\./.test(host) ||
+      /^198\.(1[8-9])\./.test(host) ||
+      /^(22[4-9]|23[0-9]|24[0-9]|25[0-5])\./.test(host) ||
+      host.startsWith('::ffff:') ||
+      host.startsWith('[::ffff:') ||
+      host.startsWith('fc00:') ||
+      host.startsWith('[fc00:') ||
+      host.startsWith('fd00:') ||
+      host.startsWith('[fd00:') ||
+      host.startsWith('fe80:') ||
+      host.startsWith('[fe80:') ||
+      /^(0x|0[0-7]|\d{8,})/.test(host) ||
       host.includes('nip.io') ||
-      host.includes('sslip.io');
+      host.includes('sslip.io') ||
+      host.includes('traefik.me') ||
+      host.includes('localtest.me') ||
+      host.includes('lvh.me') ||
+      host.includes('vcap.me') ||
+      host.includes('spoofed.net') ||
+      host === 'metadata.google.internal';
 
     if (isPrivateOrLocal) {
       return false;

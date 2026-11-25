@@ -38,6 +38,27 @@ connectDB();
 
 const app = express();
 
+// Security: strip Express fingerprint from response headers
+app.disable('x-powered-by');
+
+// Fast-fail blocker for automated vulnerability scanners & malicious bot probes
+const MALICIOUS_PROBE_REGEX = /^\/(wp-admin|wp-login|xmlrpc\.php|phpmyadmin|\.env|\.git|\.aws|\.svn|actuator|cgi-bin|autodiscover|setup\.cgi|solr)/i;
+app.use((req, res, next) => {
+  if (MALICIOUS_PROBE_REGEX.test(req.path)) {
+    return res.status(404).send('Not found');
+  }
+  next();
+});
+
+// Hardware & browser feature Permissions-Policy
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'camera=(), microphone=(self), geolocation=(), payment=(self), display-capture=()'
+  );
+  next();
+});
+
 // High-performance gzip/brotli payload compression (reduces text/json/html bandwidth by 65-80%)
 app.use(
   compression({
@@ -78,6 +99,9 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+        baseUri: ["'self'"],
+        objectSrc: ["'none'"],
+        formAction: ["'self'"],
         scriptSrc: [
           "'self'",
           "'unsafe-inline'",
@@ -114,6 +138,7 @@ app.use(
           'https://raw.githubusercontent.com',
           'https://cdn.jsdelivr.net',
         ],
+        upgradeInsecureRequests: [],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -122,8 +147,34 @@ app.use(
   })
 );
 
-// 2. Enable Cross-Origin Resource Sharing
-app.use(cors());
+// 2. Enable Smart Origin-Verifying Cross-Origin Resource Sharing (CORS)
+const ALLOWED_ORIGIN_REGEX = /^(https?:\/\/(localhost(:\d+)?|127\.0\.0\.1(:\d+)?|([a-z0-9-]+\.)*dangling-dice-studios\.com|([a-z0-9-]+\.)*pages\.dev|([a-z0-9-]+\.)*railway\.app|([a-z0-9-]+\.)*onrender\.com))$/i;
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const isPublicMachinePath =
+    req.path.startsWith('/v1/') ||
+    req.path === '/health' ||
+    req.path === '/oembed' ||
+    req.path.startsWith('/go/l/') ||
+    req.path.startsWith('/api/og/') ||
+    req.path === '/og-card.svg' ||
+    req.path.startsWith('/.well-known/') ||
+    req.path === '/llms.txt' ||
+    req.path === '/robots.txt' ||
+    req.path === '/sitemap.xml';
+
+  if (!origin || ALLOWED_ORIGIN_REGEX.test(origin) || isPublicMachinePath) {
+    cors({
+      origin: origin ? (ALLOWED_ORIGIN_REGEX.test(origin) ? origin : '*') : '*',
+      credentials: origin && ALLOWED_ORIGIN_REGEX.test(origin) ? true : false,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Api-Key'],
+    })(req, res, next);
+  } else {
+    cors({ origin: false })(req, res, next);
+  }
+});
 
 // 2b. Request Telemetry & AI Crawler Analytics Engine
 app.use(analyticsMiddleware);
@@ -187,13 +238,13 @@ app.get(['/sitemap.xml', '/sitemap-index.xml', '/robots.txt', '/app-ads.txt'], (
 // Preserves raw body for Stripe webhook cryptographic signature verification
 app.use(
   express.json({
-    limit: '10kb',
+    limit: '250kb',
     verify: (req, res, buf) => {
       req.rawBody = buf;
     },
   })
 );
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '250kb' }));
 
 // 4. Sanitize user data against NoSQL Query Injection (strips $ and . from keys)
 app.use(mongoSanitize());

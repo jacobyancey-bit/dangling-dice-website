@@ -21,19 +21,43 @@ export function isSafeOutboundUrl(targetUrl) {
       host === '127.0.0.1' ||
       host === '0.0.0.0' ||
       host === '::1' ||
+      host === '[::1]' ||
+      host === '::' ||
+      host === '[::]' ||
       host.endsWith('.internal') ||
-      host.endsWith('.local')
+      host.endsWith('.local') ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.arpa') ||
+      host.startsWith('::ffff:') ||
+      host.startsWith('[::ffff:') ||
+      host.startsWith('fc00:') ||
+      host.startsWith('[fc00:') ||
+      host.startsWith('fd00:') ||
+      host.startsWith('[fd00:') ||
+      host.startsWith('fe80:') ||
+      host.startsWith('[fe80:') ||
+      /^(0x|0[0-7]|\d{8,})/.test(host) ||
+      host.includes('nip.io') ||
+      host.includes('sslip.io') ||
+      host.includes('traefik.me') ||
+      host.includes('localtest.me') ||
+      host.includes('lvh.me') ||
+      host.includes('vcap.me') ||
+      host.includes('spoofed.net') ||
+      host === 'metadata.google.internal'
     ) {
       return false;
     }
 
-    // Check RFC1918 private IPv4 ranges
+    // Check RFC1918 and reserved IPv4 ranges
     const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
     const match = host.match(ipv4Regex);
     if (match) {
       const b0 = parseInt(match[1], 10);
       const b1 = parseInt(match[2], 10);
 
+      // 0.0.0.0/8
+      if (b0 === 0) return false;
       // 10.0.0.0/8
       if (b0 === 10) return false;
       // 127.0.0.0/8
@@ -44,6 +68,12 @@ export function isSafeOutboundUrl(targetUrl) {
       if (b0 === 192 && b1 === 168) return false;
       // 169.254.0.0/16 (Link Local / Cloud Metadata)
       if (b0 === 169 && b1 === 254) return false;
+      // 100.64.0.0/10 (Carrier-Grade NAT)
+      if (b0 === 100 && b1 >= 64 && b1 <= 127) return false;
+      // 198.18.0.0/15 (Benchmarking)
+      if (b0 === 198 && (b1 === 18 || b1 === 19)) return false;
+      // 224.0.0.0/4 (Multicast) & 240.0.0.0/4 (Reserved)
+      if (b0 >= 224) return false;
     }
 
     return true;
