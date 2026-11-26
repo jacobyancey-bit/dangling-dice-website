@@ -2,14 +2,14 @@
  * Dangling Dice Gaming Lab™ — Application Logic
  */
 
-import { initStaffCommandPalette } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
-if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
+initPwaServiceWorker();
+
+const API_GATEWAY_URL = (typeof window !== 'undefined' && window.location.hostname.includes('localhost'))
+  ? 'http://localhost:5000'
+  : 'https://api.dangling-dice-studios.com';
 
 import { GAMES_CATALOG, ACCESSORIES_CATALOG, SOFTWARE_GUIDE, AUDIO_SETUPS } from './gameData.js';
 
@@ -1699,6 +1699,7 @@ async function playDiceDuel() {
           banner.className = 'duel-match-banner';
           bannerText.textContent = `👑 MATCH VICTORY! You defeated Byte 2-${arenaState.botScore}! Streak: ${arenaState.streak} 🔥`;
         }
+        submitLeaderboardScore(arenaState.streak);
       } else {
         arenaState.streak = 0;
         localStorage.setItem('dds_dice_streak', 0);
@@ -1718,13 +1719,88 @@ async function playDiceDuel() {
   }, 750);
 }
 
+/**
+ * 👑 Global Dice Duel Leaderboard API Integration
+ */
+async function loadLeaderboardStandings() {
+  const container = document.getElementById('arenaLeaderboardList');
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_GATEWAY_URL}/v1/games/leaderboard/dice_duel`);
+    if (!res.ok) {
+      container.innerHTML = `<div style="text-align: center; padding: 0.5rem; color: #64748b;">Leaderboard ready for new champion rolls!</div>`;
+      return;
+    }
+    const json = await res.json();
+    const list = json?.data?.leaderboard || [];
+    renderLeaderboardUi(list);
+  } catch (err) {
+    container.innerHTML = `<div style="text-align: center; padding: 0.5rem; color: #64748b;">Standings available via API (/v1/games/leaderboard)</div>`;
+  }
+}
+
+function renderLeaderboardUi(standings = []) {
+  const container = document.getElementById('arenaLeaderboardList');
+  if (!container) return;
+
+  if (!standings || standings.length === 0) {
+    container.innerHTML = `<div style="text-align: center; padding: 0.5rem; color: #64748b;">No duel champions recorded yet. Claim Rank #1!</div>`;
+    return;
+  }
+
+  const medals = ['🥇', '🥈', '🥉'];
+  container.innerHTML = standings
+    .slice(0, 5)
+    .map((item, idx) => `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0.5rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          <span>${medals[idx] || `#${idx + 1}`}</span>
+          <span style="font-weight: 700; color: #f1f5f9;">${String(item.playerName || 'Anonymous').slice(0, 18)}</span>
+        </div>
+        <span style="color: #fbbf24; font-family: var(--font-mono); font-weight: 700;">Streak: ${item.score} 🔥</span>
+      </div>
+    `)
+    .join('');
+}
+
+async function submitLeaderboardScore(streak) {
+  if (!streak || streak < 1) return;
+  const storedName = localStorage.getItem('dds_player_callsign') || 'Studio Champion';
+  
+  try {
+    const res = await fetch(`${API_GATEWAY_URL}/v1/games/leaderboard/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gameId: 'dice_duel',
+        playerName: storedName,
+        score: streak,
+        stats: {
+          clientSeed: arenaState.clientSeed,
+          roundsWon: arenaState.playerScore,
+          mode: 'provably-fair',
+        },
+      }),
+    });
+    if (res.ok) {
+      showToast(`🏆 Win streak of ${streak} recorded to Global Leaderboard!`, 'success');
+      loadLeaderboardStandings();
+    }
+  } catch (err) {
+    console.debug('[Leaderboard Submit]', err.message);
+  }
+}
+
 // Global Exports
 window.randomizeClientSeed = randomizeClientSeed;
 window.toggleProofDetails = toggleProofDetails;
 window.playDiceDuel = playDiceDuel;
+window.refreshLeaderboard = loadLeaderboardStandings;
 
-// Initialize streak count on boot
+// Initialize streak count and live leaderboard on boot
 updateStreakBadge();
+loadLeaderboardStandings();
 
 // Initialize Hidden Staff Command Palette (Ctrl+K)
 initStaffCommandPalette();

@@ -3,14 +3,10 @@
  * 1-Click Fast URL to MP3 Transcoder
  */
 
-import { initStaffCommandPalette } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
-if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
+initPwaServiceWorker();
 
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000'
   ? 'http://localhost:5000/api'
