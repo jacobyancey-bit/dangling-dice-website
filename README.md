@@ -74,14 +74,10 @@ npm install
 ```
 
 ### 2. Seed Initial Studio Content
-Populates MongoDB (`dangling_dice_db`) with sample tutorials from Dangling Dice Coding and music releases from Dangling Beats:
+Populates MongoDB (`dangling_dice_db`) with sample tutorials from Dangling Dice Coding and music releases from Dangling Beats. Set `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` in your local `.env` before running on a blank database:
 ```bash
 npm run seed
 ```
-
-> **Default Seed Credentials:**
-> - Email: `studio@danglingdice.com`
-> - Password: `StudioPassword2026!`
 
 ### 3. Start Development Services
 

@@ -86,7 +86,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"studio@danglingdice.com\",\n  \"password\": \"StudioPassword2026!\"\n}"
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"<YOUR_ADMIN_PASSWORD>\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",

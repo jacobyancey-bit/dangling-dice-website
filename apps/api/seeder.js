@@ -14,13 +14,20 @@ const seedData = async () => {
     await Item.deleteMany({});
     console.log('[Seeder] Cleared previous catalog records.');
 
-    // Find or create Studio Admin / Creator
+    // Find or create Studio Admin / Creator (requires env vars when bootstrapping a new DB)
     let studioAdmin = await User.findOne({ role: 'admin' });
     if (!studioAdmin) {
+      const seedEmail = process.env.SEED_ADMIN_EMAIL;
+      const seedPassword = process.env.SEED_ADMIN_PASSWORD;
+      if (!seedEmail || !seedPassword) {
+        throw new Error(
+          '[Seeder] No admin account exists. Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD in your local .env before seeding.'
+        );
+      }
       studioAdmin = await User.create({
         name: 'Dangling Dice Studios™',
-        email: 'studio@danglingdice.com',
-        password: 'StudioPassword2026!',
+        email: seedEmail,
+        password: seedPassword,
         role: 'admin',
       });
       console.log(`[Seeder] Created lead creator account: ${studioAdmin.email}`);
