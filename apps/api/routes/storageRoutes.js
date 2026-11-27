@@ -2,12 +2,26 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { storeAsset, getAssetUrl, getStorageStatus, isR2Configured } from '../config/storage.js';
+import { storeAsset, getAssetUrl, getStorageStatus, isR2Configured, remoteAssetExists } from '../config/storage.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const localStorageDir = path.join(__dirname, '..', 'public', 'storage');
+// Bundled fallbacks (e.g. the free studio sound kit) used when an object is not (yet) in R2
+const LOCAL_FALLBACK_DIRS = [
+  localStorageDir,
+  path.join(__dirname, '..', '..', 'web', 'dist', 'downloads'),
+  path.join(__dirname, '..', '..', 'web', 'public', 'downloads'),
+];
+
+function findLocalAsset(filename) {
+  for (const dir of LOCAL_FALLBACK_DIRS) {
+    const candidate = path.join(dir, filename);
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
+  }
+  return null;
+}
 
 const router = express.Router();
 
@@ -38,18 +52,22 @@ router.get('/download/:filename', async (req, res) => {
     }
 
     const assetUrl = await getAssetUrl(rawFilename);
+    const isRemoteUrl = assetUrl.startsWith('http://') || assetUrl.startsWith('https://');
 
-    if (assetUrl.startsWith('http://') || assetUrl.startsWith('https://')) {
+    // Only redirect when the object really exists in R2; otherwise a missing upload yields a broken
+    // NoSuchKey page for visitors. (Public-domain-only setups cannot HEAD, so they redirect as before.)
+    if (isRemoteUrl && (!isR2Configured || (await remoteAssetExists(rawFilename)))) {
       // Direct CDN / R2 Edge 302 Redirect (0 server bandwidth consumed!)
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      // Short cache: presigned URLs expire, so the redirect itself must not outlive them.
+      res.setHeader('Cache-Control', 'private, max-age=300');
       return res.redirect(302, assetUrl);
     }
 
-    // Local container storage fallback
-    const localFilePath = path.join(localStorageDir, rawFilename);
-    if (fs.existsSync(localFilePath)) {
+    // Local container / bundled fallback
+    const localFilePath = findLocalAsset(rawFilename);
+    if (localFilePath) {
       res.setHeader('Cache-Control', 'public, max-age=604800');
-      return res.sendFile(localFilePath);
+      return res.download(localFilePath, rawFilename);
     }
 
     return res.status(404).json({ success: false, error: `Asset '${rawFilename}' not found` });

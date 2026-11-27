@@ -16,6 +16,15 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
 }
 
+// Zero-retention: the readyFiles registry is in-memory, so files left by a crashed/restarted
+// container would never be swept. Purge any orphaned transcodes at boot.
+try {
+  for (const name of fs.readdirSync(tempDir)) {
+    if (name.startsWith('.')) continue;
+    try { fs.unlinkSync(path.join(tempDir, name)); } catch {}
+  }
+} catch {}
+
 // Ensure FFmpeg binary has executable permissions on Linux container runtimes (Render / Cloud)
 try {
   if (ffmpegPath && fs.existsSync(ffmpegPath)) {

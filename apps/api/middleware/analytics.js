@@ -154,17 +154,40 @@ function classifyUserAgent(ua = '') {
 /**
  * Mask IP address for GDPR/privacy compliance (192.168.1.100 -> 192.168.1.xxx)
  */
-function maskIp(ip = '') {
+export function maskIp(rawIp = '') {
+  // X-Forwarded-For may be a comma-separated hop list; the client is the first entry.
+  let ip = String(rawIp || '').split(',')[0].trim();
   if (!ip) return 'unknown';
-  if (ip.includes('.')) {
-    return ip.replace(/\.\d+$/, '.xxx');
-  }
-  if (ip.includes(':')) {
-    const parts = ip.split(':');
-    return `${parts.slice(0, 3).join(':')}::xxx`;
+  // IPv4-mapped IPv6 (::ffff:1.2.3.4) -> treat as IPv4
+  const mapped = ip.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i);
+  if (mapped) ip = mapped[1];
+  // IPv4 (optionally with :port) -> /24
+  const v4 = ip.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.\d{1,3}(?::\d+)?$/);
+  if (v4) return `${v4[1]}.${v4[2]}.${v4[3]}.xxx`;
+  // IPv6 (strip [brackets], :port and %zone) -> expand, keep first 3 hextets (/48)
+  ip = ip.replace(/^\[([^\]]+)\](?::\d+)?$/, '$1').replace(/%.*$/, '');
+  if (ip.includes(':') && /^[0-9a-f:]+$/i.test(ip)) {
+    const halves = ip.split('::');
+    if (halves.length > 2) return 'masked';
+    const head = halves[0] ? halves[0].split(':') : [];
+    const tail = halves.length === 2 && halves[1] ? halves[1].split(':') : [];
+    const fill = halves.length === 2 ? Array(Math.max(0, 8 - head.length - tail.length)).fill('0') : [];
+    const groups = [...head, ...fill, ...tail];
+    if (groups.length !== 8) return 'masked';
+    return `${groups.slice(0, 3).map((g) => g.toLowerCase().replace(/^0+(?=.)/, '')).join(':')}::xxx`;
   }
   return 'masked';
 }
+export const maskIpForTesting = maskIp;
+
+// Cap dictionary-style counters so random-path scanners or junk UTM values cannot grow memory unbounded
+const MAX_COUNTER_KEYS = 500;
+function bumpCounter(obj, key) {
+  if (!(key in obj) && Object.keys(obj).length >= MAX_COUNTER_KEYS) key = '(other)';
+  obj[key] = (obj[key] || 0) + 1;
+}
+
+const SAFE_REQUEST_ID = /^[A-Za-z0-9._:-]{1,64}$/;
 
 /**
  * Check if a request path is a static frontend asset or internal admin health poll
@@ -232,7 +255,8 @@ function isNonApiTraffic(req) {
  */
 export const analyticsMiddleware = (req, res, next) => {
   const start = performance.now();
-  const requestId = req.headers['x-request-id'] || `dds_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+  const inboundId = req.headers['x-request-id'];
+  const requestId = (typeof inboundId === 'string' && SAFE_REQUEST_ID.test(inboundId) && inboundId) || `dds_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
   req.id = requestId;
   res.setHeader('X-Request-Id', requestId);
 
@@ -285,7 +309,7 @@ export const analyticsMiddleware = (req, res, next) => {
     metrics.campaigns.totalAttributedHits += 1;
     metrics.campaigns.sources[detectedSource] = (metrics.campaigns.sources[detectedSource] || 0) + 1;
     const tagKey = utmCampaign || utmSource || detectedSource;
-    metrics.campaigns.tags[tagKey] = (metrics.campaigns.tags[tagKey] || 0) + 1;
+    bumpCounter(metrics.campaigns.tags, tagKey.slice(0, 80));
   }
 
   // Skip static assets, random 404 bot scans (/wp-admin), and Admin Portal polling for API pull counts
@@ -314,7 +338,7 @@ export const analyticsMiddleware = (req, res, next) => {
   }
 
   const endpointPath = (req.originalUrl || req.url || req.path || '').split('?')[0];
-  metrics.endpoints[endpointPath] = (metrics.endpoints[endpointPath] || 0) + 1;
+  bumpCounter(metrics.endpoints, endpointPath);
 
   // Track response completion
   res.on('finish', () => {
@@ -328,7 +352,7 @@ export const analyticsMiddleware = (req, res, next) => {
     metrics.recentActivity.unshift({
       time: new Date().toISOString(),
       method: req.method,
-      path: req.originalUrl || req.url,
+      path: endpointPath, // query string dropped: may carry emails, tokens, or click IDs
       status: code,
       durationMs: duration,
       category: classification.category,

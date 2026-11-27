@@ -55,12 +55,21 @@ describe('📜 Pillar 8: Compliance, Privacy & Governance Suite', () => {
   });
 
   it('CMP-02: Verifies telemetry IP masking conforms to GDPR/CCPA /24 subnets', async () => {
-    const { maskIpForTesting } = await import('../middleware/analytics.js').catch(() => ({}));
-    // Check analytics file content to verify IP masking regex
-    const analyticsSrc = fs.readFileSync(path.join(__dirname, '../middleware/analytics.js'), 'utf8');
-    assert.ok(analyticsSrc.includes('maskIp'), 'Expected analytics.js to contain maskIp function');
-    assert.ok(analyticsSrc.includes('.xxx'), 'Expected IPv4 masking to replace last octet with .xxx');
-    assert.ok(analyticsSrc.includes('::xxx'), 'Expected IPv6 masking to mask suffix with ::xxx');
+    const { maskIpForTesting: mask } = await import('../middleware/analytics.js');
+    assert.equal(typeof mask, 'function');
+    // IPv4 /24
+    assert.equal(mask('203.0.113.77'), '203.0.113.xxx');
+    assert.equal(mask('::ffff:198.51.100.9'), '198.51.100.xxx');
+    // Raw X-Forwarded-For hop list: the client (first hop) must never leak unmasked
+    const xff = mask('203.0.113.77, 10.0.0.1');
+    assert.equal(xff, '203.0.113.xxx');
+    assert.ok(!xff.includes('203.0.113.77'));
+    // IPv6 /48 including compressed forms that put '::' inside the first 3 hextets
+    assert.equal(mask('2001:db8:abcd:12::1'), '2001:db8:abcd::xxx');
+    assert.equal(mask('2001::5:6:7:8'), '2001:0:0::xxx');
+    assert.equal(mask('[2001:db8:1::2]:443'), '2001:db8:1::xxx');
+    assert.equal(mask('not-an-ip'), 'masked');
+    assert.equal(mask(''), 'unknown');
   });
 
   it('CMP-03: Media converter index.html contains zero-retention trust banner and fair-use disclosure', () => {

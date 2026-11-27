@@ -326,6 +326,19 @@ export const getMyOrders = async (req, res, next) => {
   }
 };
 
+// Billing portal must only bounce back to studio-owned origins (prevents open redirect via Stripe)
+const SAFE_RETURN_ORIGIN = /^https:\/\/([a-z0-9-]+\.)*dangling-dice-studios\.com$/i;
+export function isSafeReturnUrl(value) {
+  if (!value || typeof value !== 'string') return false;
+  try {
+    const u = new URL(value);
+    if (SAFE_RETURN_ORIGIN.test(u.origin)) return true;
+    return process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(u.origin);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * @desc    Create a Stripe Customer Billing Portal session for self-service subscription/invoice management
  * @route   POST /api/checkout/portal
@@ -333,18 +346,19 @@ export const getMyOrders = async (req, res, next) => {
  */
 export const createPortalSession = async (req, res, next) => {
   try {
-    const { email, customerId, returnUrl } = req.body || {};
-    if (!email && !customerId) {
+    // Raw Stripe customer IDs are never accepted from the client (direct IDOR on billing data).
+    const { email, returnUrl } = req.body || {};
+    if (!email || typeof email !== 'string') {
       return res.status(400).json({
         success: false,
-        message: 'Customer email or Stripe customerId is required to access the billing portal.',
+        message: 'Customer email is required to access the billing portal.',
       });
     }
 
     const stripe = getStripe();
-    let targetCustomerId = customerId;
+    let targetCustomerId = null;
 
-    if (!targetCustomerId && email) {
+    {
       const customers = await stripe.customers.list({
         email: email.trim().toLowerCase(),
         limit: 1,
@@ -364,7 +378,7 @@ export const createPortalSession = async (req, res, next) => {
     const clientBase = process.env.CLIENT_URL || 'https://dangling-dice-studios.com';
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: targetCustomerId,
-      return_url: returnUrl || `${clientBase}/#sandboxes`,
+      return_url: isSafeReturnUrl(returnUrl) ? returnUrl : `${clientBase}/#sandboxes`,
     });
 
     return res.status(200).json({

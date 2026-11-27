@@ -91,4 +91,32 @@ const data = await res.json();`;
     assert.ok(python.includes('import requests'), 'Python snippet is valid');
     assert.ok(ts.includes('const res = await fetch'), 'TypeScript/fetch snippet is valid');
   });
+
+  it('DX-05: api, web, and media openapi.json copies stay byte-identical', () => {
+    const read = (app) => fs.readFileSync(path.resolve(__dirname, `../../${app}/public/openapi.json`), 'utf8').replace(/\r\n/g, '\n');
+    const apiSpec = read('api');
+    assert.equal(read('web'), apiSpec, 'apps/web/public/openapi.json drifted from apps/api');
+    assert.equal(read('media'), apiSpec, 'apps/media/public/openapi.json drifted from apps/api');
+  });
+
+  it('DX-06: Every live /v1 compute route is documented in openapi.json', async () => {
+    const live = JSON.parse(fs.readFileSync(specPath, 'utf8'));
+    const { default: v1Router } = await import('../routes/v1Compute.js');
+    const toSpecPath = (p) => '/v1' + p.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
+    const missing = [];
+    for (const layer of v1Router.stack) {
+      if (!layer.route) continue;
+      const paths = Array.isArray(layer.route.path) ? layer.route.path : [layer.route.path];
+      if (paths.includes('*')) continue;
+      for (const method of Object.keys(layer.route.methods)) {
+        // A route counts as documented if any of its aliases is in the spec
+        const documented = paths.some((p) => {
+          const sp = p === '/' ? '/v1/health' : toSpecPath(p);
+          return live.paths[sp]?.[method];
+        });
+        if (!documented) missing.push(`${method.toUpperCase()} ${paths.join(' | ')}`);
+      }
+    }
+    assert.deepEqual(missing, [], `Undocumented /v1 routes: ${missing.join(', ')}`);
+  });
 });

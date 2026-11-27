@@ -162,17 +162,33 @@ describe('🌐 Crawler Discovery & Health Telemetry Suite', () => {
     assert.strictEqual(publicJson.flags.commandPalette, false);
     assert.strictEqual(publicJson.flags.sandboxRunner, false);
 
-    // Staff request (with staff secret)
-    let staffJson = null;
-    const mockStaffRes = {
-      json(data) { staffJson = data; return this; },
+    const call = (req) => {
+      let out = null;
+      flagsLayer.route.stack[0].handle(req, { status() { return this; }, json(d) { out = d; return this; } });
+      return out;
     };
-    flagsLayer.route.stack[0].handle({ headers: { 'x-staff-token': 'dds_staff_2026' }, query: {} }, mockStaffRes);
+    const prevSecret = process.env.STAFF_SECRET;
+    try {
+      // Fails closed when STAFF_SECRET is unset: no hardcoded fallback secret is honored
+      delete process.env.STAFF_SECRET;
+      assert.strictEqual(call({ headers: { 'x-staff-token': 'dds_staff_2026' }, query: {} }).isStaff, false);
 
-    assert.strictEqual(staffJson.success, true);
-    assert.strictEqual(staffJson.isStaff, true);
-    assert.strictEqual(staffJson.flags.commandPalette, true);
-    assert.strictEqual(staffJson.flags.sandboxRunner, true);
+      process.env.STAFF_SECRET = 'unit-test-staff-secret';
+      // Legacy public bypasses and query-string tokens are rejected
+      assert.strictEqual(call({ headers: {}, query: { staff: 'dds_internal' } }).isStaff, false);
+      assert.strictEqual(call({ headers: {}, query: { token: 'unit-test-staff-secret' } }).isStaff, false);
+      assert.strictEqual(call({ headers: { 'x-staff-token': 'wrong' }, query: {} }).isStaff, false);
+
+      // Staff request (configured secret via header)
+      const staffJson = call({ headers: { 'x-staff-token': 'unit-test-staff-secret' }, query: {} });
+      assert.strictEqual(staffJson.success, true);
+      assert.strictEqual(staffJson.isStaff, true);
+      assert.strictEqual(staffJson.flags.commandPalette, true);
+      assert.strictEqual(staffJson.flags.sandboxRunner, true);
+    } finally {
+      if (prevSecret === undefined) delete process.env.STAFF_SECRET;
+      else process.env.STAFF_SECRET = prevSecret;
+    }
   });
 });
 

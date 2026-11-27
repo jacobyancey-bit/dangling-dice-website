@@ -924,15 +924,29 @@ function initRailwaySandboxUI() {
     runBtn.innerHTML = '<span>⏳</span> Executing in MicroVM...';
     terminal.textContent = `[Sandbox Gateway] Requesting ephemeral Railway microVM for preset '${preset}'...\n`;
 
+    // Staff token is never bundled into public JS. Staff paste it once per tab session.
+    let staffToken = sessionStorage.getItem('dds_staff_token') || '';
+    if (!staffToken) {
+      staffToken = (prompt('Enter staff sandbox token:') || '').trim();
+      if (!staffToken) {
+        terminal.textContent += '\n🔒 Staff token required to run sandboxes.';
+        runBtn.disabled = false;
+        runBtn.innerHTML = '<span>▶</span> Run in Railway Sandbox';
+        return;
+      }
+      sessionStorage.setItem('dds_staff_token', staffToken);
+    }
+
     try {
       const res = await fetch('/api/ui/sandbox/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-staff-token': 'dds_staff_2026',
+          'x-staff-token': staffToken,
         },
-        body: JSON.stringify({ preset, staff: 'dds_internal' }),
+        body: JSON.stringify({ preset }),
       });
+      if (res.status === 403) sessionStorage.removeItem('dds_staff_token');
 
       const data = await res.json();
       if (data.success) {

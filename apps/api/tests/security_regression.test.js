@@ -206,3 +206,42 @@ describe('🔒 Security & Authorization Negative Regression Suite', () => {
     });
   });
 });
+
+describe('🔐 Staff & Diagnostic Route Gating', () => {
+  it('SEC-RBAC-01: Media debug-stream diagnostics require protect + admin', async () => {
+    const { default: mediaRoutes } = await import('../routes/mediaRoutes.js');
+    const layer = mediaRoutes.stack.find((l) => l.route && l.route.path === '/debug-stream');
+    assert.ok(layer, 'Expected /debug-stream route');
+    const handlers = layer.route.stack.map((s) => s.handle);
+    assert.ok(handlers.includes(protect), 'debug-stream must use protect');
+    assert.ok(handlers.includes(admin), 'debug-stream must use admin');
+  });
+
+  it('SEC-RBAC-02: Admin write/private API routes all enforce protect + admin', async () => {
+    const { default: apiRouter } = await import('../routes/api.js');
+    const guarded = ['/broadcast/discord', '/broadcast/scheduled', '/broadcast/scheduled/:id', '/marketing/links', '/marketing/links/:slug'];
+    for (const p of guarded) {
+      const layers = apiRouter.stack.filter((l) => l.route && l.route.path === p);
+      assert.ok(layers.length > 0, `Expected route ${p}`);
+      for (const l of layers) {
+        const handlers = l.route.stack.map((s) => s.handle);
+        assert.ok(handlers.includes(protect) && handlers.includes(admin), `${p} must use protect + admin`);
+      }
+    }
+  });
+
+  it('SEC-RBAC-03: Staff sandbox runner rejects requests without a configured STAFF_SECRET header', async () => {
+    const { isStaffRequest } = await import('../routes/api.js');
+    const prev = process.env.STAFF_SECRET;
+    try {
+      delete process.env.STAFF_SECRET;
+      assert.equal(isStaffRequest({ headers: { 'x-staff-token': 'dds_staff_2026' }, body: { staff: 'dds_internal' } }), false);
+      process.env.STAFF_SECRET = 'unit-test-secret';
+      assert.equal(isStaffRequest({ headers: {}, body: { staff: 'dds_internal' } }), false);
+      assert.equal(isStaffRequest({ headers: { 'x-staff-token': 'unit-test-secret' } }), true);
+    } finally {
+      if (prev === undefined) delete process.env.STAFF_SECRET;
+      else process.env.STAFF_SECRET = prev;
+    }
+  });
+});

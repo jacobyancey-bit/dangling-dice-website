@@ -32,9 +32,6 @@ import { analyticsMiddleware } from './middleware/analytics.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from .env file
-dotenv.config();
-
 // Connect to Database tier
 connectDB();
 
@@ -43,6 +40,14 @@ let isShuttingDown = false;
 
 // Security: strip Express fingerprint from response headers
 app.disable('x-powered-by');
+
+// Reverse-proxy awareness (Cloudflare -> Render). Without this, req.ip is the proxy's address and
+// every visitor shares one rate-limit bucket / transcode slot. Opt-in via env so the hop count matches
+// the real topology: TRUST_PROXY=1 (Render only) or 2 (Cloudflare + Render, origin locked to Cloudflare).
+const TRUST_PROXY = process.env.TRUST_PROXY;
+if (TRUST_PROXY !== undefined && TRUST_PROXY !== '') {
+  app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST_PROXY) : TRUST_PROXY === 'true');
+}
 
 // Fast-fail blocker for automated vulnerability scanners & malicious bot probes
 const MALICIOUS_PROBE_REGEX = /^\/(wp-admin|wp-login|xmlrpc\.php|phpmyadmin|\.env|\.git|\.aws|\.svn|actuator|cgi-bin|autodiscover|setup\.cgi|solr)/i;

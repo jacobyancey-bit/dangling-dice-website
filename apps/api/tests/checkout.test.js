@@ -270,7 +270,7 @@ describe('💳 Stripe Checkout & Monetization Engine Suite', () => {
       assert.equal(updated.rateLimitPerMin, 1200);
     });
 
-    it('CHK-09: Rejects createPortalSession when both email and customerId are missing with 400', async () => {
+    it('CHK-09: Rejects createPortalSession when email is missing with 400', async () => {
       let statusCode = null;
       let jsonBody = null;
 
@@ -289,7 +289,17 @@ describe('💳 Stripe Checkout & Monetization Engine Suite', () => {
       await createPortalSession(req, res, () => {});
       assert.equal(statusCode, 400);
       assert.equal(jsonBody?.success, false);
-      assert.match(jsonBody?.message, /Customer email or Stripe customerId is required/i);
+      assert.match(jsonBody?.message, /Customer email is required/i);
+    });
+
+    it('CHK-10: Billing portal return URL is restricted to studio origins (no open redirect)', async () => {
+      const { isSafeReturnUrl } = await import('../controllers/checkoutController.js');
+      assert.equal(isSafeReturnUrl('https://dev.dangling-dice-studios.com/#billing'), true);
+      assert.equal(isSafeReturnUrl('https://dangling-dice-studios.com/'), true);
+      assert.equal(isSafeReturnUrl('https://evil.example/phish'), false);
+      assert.equal(isSafeReturnUrl('https://dangling-dice-studios.com.evil.example/'), false);
+      assert.equal(isSafeReturnUrl('javascript:alert(1)'), false);
+      assert.equal(isSafeReturnUrl(undefined), false);
     });
   });
 });

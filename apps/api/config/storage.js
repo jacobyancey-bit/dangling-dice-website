@@ -60,6 +60,7 @@ if (isR2Configured) {
  * @returns {Promise<{success: boolean, provider: string, filename: string, url: string, sizeBytes: number}>}
  */
 export async function storeAsset(filename, buffer, contentType = 'application/octet-stream') {
+  existenceCache.delete(filename);
   if (s3Client) {
     try {
       await s3Client.send(
@@ -121,7 +122,12 @@ export async function getAssetUrl(filename, expiresInSeconds = 3600) {
     try {
       return await getSignedUrl(
         s3Client,
-        new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: filename }),
+        new GetObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: filename,
+          // Cross-origin redirects ignore <a download>; force a save dialog instead of inline playback
+          ResponseContentDisposition: `attachment; filename="${filename.replace(/["\\\r\n]/g, '')}"`,
+        }),
         { expiresIn: expiresInSeconds }
       );
     } catch (err) {
@@ -132,11 +138,50 @@ export async function getAssetUrl(filename, expiresInSeconds = 3600) {
   return `/storage/${filename}`;
 }
 
+// Bounded cache of R2 object existence (HeadObject is a free-tier Class B op; avoid one per download)
+const EXISTENCE_TTL_MS = 5 * 60 * 1000;
+const EXISTENCE_CACHE_MAX = 200;
+const existenceCache = new Map();
+
+/**
+ * Returns whether an object exists in the R2 bucket. Returns true (and does not cache) on
+ * transient errors so a flaky HEAD never forces bandwidth onto the Render container.
+ * @param {string} filename
+ * @returns {Promise<boolean>}
+ */
+export async function remoteAssetExists(filename) {
+  if (!s3Client) return false;
+  const cached = existenceCache.get(filename);
+  if (cached && Date.now() - cached.at < EXISTENCE_TTL_MS) return cached.exists;
+
+  let exists;
+  try {
+    await s3Client.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME, Key: filename }), {
+      abortSignal: AbortSignal.timeout(3000),
+    });
+    exists = true;
+  } catch (err) {
+    const status = err?.$metadata?.httpStatusCode;
+    if (status === 404 || err?.name === 'NotFound' || err?.name === 'NoSuchKey') {
+      exists = false;
+    } else {
+      return true;
+    }
+  }
+
+  if (existenceCache.size >= EXISTENCE_CACHE_MAX) {
+    existenceCache.delete(existenceCache.keys().next().value);
+  }
+  existenceCache.set(filename, { exists, at: Date.now() });
+  return exists;
+}
+
 /**
  * Deletes an asset from Cloudflare R2 or local fallback storage
  * @param {string} filename
  */
 export async function deleteAsset(filename) {
+  existenceCache.delete(filename);
   if (s3Client) {
     try {
       await s3Client.send(

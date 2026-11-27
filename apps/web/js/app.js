@@ -1829,7 +1829,8 @@ function playSamplerGrooveDemo() {
 function downloadFreeSampleKit() {
   window.showToast("🎁 Downloading Free Studio Sound Kit (.WAV) — 8-Bar Lo-Fi Master (85 BPM)...", "info");
 
-  const wavUrl = "/downloads/dangling-dice-studio-sound-kit.wav";
+  // Routed through the R2 zero-egress redirect (falls back to the bundled copy if not yet uploaded)
+  const wavUrl = "/api/storage/download/dangling-dice-studio-sound-kit.wav";
   const tempLink = document.createElement("a");
   tempLink.href = wavUrl;
   tempLink.download = "Dangling_Dice_Studio_LoFi_Kit_85BPM.wav";

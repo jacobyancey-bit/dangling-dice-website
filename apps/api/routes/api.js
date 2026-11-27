@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import authRoutes from './authRoutes.js';
 import itemRoutes from './itemRoutes.js';
@@ -93,7 +94,8 @@ router.get('/compliance', (req, res) => {
       zeroDataRetention: true,
       cookieFreeAnalytics: true,
       ipMasking: 'GDPR / CCPA compliant (IPv4 /24 subnet masking, IPv6 /48 masking)',
-      serverStorage: 'Ephemeral in-memory pipes (Zero local disk persistence for media transcoding streams)',
+      serverStorage: 'Ephemeral processing: streamed conversions are piped in memory and never written to disk; pre-transcoded downloads are held in a temporary container directory for at most ~20 minutes (15-minute TTL), then deleted, and are purged on every container restart. No media is retained long-term.',
+      mediaRetention: { streamedConversions: 'none (in-memory pipe)', preTranscodedFiles: 'auto-deleted after 15 minutes (sweep every 5 minutes)', containerRestart: 'temporary directory purged at boot' },
       subprocessors: [
         { name: 'Cloudflare', purpose: 'Edge CDN, DDoS protection, Turnstile bot shield, and Zero-Egress R2 Asset Storage' },
         { name: 'Render', purpose: 'Stateless container hosting & API compute' },
@@ -315,6 +317,20 @@ router.delete('/marketing/links/:slug', protect, admin, async (req, res) => {
  * Dynamic Staff Feature Flags & Railway Sandbox Microservice
  * Locked from public users by default.
  */
+/**
+ * Staff gate: fails closed. Access requires STAFF_SECRET to be configured server-side
+ * and supplied via the `x-staff-token` header (never via query string, which leaks into
+ * logs/referrers). Compared in constant time. No hardcoded fallback secret.
+ */
+export function isStaffRequest(req) {
+  const expected = process.env.STAFF_SECRET;
+  const provided = req?.headers?.['x-staff-token'];
+  if (!expected || typeof provided !== 'string' || !provided) return false;
+  const a = crypto.createHash('sha256').update(provided).digest();
+  const b = crypto.createHash('sha256').update(expected).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
 let dynamicFeatureFlags = {
   commandPalette: true,
   sandboxRunner: true,
@@ -324,8 +340,7 @@ let dynamicFeatureFlags = {
 };
 
 router.get('/ui/flags', (req, res) => {
-  const staffToken = req.headers['x-staff-token'] || req.query.token;
-  const isStaff = staffToken === (process.env.STAFF_SECRET || 'dds_staff_2026') || req.query.staff === 'dds_internal';
+  const isStaff = isStaffRequest(req);
 
   if (!isStaff) {
     return res.json({
@@ -350,8 +365,7 @@ router.get('/ui/flags', (req, res) => {
 });
 
 router.post('/ui/flags/toggle', (req, res) => {
-  const staffToken = req.headers['x-staff-token'] || req.query.token;
-  const isStaff = staffToken === (process.env.STAFF_SECRET || 'dds_staff_2026') || req.body?.staff === 'dds_internal';
+  const isStaff = isStaffRequest(req);
   if (!isStaff) {
     return res.status(403).json({ success: false, error: 'Staff credentials required.' });
   }
@@ -364,8 +378,7 @@ router.post('/ui/flags/toggle', (req, res) => {
 });
 
 router.post('/ui/sandbox/run', (req, res) => {
-  const staffToken = req.headers['x-staff-token'] || req.query.token;
-  const isStaff = staffToken === (process.env.STAFF_SECRET || 'dds_staff_2026') || req.body?.staff === 'dds_internal';
+  const isStaff = isStaffRequest(req);
   if (!isStaff) {
     return res.status(403).json({ success: false, error: 'Access denied: Staff sandbox execution only.' });
   }

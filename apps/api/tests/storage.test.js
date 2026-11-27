@@ -79,4 +79,31 @@ test('📦 Cloudflare R2 / Local Storage Adapter Suite', async (t) => {
     assert.strictEqual(statusCode, 404);
     assert.strictEqual(responseData.success, false);
   });
+
+  await t.test('STOR-05: Download route serves bundled sound kit when the object is not in R2', async () => {
+    let downloaded = null;
+    let statusCode = 200;
+    const headers = {};
+    const res = {
+      status(code) { statusCode = code; return res; },
+      json() { return res; },
+      redirect() { throw new Error('must not redirect to a missing R2 object'); },
+      download(p, name) { downloaded = { p: p.replace(/\\/g, '/'), name }; },
+      sendFile() {},
+      setHeader(k, v) { headers[k] = v; },
+    };
+    const downloadLayer = storageRoutes.stack.find((l) => l.route && l.route.path === '/download/:filename');
+    await downloadLayer.route.stack[0].handle({ params: { filename: 'dangling-dice-studio-sound-kit.wav' } }, res);
+    assert.strictEqual(statusCode, 200);
+    assert.ok(downloaded, 'Expected bundled fallback download');
+    assert.match(downloaded.p, /web\/(dist|public)\/downloads\/dangling-dice-studio-sound-kit\.wav$/);
+    assert.strictEqual(downloaded.name, 'dangling-dice-studio-sound-kit.wav');
+  });
+
+  await t.test('STOR-06: remoteAssetExists reports false without an R2 client (no network calls)', async () => {
+    const { remoteAssetExists, isR2Configured } = await import('../config/storage.js');
+    if (!isR2Configured) {
+      assert.strictEqual(await remoteAssetExists('anything.zip'), false);
+    }
+  });
 });
