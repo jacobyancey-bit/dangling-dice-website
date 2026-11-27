@@ -19,24 +19,29 @@
   <link rel="stylesheet" href="/css/main.css" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
-<body>
+<body class="admin-body">
   <!-- ==========================================================================
        Admin Header Section
        ========================================================================== -->
   <header>
-    <div class="header-container">
-      <a href="/admin" class="brand">
+    <div class="header-container" style="max-width: 1460px;">
+      <a href="/admin.html" class="brand">
         <img src="/images/logo.png" alt="Logo" class="brand-logo-img" />
         <div>
           <div class="brand-title">
             Dangling Dice Studios™
-            <span class="admin-pill">Admin Portal</span>
+            <span class="admin-pill">Admin Console</span>
           </div>
         </div>
       </a>
 
-      <div class="nav-actions" style="display: flex; align-items: center; gap: 0.85rem;">
-        <a href="/" target="_blank" class="btn btn-secondary btn-sm">Public Website ↗</a>
+      <div class="nav-actions" style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <span id="headerStatusPill" class="admin-status-pill" style="display: none;">
+          <span class="admin-status-dot"></span>
+          <span id="headerStatusText">All Systems Operational</span>
+        </span>
+        <button id="headerRefreshBtn" class="btn btn-secondary btn-sm" onclick="refreshAllAdminData()" style="display: none;">↻ Refresh</button>
+        <a href="/" target="_blank" class="btn btn-secondary btn-sm">Public Site ↗</a>
         <button id="headerLogoutBtn" class="btn btn-danger btn-sm" onclick="logoutAdmin()" style="display: none;">Sign Out</button>
       </div>
     </div>
@@ -69,385 +74,580 @@
       </div>
     </div>
 
-    <!-- View 2: Full Admin Dashboard -->
+    <!-- View 2: Full SaaS Admin Command Console -->
     <div id="dashboardView">
-      <!-- Stats Strip -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Total Catalog Items</div>
-          <div class="stat-value" id="statItemCount">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total API Pulls</div>
-          <div class="stat-value" style="color: var(--neon-cyan);" id="statApiPulls">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Database Connection</div>
-          <div class="stat-value" style="color: var(--neon-emerald); font-size: 1.35rem;" id="statDbStatus">Online (Atlas)</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Authenticated Administrator</div>
-          <div class="stat-value" style="font-size: 1.1rem; color: var(--gold-light);" id="statAdminName">Studio Lead</div>
-        </div>
-      </div>
+      <div class="admin-shell">
+        <!-- Left Command Sidebar -->
+        <aside class="admin-sidebar" aria-label="Admin Console Navigation">
+          <div class="admin-sidebar-profile">
+            <div style="font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--neon-cyan); font-weight: 800;">Authenticated Lead</div>
+            <div id="statAdminName" style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-top: 0.2rem; word-break: break-word;">Studio Lead</div>
+          </div>
 
-      <!-- Private Studio API & Crawler Telemetry -->
-      <div class="card" style="margin-bottom: 2rem; border-color: rgba(6, 182, 212, 0.3);">
-        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>📊 Live API Pulls & Crawler Intelligence</span>
-          <span id="apiUptimeBadge" style="font-size: 0.75rem; font-weight: normal; color: var(--neon-cyan);">Uptime: checking...</span>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; margin-bottom: 1.25rem;">
-          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(6, 182, 212, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(6, 182, 212, 0.2);">
-            <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">AI Crawlers (ChatGPT / Claude / Perplexity)</div>
-            <div id="telemetryAiHits" style="font-size: 1.3rem; font-weight: 700; color: var(--neon-cyan); line-height: 1.1;">0</div>
-          </div>
-          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(16, 185, 129, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.2);">
-            <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">Search Engine Spiders (Google / Bing)</div>
-            <div id="telemetrySearchHits" style="font-size: 1.3rem; font-weight: 700; color: var(--neon-emerald); line-height: 1.1;">0</div>
-          </div>
-          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(236, 72, 153, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(236, 72, 153, 0.2);">
-            <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">Social Previews (Discord / Twitter / Reddit)</div>
-            <div id="telemetrySocialHits" style="font-size: 1.3rem; font-weight: 700; color: #f472b6; line-height: 1.1;">0</div>
-          </div>
-          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(245, 158, 11, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.2);">
-            <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">Developer Tools & HTTP Scripts</div>
-            <div id="telemetryToolsHits" style="font-size: 1.3rem; font-weight: 700; color: var(--gold-light); line-height: 1.1;">0</div>
-          </div>
-          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(6, 182, 212, 0.12); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(6, 182, 212, 0.4);">
-            <div style="font-size: 0.75rem; color: #67e8f9; font-weight: 700; line-height: 1.35;">⚡ RapidAPI Marketplace Pulls</div>
-            <div id="telemetryRapidApiHits" style="font-size: 1.3rem; font-weight: 700; color: #67e8f9; line-height: 1.1;">0</div>
-          </div>
-          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(168, 85, 247, 0.12); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(168, 85, 247, 0.4);">
-            <div style="font-size: 0.75rem; color: #c084fc; font-weight: 700; line-height: 1.35;">💻 Direct API &amp; SDK Calls</div>
-            <div id="telemetryDirectHits" style="font-size: 1.3rem; font-weight: 700; color: #c084fc; line-height: 1.1;">0</div>
-          </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-          <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Top Targeted Endpoints:</div>
-          <a href="/api/health" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">Raw JSON Diagnostics ↗</a>
-        </div>
-        <div id="telemetryTopEndpoints" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <span style="font-size: 0.75rem; color: var(--text-muted);">Loading endpoints...</span>
-        </div>
-      </div>
-
-      <!-- ======================================================================
-           Central Studio Marketing & Broadcast Station (Omnipost Engine)
-           ====================================================================== -->
-      <div class="card" style="margin-bottom: 2rem; border-color: rgba(236, 72, 153, 0.35);">
-        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span>📢 Central Studio Marketing & Broadcast Station</span>
-            <span class="admin-pill" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">Omnipost Engine</span>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">Discord: <code style="color: #67e8f9;">#📢・studio-drops</code></span>
-        </div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; margin-bottom: 1.25rem;">
-          Compose your studio update once. Broadcast directly to your connected Discord channel with 1 click, or instantly copy tailored formats for Reddit, YouTube Community, and Twitter/X with zero third-party software.
-        </p>
-
-        <!-- Section A: 1-Click Studio Quick Presets -->
-        <div style="margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.4rem;">
-            <div style="font-size: 0.78rem; font-weight: 700; color: #fbbf24;">⚡ 1-Click Studio Presets (Instant Fill):</div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">Click any hub to populate all fields &amp; response hooks instantly</div>
-          </div>
-          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('beats')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(236,72,153,0.4); color: #f472b6;">
-              🎛️ Beats Studio DAW
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('media')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(59,130,246,0.4); color: #60a5fa;">
-              🎵 320k Media Transcoder
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('games')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(16,185,129,0.4); color: #10b981;">
-              🎯 Gaming Audio Radar
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('dev')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(6,182,212,0.4); color: var(--neon-cyan);">
-              💻 Dev Hub Sandboxes
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('calculator')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(245,158,11,0.4); color: #fbbf24;">
-              📱 AI Calculator (Play Store)
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('gear_jbl')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(239,68,68,0.4); color: #f87171;">
-              🎧 JBL 680NC Gear Deal
-            </button>
-          </div>
-        </div>
-
-        <!-- Section B: Smart 1-Box Prompt Generator (Just say what you want!) -->
-        <div style="margin-bottom: 1.25rem; padding: 1rem 1.15rem; background: linear-gradient(135deg, rgba(168, 85, 247, 0.09), rgba(6, 182, 212, 0.09)); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: var(--radius-sm);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.4rem;">
-            <div style="font-size: 0.82rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
-              <span>✨</span> Smart Prompt Generator &bull; Just Say What You Want
-            </div>
-            <span class="pill-tag pill-tag-purple" style="font-size: 0.68rem;">Auto-generates high-response hooks &amp; questions</span>
-          </div>
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
-            <input type="text" id="smartPromptText" class="form-input" style="font-size: 0.82rem; padding: 0.55rem 0.75rem;" placeholder="What do you want to announce? (e.g. 'Added 16-pad drum machine with MIDI export and free lo-fi kit')" />
-            <input type="url" id="smartPromptLink" class="form-input" style="font-size: 0.82rem; padding: 0.55rem 0.75rem;" placeholder="Optional URL (or leave blank to auto-detect)" />
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="font-size: 0.72rem; color: var(--text-muted);">
-              💡 <em>Automatically generates interactive questions at the end of posts to get comments &amp; replies!</em>
-            </div>
-            <button type="button" class="btn btn-primary btn-sm" onclick="generateFromSmartPrompt()" style="background: linear-gradient(135deg, #a855f7, #06b6d4); color: #000; font-weight: 800; padding: 0.45rem 1.1rem;">
-              ✨ Generate Omnipost Magic
-            </button>
-          </div>
-        </div>
-
-        <!-- Composer Form -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label for="broadcastTitle">Campaign / Post Title</label>
-            <input type="text" id="broadcastTitle" placeholder="e.g. Free 320kbps YouTube to MP3 Converter — 100% Ad-Free" value="Free 320kbps YouTube to MP3 Converter — Zero Ads & Popups" oninput="generateAllOmnipostFormats()" />
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label for="broadcastLink">Target Link / URL</label>
-            <input type="url" id="broadcastLink" placeholder="https://media.dangling-dice-studios.com" value="https://media.dangling-dice-studios.com" oninput="generateAllOmnipostFormats()" />
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label for="broadcastDesc">Hook & Key Value Proposition</label>
-            <textarea id="broadcastDesc" rows="3" placeholder="Explain the key benefit..." oninput="generateAllOmnipostFormats()">Tired of closing 5 scam popup tabs just to grab an audio sample for FL Studio or Ableton? We built a fast, ad-free 320kbps in-browser converter for beatmakers and video editors. Direct downloads with zero tracking.</textarea>
-          </div>
-          <div class="form-group" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-              <label for="broadcastCategory">Category</label>
-              <select id="broadcastCategory" style="height: 42px; margin-bottom: 0.75rem;" onchange="generateAllOmnipostFormats()">
-                <option value="Developer Tools">🛠️ Developer Tools & Utilities</option>
-                <option value="Beats & Audio">🎧 Beats & Music Production</option>
-                <option value="Affiliate Deals">⚡ Gear Deals & Discounts</option>
-                <option value="Studio Update">🎲 General Studio Announcement</option>
-              </select>
-            </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button type="button" class="btn btn-primary" id="broadcastDiscordBtn" onclick="dispatchDiscordBroadcast()" style="flex: 1; min-width: 160px; height: 42px; background: linear-gradient(135deg, #5865F2, #7289da);">
-                🚀 Broadcast Now
+          <div>
+            <div class="admin-sidebar-label">Console Modules</div>
+            <div class="admin-nav-list">
+              <button type="button" class="admin-nav-btn active" data-tab="overview" onclick="switchAdminTab('overview')">
+                <span class="admin-nav-btn-left"><span>📊</span> Overview</span>
+                <span class="admin-nav-badge" id="navLatencyBadge">Live</span>
               </button>
-              <button type="button" class="btn btn-secondary" onclick="openProductHuntModal()" style="height: 42px; border-color: #da552f; color: #ff6154; font-weight: 700;">
-                🐱 Product Hunt Kit
+              <button type="button" class="admin-nav-btn" data-tab="catalog" onclick="switchAdminTab('catalog')">
+                <span class="admin-nav-btn-left"><span>📦</span> Studio Catalog</span>
+                <span class="admin-nav-badge" id="navCatalogBadge">0</span>
+              </button>
+              <button type="button" class="admin-nav-btn" data-tab="orders" onclick="switchAdminTab('orders')">
+                <span class="admin-nav-btn-left"><span>💳</span> Orders &amp; Revenue</span>
+                <span class="admin-nav-badge" id="navOrdersBadge">0</span>
+              </button>
+              <button type="button" class="admin-nav-btn" data-tab="showcase" onclick="switchAdminTab('showcase')">
+                <span class="admin-nav-btn-left"><span>⭐</span> Dev Showcase</span>
+                <span class="admin-nav-badge" id="navShowcaseBadge">0</span>
+              </button>
+              <button type="button" class="admin-nav-btn" data-tab="marketing" onclick="switchAdminTab('marketing')">
+                <span class="admin-nav-btn-left"><span>📢</span> Marketing &amp; Drops</span>
+              </button>
+              <button type="button" class="admin-nav-btn" data-tab="logs" onclick="switchAdminTab('logs')">
+                <span class="admin-nav-btn-left"><span>🖥️</span> System &amp; Logs</span>
               </button>
             </div>
           </div>
+
+          <div>
+            <div class="admin-sidebar-label">Studio Subdomains</div>
+            <div class="admin-subdomain-links">
+              <a href="https://dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer">🏠 Main</a>
+              <a href="https://beats.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer">🎧 Beats</a>
+              <a href="https://games.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer">🎮 Games</a>
+              <a href="https://media.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer">🎵 Media</a>
+              <a href="https://dev.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer">💻 Dev Hub</a>
+              <a href="https://api.dangling-dice-studios.com/openapi.json" target="_blank" rel="noopener noreferrer">📜 OpenAPI</a>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.45rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.06);">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openPublishModal()" style="width: 100%; justify-content: center;">+ Publish New Item</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openProductHuntModal()" style="width: 100%; justify-content: center; border-color: rgba(218,85,47,0.45); color: #ff8c7a;">🐱 Product Hunt Kit</button>
+          </div>
+        </aside>
+
+        <!-- Right Main Workspace -->
+        <div class="admin-main-pane">
+          <!-- ================================================================
+               TAB 1: OVERVIEW & LIVE TELEMETRY
+               ================================================================ -->
+          <section id="tab-overview" class="admin-tab-panel active">
+            <!-- Top KPI Strip -->
+            <div class="stats-row" style="margin-bottom: 1.25rem;">
+              <div class="stat-card">
+                <div class="stat-label">Total Catalog Items</div>
+                <div class="stat-value" id="statItemCount">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Total API Pulls</div>
+                <div class="stat-value" style="color: var(--neon-cyan);" id="statApiPulls">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Avg API Latency</div>
+                <div class="stat-value" style="color: var(--gold-light);" id="statAvgLatency">-- ms</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Database Connection</div>
+                <div class="stat-value" style="color: var(--neon-emerald); font-size: 1.35rem;" id="statDbStatus">Online (Atlas)</div>
+              </div>
+            </div>
+
+            <!-- Live 9-Pillar Infrastructure Matrix -->
+            <div class="infra-grid">
+              <div class="infra-card">
+                <div>
+                  <div class="infra-name">🍃 MongoDB Atlas</div>
+                  <div class="infra-sub" id="infraMongoSub">dangling_dice_db</div>
+                </div>
+                <span class="infra-badge" id="infraMongoBadge">Checking...</span>
+              </div>
+              <div class="infra-card">
+                <div>
+                  <div class="infra-name">⚡ Railway Redis</div>
+                  <div class="infra-sub" id="infraRedisSub">Cache &amp; Rate Limiter</div>
+                </div>
+                <span class="infra-badge" id="infraRedisBadge">Checking...</span>
+              </div>
+              <div class="infra-card">
+                <div>
+                  <div class="infra-name">☁️ Cloudflare R2</div>
+                  <div class="infra-sub" id="infraR2Sub">Zero-Egress Asset Bucket</div>
+                </div>
+                <span class="infra-badge" id="infraR2Badge">Checking...</span>
+              </div>
+              <div class="infra-card">
+                <div>
+                  <div class="infra-name">🚀 Render API Runtime</div>
+                  <div class="infra-sub" id="apiUptimeBadge">Uptime: checking...</div>
+                </div>
+                <span class="infra-badge" id="infraRuntimeBadge">Healthy</span>
+              </div>
+            </div>
+
+            <!-- Live API Pulls & Crawler Intelligence -->
+            <div class="card" style="margin-bottom: 1.5rem; border-color: rgba(6, 182, 212, 0.3);">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <span>📊 Live API Pulls &amp; Crawler Intelligence</span>
+                <a href="/api/health" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.2rem 0.55rem;">Raw JSON Diagnostics ↗</a>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(6, 182, 212, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(6, 182, 212, 0.2);">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">AI Crawlers (ChatGPT / Claude / Perplexity)</div>
+                  <div id="telemetryAiHits" style="font-size: 1.3rem; font-weight: 700; color: var(--neon-cyan); line-height: 1.1;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(16, 185, 129, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.2);">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">Search Engine Spiders (Google / Bing)</div>
+                  <div id="telemetrySearchHits" style="font-size: 1.3rem; font-weight: 700; color: var(--neon-emerald); line-height: 1.1;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(236, 72, 153, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(236, 72, 153, 0.2);">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">Social Previews (Discord / Twitter / Reddit)</div>
+                  <div id="telemetrySocialHits" style="font-size: 1.3rem; font-weight: 700; color: #f472b6; line-height: 1.1;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(245, 158, 11, 0.08); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.2);">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">Developer Tools &amp; HTTP Scripts</div>
+                  <div id="telemetryToolsHits" style="font-size: 1.3rem; font-weight: 700; color: var(--gold-light); line-height: 1.1;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(6, 182, 212, 0.12); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(6, 182, 212, 0.4);">
+                  <div style="font-size: 0.75rem; color: #67e8f9; font-weight: 700; line-height: 1.35;">⚡ RapidAPI Marketplace Pulls</div>
+                  <div id="telemetryRapidApiHits" style="font-size: 1.3rem; font-weight: 700; color: #67e8f9; line-height: 1.1;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.45rem; background: rgba(168, 85, 247, 0.12); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(168, 85, 247, 0.4);">
+                  <div style="font-size: 0.75rem; color: #c084fc; font-weight: 700; line-height: 1.35;">💻 Direct API &amp; SDK Calls</div>
+                  <div id="telemetryDirectHits" style="font-size: 1.3rem; font-weight: 700; color: #c084fc; line-height: 1.1;">0</div>
+                </div>
+              </div>
+
+              <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.45rem;">Top Targeted Endpoints:</div>
+              <div id="telemetryTopEndpoints" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Loading endpoints...</span>
+              </div>
+            </div>
+
+            <!-- Live Recent Request Activity Feed -->
+            <div class="card">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+                <span>⚡ Live Request Stream (GDPR-Masked)</span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fetchTelemetry()" style="font-size: 0.7rem; padding: 0.2rem 0.55rem;">↻ Refresh Feed</button>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Endpoint</th>
+                      <th>Status</th>
+                      <th>Latency</th>
+                      <th>Client</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentActivityTableBody">
+                    <tr>
+                      <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.25rem;">Loading live activity...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               TAB 2: STUDIO CATALOG MANAGER
+               ================================================================ -->
+          <section id="tab-catalog" class="admin-tab-panel">
+            <div class="card">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+                <span>📦 Studio Catalog &amp; Releases Inventory</span>
+                <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+                  <input type="search" id="catalogSearchInput" class="catalog-search-input" placeholder="🔍 Filter catalog by title or tag..." oninput="filterInventorySearch(this.value)" />
+                  <button class="btn btn-primary btn-sm" onclick="openPublishModal()">+ Publish New Item</button>
+                </div>
+              </div>
+
+              <div class="dashboard-toolbar" style="margin-bottom: 1rem;">
+                <div class="filter-pills">
+                  <button class="pill-btn active" onclick="filterCategory('All')">All Categories</button>
+                  <button class="pill-btn" onclick="filterCategory('Coding Tutorials')">💻 Coding</button>
+                  <button class="pill-btn" onclick="filterCategory('Beats & Audio')">🎧 Beats</button>
+                  <button class="pill-btn" onclick="filterCategory('Mobile Apps')">📱 Mobile Apps</button>
+                  <button class="pill-btn" onclick="filterCategory('Studio Games')">🎲 Games</button>
+                  <button class="pill-btn" onclick="filterCategory('Developer Tools')">🛠️ Dev Tools</button>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Media / External</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inventoryTableBody">
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading inventory from MongoDB...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               TAB 3: ORDERS & STRIPE REVENUE LEDGER
+               ================================================================ -->
+          <section id="tab-orders" class="admin-tab-panel">
+            <div class="stats-row" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.25rem;">
+              <div class="stat-card">
+                <div class="stat-label">Gross Studio Revenue</div>
+                <div class="stat-value" style="color: var(--neon-emerald);" id="ordersTotalRevenue">$0.00</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Fulfilled Orders</div>
+                <div class="stat-value" style="color: var(--neon-cyan);" id="ordersCompletedCount">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Total Checkout Sessions</div>
+                <div class="stat-value" style="color: var(--gold-light);" id="ordersTotalCount">0</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span>💳 Stripe Orders &amp; Digital License Ledger</span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fetchOrders()" style="font-size: 0.72rem;">↻ Refresh Orders</button>
+              </div>
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Customer Email</th>
+                      <th>Item / License</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>License Key</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ordersTableBody">
+                    <tr>
+                      <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading orders...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               TAB 4: INDIE DEV SPOTLIGHT & CURATOR
+               ================================================================ -->
+          <section id="tab-showcase" class="admin-tab-panel">
+            <div class="card" style="border-color: rgba(245, 158, 11, 0.4);">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span>⭐ Indie Developer Spotlight &amp; App of the Week</span>
+                  <span class="admin-pill" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Curator</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('all')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;">
+                    🔄 Rotate All Suites
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('creator')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(168, 85, 247, 0.4); color: #c084fc;">
+                    🎨 Rotate Creator
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('music')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(236, 72, 153, 0.4); color: #f472b6;">
+                    🎛️ Rotate Music
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('developer')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(6, 182, 212, 0.4); color: var(--neon-cyan);">
+                    💻 Rotate Dev Tool
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="loadShowcaseSubmissions()" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
+                    ↻ Refresh
+                  </button>
+                </div>
+              </div>
+
+              <!-- Autonomous Rotation Banner -->
+              <div style="margin-top: 0.75rem; margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="font-size: 1.3rem;">🤖</span>
+                  <div>
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Autonomous 7-Day Weekly Rotation Engine</div>
+                    <div style="font-size: 0.74rem; color: var(--text-muted);">Automatically swaps to the least-recently-featured approved app every Sunday with zero manual work.</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <label style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                    <input type="checkbox" id="autoRotationToggle" onchange="toggleAutoRotation(this.checked)" checked style="cursor: pointer;" />
+                    Auto-Rotate Weekly
+                  </label>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>App / Project</th>
+                      <th>Creator</th>
+                      <th>Category / Stack</th>
+                      <th>Status</th>
+                      <th>App of the Week</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="showcaseTableBody">
+                    <tr>
+                      <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading submissions...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               TAB 5: MARKETING & OMNIPOST BROADCAST STATION
+               ================================================================ -->
+          <section id="tab-marketing" class="admin-tab-panel">
+            <div class="card" style="border-color: rgba(236, 72, 153, 0.35);">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span>📢 Central Studio Marketing &amp; Broadcast Station</span>
+                  <span class="admin-pill" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">Omnipost Engine</span>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Discord: <code style="color: #67e8f9;">#📢・studio-drops</code></span>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; margin-bottom: 1.25rem;">
+                Compose your studio update once. Broadcast directly to your connected Discord channel with 1 click, or instantly copy tailored formats for Reddit, YouTube Community, and Twitter/X with zero third-party software.
+              </p>
+
+              <!-- Section A: 1-Click Studio Quick Presets -->
+              <div style="margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.4rem;">
+                  <div style="font-size: 0.78rem; font-weight: 700; color: #fbbf24;">⚡ 1-Click Studio Presets (Instant Fill):</div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted);">Click any hub to populate all fields &amp; response hooks instantly</div>
+                </div>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('beats')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(236,72,153,0.4); color: #f472b6;">
+                    🎛️ Beats Studio DAW
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('media')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(59,130,246,0.4); color: #60a5fa;">
+                    🎵 320k Media Transcoder
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('games')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(16,185,129,0.4); color: #10b981;">
+                    🎯 Gaming Audio Radar
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('dev')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(6,182,212,0.4); color: var(--neon-cyan);">
+                    💻 Dev Hub Sandboxes
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('calculator')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(245,158,11,0.4); color: #fbbf24;">
+                    📱 AI Calculator (Play Store)
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="applyOmnipostPreset('gear_jbl')" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; border-color: rgba(239,68,68,0.4); color: #f87171;">
+                    🎧 JBL 680NC Gear Deal
+                  </button>
+                </div>
+              </div>
+
+              <!-- Section B: Smart 1-Box Prompt Generator -->
+              <div style="margin-bottom: 1.25rem; padding: 1rem 1.15rem; background: linear-gradient(135deg, rgba(168, 85, 247, 0.09), rgba(6, 182, 212, 0.09)); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.4rem;">
+                  <div style="font-size: 0.82rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
+                    <span>✨</span> Smart Prompt Generator &bull; Just Say What You Want
+                  </div>
+                  <span class="pill-tag pill-tag-purple" style="font-size: 0.68rem;">Auto-generates high-response hooks &amp; questions</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.65rem; margin-bottom: 0.65rem;">
+                  <input type="text" id="smartPromptText" class="form-input" style="font-size: 0.82rem; padding: 0.55rem 0.75rem;" placeholder="What do you want to announce? (e.g. 'Added 16-pad drum machine with MIDI export and free lo-fi kit')" />
+                  <input type="url" id="smartPromptLink" class="form-input" style="font-size: 0.82rem; padding: 0.55rem 0.75rem;" placeholder="Optional URL (or leave blank to auto-detect)" />
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                  <div style="font-size: 0.72rem; color: var(--text-muted);">
+                    💡 <em>Automatically generates interactive questions at the end of posts to get comments &amp; replies!</em>
+                  </div>
+                  <button type="button" class="btn btn-primary btn-sm" onclick="generateFromSmartPrompt()" style="background: linear-gradient(135deg, #a855f7, #06b6d4); color: #000; font-weight: 800; padding: 0.45rem 1.1rem;">
+                    ✨ Generate Omnipost Magic
+                  </button>
+                </div>
+              </div>
+
+              <!-- Composer Form -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="broadcastTitle">Campaign / Post Title</label>
+                  <input type="text" id="broadcastTitle" placeholder="e.g. Free 320kbps YouTube to MP3 Converter — 100% Ad-Free" value="Free 320kbps YouTube to MP3 Converter — Zero Ads & Popups" oninput="generateAllOmnipostFormats()" />
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="broadcastLink">Target Link / URL</label>
+                  <input type="url" id="broadcastLink" placeholder="https://media.dangling-dice-studios.com" value="https://media.dangling-dice-studios.com" oninput="generateAllOmnipostFormats()" />
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="broadcastDesc">Hook &amp; Key Value Proposition</label>
+                  <textarea id="broadcastDesc" rows="3" placeholder="Explain the key benefit..." oninput="generateAllOmnipostFormats()">Tired of closing 5 scam popup tabs just to grab an audio sample for FL Studio or Ableton? We built a fast, ad-free 320kbps in-browser converter for beatmakers and video editors. Direct downloads with zero tracking.</textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                  <div>
+                    <label for="broadcastCategory">Category</label>
+                    <select id="broadcastCategory" style="height: 42px; margin-bottom: 0.75rem;" onchange="generateAllOmnipostFormats()">
+                      <option value="Developer Tools">🛠️ Developer Tools &amp; Utilities</option>
+                      <option value="Beats & Audio">🎧 Beats &amp; Music Production</option>
+                      <option value="Affiliate Deals">⚡ Gear Deals &amp; Discounts</option>
+                      <option value="Studio Update">🎲 General Studio Announcement</option>
+                    </select>
+                  </div>
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary" id="broadcastDiscordBtn" onclick="dispatchDiscordBroadcast()" style="flex: 1; min-width: 160px; height: 42px; background: linear-gradient(135deg, #5865F2, #7289da);">
+                      🚀 Broadcast Now
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="openProductHuntModal()" style="height: 42px; border-color: #da552f; color: #ff6154; font-weight: 700;">
+                      🐱 Product Hunt Kit
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Automated Schedule Drop Queue -->
+              <div style="margin-top: 1rem; padding: 0.85rem 1rem; background: rgba(88, 101, 242, 0.08); border: 1px solid rgba(88, 101, 242, 0.3); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="font-size: 1.3rem;">⏰</span>
+                  <div>
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Automated Schedule Drop Queue</div>
+                    <div style="font-size: 0.74rem; color: var(--text-muted);">Schedule auto-broadcasts without paying for Buffer, Hootsuite, or Later</div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                  <input type="datetime-local" id="broadcastScheduleTime" style="padding: 0.45rem 0.65rem; font-size: 0.8rem; background: #06090e; border: 1px solid var(--border-subtle); color: #fff; border-radius: 4px;" />
+                  <button type="button" class="btn btn-primary btn-sm" onclick="queueScheduledBroadcast()" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 700;">
+                    📅 Queue Scheduled Drop
+                  </button>
+                </div>
+              </div>
+
+              <!-- Active Scheduled Drops Queue List -->
+              <div id="scheduledQueueSection" style="margin-top: 1rem; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <div style="font-size: 0.8rem; font-weight: 700; color: var(--neon-cyan);">📅 Upcoming Scheduled Broadcasts:</div>
+                  <button class="btn btn-secondary btn-sm" onclick="loadScheduledQueue()" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">↻ Refresh Queue</button>
+                </div>
+                <div id="scheduledQueueList" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+              </div>
+
+              <div id="broadcastStatusAlert" class="alert" style="display: none; margin-top: 1rem; margin-bottom: 1rem;"></div>
+
+              <!-- Platform-Optimized Formats -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff;">📋 Platform-Optimized Omnipost Formats:</h4>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Auto-formatted with zero algorithm penalty triggers</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #ff4500;">Reddit (r/FL_Studio, r/trapproduction)</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('redditPreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="redditPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #ff0033;">YouTube Community &amp; Video Desc</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('youtubePreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="youtubePreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #1da1f2;">Twitter / X (Algorithm-Safe Thread)</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('twitterPreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="twitterPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #1877f2;">Facebook (Pages &amp; Creator Groups)</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('facebookPreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="facebookPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #e1306c;">Instagram (Reels &amp; Carousels)</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('instagramPreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="instagramPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #00f2fe;">TikTok (On-Screen Hooks &amp; Captions)</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('tiktokPreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="tiktokPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #a855f7;">Dev.to &amp; Hashnode (Tech Blog Post)</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('devtoPreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="devtoPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+
+                <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: #22c55e;">GitHub Public-APIs Pull Request</span>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('publicApisReadmePreview')">📋 Copy</button>
+                  </div>
+                  <textarea id="publicApisReadmePreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               TAB 6: SYSTEM DIAGNOSTICS & CONSOLE LOGS
+               ================================================================ -->
+          <section id="tab-logs" class="admin-tab-panel">
+            <div class="card" style="margin-bottom: 1.25rem;">
+              <div class="card-title" style="margin-bottom: 0.85rem;">🩺 Live Production Diagnostic Endpoints</div>
+              <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                <a href="/api/health" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">/api/health ↗</a>
+                <a href="/api/compliance" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">/api/compliance ↗</a>
+                <a href="/openapi.json" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">/openapi.json ↗</a>
+                <a href="/live" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">/live (Liveness) ↗</a>
+                <a href="/ready" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">/ready (Readiness) ↗</a>
+                <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">/sitemap.xml ↗</a>
+                <a href="/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">/llms.txt ↗</a>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <span>🖥️ Admin Console &amp; Network Inspector</span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="clearAdminLogs()" style="font-size: 0.7rem;">Clear Logs</button>
+              </div>
+              <div class="log-box" id="adminLogBox" style="margin-top: 0; min-height: 280px;">
+                <div class="log-line">[System] Dangling Dice Studios™ Admin Console Active.</div>
+              </div>
+            </div>
+          </section>
         </div>
-
-        <!-- In-House Automated Schedule Drop Queue -->
-        <div style="margin-top: 1rem; padding: 0.85rem 1rem; background: rgba(88, 101, 242, 0.08); border: 1px solid rgba(88, 101, 242, 0.3); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <span style="font-size: 1.3rem;">⏰</span>
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Automated Schedule Drop Queue</div>
-              <div style="font-size: 0.74rem; color: var(--text-muted);">Schedule auto-broadcasts without paying for Buffer, Hootsuite, or Later</div>
-            </div>
-          </div>
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-            <input type="datetime-local" id="broadcastScheduleTime" style="padding: 0.45rem 0.65rem; font-size: 0.8rem; background: #06090e; border: 1px solid var(--border-subtle); color: #fff; border-radius: 4px;" />
-            <button type="button" class="btn btn-primary btn-sm" onclick="queueScheduledBroadcast()" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 700;">
-              📅 Queue Scheduled Drop
-            </button>
-          </div>
-        </div>
-
-        <!-- Active Scheduled Drops Queue List -->
-        <div id="scheduledQueueSection" style="margin-top: 1rem; display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-            <div style="font-size: 0.8rem; font-weight: 700; color: var(--neon-cyan);">📅 Upcoming Scheduled Broadcasts:</div>
-            <button class="btn btn-secondary btn-sm" onclick="loadScheduledQueue()" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">↻ Refresh Queue</button>
-          </div>
-          <div id="scheduledQueueList" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
-        </div>
-
-        <div id="broadcastStatusAlert" class="alert" style="display: none; margin-top: 1rem; margin-bottom: 1rem;"></div>
-
-        <!-- 3 Platform-Optimized Formats -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-          <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff;">📋 Platform-Optimized Omnipost Formats:</h4>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">Auto-formatted with zero algorithm penalty triggers</span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-          <!-- Reddit Formatter -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #ff4500;">Reddit (r/FL_Studio, r/trapproduction)</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('redditPreview')">📋 Copy</button>
-            </div>
-            <textarea id="redditPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-
-          <!-- YouTube Community Formatter -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #ff0033;">YouTube Community & Video Desc</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('youtubePreview')">📋 Copy</button>
-            </div>
-            <textarea id="youtubePreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-
-          <!-- Twitter / X Thread Formatter -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #1da1f2;">Twitter / X (Algorithm-Safe Thread)</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('twitterPreview')">📋 Copy</button>
-            </div>
-            <textarea id="twitterPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-
-          <!-- Facebook Formatter -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #1877f2;">Facebook (Pages & Creator Groups)</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('facebookPreview')">📋 Copy</button>
-            </div>
-            <textarea id="facebookPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-
-          <!-- Instagram Formatter (Reels, Carousels & Stories) -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #e1306c;">Instagram (Reels & Carousels)</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('instagramPreview')">📋 Copy</button>
-            </div>
-            <textarea id="instagramPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-
-          <!-- TikTok Formatter (Hooks, Shorts & Audio Sounds) -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #00f2fe;">TikTok (On-Screen Hooks & Captions)</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('tiktokPreview')">📋 Copy</button>
-            </div>
-            <textarea id="tiktokPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-
-          <!-- Dev.to / Hashnode Technical Article Formatter -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #a855f7;">Dev.to & Hashnode (Tech Blog Post)</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('devtoPreview')">📋 Copy</button>
-            </div>
-            <textarea id="devtoPreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-
-          <!-- GitHub Public-APIs / Awesome-List Formatter -->
-          <div style="background: rgba(6, 9, 14, 0.75); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="font-size: 0.78rem; font-weight: 700; color: #22c55e;">GitHub Public-APIs Pull Request</span>
-              <button class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="copyOmnipost('publicApisReadmePreview')">📋 Copy</button>
-            </div>
-            <textarea id="publicApisReadmePreview" readonly style="flex: 1; font-size: 0.74rem; font-family: var(--font-mono); background: #04060a; color: #cbd5e1; border: 1px solid var(--border-subtle); border-radius: 4px; padding: 0.5rem; min-height: 120px; resize: none;"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- ======================================================================
-           Indie Dev Spotlight & App of the Week Manager
-           ====================================================================== -->
-      <div class="card" style="margin-bottom: 2rem; border-color: rgba(245, 158, 11, 0.4);">
-        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span>⭐ Indie Developer Spotlight & App of the Week</span>
-            <span class="admin-pill" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">Curator</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('all')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;">
-              🔄 Rotate All Suites
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('creator')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(168, 85, 247, 0.4); color: #c084fc;">
-              🎨 Rotate Creator
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('music')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(236, 72, 153, 0.4); color: #f472b6;">
-              🎛️ Rotate Music
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="triggerManualRotationNow('developer')" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; border-color: rgba(6, 182, 212, 0.4); color: var(--neon-cyan);">
-              💻 Rotate Dev Tool
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="loadShowcaseSubmissions()" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
-              ↻ Refresh
-            </button>
-          </div>
-        </div>
-
-        <!-- Autonomous Rotation Banner -->
-        <div style="margin-top: 0.75rem; margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <span style="font-size: 1.3rem;">🤖</span>
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: #fff;">Autonomous 7-Day Weekly Rotation Engine</div>
-              <div style="font-size: 0.74rem; color: var(--text-muted);">Automatically swaps to the least-recently-featured approved app every Sunday with zero manual work.</div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <label style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-              <input type="checkbox" id="autoRotationToggle" onchange="toggleAutoRotation(this.checked)" checked style="cursor: pointer;" />
-              Auto-Rotate Weekly
-            </label>
-          </div>
-        </div>
-
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>App / Project</th>
-                <th>Creator</th>
-                <th>Category / Stack</th>
-                <th>Status</th>
-                <th>App of the Week</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="showcaseTableBody">
-              <tr>
-                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading submissions...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Action Toolbar -->
-      <div class="dashboard-toolbar">
-        <div class="filter-pills">
-          <button class="pill-btn active" onclick="filterCategory('All')">All Categories</button>
-          <button class="pill-btn" onclick="filterCategory('Coding Tutorials')">💻 Coding</button>
-          <button class="pill-btn" onclick="filterCategory('Beats & Audio')">🎧 Beats</button>
-          <button class="pill-btn" onclick="filterCategory('Mobile Apps')">📱 Mobile Apps</button>
-          <button class="pill-btn" onclick="filterCategory('Studio Games')">🎲 Games</button>
-          <button class="pill-btn" onclick="filterCategory('Developer Tools')">🛠️ Dev Tools</button>
-        </div>
-
-        <button class="btn btn-primary btn-sm" onclick="openPublishModal()">+ Publish New Item</button>
-      </div>
-
-      <!-- Inventory Table -->
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Media / External</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="inventoryTableBody">
-            <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading inventory from MongoDB...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Console & Network Inspector -->
-      <div class="log-box" id="adminLogBox">
-        <div class="log-line">[System] Dangling Dice Studios™ Admin Console Active.</div>
       </div>
     </div>
   </main>

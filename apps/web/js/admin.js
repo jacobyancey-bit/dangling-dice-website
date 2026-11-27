@@ -77,9 +77,13 @@ function logoutAdmin() {
   const loginView = document.getElementById('loginView');
   const dashboardView = document.getElementById('dashboardView');
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+  const headerStatusPill = document.getElementById('headerStatusPill');
+  const headerRefreshBtn = document.getElementById('headerRefreshBtn');
   if (loginView) loginView.style.display = 'block';
   if (dashboardView) dashboardView.style.display = 'none';
   if (headerLogoutBtn) headerLogoutBtn.style.display = 'none';
+  if (headerStatusPill) headerStatusPill.style.display = 'none';
+  if (headerRefreshBtn) headerRefreshBtn.style.display = 'none';
   logAdmin('Signed out of Administrator Portal.');
 }
 
@@ -101,17 +105,36 @@ async function verifyExistingSession() {
   }
 }
 
+function switchAdminTab(tabId = 'overview') {
+  const panels = document.querySelectorAll('.admin-tab-panel');
+  const buttons = document.querySelectorAll('.admin-nav-btn');
+  panels.forEach((p) => p.classList.toggle('active', p.id === `tab-${tabId}`));
+  buttons.forEach((b) => b.classList.toggle('active', b.dataset.tab === tabId));
+  try {
+    localStorage.setItem('dds_admin_active_tab', tabId);
+  } catch {}
+}
+
 function showDashboard() {
   const loginView = document.getElementById('loginView');
   const dashboardView = document.getElementById('dashboardView');
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+  const headerStatusPill = document.getElementById('headerStatusPill');
+  const headerRefreshBtn = document.getElementById('headerRefreshBtn');
   const statAdminName = document.getElementById('statAdminName');
   if (loginView) loginView.style.display = 'none';
   if (dashboardView) dashboardView.style.display = 'block';
   if (headerLogoutBtn) headerLogoutBtn.style.display = 'inline-flex';
+  if (headerStatusPill) headerStatusPill.style.display = 'inline-flex';
+  if (headerRefreshBtn) headerRefreshBtn.style.display = 'inline-flex';
   if (statAdminName && adminUser) statAdminName.textContent = `${adminUser.name} (${adminUser.email})`;
+
+  const savedTab = localStorage.getItem('dds_admin_active_tab') || 'overview';
+  switchAdminTab(savedTab);
+
   fetchInventory();
   fetchTelemetry();
+  fetchOrders();
   loadScheduledQueue();
   loadShowcaseSubmissions();
 }
@@ -127,10 +150,47 @@ async function fetchTelemetry() {
     const statApiPulls = document.getElementById('statApiPulls');
     if (statApiPulls) statApiPulls.textContent = (analytics.totalRequests || 0).toLocaleString();
 
+    const avgMs = analytics.avgResponseTimeMs !== undefined ? `${analytics.avgResponseTimeMs} ms` : '-- ms';
+    const statAvgLatency = document.getElementById('statAvgLatency');
+    if (statAvgLatency) statAvgLatency.textContent = avgMs;
+
+    const navLatencyBadge = document.getElementById('navLatencyBadge');
+    if (navLatencyBadge) navLatencyBadge.textContent = avgMs;
+
+    const headerStatusText = document.getElementById('headerStatusText');
+    if (headerStatusText) {
+      headerStatusText.textContent = data.status === 'healthy'
+        ? `Operational • ${avgMs}`
+        : 'Degraded';
+    }
+
     const statDbStatus = document.getElementById('statDbStatus');
     if (statDbStatus && data.database) {
       statDbStatus.textContent = data.database.connected ? 'Online (Atlas)' : 'Disconnected';
       statDbStatus.style.color = data.database.connected ? 'var(--neon-emerald)' : 'var(--neon-red)';
+    }
+
+    // Live 9-Pillar Infrastructure Matrix Badges
+    const mongoBadge = document.getElementById('infraMongoBadge');
+    const mongoSub = document.getElementById('infraMongoSub');
+    if (mongoBadge && data.database) {
+      mongoBadge.textContent = data.database.connected ? 'Connected' : 'Offline';
+      mongoBadge.className = `infra-badge ${data.database.connected ? '' : 'err'}`;
+      if (mongoSub && data.database.name) mongoSub.textContent = data.database.name;
+    }
+
+    const redisBadge = document.getElementById('infraRedisBadge');
+    if (redisBadge && data.redis) {
+      redisBadge.textContent = data.redis.connected ? 'Connected' : 'In-Memory';
+      redisBadge.className = `infra-badge ${data.redis.connected ? '' : 'warn'}`;
+    }
+
+    const r2Badge = document.getElementById('infraR2Badge');
+    const r2Sub = document.getElementById('infraR2Sub');
+    if (r2Badge && data.storage) {
+      r2Badge.textContent = data.storage.configured ? '$0 Egress' : 'Not Set';
+      r2Badge.className = `infra-badge ${data.storage.configured ? '' : 'warn'}`;
+      if (r2Sub && data.storage.bucket) r2Sub.textContent = data.storage.bucket;
     }
 
     const aiEl = document.getElementById('telemetryAiHits');
@@ -154,7 +214,7 @@ async function fetchTelemetry() {
     const uptimeEl = document.getElementById('apiUptimeBadge');
     if (uptimeEl) {
       const mins = Math.round((analytics.uptimeSeconds || 0) / 60);
-      uptimeEl.textContent = `Server Uptime: ${mins > 60 ? (mins / 60).toFixed(1) + ' hrs' : mins + ' mins'}`;
+      uptimeEl.textContent = `Uptime: ${mins > 60 ? (mins / 60).toFixed(1) + ' hrs' : mins + ' mins'}`;
     }
 
     const topEl = document.getElementById('telemetryTopEndpoints');
@@ -164,6 +224,29 @@ async function fetchTelemetry() {
           ${escapeHtml(e.path)} <strong style="color: var(--neon-cyan); margin-left: 0.25rem;">${e.hits.toLocaleString()}</strong>
         </span>
       `).join('') || '<span style="color: var(--text-muted); font-size: 0.75rem;">None recorded yet</span>';
+    }
+
+    // Live Recent Request Activity Feed
+    const activityBody = document.getElementById('recentActivityTableBody');
+    if (activityBody && Array.isArray(analytics.recentActivity)) {
+      if (analytics.recentActivity.length === 0) {
+        activityBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.25rem;">No recent requests logged yet.</td></tr>`;
+      } else {
+        activityBody.innerHTML = analytics.recentActivity.slice(0, 12).map((evt) => {
+          const statusColor = evt.status >= 500 ? '#f87171' : evt.status >= 400 ? '#fbbf24' : '#34d399';
+          const timeStr = evt.time ? new Date(evt.time).toLocaleTimeString() : '-';
+          return `
+            <tr>
+              <td><span class="method-pill ${escapeHtml(evt.method || 'GET')}">${escapeHtml(evt.method || 'GET')}</span></td>
+              <td style="font-family: var(--font-mono); font-size: 0.78rem; color: #e2e8f0;">${escapeHtml(evt.path || '/')}</td>
+              <td style="font-family: var(--font-mono); font-weight: 700; color: ${statusColor};">${evt.status || 200}</td>
+              <td style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-muted);">${evt.durationMs ?? 0} ms</td>
+              <td style="font-size: 0.76rem; color: var(--text-muted);">${escapeHtml(evt.client || 'Browser')} <span style="opacity:0.65;">(${escapeHtml(evt.ip || 'masked')})</span></td>
+              <td style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">${escapeHtml(timeStr)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
     }
   } catch (e) {
     logAdmin(`Telemetry load error: ${e.message}`);
@@ -200,40 +283,123 @@ async function fetchInventory() {
 
     catalogItems = json.data || [];
     if (countEl) countEl.textContent = catalogItems.length;
+    const navCatBadge = document.getElementById('navCatalogBadge');
+    if (navCatBadge) navCatBadge.textContent = catalogItems.length;
 
-    if (catalogItems.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No items found in this category. Click "+ Publish New Item" above to add one.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = catalogItems.map(item => {
-      const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
-      return `
-        <tr>
-          <td>
-            <div style="font-weight: 700; color: #fff;">${escapeHtml(item.title)}</div>
-            <div style="font-size: 0.78rem; color: var(--text-muted); max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.description)}</div>
-          </td>
-          <td><span class="badge-tag">${escapeHtml(item.category)}</span></td>
-          <td style="font-weight: 600;">${priceLabel}</td>
-          <td>
-            ${item.mediaUrl ? `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: none; font-size: 0.8rem;">Open Link ↗</a>` : '<span style="color: var(--text-faint);">-</span>'}
-          </td>
-          <td>
-            <div style="display: flex; gap: 0.4rem;">
-              <button class="btn btn-secondary btn-sm" onclick="openEditModal('${item._id}')">✏️ Edit</button>
-              <button class="btn btn-danger btn-sm" onclick="handleDelete('${item._id}')">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
-
+    renderInventoryRows(catalogItems);
     logAdmin(`Loaded ${catalogItems.length} items from MongoDB Atlas.`, true);
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="5" style="color: var(--neon-red); text-align: center; padding: 2rem;">Error: ${escapeHtml(err.message)}</td></tr>`;
     logAdmin(`Fetch error: ${err.message}`);
   }
+}
+
+function renderInventoryRows(items = []) {
+  const tbody = document.getElementById('inventoryTableBody');
+  if (!tbody) return;
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No matching items found. Click "+ Publish New Item" to add one.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = items.map(item => {
+    const priceLabel = item.price === 0 ? 'FREE' : `$${Number(item.price).toFixed(2)}`;
+    return `
+      <tr>
+        <td>
+          <div style="font-weight: 700; color: #fff;">${escapeHtml(item.title)}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.description)}</div>
+        </td>
+        <td><span class="badge-tag">${escapeHtml(item.category)}</span></td>
+        <td style="font-weight: 600;">${priceLabel}</td>
+        <td>
+          ${item.mediaUrl ? `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: none; font-size: 0.8rem;">Open Link ↗</a>` : '<span style="color: var(--text-faint);">-</span>'}
+        </td>
+        <td>
+          <div style="display: flex; gap: 0.4rem;">
+            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${item._id}')">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="handleDelete('${item._id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterInventorySearch(query = '') {
+  const q = String(query).trim().toLowerCase();
+  if (!q) return renderInventoryRows(catalogItems);
+  const filtered = catalogItems.filter((item) => {
+    const hay = `${item.title || ''} ${item.description || ''} ${item.category || ''} ${(item.tags || []).join(' ')}`.toLowerCase();
+    return hay.includes(q);
+  });
+  renderInventoryRows(filtered);
+}
+
+// Orders & Stripe Revenue Ledger
+async function fetchOrders() {
+  const tbody = document.getElementById('ordersTableBody');
+  if (!tbody || !adminToken) return;
+  try {
+    const res = await fetch(`${API_BASE}/orders`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Failed to load orders');
+
+    const orders = json.data || [];
+    const navOrdersBadge = document.getElementById('navOrdersBadge');
+    if (navOrdersBadge) navOrdersBadge.textContent = orders.length;
+
+    const totalCountEl = document.getElementById('ordersTotalCount');
+    if (totalCountEl) totalCountEl.textContent = orders.length.toLocaleString();
+
+    const completed = orders.filter((o) => ['completed', 'paid', 'fulfilled'].includes(String(o.status || '').toLowerCase()));
+    const completedEl = document.getElementById('ordersCompletedCount');
+    if (completedEl) completedEl.textContent = completed.length.toLocaleString();
+
+    const gross = completed.reduce((sum, o) => sum + (Number(o.amountTotal) || 0), 0);
+    const revEl = document.getElementById('ordersTotalRevenue');
+    if (revEl) revEl.textContent = `$${gross.toFixed(2)}`;
+
+    if (orders.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No Stripe orders recorded yet. Sales &amp; API subscriptions will appear here automatically.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = orders.map((o) => {
+      const dt = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-';
+      const statusStr = String(o.status || 'pending').toUpperCase();
+      const statusBadge = ['COMPLETED', 'PAID', 'FULFILLED'].includes(statusStr) ? '' : 'warn';
+      const itemTitle = o.item?.title || o.licenseTier || 'Studio Digital License';
+      return `
+        <tr>
+          <td style="font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(dt)}</td>
+          <td style="font-weight: 600; color: #fff;">${escapeHtml(o.customerEmail || '-')}</td>
+          <td style="font-size: 0.8rem;">${escapeHtml(itemTitle)}</td>
+          <td style="font-weight: 700; color: var(--neon-emerald);">$${(Number(o.amountTotal) || 0).toFixed(2)}</td>
+          <td><span class="infra-badge ${statusBadge}">${escapeHtml(statusStr)}</span></td>
+          <td style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--neon-cyan);">${escapeHtml(o.licenseKey || '—')}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Unable to load orders: ${escapeHtml(err.message)}</td></tr>`;
+  }
+}
+
+function refreshAllAdminData() {
+  fetchTelemetry();
+  fetchInventory();
+  fetchOrders();
+  loadScheduledQueue();
+  loadShowcaseSubmissions();
+  logAdmin('Refreshed all live telemetry, catalog, orders, and showcase data.', true);
+}
+
+function clearAdminLogs() {
+  const box = document.getElementById('adminLogBox');
+  if (box) box.innerHTML = '<div class="log-line">[System] Console log cleared.</div>';
 }
 
 // Publish Modal
@@ -805,6 +971,8 @@ async function loadShowcaseSubmissions() {
     if (!res.ok) throw new Error(json.message);
 
     const submissions = json.data || [];
+    const navShowcaseBadge = document.getElementById('navShowcaseBadge');
+    if (navShowcaseBadge) navShowcaseBadge.textContent = submissions.length;
     if (submissions.length === 0) {
       tbody.innerHTML = `
         <tr>
@@ -999,6 +1167,12 @@ window.setAppOfTheWeekAdmin = setAppOfTheWeekAdmin;
 window.deleteShowcaseItem = deleteShowcaseItem;
 window.toggleAutoRotation = toggleAutoRotation;
 window.triggerManualRotationNow = triggerManualRotationNow;
+window.switchAdminTab = switchAdminTab;
+window.filterInventorySearch = filterInventorySearch;
+window.fetchTelemetry = fetchTelemetry;
+window.fetchOrders = fetchOrders;
+window.refreshAllAdminData = refreshAllAdminData;
+window.clearAdminLogs = clearAdminLogs;
 
 // Startup
 window.addEventListener('DOMContentLoaded', () => {

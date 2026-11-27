@@ -2796,3 +2796,293 @@ tr:hover td {
     display: none !important; /* No backdrop needed on desktop popup */
   }
 }
+
+
+/* ==========================================================================
+   SaaS Admin Command Console (Sidebar + Tabbed Workspace)
+   ========================================================================== */
+.admin-body main {
+  max-width: 1460px;
+  padding: 1.25rem 1.5rem 2.5rem;
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 5.25rem;
+  background: rgba(13, 18, 30, 0.88);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  backdrop-filter: blur(12px);
+}
+
+.admin-sidebar-profile {
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+}
+
+.admin-sidebar-label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint, #64748b);
+  padding: 0 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.admin-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.62rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.16s ease;
+}
+
+.admin-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.admin-nav-btn.active {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.16), rgba(6, 182, 212, 0.04));
+  border-color: rgba(6, 182, 212, 0.35);
+  color: #67e8f9;
+  font-weight: 700;
+}
+
+.admin-nav-btn-left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.admin-nav-badge {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.admin-nav-btn.active .admin-nav-badge {
+  background: rgba(6, 182, 212, 0.25);
+  color: #67e8f9;
+}
+
+.admin-subdomain-links {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.35rem;
+}
+
+.admin-subdomain-links a {
+  font-size: 0.72rem;
+  padding: 0.38rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.admin-subdomain-links a:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #fff;
+}
+
+.admin-main-pane {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-workspace-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  background: rgba(13, 18, 30, 0.75);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.admin-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #34d399;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.admin-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.admin-tab-panel {
+  display: none;
+  animation: fadeInTab 0.18s ease;
+}
+
+.admin-tab-panel.active {
+  display: block;
+}
+
+@keyframes fadeInTab {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.infra-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.infra-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: rgba(13, 18, 30, 0.78);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.infra-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.infra-sub {
+  font-size: 0.69rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+.infra-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  white-space: nowrap;
+}
+
+.infra-badge.warn {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.infra-badge.err {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.method-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.12rem 0.42rem;
+  border-radius: 4px;
+  background: rgba(6, 182, 212, 0.16);
+  color: #67e8f9;
+}
+
+.method-pill.POST {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+}
+
+.method-pill.DELETE {
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+}
+
+.catalog-search-input {
+  background: rgba(6, 9, 14, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  min-width: 220px;
+}
+
+.catalog-search-input:focus {
+  outline: none;
+  border-color: var(--neon-cyan);
+}
+
+@media (max-width: 960px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    position: static;
+  }
+
+  .admin-nav-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .admin-nav-btn {
+    width: auto;
+    flex: 1 1 140px;
+  }
+}
