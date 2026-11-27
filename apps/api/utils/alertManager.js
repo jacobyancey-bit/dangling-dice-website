@@ -100,7 +100,11 @@ export async function sendErrorAlert({ error, req = {}, context = '' }) {
         body: JSON.stringify(discordPayload),
         signal: AbortSignal.timeout(6000),
       });
-      return response.ok;
+      // Non-2xx (429 rate limit, 5xx, deleted webhook) must count as a breaker failure
+      if (!response.ok) {
+        throw new Error(`Discord webhook HTTP ${response.status}`);
+      }
+      return true;
     });
   } catch (err) {
     console.warn('[AlertManager] Failed to dispatch Discord alert:', err.message);

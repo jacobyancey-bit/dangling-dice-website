@@ -112,8 +112,8 @@ npm run build:web
 | Endpoint | Method | Protection | Description |
 | :--- | :---: | :---: | :--- |
 | `GET /api` | `GET` | Public | System status and active endpoint discovery |
-| `POST /api/auth/register` | `POST` | Public | Create new creator account; returns JWT |
-| `POST /api/auth/login` | `POST` | Public | Authenticate creator; returns JWT |
+| `POST /api/auth/register` | `POST` | Public (Turnstile) | Create new creator account; returns JWT |
+| `POST /api/auth/login` | `POST` | Public (Turnstile) | Authenticate creator; returns JWT |
 | `GET /api/auth/profile` | `GET` | **Bearer JWT** | Get current creator profile |
 | `GET /api/items` | `GET` | Public | List studio content (supports `?category=...`) |
 | `GET /api/items/:id` | `GET` | Public | Get specific content item by MongoDB ID |

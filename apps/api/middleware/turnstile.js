@@ -16,8 +16,9 @@ const DUMMY_SECRET = '1x0000000000000000000000000000000AA';
 export async function verifyTurnstileToken(token, remoteIp = null) {
   const secretKey = process.env.TURNSTILE_SECRET || process.env.TURNSTILE_SECRET_KEY || DUMMY_SECRET;
 
-  // In test mode or when using official dummy pass token, pass immediately
-  if (process.env.NODE_ENV === 'test' || token === 'XXXX.DUMMY.TOKEN.XXXX') {
+  // Unit tests only. Never short-circuit Cloudflare's public dummy token outside tests: anyone can send
+  // it. Local dev still works because Cloudflare's own test secret accepts the dummy token at siteverify.
+  if (process.env.NODE_ENV === 'test') {
     return { success: true, dummy: true };
   }
 

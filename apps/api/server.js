@@ -12,6 +12,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import redisClient from './config/redis.js';
+import { resolveTrustProxy } from './config/trustProxy.js';
 
 import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
@@ -42,11 +43,11 @@ let isShuttingDown = false;
 app.disable('x-powered-by');
 
 // Reverse-proxy awareness (Cloudflare -> Render). Without this, req.ip is the proxy's address and
-// every visitor shares one rate-limit bucket / transcode slot. Opt-in via env so the hop count matches
-// the real topology: TRUST_PROXY=1 (Render only) or 2 (Cloudflare + Render, origin locked to Cloudflare).
-const TRUST_PROXY = process.env.TRUST_PROXY;
-if (TRUST_PROXY !== undefined && TRUST_PROXY !== '') {
-  app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST_PROXY) : TRUST_PROXY === 'true');
+// every visitor shares one rate-limit bucket / transcode slot. TRUST_PROXY=cloudflare (recommended)
+// trusts only internal hops + Cloudflare edge ranges, so req.ip is the real, unspoofable visitor IP.
+const trustProxySetting = resolveTrustProxy(process.env.TRUST_PROXY);
+if (trustProxySetting !== undefined) {
+  app.set('trust proxy', trustProxySetting);
 }
 
 // Fast-fail blocker for automated vulnerability scanners & malicious bot probes

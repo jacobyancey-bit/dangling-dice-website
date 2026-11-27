@@ -13,9 +13,9 @@ const router = express.Router();
 /**
  * @route   POST /api/auth/register
  * @desc    Register a new user
- * @access  Public (Protected by rate limiter)
+ * @access  Public (Protected by rate limiter + Cloudflare Turnstile)
  */
-router.post('/register', authLimiter, registerUser);
+router.post('/register', authLimiter, requireTurnstile, registerUser);
 
 /**
  * @route   POST /api/auth/login

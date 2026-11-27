@@ -6,7 +6,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
-import { cobaltBreaker, rapidApiBreaker } from '../utils/circuitBreaker.js';
+import { cobaltBreaker, rapidApiBreaker, isUpstreamOutageStatus } from '../utils/circuitBreaker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -191,7 +191,7 @@ async function fetchOEmbedMetadata(canonicalUrl) {
  * Seamlessly routes conversion requests through dedicated media gateways (Cobalt / RapidAPI)
  * to bypass datacenter IP BotGuard challenges with unthrottled streaming.
  */
-async function fetchFromExtractionGateway(targetUrl, format) {
+export async function fetchFromExtractionGateway(targetUrl, format) {
   const isMp4 = String(format).startsWith('mp4');
 
   // Provider 1: Cobalt Gateway (Self-hosted or private instance)
@@ -214,6 +214,11 @@ async function fetchFromExtractionGateway(targetUrl, format) {
           }),
           signal: AbortSignal.timeout(12000),
         });
+
+        // 5xx / 429 = upstream outage -> throw so the breaker records a failure
+        if (isUpstreamOutageStatus(response.status)) {
+          throw new Error(`Cobalt upstream HTTP ${response.status}`);
+        }
 
         if (response.ok) {
           const data = await response.json();
@@ -264,6 +269,11 @@ async function fetchFromExtractionGateway(targetUrl, format) {
           if (response.status === 401 || response.status === 403) {
             console.warn(`[Extraction Gateway] RapidAPI key unauthorized or unsubscribed (HTTP ${response.status}). Skipping gateway.`);
             return { unauthorized: true };
+          }
+
+          // 5xx / 429 (quota exhausted) = upstream outage -> throw so the breaker records a failure
+          if (isUpstreamOutageStatus(response.status)) {
+            throw new Error(`RapidAPI upstream HTTP ${response.status}`);
           }
 
           if (response.ok) {

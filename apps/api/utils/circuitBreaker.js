@@ -14,6 +14,7 @@ export class CircuitBreaker {
     this.failureCount = 0;
     this.lastFailureTime = null;
     this.state = 'CLOSED'; // CLOSED (healthy), OPEN (failing fast), HALF_OPEN (probing)
+    this.probeInFlight = false; // HALF_OPEN admits exactly one probe; concurrent callers keep fast-failing
   }
 
   isOpen() {
@@ -24,6 +25,9 @@ export class CircuitBreaker {
         console.log(`[CircuitBreaker:${this.name}] Transitioned to HALF_OPEN (probing upstream)`);
         return false;
       }
+      return true;
+    }
+    if (this.state === 'HALF_OPEN' && this.probeInFlight) {
       return true;
     }
     return false;
@@ -58,6 +62,8 @@ export class CircuitBreaker {
       throw new Error(`Circuit breaker '${this.name}' is OPEN. Upstream temporarily unavailable.`);
     }
 
+    const isProbe = this.state === 'HALF_OPEN';
+    if (isProbe) this.probeInFlight = true;
     try {
       const result = await fn();
       this.recordSuccess();
@@ -68,6 +74,8 @@ export class CircuitBreaker {
         return await fallbackFn(err);
       }
       throw err;
+    } finally {
+      if (isProbe) this.probeInFlight = false;
     }
   }
 
@@ -79,6 +87,14 @@ export class CircuitBreaker {
       healthy: this.state === 'CLOSED',
     };
   }
+}
+
+/**
+ * Upstream outage signals (5xx, 429 rate-limit/quota) must count as breaker failures; plain 4xx
+ * input errors must not. Throw this inside breaker.execute() for outage responses.
+ */
+export function isUpstreamOutageStatus(status) {
+  return status === 429 || status >= 500;
 }
 
 export const rapidApiBreaker = new CircuitBreaker('RapidAPI_Media', { failureThreshold: 3, resetTimeoutMs: 30000 });
