@@ -219,7 +219,7 @@
                 "properties": {
                   "uri": {
                     "type": "string",
-                    "example": "mongodb+srv://admin:p@ss:word#1@cluster0.example.mongodb.net/prod_db"
+                    "example": "mongodb+srv://admin:<YOUR_PASSWORD>@cluster0.example.mongodb.net/prod_db"
                   }
                 }
               }
@@ -522,7 +522,7 @@
                 "properties": {
                   "payload": {
                     "type": "object",
-                    "example": { "user": "jacob", "password": "super_secret_password", "stripeToken": "sk_live_999" }
+                    "example": { "user": "demo_user", "password": "<EXAMPLE_PASSWORD>", "apiToken": "<EXAMPLE_TOKEN>" }
                   },
                   "sensitiveKeys": { "type": "array", "items": { "type": "string" } }
                 }

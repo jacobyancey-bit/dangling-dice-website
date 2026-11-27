@@ -372,6 +372,13 @@ app.use((req, res, next) => {
     return res.status(404).send('Not found');
   }
 
+  // Admin Console Hardening: never cache admin HTML and block search engine indexing at HTTP layer
+  if (req.path === '/admin' || req.path === '/admin.html') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
+
   const hostname = (req.hostname || '').toLowerCase();
   const isApiSubdomain = hostname.startsWith('api.') || req.query.subdomain === 'api';
   const isMediaSubdomain = hostname.startsWith('media.') || req.query.subdomain === 'media' || req.path === '/media' || req.path.startsWith('/media/');

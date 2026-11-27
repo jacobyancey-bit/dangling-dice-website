@@ -5,7 +5,10 @@
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000' && window.location.port !== '3000'
   ? 'http://localhost:5000/api'
   : window.location.origin + '/api';
-let adminToken = localStorage.getItem('dangling_admin_jwt');
+let adminToken = sessionStorage.getItem('dangling_admin_jwt');
+if (localStorage.getItem('dangling_admin_jwt')) {
+  localStorage.removeItem('dangling_admin_jwt');
+}
 let adminUser = null;
 let selectedCategory = 'All';
 let catalogItems = [];
@@ -61,7 +64,7 @@ async function handleAdminLogin(e) {
 
     adminToken = json.data.token;
     adminUser = json.data;
-    localStorage.setItem('dangling_admin_jwt', adminToken);
+    sessionStorage.setItem('dangling_admin_jwt', adminToken);
     logAdmin(`Authenticated as Administrator: ${adminUser.name}`, true);
     showDashboard();
   } catch (err) {
@@ -73,6 +76,7 @@ async function handleAdminLogin(e) {
 function logoutAdmin() {
   adminToken = null;
   adminUser = null;
+  sessionStorage.removeItem('dangling_admin_jwt');
   localStorage.removeItem('dangling_admin_jwt');
   const loginView = document.getElementById('loginView');
   const dashboardView = document.getElementById('dashboardView');
@@ -1178,5 +1182,4 @@ window.clearAdminLogs = clearAdminLogs;
 window.addEventListener('DOMContentLoaded', () => {
   verifyExistingSession();
   generateAllOmnipostFormats();
-  loadScheduledQueue();
 });
