@@ -116,4 +116,41 @@ export async function findAndTrackShortUrl(slug) {
   return mem || null;
 }
 
+export async function listShortUrls(limit = 50) {
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      const docs = await ShortUrlModel.find()
+        .sort({ clicks: -1, createdAt: -1 })
+        .limit(limit)
+        .lean();
+      return docs.map((d) => ({
+        ...d,
+        shortUrl: `https://dangling-dice-studios.com/go/l/${d.slug}`,
+      }));
+    } catch {
+      // fallback
+    }
+  }
+
+  return Array.from(memoryShortUrls.values())
+    .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
+    .slice(0, limit);
+}
+
+export async function deleteShortUrl(slug) {
+  if (!slug) return false;
+  const cleanSlug = slug.toLowerCase().trim();
+  memoryShortUrls.delete(cleanSlug);
+
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      const deleted = await ShortUrlModel.findOneAndDelete({ slug: cleanSlug });
+      return Boolean(deleted);
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
 export default ShortUrlModel;

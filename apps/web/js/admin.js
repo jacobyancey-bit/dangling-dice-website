@@ -139,6 +139,7 @@ function showDashboard() {
   fetchInventory();
   fetchTelemetry();
   fetchOrders();
+  loadMarketingLinks();
   loadScheduledQueue();
   loadShowcaseSubmissions();
 }
@@ -396,9 +397,150 @@ function refreshAllAdminData() {
   fetchTelemetry();
   fetchInventory();
   fetchOrders();
+  loadMarketingLinks();
   loadScheduledQueue();
   loadShowcaseSubmissions();
-  logAdmin('Refreshed all live telemetry, catalog, orders, and showcase data.', true);
+  logAdmin('Refreshed all live telemetry, catalog, orders, marketing links, and showcase data.', true);
+}
+
+// Product & External Campaign Attribution Tracker
+function onMarketingProductSelect(val) {
+  if (!val) return;
+  const [url, label] = val.split('|');
+  const urlEl = document.getElementById('trackTargetUrl');
+  const titleEl = document.getElementById('trackLinkTitle');
+  const slugEl = document.getElementById('trackCustomSlug');
+  const channel = document.getElementById('trackChannelSelect')?.value || 'promo';
+  if (urlEl && url) urlEl.value = url;
+  if (titleEl && label) titleEl.value = `${label} (${channel.replace('_', ' ')})`;
+  if (slugEl && label) {
+    const shortName = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 14);
+    const shortChan = channel.split('_')[0];
+    slugEl.value = `${shortChan}-${shortName}`;
+  }
+}
+
+async function loadMarketingLinks() {
+  const tbody = document.getElementById('marketingLinksTableBody');
+  if (!tbody || !adminToken) return;
+  try {
+    const res = await fetch(`${API_BASE}/marketing/links`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Failed to load campaign links');
+
+    const links = json.data || [];
+    const attr = json.attribution || { sources: {} };
+    const src = attr.sources || {};
+
+    const gEl = document.getElementById('attrGoogleAds');
+    const yEl = document.getElementById('attrYoutube');
+    const rEl = document.getElementById('attrReddit');
+    const sEl = document.getElementById('attrSocial');
+    const tEl = document.getElementById('attrShortLinkTotal');
+
+    if (gEl) gEl.textContent = (src.google_ads || 0).toLocaleString();
+    if (yEl) yEl.textContent = (src.youtube || 0).toLocaleString();
+    if (rEl) rEl.textContent = (src.reddit || 0).toLocaleString();
+    if (sEl) sEl.textContent = ((src.tiktok || 0) + (src.social || 0) + (src.discord || 0)).toLocaleString();
+
+    const totalClicks = links.reduce((sum, l) => sum + (Number(l.clicks) || 0), 0);
+    if (tEl) tEl.textContent = totalClicks.toLocaleString();
+
+    if (links.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.25rem;">No tracked product links yet. Pick a studio product above to generate your first trackable link!</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = links.map((link) => {
+      const fullShort = link.shortUrl || `https://dangling-dice-studios.com/go/l/${link.slug}`;
+      const lastClick = link.lastClickedAt ? new Date(link.lastClickedAt).toLocaleString() : 'Never';
+      return `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: #fff;">${escapeHtml(link.title || link.slug)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(link.targetUrl)}</div>
+          </td>
+          <td>
+            <code style="font-size: 0.76rem; color: #67e8f9;">${escapeHtml(fullShort)}</code>
+          </td>
+          <td style="font-weight: 800; font-size: 1rem; color: #34d399;">${(link.clicks || 0).toLocaleString()}</td>
+          <td style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(lastClick)}</td>
+          <td>
+            <div style="display: flex; gap: 0.35rem;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="copyMarketingShortUrl('${escapeHtml(fullShort)}')" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">📋 Copy</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="deleteMarketingTrackedLink('${escapeHtml(link.slug)}')" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.25rem;">Error: ${escapeHtml(err.message)}</td></tr>`;
+  }
+}
+
+async function createMarketingTrackedLink() {
+  const targetUrl = document.getElementById('trackTargetUrl')?.value?.trim();
+  const customSlug = document.getElementById('trackCustomSlug')?.value?.trim();
+  const title = document.getElementById('trackLinkTitle')?.value?.trim();
+  const channel = document.getElementById('trackChannelSelect')?.value || 'promo';
+
+  if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
+    alert('Please select a studio product or enter a valid https:// target URL.');
+    return;
+  }
+
+  // Append utm_source automatically if linking to your own domain so UTM attribution also fires!
+  let finalTarget = targetUrl;
+  if (targetUrl.includes('dangling-dice-studios.com') && !targetUrl.includes('utm_source=')) {
+    const sep = targetUrl.includes('?') ? '&' : '?';
+    finalTarget = `${targetUrl}${sep}utm_source=${encodeURIComponent(channel)}&utm_campaign=${encodeURIComponent(customSlug || 'studio')}`;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/marketing/links`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({
+        targetUrl: finalTarget,
+        customSlug: customSlug || undefined,
+        title: title || `${channel} campaign`,
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Failed to create link');
+
+    logAdmin(`Created tracked campaign link: ${json.data.shortUrl}`, true);
+    document.getElementById('trackCustomSlug').value = '';
+    loadMarketingLinks();
+  } catch (err) {
+    alert(`Could not create link: ${err.message}`);
+  }
+}
+
+function copyMarketingShortUrl(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    logAdmin(`Copied tracked link to clipboard: ${url}`, true);
+  }).catch(() => {});
+}
+
+async function deleteMarketingTrackedLink(slug) {
+  if (!confirm(`Delete tracked link /go/l/${slug}?`)) return;
+  try {
+    await fetch(`${API_BASE}/marketing/links/${encodeURIComponent(slug)}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    logAdmin(`Deleted tracked link: /go/l/${slug}`, true);
+    loadMarketingLinks();
+  } catch (err) {
+    alert(`Delete error: ${err.message}`);
+  }
 }
 
 function clearAdminLogs() {
@@ -1177,6 +1319,11 @@ window.fetchTelemetry = fetchTelemetry;
 window.fetchOrders = fetchOrders;
 window.refreshAllAdminData = refreshAllAdminData;
 window.clearAdminLogs = clearAdminLogs;
+window.onMarketingProductSelect = onMarketingProductSelect;
+window.loadMarketingLinks = loadMarketingLinks;
+window.createMarketingTrackedLink = createMarketingTrackedLink;
+window.copyMarketingShortUrl = copyMarketingShortUrl;
+window.deleteMarketingTrackedLink = deleteMarketingTrackedLink;
 
 // Startup
 window.addEventListener('DOMContentLoaded', () => {

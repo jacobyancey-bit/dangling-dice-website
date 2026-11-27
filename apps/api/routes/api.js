@@ -18,6 +18,7 @@ import {
 } from '../controllers/broadcastController.js';
 import { getAnalyticsSummary } from '../middleware/analytics.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
+import { createShortUrl, listShortUrls, deleteShortUrl } from '../models/ShortUrl.js';
 import { getRedisStatus } from '../config/redis.js';
 import { getStorageStatus } from '../config/storage.js';
 
@@ -257,6 +258,58 @@ router.post('/broadcast/discord', protect, admin, sendDiscordBroadcast);
 router.get('/broadcast/scheduled', protect, admin, getScheduledPosts);
 router.post('/broadcast/scheduled', protect, admin, createScheduledPost);
 router.delete('/broadcast/scheduled/:id', protect, admin, deleteScheduledPost);
+
+/**
+ * Admin Product & External Campaign Tracking Links (/go/l/:slug)
+ */
+router.get('/marketing/links', protect, admin, async (req, res) => {
+  try {
+    const links = await listShortUrls(50);
+    return res.status(200).json({
+      success: true,
+      count: links.length,
+      data: links,
+      attribution: getAnalyticsSummary().campaigns,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message || 'Failed to load campaign links.' });
+  }
+});
+
+router.post('/marketing/links', protect, admin, async (req, res) => {
+  try {
+    const { targetUrl, customSlug, title } = req.body || {};
+    if (!targetUrl || !/^https?:\/\//i.test(String(targetUrl).trim())) {
+      return res.status(400).json({ success: false, message: 'Valid http/https targetUrl is required.' });
+    }
+    const cleanSlug = customSlug
+      ? String(customSlug).trim().toLowerCase().replace(/[^a-z0-9-_]/g, '').slice(0, 40)
+      : undefined;
+
+    const created = await createShortUrl({
+      targetUrl: String(targetUrl).trim(),
+      customSlug: cleanSlug || undefined,
+      title: title ? String(title).trim().slice(0, 120) : '',
+      createdByEmail: req.user?.email || 'admin',
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: created,
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message || 'Failed to create tracked link.' });
+  }
+});
+
+router.delete('/marketing/links/:slug', protect, admin, async (req, res) => {
+  try {
+    await deleteShortUrl(req.params.slug);
+    return res.status(200).json({ success: true, message: 'Tracked campaign link deleted.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message || 'Failed to delete tracked link.' });
+  }
+});
 
 /**
  * Dynamic Staff Feature Flags & Railway Sandbox Microservice

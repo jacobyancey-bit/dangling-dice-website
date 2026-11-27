@@ -418,6 +418,99 @@
                TAB 5: MARKETING & OMNIPOST BROADCAST STATION
                ================================================================ -->
           <section id="tab-marketing" class="admin-tab-panel">
+            <!-- External Campaign Attribution & Tracked Product Links -->
+            <div class="card" style="margin-bottom: 1.5rem; border-color: rgba(6, 182, 212, 0.35);">
+              <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span>🎯 External Campaign Attribution &amp; Product Tag Tracker</span>
+                  <span class="admin-pill" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9;">Cookie-Free</span>
+                </div>
+                <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+                  <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;">📈 Google Ads ↗</a>
+                  <a href="https://play.google.com/console" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.72rem;">📱 Play Console ↗</a>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="loadMarketingLinks()" style="font-size: 0.72rem;">↻ Refresh</button>
+                </div>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; margin-bottom: 1rem;">
+                Create branded short links (<code>/go/l/your-tag</code>) for any product you promote on Google Ads, YouTube Shorts, Reddit, TikTok, or Discord. Incoming <code>?gclid=</code> and <code>?utm_source=</code> visits are also counted automatically.
+              </p>
+
+              <!-- Live External Attribution Counters -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.35rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-sm); padding: 0.7rem 0.85rem;">
+                  <div style="font-size: 0.72rem; color: #93c5fd; font-weight: 700;">Google Ads (gclid)</div>
+                  <div id="attrGoogleAds" style="font-size: 1.25rem; font-weight: 800; color: #60a5fa;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.35rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 0.7rem 0.85rem;">
+                  <div style="font-size: 0.72rem; color: #fca5a5; font-weight: 700;">YouTube / Shorts</div>
+                  <div id="attrYoutube" style="font-size: 1.25rem; font-weight: 800; color: #f87171;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.35rem; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: var(--radius-sm); padding: 0.7rem 0.85rem;">
+                  <div style="font-size: 0.72rem; color: #fdba74; font-weight: 700;">Reddit Campaigns</div>
+                  <div id="attrReddit" style="font-size: 1.25rem; font-weight: 800; color: #fb923c;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.35rem; background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: var(--radius-sm); padding: 0.7rem 0.85rem;">
+                  <div style="font-size: 0.72rem; color: #67e8f9; font-weight: 700;">TikTok / Social</div>
+                  <div id="attrSocial" style="font-size: 1.25rem; font-weight: 800; color: #22d3ee;">0</div>
+                </div>
+                <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 0.35rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 0.7rem 0.85rem;">
+                  <div style="font-size: 0.72rem; color: #6ee7b7; font-weight: 700;">Tracked Link Clicks</div>
+                  <div id="attrShortLinkTotal" style="font-size: 1.25rem; font-weight: 800; color: #34d399;">0</div>
+                </div>
+              </div>
+
+              <!-- 1-Click Tracked Product Link Builder -->
+              <div style="padding: 0.9rem 1rem; background: rgba(6, 9, 14, 0.65); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); margin-bottom: 1rem;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: #fff; margin-bottom: 0.6rem;">🔗 Generate Tracked Product Link</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.65rem; margin-bottom: 0.65rem;">
+                  <select id="trackProductPreset" onchange="onMarketingProductSelect(this.value)" style="padding: 0.5rem; font-size: 0.8rem; background: #04060a; color: #fff; border: 1px solid var(--border-subtle); border-radius: 6px;">
+                    <option value="">-- Quick-Pick Studio Product --</option>
+                    <option value="https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator|Tutor Calculator (Google Play)">📱 Tutor Calculator (Google Play)</option>
+                    <option value="https://dangling-dice-studios.com/tutor-calculator/|Tutor Calculator Landing Page">🌐 Tutor Calculator Landing Page</option>
+                    <option value="https://media.dangling-dice-studios.com/|Media Converter (320k MP3)">🎵 Media Converter</option>
+                    <option value="https://beats.dangling-dice-studios.com/|Dangling Beats Studio DAW">🎧 Dangling Beats Studio</option>
+                    <option value="https://games.dangling-dice-studios.com/|Gaming Lab & Footstep EQ">🎮 Gaming Lab (Footstep EQ)</option>
+                    <option value="https://dev.dangling-dice-studios.com/|Developer Compute Hub">💻 Developer Compute Hub</option>
+                    <option value="https://dangling-dice-studios.com/|Main Studio Portal">🏠 Main Studio Portal</option>
+                  </select>
+                  <select id="trackChannelSelect" style="padding: 0.5rem; font-size: 0.8rem; background: #04060a; color: #fff; border: 1px solid var(--border-subtle); border-radius: 6px;">
+                    <option value="google_ads">📈 Google Ads</option>
+                    <option value="youtube_shorts">📺 YouTube / Shorts</option>
+                    <option value="reddit">🟠 Reddit</option>
+                    <option value="tiktok">🎵 TikTok</option>
+                    <option value="discord">💬 Discord</option>
+                    <option value="instagram">📸 Instagram / Social</option>
+                  </select>
+                  <input type="text" id="trackCustomSlug" placeholder="Tag slug (e.g. yt-calc)" style="padding: 0.5rem 0.65rem; font-size: 0.8rem; background: #04060a; color: #fff; border: 1px solid var(--border-subtle); border-radius: 6px;" />
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1.5fr auto; gap: 0.65rem; align-items: center;">
+                  <input type="url" id="trackTargetUrl" placeholder="Target URL (https://...)" style="padding: 0.5rem 0.65rem; font-size: 0.8rem; background: #04060a; color: #fff; border: 1px solid var(--border-subtle); border-radius: 6px;" />
+                  <input type="text" id="trackLinkTitle" placeholder="Campaign / Product Label" style="padding: 0.5rem 0.65rem; font-size: 0.8rem; background: #04060a; color: #fff; border: 1px solid var(--border-subtle); border-radius: 6px;" />
+                  <button type="button" class="btn btn-primary btn-sm" onclick="createMarketingTrackedLink()" style="height: 36px; white-space: nowrap;">+ Create Tracked Link</button>
+                </div>
+              </div>
+
+              <!-- Tracked Links Table -->
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product / Campaign</th>
+                      <th>Tracked Short Link</th>
+                      <th>Clicks</th>
+                      <th>Last Click</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="marketingLinksTableBody">
+                    <tr>
+                      <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.25rem;">Loading tracked campaign links...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div class="card" style="border-color: rgba(236, 72, 153, 0.35);">
               <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">

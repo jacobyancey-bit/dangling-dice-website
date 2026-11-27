@@ -29,6 +29,19 @@ const metrics = {
     web: 0,
     direct: 0,
   },
+  campaigns: {
+    totalAttributedHits: 0,
+    sources: {
+      google_ads: 0,
+      youtube: 0,
+      reddit: 0,
+      tiktok: 0,
+      discord: 0,
+      social: 0,
+      other: 0,
+    },
+    tags: {},
+  },
   crawlerBreakdown: {},
   endpoints: {},
   statusCodes: {},
@@ -247,6 +260,34 @@ export const analyticsMiddleware = (req, res, next) => {
     metrics.crawlerBreakdown[classification.name] = (metrics.crawlerBreakdown[classification.name] || 0) + 1;
   }
 
+  // Track external marketing & ad-click attribution (Google Ads gclid, Reddit rdt_cid, TikTok ttclid, FB fbclid, UTMs)
+  const q = req.query || {};
+  const utmSource = String(q.utm_source || q.ref || '').trim().toLowerCase();
+  const utmCampaign = String(q.utm_campaign || '').trim().toLowerCase();
+  let detectedSource = null;
+  if (q.gclid || utmSource.includes('google') || utmSource === 'adwords') {
+    detectedSource = 'google_ads';
+  } else if (q.rdt_cid || utmSource.includes('reddit')) {
+    detectedSource = 'reddit';
+  } else if (utmSource.includes('youtube') || utmSource === 'yt' || utmSource === 'yt_shorts') {
+    detectedSource = 'youtube';
+  } else if (q.ttclid || utmSource.includes('tiktok')) {
+    detectedSource = 'tiktok';
+  } else if (utmSource.includes('discord')) {
+    detectedSource = 'discord';
+  } else if (q.fbclid || utmSource.includes('facebook') || utmSource.includes('instagram') || utmSource.includes('twitter') || utmSource === 'x') {
+    detectedSource = 'social';
+  } else if (utmSource) {
+    detectedSource = 'other';
+  }
+
+  if (detectedSource) {
+    metrics.campaigns.totalAttributedHits += 1;
+    metrics.campaigns.sources[detectedSource] = (metrics.campaigns.sources[detectedSource] || 0) + 1;
+    const tagKey = utmCampaign || utmSource || detectedSource;
+    metrics.campaigns.tags[tagKey] = (metrics.campaigns.tags[tagKey] || 0) + 1;
+  }
+
   // Skip static assets, random 404 bot scans (/wp-admin), and Admin Portal polling for API pull counts
   if (isNonApiTraffic(req)) {
     return next();
@@ -323,6 +364,7 @@ export const getAnalyticsSummary = () => {
     lastRequestAt: metrics.lastRequestAt,
     crawlers: metrics.crawlers,
     apiChannels: metrics.apiChannels,
+    campaigns: metrics.campaigns,
     crawlerBreakdown: metrics.crawlerBreakdown,
     topEndpoints,
     statusCodes: metrics.statusCodes,
