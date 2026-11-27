@@ -845,41 +845,19 @@ async function initBillingStudio() {
   }
 }
 
-async function openStripeCustomerPortal() {
+// Stripe-hosted portal login: Stripe emails the customer a one-time code, so only the
+// owner of the email can reach their invoices, cards, and subscriptions.
+const STRIPE_PORTAL_LOGIN_URL = 'https://billing.stripe.com/p/login/eVqfZj0MAgPa0ibezd5ZC00';
+
+function openStripeCustomerPortal() {
   const emailInput = document.getElementById('devKeyEmailInput');
-  let email = (emailInput?.value || localStorage.getItem('dds_developer_email') || '').trim();
-
-  if (!email || !email.includes('@')) {
-    email = prompt('Enter the email address associated with your Stripe billing profile:') || '';
-    if (!email || !email.includes('@')) {
-      showToast('A valid email address is required to locate your billing profile.');
-      return;
-    }
-    if (emailInput) emailInput.value = email;
-    localStorage.setItem('dds_developer_email', email);
+  const email = (emailInput?.value || localStorage.getItem('dds_developer_email') || '').trim();
+  const url = new URL(STRIPE_PORTAL_LOGIN_URL);
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    url.searchParams.set('prefilled_email', email.toLowerCase());
   }
-
-  showToast('Connecting to Stripe Customer Billing Portal...');
-
-  try {
-    const res = await fetch(`${API_GATEWAY_URL}/api/checkout/portal`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        returnUrl: window.location.href,
-      }),
-    });
-
-    const json = await res.json();
-    if (json.success && json.url) {
-      window.location.href = json.url;
-    } else {
-      showToast(json.message || 'No active Stripe billing profile found for this email.');
-    }
-  } catch (err) {
-    showToast(`Billing Portal error: ${err.message}`);
-  }
+  showToast('Opening Stripe Billing Portal — check your email for the sign-in code.');
+  window.location.href = url.toString();
 }
 
 // Global Exports for HTML Onclicks

@@ -326,70 +326,34 @@ export const getMyOrders = async (req, res, next) => {
   }
 };
 
-// Billing portal must only bounce back to studio-owned origins (prevents open redirect via Stripe)
-const SAFE_RETURN_ORIGIN = /^https:\/\/([a-z0-9-]+\.)*dangling-dice-studios\.com$/i;
-export function isSafeReturnUrl(value) {
-  if (!value || typeof value !== 'string') return false;
-  try {
-    const u = new URL(value);
-    if (SAFE_RETURN_ORIGIN.test(u.origin)) return true;
-    return process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(u.origin);
-  } catch {
-    return false;
-  }
+// Stripe-hosted customer portal login page (public link; Stripe emails the customer a one-time code,
+// so only the real owner of the email can get in). Override per environment with STRIPE_PORTAL_LOGIN_URL.
+const DEFAULT_PORTAL_LOGIN_URL = 'https://billing.stripe.com/p/login/eVqfZj0MAgPa0ibezd5ZC00';
+const STRIPE_PORTAL_LOGIN_PREFIX = 'https://billing.stripe.com/p/login/';
+const SIMPLE_EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
+
+export function getPortalLoginUrl(email) {
+  const configured = (process.env.STRIPE_PORTAL_LOGIN_URL || '').trim();
+  const base = configured.startsWith(STRIPE_PORTAL_LOGIN_PREFIX) ? configured : DEFAULT_PORTAL_LOGIN_URL;
+  const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!cleanEmail || !SIMPLE_EMAIL.test(cleanEmail)) return base;
+  const url = new URL(base);
+  url.searchParams.set('prefilled_email', cleanEmail);
+  return url.toString();
 }
 
 /**
- * @desc    Create a Stripe Customer Billing Portal session for self-service subscription/invoice management
- * @route   POST /api/checkout/portal
- * @access  Public (Customer Email / Customer ID verification)
+ * @desc    Return the Stripe customer portal login link for self-service billing.
+ *          Never creates a portal session server-side: ownership of the email is verified by Stripe
+ *          via a one-time code, which closes the email/customerId -> billing-data IDOR.
+ * @route   POST /api/checkout/portal (alias: /api/checkout/create-portal-session)
+ * @access  Public
  */
-export const createPortalSession = async (req, res, next) => {
-  try {
-    // Raw Stripe customer IDs are never accepted from the client (direct IDOR on billing data).
-    const { email, returnUrl } = req.body || {};
-    if (!email || typeof email !== 'string') {
-      return res.status(400).json({
-        success: false,
-        message: 'Customer email is required to access the billing portal.',
-      });
-    }
-
-    const stripe = getStripe();
-    let targetCustomerId = null;
-
-    {
-      const customers = await stripe.customers.list({
-        email: email.trim().toLowerCase(),
-        limit: 1,
-      });
-      if (customers.data && customers.data.length > 0) {
-        targetCustomerId = customers.data[0].id;
-      }
-    }
-
-    if (!targetCustomerId) {
-      return res.status(404).json({
-        success: false,
-        message: 'No active Stripe billing profile found for this email address. Please make a purchase or subscribe first.',
-      });
-    }
-
-    const clientBase = process.env.CLIENT_URL || 'https://dangling-dice-studios.com';
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: targetCustomerId,
-      return_url: isSafeReturnUrl(returnUrl) ? returnUrl : `${clientBase}/#sandboxes`,
-    });
-
-    return res.status(200).json({
-      success: true,
-      url: portalSession.url,
-    });
-  } catch (err) {
-    console.error('[Stripe Portal Error]', err.message);
-    return res.status(500).json({
-      success: false,
-      message: err.message || 'Failed to generate billing portal session.',
-    });
-  }
+export const createPortalSession = (req, res) => {
+  const { email } = req.body || {};
+  return res.status(200).json({
+    success: true,
+    url: getPortalLoginUrl(email),
+    verification: 'stripe_email_one_time_code',
+  });
 };

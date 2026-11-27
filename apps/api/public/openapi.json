@@ -958,30 +958,24 @@
     },
     "/api/checkout/portal": {
       "post": {
-        "operationId": "createBillingPortalSession",
+        "operationId": "getBillingPortalLoginLink",
         "tags": [
           "API Key Management"
         ],
-        "summary": "Open the self-serve Stripe Billing Portal",
+        "summary": "Get the self-serve Stripe Billing Portal login link",
+        "description": "Returns Stripe's hosted customer portal login page. Stripe verifies ownership by emailing the customer a one-time code; no portal session is created server-side.",
         "requestBody": {
-          "required": true,
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email"
-                ],
                 "properties": {
                   "email": {
                     "type": "string",
                     "format": "email",
-                    "example": "developer@example.com"
-                  },
-                  "returnUrl": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "Must be a dangling-dice-studios.com origin; otherwise the default return page is used."
+                    "example": "developer@example.com",
+                    "description": "Optional; pre-fills the email field on the Stripe login page."
                   }
                 }
               }
@@ -990,13 +984,16 @@
         },
         "responses": {
           "200": {
-            "description": "Portal session URL"
-          },
-          "400": {
-            "description": "Missing email"
-          },
-          "404": {
-            "description": "No billing profile for this email"
+            "description": "Stripe portal login URL",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "url": "https://billing.stripe.com/p/login/...?prefilled_email=developer%40example.com",
+                  "verification": "stripe_email_one_time_code"
+                }
+              }
+            }
           }
         }
       }

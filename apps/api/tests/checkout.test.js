@@ -270,36 +270,34 @@ describe('💳 Stripe Checkout & Monetization Engine Suite', () => {
       assert.equal(updated.rateLimitPerMin, 1200);
     });
 
-    it('CHK-09: Rejects createPortalSession when email is missing with 400', async () => {
-      let statusCode = null;
+    it('CHK-09: Billing portal returns the Stripe login link and never looks up customers', async () => {
       let jsonBody = null;
-
-      const req = { body: {} };
       const res = {
-        status(code) {
-          statusCode = code;
-          return this;
-        },
-        json(data) {
-          jsonBody = data;
-          return this;
-        },
+        status() { return this; },
+        json(data) { jsonBody = data; return this; },
       };
-
-      await createPortalSession(req, res, () => {});
-      assert.equal(statusCode, 400);
-      assert.equal(jsonBody?.success, false);
-      assert.match(jsonBody?.message, /Customer email is required/i);
+      // Even with a guessed email/customerId, no portal session is created server-side
+      createPortalSession({ body: { email: 'victim@example.com', customerId: 'cus_guess' } }, res);
+      assert.equal(jsonBody?.success, true);
+      const url = new URL(jsonBody.url);
+      assert.equal(url.origin, 'https://billing.stripe.com');
+      assert.ok(url.pathname.startsWith('/p/login/'), 'must be the email-verified login page, not a session URL');
+      assert.equal(url.searchParams.get('prefilled_email'), 'victim@example.com');
+      assert.ok(!jsonBody.url.includes('cus_guess'));
     });
 
-    it('CHK-10: Billing portal return URL is restricted to studio origins (no open redirect)', async () => {
-      const { isSafeReturnUrl } = await import('../controllers/checkoutController.js');
-      assert.equal(isSafeReturnUrl('https://dev.dangling-dice-studios.com/#billing'), true);
-      assert.equal(isSafeReturnUrl('https://dangling-dice-studios.com/'), true);
-      assert.equal(isSafeReturnUrl('https://evil.example/phish'), false);
-      assert.equal(isSafeReturnUrl('https://dangling-dice-studios.com.evil.example/'), false);
-      assert.equal(isSafeReturnUrl('javascript:alert(1)'), false);
-      assert.equal(isSafeReturnUrl(undefined), false);
+    it('CHK-10: Portal login link ignores invalid emails and untrusted env overrides', async () => {
+      const { getPortalLoginUrl } = await import('../controllers/checkoutController.js');
+      assert.ok(!getPortalLoginUrl('not-an-email').includes('prefilled_email'));
+      assert.ok(!getPortalLoginUrl(undefined).includes('prefilled_email'));
+      const prev = process.env.STRIPE_PORTAL_LOGIN_URL;
+      try {
+        process.env.STRIPE_PORTAL_LOGIN_URL = 'https://evil.example/p/login/x';
+        assert.ok(getPortalLoginUrl().startsWith('https://billing.stripe.com/p/login/'));
+      } finally {
+        if (prev === undefined) delete process.env.STRIPE_PORTAL_LOGIN_URL;
+        else process.env.STRIPE_PORTAL_LOGIN_URL = prev;
+      }
     });
   });
 });
