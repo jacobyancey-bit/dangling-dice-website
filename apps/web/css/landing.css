@@ -131,6 +131,51 @@
 .dds .division[data-division='dev'] { --division-accent: var(--dds-site-dev); }
 .dds .division .status-dot { --dot-color: var(--division-accent); }
 .dds .division-label { display: flex; align-items: center; gap: var(--dds-space-2); margin: 0; color: var(--dds-ink-muted); font-size: var(--dds-text-xs); text-transform: uppercase; letter-spacing: 0.06em; }
+.dds .division-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  margin-bottom: var(--dds-space-2);
+  border: var(--dds-border);
+  border-radius: var(--dds-radius-control);
+  background: var(--dds-canvas);
+}
+.dds .division-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dds .division-media.is-app-showcase {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dds-space-4);
+  padding: var(--dds-space-3);
+  background: var(--dds-surface-subtle);
+}
+.dds .division-app-tile {
+  display: grid;
+  justify-items: center;
+  gap: var(--dds-space-1);
+  color: var(--dds-ink-muted);
+  font-size: var(--dds-text-xs);
+  text-decoration: none;
+}
+.dds .division-app-tile img {
+  width: 52px;
+  height: 52px;
+  border: var(--dds-border);
+  border-radius: var(--dds-radius-panel);
+  object-fit: cover;
+  background: var(--dds-canvas);
+}
+.dds .division-app-icon-box {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: var(--dds-border);
+  border-radius: var(--dds-radius-panel);
+  background: var(--dds-canvas);
+  color: var(--dds-accent);
+}
+.dds .division-app-icon-box .icon { width: 24px; height: 24px; }
 .dds .division-title { font-size: var(--dds-text-md); letter-spacing: var(--dds-tracking-body); }
 .dds .division-actions { margin-top: auto; padding-top: var(--dds-space-3); }
 
