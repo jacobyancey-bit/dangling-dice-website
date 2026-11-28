@@ -2,9 +2,9 @@
  * Dangling Beats Studio™ — Multi-Instrument Hardware & Touch Controller Engine
  * 
  * Provides interactive performance surfaces:
- * - Left: 🎹 Piano Keyboard
- * - Middle: 🥁 Drum Pad
- * - Right: 🎸 Guitar Fretboard
+ * - Left: Piano Keyboard
+ * - Middle: Drum Pad
+ * - Right: Guitar Fretboard
  * 
  * Supported Edit / Performance Modes across all instruments:
  * 1. Single Notes (Chromatic piano keys, drum one-shots, guitar frets)
@@ -21,24 +21,24 @@ import { sampleEngine } from './sampleEngine.js';
 // ============================================================================
 
 export const CONTROLLER_INSTRUMENTS = [
-  { id: 'piano', name: 'Piano Keyboard', icon: '🎹', shortcut: 'Left' },
-  { id: 'drums', name: 'Drum Pad', icon: '🥁', shortcut: 'Middle' },
-  { id: 'guitar', name: 'Guitar Fretboard', icon: '🎸', shortcut: 'Right' },
+  { id: 'piano', name: 'Piano Keyboard', icon: '', shortcut: 'Left' },
+  { id: 'drums', name: 'Drum Pad', icon: '', shortcut: 'Middle' },
+  { id: 'guitar', name: 'Guitar Fretboard', icon: '', shortcut: 'Right' },
 ];
 
 export const CONTROLLER_MODES = [
-  { id: 'notes', name: 'Single Notes', icon: '🎵', desc: 'Individual notes, frets, and drum one-shots' },
-  { id: 'chords', name: 'Chords', icon: '🎼', desc: 'Harmonic voicings, layered drum chords, and guitar strums' },
-  { id: 'slices', name: 'Slices (Genre-Based)', icon: '✂️', desc: 'Live musical chops & loops categorized by genre' },
+  { id: 'notes', name: 'Single Notes', icon: '', desc: 'Individual notes, frets, and drum one-shots' },
+  { id: 'chords', name: 'Chords', icon: '', desc: 'Harmonic voicings, layered drum chords, and guitar strums' },
+  { id: 'slices', name: 'Slices (Genre-Based)', icon: '', desc: 'Live musical chops & loops categorized by genre' },
 ];
 
 export const GENRES_CATALOG = [
-  { id: 'funk', name: 'Funk', icon: '🕺', color: '#f59e0b', desc: 'Syncopated 16th clavs, breakbeat chops, muted scratches' },
-  { id: 'jazz', name: 'Jazz & Neo-Soul', icon: '🎷', color: '#8b5cf6', desc: 'Lush 9th/11th chords, swing ride chops, bebop runs' },
-  { id: 'metal', name: 'Metal & Rock', icon: '⚡', color: '#ef4444', desc: 'Palm-muted chugs, double-bass blasts, high-gain riffs' },
-  { id: 'lofi', name: 'Lofi & Chillhop', icon: '📻', color: '#ec4899', desc: 'Dusty vinyl Rhodes, boom-bap chops, mellow nylon plucks' },
-  { id: 'trap', name: 'Trap & Drill', icon: '🚀', color: '#06b6d4', desc: '808 slides, fast hi-hat rolls, dark acoustic stabs' },
-  { id: 'blues', name: 'Blues & Soul', icon: '🎸', color: '#3b82f6', desc: '12-bar turnarounds, shuffle swing chops, pentatonic bends' },
+  { id: 'funk', name: 'Funk', icon: '', desc: 'Syncopated 16th clavs, breakbeat chops, muted scratches' },
+  { id: 'jazz', name: 'Jazz & Neo-Soul', icon: '', desc: 'Lush 9th/11th chords, swing ride chops, bebop runs' },
+  { id: 'metal', name: 'Metal & Rock', icon: '', desc: 'Palm-muted chugs, double-bass blasts, high-gain riffs' },
+  { id: 'lofi', name: 'Lofi & Chillhop', icon: '', desc: 'Dusty vinyl Rhodes, boom-bap chops, mellow nylon plucks' },
+  { id: 'trap', name: 'Trap & Drill', icon: '', desc: '808 slides, fast hi-hat rolls, dark acoustic stabs' },
+  { id: 'blues', name: 'Blues & Soul', icon: '', desc: '12-bar turnarounds, shuffle swing chops, pentatonic bends' },
 ];
 
 // Piano Chord Presets
@@ -1734,23 +1734,23 @@ class TouchControllerEngine {
   getModesForInstrument() {
     if (this.activeInstrument === 'drums') {
       return [
-        { id: 'notes', name: 'Single Hits', icon: '🥁', desc: '16-Pad MPC one-shot drum hits' },
-        { id: 'chords', name: 'Grooves & Fills', icon: '⚡', desc: 'Dynamic drum rolls, groove stems, and rhythm fills' },
-        { id: 'slices', name: 'Genre Beats', icon: '✂️', desc: 'Live genre-based breakbeats, chops, and drum loops' },
+        { id: 'notes', name: 'Single Hits', icon: '', desc: '16-Pad MPC one-shot drum hits' },
+        { id: 'chords', name: 'Grooves & Fills', icon: '', desc: 'Dynamic drum rolls, groove stems, and rhythm fills' },
+        { id: 'slices', name: 'Genre Beats', icon: '', desc: 'Live genre-based breakbeats, chops, and drum loops' },
       ];
     }
     if (this.activeInstrument === 'guitar') {
       return [
-        { id: 'notes', name: 'Single Notes', icon: '🎸', desc: 'Fretboard frets & open strings' },
-        { id: 'chords', name: 'Guitar Chords', icon: '🎼', desc: 'Strummable chord shapes & barres' },
-        { id: 'slices', name: 'Genre Riffs', icon: '✂️', desc: 'Genre-based guitar riffs & chops' },
+        { id: 'notes', name: 'Single Notes', icon: '', desc: 'Fretboard frets & open strings' },
+        { id: 'chords', name: 'Guitar Chords', icon: '', desc: 'Strummable chord shapes & barres' },
+        { id: 'slices', name: 'Genre Riffs', icon: '', desc: 'Genre-based guitar riffs & chops' },
       ];
     }
     // Piano
     return [
-      { id: 'notes', name: 'Single Notes', icon: '🎹', desc: '2+ Octaves chromatic piano keys' },
-      { id: 'chords', name: 'Harmonic Chords', icon: '🎼', desc: 'Jazz, Soul, Pop & Classical chord voicings' },
-      { id: 'slices', name: 'Genre Licks', icon: '✂️', desc: 'Genre-based piano phrases & stabs' },
+      { id: 'notes', name: 'Single Notes', icon: '', desc: '2+ Octaves chromatic piano keys' },
+      { id: 'chords', name: 'Harmonic Chords', icon: '', desc: 'Jazz, Soul, Pop & Classical chord voicings' },
+      { id: 'slices', name: 'Genre Licks', icon: '', desc: 'Genre-based piano phrases & stabs' },
     ];
   }
 
@@ -2078,11 +2078,11 @@ class TouchControllerEngine {
       <div class="ctrl-carousel-header">
         <div class="ctrl-brand-group">
           <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <span class="calc-panel-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">
+            <span class="calc-panel-badge" style="background: var(--dds-surface-subtle); color: var(--dds-ink); border-color: var(--dds-border-color);">
               Hardware &amp; Touch Controller
             </span>
-            <span class="calc-panel-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.3); display: inline-flex; align-items: center; gap: 0.35rem;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+            <span class="calc-panel-badge" style="background: var(--dds-surface-subtle); color: var(--dds-ink); border-color: var(--dds-border-color); display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 6px; height: 6px; border-radius: var(--dds-radius-dot);"></span>
               Studio SoundFonts Active
             </span>
           </div>
@@ -2114,21 +2114,21 @@ class TouchControllerEngine {
               class="ctrl-inst-pill ${this.activeInstrument === 'piano' ? 'active' : ''}" 
               onclick="window.touchController.setInstrument('piano')"
             >
-              🎹 Piano Keyboard
+              Piano Keyboard
             </button>
             <button 
               type="button" 
               class="ctrl-inst-pill ${this.activeInstrument === 'drums' ? 'active' : ''}" 
               onclick="window.touchController.setInstrument('drums')"
             >
-              🥁 Drum Pad
+              Drum Pad
             </button>
             <button 
               type="button" 
               class="ctrl-inst-pill ${this.activeInstrument === 'guitar' ? 'active' : ''}" 
               onclick="window.touchController.setInstrument('guitar')"
             >
-              🎸 Guitar Fretboard
+              Guitar Fretboard
             </button>
           </div>
 
@@ -2181,29 +2181,29 @@ class TouchControllerEngine {
       <!-- Dynamic Active Instrument QWERTY HUD -->
       ${this.renderActiveInstrumentHudHtml()}
       
-      <p style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 0.65rem;">
-        ⌨️ <em>Active Instrument Isolation: Whichever instrument is selected exclusively controls the computer keyboard. Clicking text inputs restores standard typing.</em>
+      <p style="font-size: 0.72rem; color: var(--dds-ink-muted); text-align: center; margin-top: 0.65rem;">
+        <em>Active Instrument Isolation: Whichever instrument is selected exclusively controls the computer keyboard. Clicking text inputs restores standard typing.</em>
       </p>
     `;
   }
 
   renderAuditionBarHtml() {
     return `
-      <div class="ctrl-audition-bar" style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.55rem 0.9rem; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; margin: 0.6rem 0 1rem 0; flex-wrap: wrap;">
-        <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.35rem;">
-          <span>🎧</span> Instant Sample Audition:
+      <div class="ctrl-audition-bar" style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.55rem 0.9rem; background: var(--dds-canvas); border: 1px solid var(--dds-border-color); border-radius: var(--dds-radius-panel); margin: 0.6rem 0 1rem 0; flex-wrap: wrap;">
+        <span style="font-size: 0.75rem; font-weight: 600; color: var(--dds-ink-muted); text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.35rem;">
+          Instant Sample Audition:
         </span>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('piano')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.12); color: #a5b4fc; font-size: 0.78rem;">
-          <span>🎹</span> Play Grand Piano
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('piano')" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+          Play Grand Piano
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('drums')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.12); color: #fcd34d; font-size: 0.78rem;">
-          <span>🥁</span> Play Acoustic Drum Kit
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('drums')" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+          Play Acoustic Drum Kit
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('guitar')" style="display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12); color: #6ee7b7; font-size: 0.78rem;">
-          <span>🎸</span> Play Acoustic Guitar
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.auditionInstrument('guitar')" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+          Play Acoustic Guitar
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.stopActiveSlice()" title="Stop Sound" style="padding: 0.25rem 0.5rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
-          ⏹ Stop
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.stopActiveSlice()" title="Stop Sound">
+          Stop
         </button>
       </div>
     `;
@@ -2223,33 +2223,33 @@ class TouchControllerEngine {
         : (this.activeMode === 'slices' ? `${this.activeGenre.toUpperCase()} Breakbeats` : 'Velocity One-Shots');
       return `
         <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
-          <div class="qwerty-hud-group active-hud" style="border-color: rgba(245, 158, 11, 0.45); background: rgba(245, 158, 11, 0.05); grid-column: 1 / -1;">
+          <div class="qwerty-hud-group active-hud" style="border-color: var(--dds-border-color); background: var(--dds-surface-subtle); grid-column: 1 / -1;">
             <div class="qwerty-hud-title" style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="color: #fbbf24; font-weight: 700; font-size: 0.95rem;">🥁 Active Instrument: Drum Machine (${modeLabel})</span>
-              <span class="calc-panel-badge" style="background: rgba(245, 158, 11, 0.25); color: #fbbf24; font-size: 0.7rem; border-color: rgba(245, 158, 11, 0.4);">
+              <span style="color: var(--dds-ink); font-weight: 600; font-size: 0.95rem;">Active Instrument: Drum Machine (${modeLabel})</span>
+              <span class="calc-panel-badge" style="background: var(--dds-surface-subtle); color: var(--dds-ink); font-size: 0.7rem; border-color: var(--dds-border-color);">
                 ${badgeDesc}
               </span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
-              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 4 (Pads 13-16):</span>
+              <div style="background: var(--dds-surface-subtle); padding: 0.5rem 0.75rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+                <span style="font-size: 0.75rem; color: var(--dds-ink-muted); display: block; margin-bottom: 0.25rem;">Row 4 (Pads 13-16):</span>
                 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd>
               </div>
-              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 3 (Pads 9-12):</span>
+              <div style="background: var(--dds-surface-subtle); padding: 0.5rem 0.75rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+                <span style="font-size: 0.75rem; color: var(--dds-ink-muted); display: block; margin-bottom: 0.25rem;">Row 3 (Pads 9-12):</span>
                 <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd>
               </div>
-              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 2 (Pads 5-8):</span>
+              <div style="background: var(--dds-surface-subtle); padding: 0.5rem 0.75rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+                <span style="font-size: 0.75rem; color: var(--dds-ink-muted); display: block; margin-bottom: 0.25rem;">Row 2 (Pads 5-8):</span>
                 <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd>
               </div>
-              <div style="background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-                <span style="font-size: 0.75rem; color: #a1a1aa; display: block; margin-bottom: 0.25rem;">Row 1 (Pads 1-4):</span>
+              <div style="background: var(--dds-surface-subtle); padding: 0.5rem 0.75rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+                <span style="font-size: 0.75rem; color: var(--dds-ink-muted); display: block; margin-bottom: 0.25rem;">Row 1 (Pads 1-4):</span>
                 <kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd>
               </div>
             </div>
-            <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
-              ⚡ Press QWERTY keys or click on-screen pads. In Grooves &amp; Fills mode, each key triggers ${is4m ? 'a 4-measure buildup fill (64 steps)' : (is1m ? 'a 1-measure transition fill (16 steps)' : 'a foundational main part groove')}${this.autoResolveMainPart && this.drumGrooveCategory !== 'main' ? ' &mdash; automatically dropping into the target Main Part.' : '.'}
+            <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: var(--dds-ink);">
+              Press QWERTY keys or click on-screen pads. In Grooves &amp; Fills mode, each key triggers ${is4m ? 'a 4-measure buildup fill (64 steps)' : (is1m ? 'a 1-measure transition fill (16 steps)' : 'a foundational main part groove')}${this.autoResolveMainPart && this.drumGrooveCategory !== 'main' ? ' &mdash; automatically dropping into the target Main Part.' : '.'}
             </div>
           </div>
         </div>
@@ -2259,14 +2259,14 @@ class TouchControllerEngine {
     if (this.activeInstrument === 'piano') {
       return `
         <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
-          <div class="qwerty-hud-group active-hud" style="border-color: rgba(6, 182, 212, 0.45); background: rgba(6, 182, 212, 0.05); grid-column: 1 / -1;">
+          <div class="qwerty-hud-group active-hud" style="border-color: var(--dds-border-color); background: var(--dds-surface-subtle); grid-column: 1 / -1;">
             <div class="qwerty-hud-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-              <span style="color: #67e8f9; font-weight: 700; font-size: 0.95rem;">🎹 Active Instrument: Chromatic Piano (Full Keyboard Layout)</span>
+              <span style="color: var(--dds-ink); font-weight: 600; font-size: 0.95rem;">Active Instrument: Chromatic Piano (Full Keyboard Layout)</span>
               <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="calc-panel-badge" style="background: rgba(6, 182, 212, 0.2); color: #67e8f9; font-size: 0.7rem; border-color: rgba(6, 182, 212, 0.4);">
+                <span class="calc-panel-badge" style="background: var(--dds-surface-subtle); color: var(--dds-ink); font-size: 0.7rem; border-color: var(--dds-border-color);">
                   Octave: C${this.pianoOctave} - C${this.pianoOctave + 2} (Press [1] / [-] to Shift)
                 </span>
-                <span class="calc-panel-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.7rem; border-color: rgba(16, 185, 129, 0.4);">
+                <span class="calc-panel-badge" style="background: var(--dds-surface-subtle); color: var(--dds-ink); font-size: 0.7rem; border-color: var(--dds-border-color);">
                   Hold [Shift] for Sustain
                 </span>
               </div>
@@ -2274,38 +2274,38 @@ class TouchControllerEngine {
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
               <!-- Upper Octave -->
-              <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.15);">
-                <div style="font-size: 0.75rem; font-weight: 600; color: #67e8f9; margin-bottom: 0.35rem;">
+              <div style="background: var(--dds-surface-subtle); padding: 0.6rem 0.85rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--dds-ink); margin-bottom: 0.35rem;">
                   Upper Tier (Octave C${this.pianoOctave + 1} - G${this.pianoOctave + 2}):
                 </div>
                 <div style="margin-bottom: 0.3rem;">
-                  <span style="color: #a1a1aa; font-size: 0.7rem;">Whites:</span> 
+                  <span style="color: var(--dds-ink-muted); font-size: 0.7rem;">Whites:</span> 
                   <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>I</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>[</kbd> <kbd>]</kbd>
                 </div>
                 <div>
-                  <span style="color: #a1a1aa; font-size: 0.7rem;">Blacks:</span> 
+                  <span style="color: var(--dds-ink-muted); font-size: 0.7rem;">Blacks:</span> 
                   <kbd>2</kbd> <kbd>3</kbd> &nbsp; <kbd>5</kbd> <kbd>6</kbd> <kbd>7</kbd> &nbsp; <kbd>9</kbd> <kbd>0</kbd> <kbd>=</kbd>
                 </div>
               </div>
 
               <!-- Lower Octave -->
-              <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(6, 182, 212, 0.15);">
-                <div style="font-size: 0.75rem; font-weight: 600; color: #67e8f9; margin-bottom: 0.35rem;">
+              <div style="background: var(--dds-surface-subtle); padding: 0.6rem 0.85rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--dds-ink); margin-bottom: 0.35rem;">
                   Lower Tier (Octave C${this.pianoOctave} - E${this.pianoOctave + 1}):
                 </div>
                 <div style="margin-bottom: 0.3rem;">
-                  <span style="color: #a1a1aa; font-size: 0.7rem;">Whites:</span> 
+                  <span style="color: var(--dds-ink-muted); font-size: 0.7rem;">Whites:</span> 
                   <kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd> <kbd>B</kbd> <kbd>N</kbd> <kbd>M</kbd> <kbd>,</kbd> <kbd>.</kbd> <kbd>/</kbd>
                 </div>
                 <div>
-                  <span style="color: #a1a1aa; font-size: 0.7rem;">Blacks:</span> 
+                  <span style="color: var(--dds-ink-muted); font-size: 0.7rem;">Blacks:</span> 
                   <kbd>S</kbd> <kbd>D</kbd> &nbsp; <kbd>G</kbd> <kbd>H</kbd> <kbd>J</kbd> &nbsp; <kbd>L</kbd> <kbd>;</kbd>
                 </div>
               </div>
             </div>
 
-            <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
-              🎹 Over two full continuous octaves mapped across your keyboard like a professional digital audio workstation.
+            <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: var(--dds-ink);">
+              Over two full continuous octaves mapped across your keyboard like a professional digital audio workstation.
             </div>
           </div>
         </div>
@@ -2315,35 +2315,35 @@ class TouchControllerEngine {
     // Guitar Active HUD
     return `
       <div class="qwerty-multi-instrument-hud active-single-instrument-hud" style="margin-top: 1.5rem;">
-        <div class="qwerty-hud-group active-hud" style="border-color: rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.05); grid-column: 1 / -1;">
+        <div class="qwerty-hud-group active-hud" style="border-color: var(--dds-border-color); background: var(--dds-surface-subtle); grid-column: 1 / -1;">
           <div class="qwerty-hud-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-            <span style="color: #34d399; font-weight: 700; font-size: 0.95rem;">🎸 Active Instrument: Guitar Fretboard &amp; Strummer (Full Keyboard Layout)</span>
-            <span class="calc-panel-badge" style="background: rgba(16, 185, 129, 0.25); color: #34d399; font-size: 0.7rem; border-color: rgba(16, 185, 129, 0.4);">
+            <span style="color: var(--dds-ink); font-weight: 600; font-size: 0.95rem;">Active Instrument: Guitar Fretboard &amp; Strummer (Full Keyboard Layout)</span>
+            <span class="calc-panel-badge" style="background: var(--dds-surface-subtle); color: var(--dds-ink); font-size: 0.7rem; border-color: var(--dds-border-color);">
               Full 4-Row Guitar Map
             </span>
           </div>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
-            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
-              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 1: Open Strings Plucks</span>
+            <div style="background: var(--dds-surface-subtle); padding: 0.6rem 0.85rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+              <span style="font-size: 0.75rem; color: var(--dds-ink); font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 1: Open Strings Plucks</span>
               <kbd>1</kbd> (E4) <kbd>2</kbd> (B3) <kbd>3</kbd> (G3) <kbd>4</kbd> (D3) <kbd>5</kbd> (A2) <kbd>6</kbd> (E2) &bull; <kbd>7</kbd><kbd>8</kbd><kbd>9</kbd><kbd>0</kbd>
             </div>
-            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
-              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 2: Lead Solo Frets (High E Fret 0-12)</span>
+            <div style="background: var(--dds-surface-subtle); padding: 0.6rem 0.85rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+              <span style="font-size: 0.75rem; color: var(--dds-ink); font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 2: Lead Solo Frets (High E Fret 0-12)</span>
               <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>I</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>[</kbd> <kbd>]</kbd>
             </div>
-            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
-              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 3: Mid Riffing Frets (Strings 3 &amp; 4)</span>
+            <div style="background: var(--dds-surface-subtle); padding: 0.6rem 0.85rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+              <span style="font-size: 0.75rem; color: var(--dds-ink); font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 3: Mid Riffing Frets (Strings 3 &amp; 4)</span>
               <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>H</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> <kbd>;</kbd> <kbd>'</kbd>
             </div>
-            <div style="background: rgba(0,0,0,0.3); padding: 0.6rem 0.85rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.15);">
-              <span style="font-size: 0.75rem; color: #34d399; font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 4: Bass Notes &amp; Chord Strums</span>
+            <div style="background: var(--dds-surface-subtle); padding: 0.6rem 0.85rem; border-radius: var(--dds-radius-control); border: 1px solid var(--dds-border-color);">
+              <span style="font-size: 0.75rem; color: var(--dds-ink); font-weight: 600; display: block; margin-bottom: 0.25rem;">Row 4: Bass Notes &amp; Chord Strums</span>
               Bass: <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd><kbd>V</kbd> &bull; Chords: <kbd>B</kbd>(Em) <kbd>N</kbd>(C) <kbd>M</kbd>(G) <kbd>,</kbd>(D) <kbd>.</kbd>(Am) <kbd>/</kbd>(F)
             </div>
           </div>
 
-          <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: #cbd5e1;">
-            🎸 Pluck individual open strings, run guitar solos up the neck, or trigger full chord strums with realistic acoustic resonance.
+          <div class="qwerty-hud-desc" style="margin-top: 0.5rem; color: var(--dds-ink);">
+            Pluck individual open strings, run guitar solos up the neck, or trigger full chord strums with realistic acoustic resonance.
           </div>
         </div>
       </div>
@@ -2357,7 +2357,7 @@ class TouchControllerEngine {
 
   getInstrumentIcon() {
     const item = CONTROLLER_INSTRUMENTS.find(i => i.id === this.activeInstrument);
-    return item ? item.icon : '🎛️';
+    return item ? item.icon : '';
   }
 
   renderContextControlsHtml() {
@@ -2371,7 +2371,7 @@ class TouchControllerEngine {
                 type="button" 
                 class="ctrl-genre-pill ${this.activeGenre === g.id ? 'active' : ''}" 
                 onclick="window.touchController.setGenre('${g.id}')"
-                style="${this.activeGenre === g.id ? `border-color: ${g.color}; box-shadow: 0 0 10px ${g.color}40;` : ''}"
+                aria-pressed="${this.activeGenre === g.id}"
               >
                 ${g.icon} ${g.name}
               </button>
@@ -2385,9 +2385,9 @@ class TouchControllerEngine {
       if (this.activeInstrument === 'piano') {
         return `
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.shiftOctave(-1)">◀ Octave -</button>
-            <span style="font-family: monospace; font-size: 0.8rem; font-weight: 700; color: var(--neon-cyan);">Octave C${this.pianoOctave}–C${this.pianoOctave + 2}</span>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.shiftOctave(1)">Octave + ▶</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.shiftOctave(-1)">Octave -</button>
+            <span style="font-family: var(--dds-font-mono); font-size: 0.8rem; font-weight: 600; color: var(--dds-ink);">Octave C${this.pianoOctave}–C${this.pianoOctave + 2}</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.shiftOctave(1)">Octave + </button>
           </div>
         `;
       }
@@ -2396,11 +2396,11 @@ class TouchControllerEngine {
           <div style="display: flex; align-items: center; gap: 0.4rem;">
             <label class="ctrl-label">Kit:</label>
             <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
-              <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>🥁 Studio Acoustic</option>
-              <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>⚡ 808 Trap &amp; Drill</option>
-              <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>🎛️ 909 Dance</option>
-              <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>📻 Lofi Vinyl</option>
-              <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
+              <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>Studio Acoustic</option>
+              <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>808 Trap &amp; Drill</option>
+              <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>909 Dance</option>
+              <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>Lofi Vinyl</option>
+              <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>Latin Perc</option>
             </select>
           </div>
         `;
@@ -2410,11 +2410,11 @@ class TouchControllerEngine {
           <div style="display: flex; align-items: center; gap: 0.4rem;">
             <label class="ctrl-label">Guitar Voice:</label>
             <select class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
-              <option value="steel_acoustic" selected>🎸 Steel Acoustic</option>
-              <option value="classical_guitar">🎸 Classical Nylon</option>
-              <option value="electric_clean">⚡ Clean Electric</option>
-              <option value="rock_overdrive">🔥 Rock Overdrive</option>
-              <option value="palm_mute">🤘 Palm Muted</option>
+              <option value="steel_acoustic" selected>Steel Acoustic</option>
+              <option value="classical_guitar">Classical Nylon</option>
+              <option value="electric_clean">Clean Electric</option>
+              <option value="rock_overdrive">Rock Overdrive</option>
+              <option value="palm_mute">Palm Muted</option>
             </select>
           </div>
         `;
@@ -2431,35 +2431,35 @@ class TouchControllerEngine {
                 type="button" 
                 class="ctrl-genre-pill ${this.drumGrooveCategory === 'main' ? 'active' : ''}" 
                 onclick="window.touchController.setDrumGrooveCategory('main')"
-                style="${this.drumGrooveCategory === 'main' ? 'border-color: #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.4);' : ''}"
+                aria-pressed="${this.drumGrooveCategory === 'main'}"
                 title="16 Foundational Main Part Grooves"
               >
-                🥁 Main Parts
+                Main Parts
               </button>
               <button 
                 type="button" 
                 class="ctrl-genre-pill ${this.drumGrooveCategory === 'fill_1m' ? 'active' : ''}" 
                 onclick="window.touchController.setDrumGrooveCategory('fill_1m')"
-                style="${this.drumGrooveCategory === 'fill_1m' ? 'border-color: #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,0.4);' : ''}"
+                aria-pressed="${this.drumGrooveCategory === 'fill_1m'}"
                 title="16 Dynamic 1-Measure / 1-Bar Drum Fills"
               >
-                ⚡ 1-Measure Fills
+                1-Measure Fills
               </button>
               <button 
                 type="button" 
                 class="ctrl-genre-pill ${this.drumGrooveCategory === 'fill_4m' ? 'active' : ''}" 
                 onclick="window.touchController.setDrumGrooveCategory('fill_4m')"
-                style="${this.drumGrooveCategory === 'fill_4m' ? 'border-color: #ec4899; box-shadow: 0 0 10px rgba(236,72,153,0.4);' : ''}"
+                aria-pressed="${this.drumGrooveCategory === 'fill_4m'}"
                 title="16 Epic 4-Measure Extended Buildups"
               >
-                🚀 4-Measure Fills
+                4-Measure Fills
               </button>
             </div>
           </div>
         `;
       }
       return `
-        <div style="font-size: 0.78rem; color: #a1a1aa;">
+        <div style="font-size: 0.78rem; color: var(--dds-ink-muted);">
           Harmonic Chord Engine &bull; Click any pad to trigger or edit voicing below
         </div>
       `;
@@ -2634,7 +2634,7 @@ class TouchControllerEngine {
         ${PIANO_CHORDS_CATALOG.map((chord, idx) => `
           <div 
             class="mpc-pad" 
-            style="border-color: rgba(6, 182, 212, 0.35); background: rgba(6, 182, 212, 0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
+            style="border-color: var(--dds-border-color); background: var(--dds-surface-subtle); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
             onmousedown="window.touchController.playChordVoicing([${chord.notes.join(',')}], false); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
@@ -2642,9 +2642,9 @@ class TouchControllerEngine {
             ontouchend="this.classList.remove('active');"
             title="${chord.name}: ${chord.desc}"
           >
-            <div style="font-size: 0.68rem; font-weight: 800; color: #22d3ee; opacity: 0.85; text-transform: uppercase;">CHORD ${idx + 1}</div>
-            <div style="color: #f8fafc; font-weight: 700; font-size: 1.05rem; line-height: 1.2;">${chord.name}</div>
-            <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace;">VOICING</div>
+            <div style="font-size: 0.68rem; font-weight: 600; color: var(--dds-ink); opacity: 0.85; text-transform: uppercase;">CHORD ${idx + 1}</div>
+            <div style="color: var(--dds-ink); font-weight: 600; font-size: 1.05rem; line-height: 1.2;">${chord.name}</div>
+            <div style="font-size: 0.66rem; color: var(--dds-ink-muted); font-family: var(--dds-font-mono);">VOICING</div>
           </div>
         `).join('')}
       </div>
@@ -2657,15 +2657,10 @@ class TouchControllerEngine {
     const is4m = this.drumGrooveCategory === 'fill_4m';
     const is1m = this.drumGrooveCategory === 'fill_1m';
     
-    const borderColor = is4m 
-      ? 'rgba(236, 72, 153, 0.45)' 
-      : (is1m ? 'rgba(56, 189, 248, 0.45)' : 'rgba(245, 158, 11, 0.45)');
-    const bgColor = is4m 
-      ? 'rgba(236, 72, 153, 0.06)' 
-      : (is1m ? 'rgba(56, 189, 248, 0.06)' : 'rgba(245, 158, 11, 0.06)');
-    const textColor = is4m 
-      ? '#f472b6' 
-      : (is1m ? '#38bdf8' : '#fbbf24');
+    // Category marker uses the data-viz palette (DAW exception): main = viz-6, 1-bar = viz-1, 4-bar = viz-2
+    const borderColor = is4m ? 'var(--dds-viz-2)' : (is1m ? 'var(--dds-viz-1)' : 'var(--dds-viz-6)');
+    const bgColor = 'var(--dds-surface-subtle)';
+    const textColor = 'var(--dds-ink-muted)';
     const badgePrefix = is4m ? 'BUILD' : (is1m ? 'FILL' : 'PART');
 
     return `
@@ -2690,10 +2685,10 @@ class TouchControllerEngine {
               <div style="font-size: 0.68rem; font-weight: 800; color: ${textColor}; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.05em;">
                 ${badgePrefix} ${idx + 1}
               </div>
-              <div style="color: #f8fafc; font-weight: 700; font-size: 0.92rem; line-height: 1.25;">
+              <div style="color: var(--dds-ink); font-weight: 600; font-size: 0.92rem; line-height: 1.25;">
                 ${cleanName}
               </div>
-              <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace; font-weight: 600;">
+              <div style="font-size: 0.66rem; color: var(--dds-ink-muted); font-family: var(--dds-font-mono); font-weight: 600;">
                 ${is4m ? '4 BARS' : (is1m ? '1 BAR' : 'GROOVE')}
               </div>
             </div>
@@ -2715,7 +2710,7 @@ class TouchControllerEngine {
         ${GUITAR_CHORDS_CATALOG.map((gc, idx) => `
           <div 
             class="mpc-pad" 
-            style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
+            style="border-color: var(--dds-border-color); background: var(--dds-surface-subtle); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
             onmousedown="window.touchController.playChordVoicing([${gc.notes.join(',')}], true); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
@@ -2723,9 +2718,9 @@ class TouchControllerEngine {
             ontouchend="this.classList.remove('active');"
             title="${gc.name}: ${gc.desc} • Frets: ${gc.frets}"
           >
-            <div style="font-size: 0.68rem; font-weight: 800; color: #34d399; opacity: 0.85; text-transform: uppercase;">[ ${gc.frets} ]</div>
-            <div style="color: #f8fafc; font-weight: 700; font-size: 1.05rem; line-height: 1.2;">${gc.name}</div>
-            <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace;">STRUM</div>
+            <div style="font-size: 0.68rem; font-weight: 600; color: var(--dds-ink); opacity: 0.85; text-transform: uppercase;">[ ${gc.frets} ]</div>
+            <div style="color: var(--dds-ink); font-weight: 600; font-size: 1.05rem; line-height: 1.2;">${gc.name}</div>
+            <div style="font-size: 0.66rem; color: var(--dds-ink-muted); font-family: var(--dds-font-mono);">STRUM</div>
           </div>
         `).join('')}
       </div>
@@ -2743,7 +2738,7 @@ class TouchControllerEngine {
           <div 
             class="mpc-pad" 
             id="slicePad_${idx}"
-            style="border-color: rgba(236, 72, 153, 0.4); background: rgba(236, 72, 153, 0.06); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
+            style="border-color: var(--dds-border-color); background: var(--dds-surface-subtle); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0.55rem 0.35rem; gap: 0.25rem;"
             onmousedown="window.touchController.playGenreSlice(window.touchController.getSlice(${idx})); this.classList.add('active');"
             onmouseup="this.classList.remove('active');"
             onmouseleave="this.classList.remove('active');"
@@ -2751,9 +2746,9 @@ class TouchControllerEngine {
             ontouchend="this.classList.remove('active');"
             title="Slice ${idx + 1} (${slice.name}) • Click to trigger"
           >
-            <div style="font-size: 0.68rem; font-weight: 800; color: #f472b6; opacity: 0.85; text-transform: uppercase;">SLICE ${idx + 1}</div>
-            <div style="color: #f8fafc; font-weight: 700; font-size: 0.95rem; line-height: 1.2;">${slice.name}</div>
-            <div style="font-size: 0.66rem; color: #94a3b8; font-family: monospace;">${this.activeGenre.toUpperCase()}</div>
+            <div style="font-size: 0.68rem; font-weight: 600; color: var(--dds-ink); opacity: 0.85; text-transform: uppercase;">SLICE ${idx + 1}</div>
+            <div style="color: var(--dds-ink); font-weight: 600; font-size: 0.95rem; line-height: 1.2;">${slice.name}</div>
+            <div style="font-size: 0.66rem; color: var(--dds-ink-muted); font-family: var(--dds-font-mono);">${this.activeGenre.toUpperCase()}</div>
           </div>
         `).join('')}
       </div>
@@ -2777,18 +2772,18 @@ class TouchControllerEngine {
         return `
           <div class="ctrl-editor-panel">
             <div class="ctrl-editor-title">
-              <span>🥁 Drum Breakbeat &amp; Slice Designer (${this.activeGenre.toUpperCase()})</span>
-              <span style="font-size: 0.72rem; color: #a1a1aa;">Time-stretching, groove swing, and sound model for genre beat chops</span>
+              <span>Drum Breakbeat &amp; Slice Designer (${this.activeGenre.toUpperCase()})</span>
+              <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Time-stretching, groove swing, and sound model for genre beat chops</span>
             </div>
             <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
               <div class="ctrl-editor-field">
                 <label>Drum Kit Profile:</label>
                 <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
-                  <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>🥁 Studio Acoustic</option>
-                  <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>⚡ 808 Trap &amp; Drill</option>
-                  <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>🎛️ 909 Dance</option>
-                  <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>📻 Lofi Vinyl</option>
-                  <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
+                  <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>Studio Acoustic</option>
+                  <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>808 Trap &amp; Drill</option>
+                  <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>909 Dance</option>
+                  <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>Lofi Vinyl</option>
+                  <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>Latin Perc</option>
                 </select>
               </div>
               <div class="ctrl-editor-field">
@@ -2808,7 +2803,7 @@ class TouchControllerEngine {
                 </div>
               </div>
               <div class="ctrl-editor-field">
-                <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--neon-cyan);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
+                <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--dds-ink);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
                 <input 
                   type="range" 
                   min="-12" 
@@ -2827,22 +2822,22 @@ class TouchControllerEngine {
         return `
           <div class="ctrl-editor-panel">
             <div class="ctrl-editor-title">
-              <span>🎸 Guitar Riff &amp; Lick Designer (${this.activeGenre.toUpperCase()})</span>
-              <span style="font-size: 0.72rem; color: #a1a1aa;">Real-time pitch shift, tempo stretch, &amp; guitar timbre</span>
+              <span>Guitar Riff &amp; Lick Designer (${this.activeGenre.toUpperCase()})</span>
+              <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Real-time pitch shift, tempo stretch, &amp; guitar timbre</span>
             </div>
             <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
               <div class="ctrl-editor-field">
                 <label>Guitar Voice:</label>
                 <select class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
-                  <option value="steel_acoustic" selected>🎸 Steel Acoustic</option>
-                  <option value="classical_guitar">🎸 Classical Nylon</option>
-                  <option value="electric_clean">⚡ Clean Electric</option>
-                  <option value="rock_overdrive">🔥 Rock Overdrive</option>
-                  <option value="palm_mute">🤘 Palm Muted</option>
+                  <option value="steel_acoustic" selected>Steel Acoustic</option>
+                  <option value="classical_guitar">Classical Nylon</option>
+                  <option value="electric_clean">Clean Electric</option>
+                  <option value="rock_overdrive">Rock Overdrive</option>
+                  <option value="palm_mute">Palm Muted</option>
                 </select>
               </div>
               <div class="ctrl-editor-field">
-                <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--neon-cyan);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
+                <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--dds-ink);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
                 <input 
                   type="range" 
                   min="-12" 
@@ -2869,12 +2864,12 @@ class TouchControllerEngine {
       return `
         <div class="ctrl-editor-panel">
           <div class="ctrl-editor-title">
-            <span>🎹 Piano Lick Sound Designer (${this.activeGenre.toUpperCase()})</span>
-            <span style="font-size: 0.72rem; color: #a1a1aa;">Real-time pitch shift, tempo stretch, &amp; harmonic resonance</span>
+            <span>Piano Lick Sound Designer (${this.activeGenre.toUpperCase()})</span>
+            <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Real-time pitch shift, tempo stretch, &amp; harmonic resonance</span>
           </div>
           <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
             <div class="ctrl-editor-field">
-              <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--neon-cyan);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
+              <label>Pitch Shift: <span id="ctrlSlicePitchVal" style="color: var(--dds-ink);">${this.slicePitchShift > 0 ? '+' : ''}${this.slicePitchShift} st</span></label>
               <input 
                 type="range" 
                 min="-12" 
@@ -2915,8 +2910,8 @@ class TouchControllerEngine {
         return `
           <div class="ctrl-editor-panel">
             <div class="ctrl-editor-title">
-              <span>🥁 Drum Fills &amp; Main Parts Articulation Rack</span>
-              <span style="font-size: 0.72rem; color: #a1a1aa;">1-measure fills, 4-measure buildups, and target main parts with seamless drop resolution</span>
+              <span>Drum Fills &amp; Main Parts Articulation Rack</span>
+              <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">1-measure fills, 4-measure buildups, and target main parts with seamless drop resolution</span>
             </div>
             <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
               <!-- Active Fills / Parts Selection -->
@@ -2957,11 +2952,11 @@ class TouchControllerEngine {
               <div class="ctrl-editor-field">
                 <label>Drum Kit Profile:</label>
                 <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
-                  <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>🥁 Studio Acoustic</option>
-                  <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>⚡ 808 Trap &amp; Drill</option>
-                  <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>🎛️ 909 Dance</option>
-                  <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>📻 Lofi Vinyl</option>
-                  <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
+                  <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>Studio Acoustic</option>
+                  <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>808 Trap &amp; Drill</option>
+                  <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>909 Dance</option>
+                  <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>Lofi Vinyl</option>
+                  <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>Latin Perc</option>
                 </select>
               </div>
 
@@ -2978,16 +2973,16 @@ class TouchControllerEngine {
               <!-- Direct Audition Buttons -->
               <div class="ctrl-editor-field" style="display: flex; gap: 0.35rem; align-items: flex-end;">
                 <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="window.touchController.auditionFillMode('fill_1m')">
-                  ▶ 1-Bar Fill
+                  1-Bar Fill
                 </button>
                 <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="window.touchController.auditionFillMode('fill_4m')">
-                  ▶ 4-Bar Build
+                  4-Bar Build
                 </button>
                 <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="window.touchController.auditionFillMode('main')">
-                  ▶ Main Part
+                  Main Part
                 </button>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="window.touchController.stopActiveSlice()" title="Stop audio">
-                  ⏹
+                  
                 </button>
               </div>
             </div>
@@ -2998,18 +2993,18 @@ class TouchControllerEngine {
         return `
           <div class="ctrl-editor-panel">
             <div class="ctrl-editor-title">
-              <span>🎸 Guitar Voicing &amp; Strum Physics Rack</span>
-              <span style="font-size: 0.72rem; color: #a1a1aa;">Custom fret voicing builder, pick dynamics &amp; acoustic strum speed</span>
+              <span>Guitar Voicing &amp; Strum Physics Rack</span>
+              <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Custom fret voicing builder, pick dynamics &amp; acoustic strum speed</span>
             </div>
             <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
               <div class="ctrl-editor-field">
                 <label>Guitar Voice:</label>
                 <select class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
-                  <option value="steel_acoustic" selected>🎸 Steel Acoustic</option>
-                  <option value="classical_guitar">🎸 Classical Nylon</option>
-                  <option value="electric_clean">⚡ Clean Electric</option>
-                  <option value="rock_overdrive">🔥 Rock Overdrive</option>
-                  <option value="palm_mute">🤘 Palm Muted</option>
+                  <option value="steel_acoustic" selected>Steel Acoustic</option>
+                  <option value="classical_guitar">Classical Nylon</option>
+                  <option value="electric_clean">Clean Electric</option>
+                  <option value="rock_overdrive">Rock Overdrive</option>
+                  <option value="palm_mute">Palm Muted</option>
                 </select>
               </div>
               <div class="ctrl-editor-field">
@@ -3052,7 +3047,7 @@ class TouchControllerEngine {
               </div>
               <div class="ctrl-editor-field" style="display: flex; align-items: flex-end;">
                 <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="window.touchController.auditionCustomChord()">
-                  ▶ Audition Guitar Chord
+                  Audition Guitar Chord
                 </button>
               </div>
             </div>
@@ -3063,8 +3058,8 @@ class TouchControllerEngine {
       return `
         <div class="ctrl-editor-panel">
           <div class="ctrl-editor-title">
-            <span>🎹 Piano Harmonic Voicing &amp; Inversion Builder</span>
-            <span style="font-size: 0.72rem; color: #a1a1aa;">Build, voice, and invert rich piano chords</span>
+            <span>Piano Harmonic Voicing &amp; Inversion Builder</span>
+            <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Build, voice, and invert rich piano chords</span>
           </div>
           <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
             <div class="ctrl-editor-field">
@@ -3111,7 +3106,7 @@ class TouchControllerEngine {
             </div>
             <div class="ctrl-editor-field" style="display: flex; align-items: flex-end;">
               <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="window.touchController.auditionCustomChord()">
-                ▶ Audition Piano Chord
+                Audition Piano Chord
               </button>
             </div>
           </div>
@@ -3124,22 +3119,22 @@ class TouchControllerEngine {
       return `
         <div class="ctrl-editor-panel">
           <div class="ctrl-editor-title">
-            <span>🥁 MPC Drum Kit &amp; Pad Velocity Rack</span>
-            <span style="font-size: 0.72rem; color: #a1a1aa;">Select kit acoustic timbre and trigger velocity</span>
+            <span>MPC Drum Kit &amp; Pad Velocity Rack</span>
+            <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Select kit acoustic timbre and trigger velocity</span>
           </div>
           <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
             <div class="ctrl-editor-field">
               <label>Drum Kit Profile:</label>
               <select class="theory-select" onchange="window.handleDrumKitChange(this.value)">
-                <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>🥁 Studio Acoustic</option>
-                <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>⚡ 808 Trap &amp; Drill</option>
-                <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>🎛️ 909 Dance</option>
-                <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>📻 Lofi Vinyl</option>
-                <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>🪘 Latin Perc</option>
+                <option value="studio_acoustic" ${instrumentEngine.settings.drumKit === 'studio_acoustic' ? 'selected' : ''}>Studio Acoustic</option>
+                <option value="trap_808" ${instrumentEngine.settings.drumKit === 'trap_808' ? 'selected' : ''}>808 Trap &amp; Drill</option>
+                <option value="dance_909" ${instrumentEngine.settings.drumKit === 'dance_909' ? 'selected' : ''}>909 Dance</option>
+                <option value="lofi_vinyl" ${instrumentEngine.settings.drumKit === 'lofi_vinyl' ? 'selected' : ''}>Lofi Vinyl</option>
+                <option value="latin_perc" ${instrumentEngine.settings.drumKit === 'latin_perc' ? 'selected' : ''}>Latin Perc</option>
               </select>
             </div>
             <div class="ctrl-editor-field">
-              <label>Pad Hit Velocity: <span style="color: var(--neon-cyan);">95%</span></label>
+              <label>Pad Hit Velocity: <span style="color: var(--dds-ink);">95%</span></label>
               <input type="range" min="40" max="100" value="95" class="calc-slider" />
             </div>
           </div>
@@ -3150,22 +3145,22 @@ class TouchControllerEngine {
       return `
         <div class="ctrl-editor-panel">
           <div class="ctrl-editor-title">
-            <span>🎸 Guitar Timbre &amp; Fret Dynamics Rack</span>
-            <span style="font-size: 0.72rem; color: #a1a1aa;">Tune guitar sound model, string action, and pick velocity</span>
+            <span>Guitar Timbre &amp; Fret Dynamics Rack</span>
+            <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Tune guitar sound model, string action, and pick velocity</span>
           </div>
           <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
             <div class="ctrl-editor-field">
               <label>Guitar Voice:</label>
               <select class="theory-select" onchange="window.handleGlobalInstrumentChange(this.value)">
-                <option value="steel_acoustic" selected>🎸 Steel Acoustic</option>
-                <option value="classical_guitar">🎸 Classical Nylon</option>
-                <option value="electric_clean">⚡ Clean Electric</option>
-                <option value="rock_overdrive">🔥 Rock Overdrive</option>
-                <option value="palm_mute">🤘 Palm Muted</option>
+                <option value="steel_acoustic" selected>Steel Acoustic</option>
+                <option value="classical_guitar">Classical Nylon</option>
+                <option value="electric_clean">Clean Electric</option>
+                <option value="rock_overdrive">Rock Overdrive</option>
+                <option value="palm_mute">Palm Muted</option>
               </select>
             </div>
             <div class="ctrl-editor-field">
-              <label>Pick Attack Velocity: <span style="color: var(--neon-cyan);">95%</span></label>
+              <label>Pick Attack Velocity: <span style="color: var(--dds-ink);">95%</span></label>
               <input type="range" min="40" max="100" value="95" class="calc-slider" />
             </div>
           </div>
@@ -3176,12 +3171,12 @@ class TouchControllerEngine {
     return `
       <div class="ctrl-editor-panel">
         <div class="ctrl-editor-title">
-          <span>🎹 Piano Keybed Articulation Rack</span>
-          <span style="font-size: 0.72rem; color: #a1a1aa;">Tune key velocity, octave range, and sustain resonance</span>
+          <span>Piano Keybed Articulation Rack</span>
+          <span style="font-size: 0.72rem; color: var(--dds-ink-muted);">Tune key velocity, octave range, and sustain resonance</span>
         </div>
         <div class="ctrl-editor-controls" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
           <div class="ctrl-editor-field">
-            <label>Master Velocity: <span style="color: var(--neon-cyan);">95%</span></label>
+            <label>Master Velocity: <span style="color: var(--dds-ink);">95%</span></label>
             <input type="range" min="40" max="100" value="95" class="calc-slider" />
           </div>
           <div class="ctrl-editor-field">

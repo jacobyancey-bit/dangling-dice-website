@@ -105,7 +105,7 @@ export const GUITAR_TUNINGS = {
 
 export const CHORD_PRESETS = {
   lofi_chill: {
-    name: '☕ Lofi Chillhop & Rhodes',
+    name: 'Lofi Chillhop & Rhodes',
     desc: 'Lush 9ths and 11ths with smooth chromatic voice leading.',
     defaultKey: 'Eb',
     defaultScale: 'major',
@@ -120,7 +120,7 @@ export const CHORD_PRESETS = {
     ],
   },
   neo_soul: {
-    name: '🎷 Neo-Soul & Jazzy Warmth',
+    name: 'Neo-Soul & Jazzy Warmth',
     desc: 'Secondary dominants, altered tensions, and deep soul substitutions.',
     defaultKey: 'F',
     defaultScale: 'minor',
@@ -135,7 +135,7 @@ export const CHORD_PRESETS = {
     ],
   },
   synthwave: {
-    name: '🌆 Synthwave & Retrowave',
+    name: 'Synthwave & Retrowave',
     desc: 'Nostalgic 80s minor progressions with open fifths and driving energy.',
     defaultKey: 'A',
     defaultScale: 'minor',
@@ -148,7 +148,7 @@ export const CHORD_PRESETS = {
     ],
   },
   dark_trap: {
-    name: '🦇 Dark Trap & 808 Drill',
+    name: 'Dark Trap & 808 Drill',
     desc: 'Phrygian half-step tension and ominous harmonic minor voicings.',
     defaultKey: 'C',
     defaultScale: 'minor',
@@ -161,7 +161,7 @@ export const CHORD_PRESETS = {
     ],
   },
   math_rock: {
-    name: '🎸 Midwest Emo & Math Rock',
+    name: 'Midwest Emo & Math Rock',
     desc: 'Open tunings, sparkle add9 voicings, and clean nostalgic guitars.',
     defaultKey: 'D',
     defaultScale: 'major',
@@ -174,7 +174,7 @@ export const CHORD_PRESETS = {
     ],
   },
   ambient_dream: {
-    name: '🌌 Ambient Dreamscape',
+    name: 'Ambient Dreamscape',
     desc: 'Spacious suspended chords with gentle harmonic dissonance.',
     defaultKey: 'C',
     defaultScale: 'major',

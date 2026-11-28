@@ -34,6 +34,7 @@
   /* ---------- Geometry ---------- */
   --dds-radius-control: 6px; /* buttons, inputs */
   --dds-radius-tag: 4px;     /* monospace tags and badges */
+  --dds-radius-dot: 50%;     /* status dots and LEDs only, never controls or cards */
   --dds-radius-panel: 8px;   /* cards, panels, dialogs */
   --dds-border-width: 1px;
   --dds-accent-bar: 3px;     /* left accent border on hero / featured blocks */

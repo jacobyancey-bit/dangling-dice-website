@@ -2,7 +2,20 @@
 // Dangling Beats Studio™ — Specialized Music & Producer Radio Application
 // ============================================================================
 
-import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell, initTabKeyboard, icon, hydrateIcons } from '@dangling-dice/shared';
+
+// Swap <span data-icon> placeholders for stroke icons before any handlers run
+hydrateIcons();
+
+// Data-viz exception (DESIGN_SYSTEM.md): canvases and DAW lanes read --dds-viz-* / surface tokens
+const cssToken = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+// Toggle a two-state button's pressed state (class + aria-pressed)
+function setPressed(el, on) {
+  if (!el) return;
+  el.classList.toggle('active', on);
+  el.setAttribute('aria-pressed', String(on));
+}
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -76,17 +89,15 @@ const API_BASE = window.location.hostname === "localhost"
   : "https://dangling-dice-studios.com/api";
 
 function showToast(msg, type = "info") {
-  const existing = document.querySelector(".toast");
-  if (existing) existing.remove();
-
+  const stack = document.getElementById("toastContainer");
+  if (!stack) return;
   const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.innerHTML = `<span>${type === "error" ? "⚠️" : type === "success" ? "🎵" : "ℹ️"}</span> <span>${msg}</span>`;
-  document.body.appendChild(toast);
+  toast.className = `toast${type === "success" ? " toast-success" : type === "error" ? " toast-error" : ""}`;
+  toast.textContent = msg;
+  stack.appendChild(toast);
 
   setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateY(10px)";
+    toast.classList.add("is-leaving");
     setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
@@ -100,7 +111,7 @@ async function requestMidiAccess() {
   updateMidiStatusUI(result);
 
   if (result.connected) {
-    showToast(`🎹 Connected: ${result.deviceName}`, "success");
+    showToast(`Connected: ${result.deviceName}`, "success");
   } else if (result.supported) {
     showToast("Web MIDI active: Plug in any USB/Bluetooth MIDI keyboard", "info");
   } else {
@@ -117,15 +128,15 @@ function updateMidiStatusUI(status) {
 
   if (status.connected && status.deviceName) {
     btn.classList.add("connected");
-    text.textContent = `🟢 ${status.deviceName}`;
+    text.textContent = `${status.deviceName}`;
     if (deviceText) deviceText.textContent = status.deviceName;
   } else if (status.supported) {
     btn.classList.remove("connected");
-    text.textContent = "🎹 Web MIDI Ready (Plug In)";
+    text.textContent = "Web MIDI Ready (Plug In)";
     if (deviceText) deviceText.textContent = "Listening for USB...";
   } else {
     btn.classList.remove("connected");
-    text.textContent = "🎹 Web MIDI Not Supported";
+    text.textContent = "Web MIDI Not Supported";
     if (deviceText) deviceText.textContent = "Unsupported Browser";
   }
 }
@@ -482,19 +493,19 @@ function toggleSustainPedal() {
   const newState = !instrumentEngine.settings.sustainPedal;
   instrumentEngine.setSustainPedal(newState);
   updateSustainPedalUI(newState);
-  showToast(newState ? '🦶 Sustain Pedal: ON (Holding notes)' : '🦶 Sustain Pedal: OFF', 'info');
+  showToast(newState ? 'Sustain Pedal: ON (Holding notes)' : 'Sustain Pedal: OFF', 'info');
 }
 
 function updateSustainPedalUI(isDown) {
   const masterBtn = document.getElementById('masterSustainBtn');
   if (masterBtn) {
     masterBtn.classList.toggle('active', isDown);
-    masterBtn.innerHTML = `<span class="sustain-pedal-led ${isDown ? 'led-on' : ''}"></span> 🦶 PEDAL: ${isDown ? 'ON' : 'OFF'}`;
+    masterBtn.innerHTML = `<span class="sustain-pedal-led ${isDown ? 'led-on' : ''}"></span> PEDAL: ${isDown ? 'ON' : 'OFF'}`;
   }
   const rackPedalBtn = document.getElementById('rackSustainBtn');
   if (rackPedalBtn) {
     rackPedalBtn.classList.toggle('active-pedal', isDown);
-    rackPedalBtn.innerHTML = `<span class="sustain-pedal-led ${isDown ? 'led-on' : ''}"></span> ${isDown ? '🦶 SUSTAIN PEDAL: ON' : '🦶 SUSTAIN PEDAL: OFF'}`;
+    rackPedalBtn.innerHTML = `<span class="sustain-pedal-led ${isDown ? 'led-on' : ''}"></span> ${isDown ? 'SUSTAIN PEDAL: ON' : 'SUSTAIN PEDAL: OFF'}`;
   }
 }
 
@@ -502,13 +513,13 @@ function toggleLegatoMode() {
   const newMode = instrumentEngine.settings.playMode === 'legato' ? 'poly' : 'legato';
   instrumentEngine.setPlayMode(newMode);
   updateLegatoUI(newMode);
-  showToast(newMode === 'legato' ? '🌊 Mono Legato Mode (Smooth note glide)' : '🎹 Polyphonic Mode (Full chords)', 'info');
+  showToast(newMode === 'legato' ? 'Mono Legato Mode (Smooth note glide)' : 'Polyphonic Mode (Full chords)', 'info');
 }
 
 function updateLegatoUI(mode) {
   const badge = document.getElementById('masterLegatoBadge');
   if (badge) {
-    badge.textContent = mode === 'legato' ? '🌊 LEGATO' : '🎹 POLY';
+    badge.textContent = mode === 'legato' ? 'LEGATO' : 'POLY';
   }
   renderInstrumentSettingsRack();
 }
@@ -552,7 +563,7 @@ function renderRecordedTakeShelf(take) {
   shelf.innerHTML = `
     <div class="take-info-side">
       <div class="take-header-row">
-        <span class="take-pill">🔴 Audio Take Ready</span>
+        <span class="take-pill">Audio Take Ready</span>
         <span class="take-filename">${escapeHtml(take.filename)}</span>
       </div>
       <div class="take-meta-sub">
@@ -570,7 +581,7 @@ function renderRecordedTakeShelf(take) {
         onclick="window.toggleTakePreview()" 
         title="Audition recorded audio snippet"
       >
-        ${isPlaying ? '⏹ Stop' : '▶ Audition'}
+        ${isPlaying ? 'Stop' : 'Audition'}
       </button>
 
       <button 
@@ -579,7 +590,7 @@ function renderRecordedTakeShelf(take) {
         onclick="window.downloadRecordedTake()" 
         title="Download high-definition WAV file directly to your system"
       >
-        💾 Download WAV
+        Download WAV
       </button>
 
       <button 
@@ -588,7 +599,7 @@ function renderRecordedTakeShelf(take) {
         onclick="window.sendTakeToSampler()" 
         title="Send snippet directly into the Chromatic Sampler"
       >
-        🎛️ To Sampler
+        To Sampler
       </button>
 
       <button 
@@ -597,7 +608,7 @@ function renderRecordedTakeShelf(take) {
         onclick="window.sendTakeToSlicer()" 
         title="Send snippet directly into the Drum Break Transient Slicer"
       >
-        ✂️ To Slicer
+        To Slicer
       </button>
 
       <button 
@@ -605,8 +616,9 @@ function renderRecordedTakeShelf(take) {
         class="take-action-btn btn-dismiss" 
         onclick="window.dismissRecordedTake()" 
         title="Dismiss take"
+        aria-label="Dismiss take"
       >
-        ✖
+        &times;
       </button>
     </div>
   `;
@@ -666,22 +678,22 @@ studioRecorder.onStateChange((event, data) => {
   if (event === 'start') {
     if (recBtn) recBtn.classList.add('recording');
     if (recDot) recDot.classList.add('pulsing');
-    if (recLabel) recLabel.textContent = '⏹ STOP (0.0s)';
-    showToast('🔴 Recording master audio take... Play your instrument or drums!', 'info');
+    if (recLabel) recLabel.textContent = 'STOP (0.0s)';
+    showToast('Recording master audio take... Play your instrument or drums!', 'info');
   } else if (event === 'timer') {
-    if (recLabel) recLabel.textContent = `⏹ STOP (${data.elapsed.toFixed(1)}s)`;
+    if (recLabel) recLabel.textContent = `STOP (${data.elapsed.toFixed(1)}s)`;
   } else if (event === 'take_ready') {
     if (recBtn) recBtn.classList.remove('recording');
     if (recDot) recDot.classList.remove('pulsing');
     if (recLabel) recLabel.textContent = '● REC TAKE';
     renderRecordedTakeShelf(data);
-    showToast(`🎵 Studio Take Captured (${data.duration}s)! Ready to audition or download.`, 'success');
+    showToast(`Studio Take Captured (${data.duration}s)! Ready to audition or download.`, 'success');
   } else if (event === 'preview_started' || event === 'preview_ended') {
     const previewBtn = document.getElementById('takePreviewBtn');
     if (previewBtn) {
       const isPlaying = studioRecorder.isPlayingPreview;
       previewBtn.classList.toggle('playing', isPlaying);
-      previewBtn.textContent = isPlaying ? '⏹ Stop' : '▶ Audition';
+      previewBtn.textContent = isPlaying ? 'Stop' : 'Audition';
     }
   }
 });
@@ -711,8 +723,8 @@ function toggleRealSamples() {
   renderInstrumentSettingsRack();
   showToast(
     sampleEngine.useRealSamples
-      ? '🎙️ Real Studio Multi-Samples Active'
-      : '⚡ Mathematical Synthesis Mode Active',
+      ? 'Real Studio Multi-Samples Active'
+      : 'Mathematical Synthesis Mode Active',
     'info'
   );
 }
@@ -731,10 +743,10 @@ function renderInstrumentSettingsRack() {
     <div class="settings-rack-card">
       <div class="settings-rack-header">
         <div class="settings-rack-title">
-          <span style="font-size: 1.15rem;">🎛️</span>
+          <span style="font-size: 1.15rem;"></span>
           <span><strong>${inst.name}</strong> Articulation &amp; Performance Controls</span>
           <span class="sample-status-pill ${sampleEngine.useRealSamples ? 'pill-sampled' : 'pill-synth'}">
-            ${sampleEngine.useRealSamples ? (sampleStatus === 'loading' ? '⏳ Loading Studio Samples...' : '🎙️ Multi-Sample Bank Ready') : '⚡ Analog Synthesis Mode'}
+            ${sampleEngine.useRealSamples ? (sampleStatus === 'loading' ? 'Loading Studio Samples...' : 'Multi-Sample Bank Ready') : 'Analog Synthesis Mode'}
           </span>
         </div>
         <div class="settings-rack-actions">
@@ -745,7 +757,7 @@ function renderInstrumentSettingsRack() {
             title="Switch between Real Studio Multi-Samples (Recordings) and Mathematical Synthesis"
           >
             <span class="sample-engine-dot ${sampleEngine.useRealSamples ? 'dot-ready' : 'dot-off'}"></span>
-            ${sampleEngine.useRealSamples ? '🎙️ REAL SAMPLES' : '⚡ SYNTHESIS'}
+            ${sampleEngine.useRealSamples ? 'REAL SAMPLES' : 'SYNTHESIS'}
           </button>
 
           <button 
@@ -756,7 +768,7 @@ function renderInstrumentSettingsRack() {
             title="Damper / Sustain Pedal (Keyboard shortcut: Shift key)"
           >
             <span class="sustain-pedal-led ${settings.sustainPedal ? 'led-on' : ''}"></span>
-            ${settings.sustainPedal ? '🦶 SUSTAIN PEDAL: ON' : '🦶 SUSTAIN PEDAL: OFF'}
+            ${settings.sustainPedal ? 'SUSTAIN PEDAL: ON' : 'SUSTAIN PEDAL: OFF'}
           </button>
 
           <button 
@@ -765,7 +777,7 @@ function renderInstrumentSettingsRack() {
             onclick="window.toggleLegatoMode()"
             title="Switch between Polyphonic chords and Monophonic smooth legato slides"
           >
-            ${settings.playMode === 'legato' ? '🌊 MONO LEGATO' : '🎹 POLYPHONIC'}
+            ${settings.playMode === 'legato' ? 'MONO LEGATO' : 'POLYPHONIC'}
           </button>
         </div>
       </div>
@@ -1117,7 +1129,7 @@ async function fetchBeatCatalog() {
 
     if (items.length === 0) {
       container.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--dds-ink-muted); padding: 2rem;">
           Studio instrumentals and sound packs are loaded in the workstation above.
         </div>
       `;
@@ -1133,8 +1145,8 @@ async function fetchBeatCatalog() {
             <p class="station-card-sub">${item.description || "Original release from Dangling Beats Studio"}</p>
           </div>
           <div class="station-card-action">
-            <a href="https://media.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); text-decoration: none; font-weight: 700;">
-              Download Stems &amp; Audio ⚡
+            <a href="https://media.dangling-dice-studios.com/" target="_blank" rel="noopener noreferrer" style="color: var(--dds-ink); text-decoration: none; font-weight: 600;">
+              Download Stems &amp; Audio 
             </a>
           </div>
         </div>
@@ -1223,7 +1235,10 @@ function switchTheoryTab(tab) {
   });
 
   Object.entries(buttons).forEach(([key, btn]) => {
-    if (btn) btn.classList.toggle('active', key === tab);
+    if (!btn) return;
+    btn.classList.toggle('active', key === tab);
+    btn.setAttribute('aria-selected', String(key === tab));
+    btn.tabIndex = key === tab ? 0 : -1;
   });
 
   if (tab === 'visualizer') {
@@ -1312,7 +1327,7 @@ function renderChordPads() {
       <div class="chord-pad-card" onclick="window.auditionChord(${idx})">
         <div class="chord-pad-top">
           <span class="chord-numeral">${chord.numeral}</span>
-          <span class="chord-listen-icon">🔊</span>
+          <span class="chord-listen-icon"></span>
         </div>
         <div>
           <div class="chord-name">${chord.name}</div>
@@ -1372,7 +1387,7 @@ function renderProgressionTimeline() {
 
   if (progressionSequence.length === 0) {
     track.innerHTML = `
-      <div style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem;">
+      <div style="color: var(--dds-ink-muted); font-size: 0.85rem; padding: 1rem;">
         No chords in progression. Click any chord pad above or "+" to add chords.
       </div>
     `;
@@ -1431,7 +1446,7 @@ function startProgressionPlayback() {
 
   isProgressionPlaying = true;
   const playBtn = document.getElementById('playProgressionBtn');
-  if (playBtn) playBtn.textContent = '⏸ Pause Loop';
+  if (playBtn) playBtn.textContent = 'Pause Loop';
 
   const msPerBeat = 60000 / currentBpm;
   const chordDurationMs = msPerBeat * 4; // 4 beats per chord
@@ -1458,7 +1473,7 @@ function stopProgressionPlayback() {
   currentPlayheadIndex = -1;
   if (progressionPlayTimer) clearTimeout(progressionPlayTimer);
   const playBtn = document.getElementById('playProgressionBtn');
-  if (playBtn) playBtn.textContent = '▶ Play Progression Loop';
+  if (playBtn) playBtn.textContent = 'Play Progression Loop';
   renderProgressionTimeline();
 }
 
@@ -1491,7 +1506,7 @@ function downloadProgressionMidi() {
 
   const filename = `DanglingBeats_${currentRootKey}_${currentPresetKey}_Progression.mid`;
   downloadMidiFile(midiBytes, filename);
-  showToast(`✅ Downloaded ${filename}! Drag straight into your DAW.`, 'success');
+  showToast(`Downloaded ${filename}! Drag straight into your DAW.`, 'success');
 }
 
 // ============================================================================
@@ -1532,7 +1547,7 @@ function renderScaleVisualizer() {
   const descEl = document.getElementById('scaleCharDesc');
 
   const notesInScale = scaleDef.intervals.map((int) => NOTE_NAMES[(rootSemi + int) % 12]);
-  if (titleEl) titleEl.innerHTML = `<span>✨</span> ${currentScaleRoot} ${scaleDef.name}`;
+  if (titleEl) titleEl.innerHTML = `${currentScaleRoot} ${scaleDef.name}`;
   if (degEl) degEl.textContent = `${scaleDef.degrees.join(' - ')} (${notesInScale.join(' - ')})`;
   if (descEl) descEl.textContent = scaleDef.mood;
 
@@ -1666,7 +1681,7 @@ function renderGuitarFretboard(container, rootSemi, scaleDef) {
     const inlaySymbol = fret === 12 || fret === 24 ? '••' : hasInlay ? '•' : '';
     fretboardHtml += `
       <div class="fret-num-cell ${fret === 0 ? 'fret-nut' : ''}">
-        ${fret === 0 ? 'Nut' : fret} ${inlaySymbol ? `<span style="color: #ec4899;">${inlaySymbol}</span>` : ''}
+        ${fret === 0 ? 'Nut' : fret} ${inlaySymbol ? `<span style="color: var(--dds-ink);">${inlaySymbol}</span>` : ''}
       </div>
     `;
   }
@@ -1694,14 +1709,14 @@ function updateDelayCalculations(bpm) {
       .map(
         (d) => `
         <tr>
-          <td style="font-weight: 700; color: #fff;">${d.name}</td>
-          <td><span style="color: #67e8f9;">${d.standard.ms}</span> ms</td>
-          <td><span style="color: #f472b6;">${d.dotted.ms}</span> ms</td>
-          <td><span style="color: #fbbf24;">${d.triplet.ms}</span> ms</td>
-          <td><span style="color: #10b981;">${d.standard.hz}</span> Hz</td>
+          <td style="font-weight: 600; color: var(--dds-ink);">${d.name}</td>
+          <td><span style="color: var(--dds-ink);">${d.standard.ms}</span> ms</td>
+          <td><span style="color: var(--dds-ink);">${d.dotted.ms}</span> ms</td>
+          <td><span style="color: var(--dds-ink);">${d.triplet.ms}</span> ms</td>
+          <td><span style="color: var(--dds-ink);">${d.standard.hz}</span> Hz</td>
           <td>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.auditionDelayTick(${d.standard.ms})" style="padding: 2px 8px; font-size: 0.72rem;">
-              🔊 Click
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.auditionDelayTick(${d.standard.ms})">
+              Click
             </button>
           </td>
         </tr>
@@ -1719,7 +1734,7 @@ function updateDelayCalculations(bpm) {
         (s) => `
         <div class="reverb-space-card">
           <div class="space-title">${s.type}</div>
-          <div class="space-timings">Pre-Delay: <span style="color: #67e8f9;">${s.preDelayMs}ms</span> | Decay: <span style="color: #f472b6;">${s.decayMs}ms</span></div>
+          <div class="space-timings">Pre-Delay: <span style="color: var(--dds-ink);">${s.preDelayMs}ms</span> | Decay: <span style="color: var(--dds-ink);">${s.decayMs}ms</span></div>
           <div class="space-desc">${s.desc}</div>
         </div>
       `
@@ -1748,15 +1763,15 @@ function runPitchShiftCalc() {
   if (resultBox) {
     resultBox.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Required Semitone Shift</span>
-        <span style="font-size: 1.4rem; font-family: 'JetBrains Mono', monospace; font-weight: 800; color: ${res.semitones >= 0 ? '#10b981' : '#ef4444'};">
+        <span style="font-size: 0.75rem; color: var(--dds-ink-muted); text-transform: uppercase;">Required Semitone Shift</span>
+        <span style="font-size: 1.4rem; font-family: var(--dds-font-mono); font-weight: 600; color: var(--dds-ink);">
           ${res.semitones >= 0 ? '+' : ''}${res.semitones} st
         </span>
       </div>
-      <div style="font-size: 0.8rem; color: #fff; margin-bottom: 0.35rem;">
-        Cents Detune: <span style="color: #67e8f9; font-family: monospace;">${res.cents >= 0 ? '+' : ''}${res.cents}¢</span> | Speed Ratio: <span style="color: #fbbf24; font-family: monospace;">${res.playbackPercent}%</span>
+      <div style="font-size: 0.8rem; color: var(--dds-ink); margin-bottom: 0.35rem;">
+        Cents Detune: <span style="color: var(--dds-ink); font-family: var(--dds-font-mono);">${res.cents >= 0 ? '+' : ''}${res.cents}¢</span> | Speed Ratio: <span style="color: var(--dds-ink); font-family: var(--dds-font-mono);">${res.playbackPercent}%</span>
       </div>
-      <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.3;">
+      <p style="font-size: 0.74rem; color: var(--dds-ink-muted); line-height: 1.3;">
         ${res.summary}
       </p>
     `;
@@ -1785,19 +1800,17 @@ function runRoomModesCalc() {
   const banner = document.getElementById('roomAlertBanner');
 
   if (banner) {
-    if (res.dangerZones.length > 0 || res.assessment.startsWith('⚠️')) {
+    if (res.dangerZones.length > 0 || res.warning) {
       banner.style.display = 'block';
-      banner.className = 'calc-result-box';
-      banner.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-      banner.style.background = 'rgba(239, 68, 68, 0.08)';
+      banner.className = 'callout is-warn';
       banner.innerHTML = `
-        <div style="font-size: 0.8rem; font-weight: 700; color: #ef4444; margin-bottom: 0.25rem;">
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--dds-ink); margin-bottom: 0.25rem;">
           ${res.assessment}
         </div>
         ${res.dangerZones
           .map(
             (dz) => `
-          <div style="font-size: 0.74rem; color: #fca5a5; margin-top: 0.2rem;">
+          <div style="font-size: 0.74rem; color: var(--dds-ink); margin-top: 0.2rem;">
             • ${dz.message} (${dz.source})
           </div>
         `
@@ -1806,12 +1819,10 @@ function runRoomModesCalc() {
       `;
     } else {
       banner.style.display = 'block';
-      banner.className = 'calc-result-box';
-      banner.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-      banner.style.background = 'rgba(16, 185, 129, 0.08)';
+      banner.className = 'callout is-ok';
       banner.innerHTML = `
-        <div style="font-size: 0.8rem; font-weight: 700; color: #10b981;">
-          ✅ ${res.assessment} (Volume: ~${res.volumeCuFt} cu. ft)
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--dds-ink);">
+          ${res.assessment} (Volume: ~${res.volumeCuFt} cu. ft)
         </div>
       `;
     }
@@ -1904,20 +1915,15 @@ function drawWaveform() {
   const amp = height / 2;
 
   // Draw background grid lines
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.strokeStyle = cssToken('--dds-border-color');
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(0, amp);
   ctx.lineTo(width, amp);
   ctx.stroke();
 
-  // Draw waveform
-  const gradient = ctx.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0, '#ec4899');
-  gradient.addColorStop(0.5, '#06b6d4');
-  gradient.addColorStop(1, '#10b981');
-
-  ctx.fillStyle = gradient;
+  // Draw waveform (flat accent fill)
+  ctx.fillStyle = cssToken('--dds-accent');
   ctx.beginPath();
 
   for (let i = 0; i < width; i++) {
@@ -1934,7 +1940,7 @@ function drawWaveform() {
   }
 
   // Draw vertical slice markers
-  ctx.strokeStyle = '#10b981';
+  ctx.strokeStyle = cssToken('--dds-ink');
   ctx.lineWidth = 2;
   const totalDuration = chopperAudioBuffer.duration;
 
@@ -1946,7 +1952,7 @@ function drawWaveform() {
     ctx.stroke();
 
     // Marker badge
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = cssToken('--dds-ink');
     ctx.font = 'bold 10px monospace';
     ctx.fillText(`${idx + 1}`, x + 3, 14);
   });
@@ -1972,7 +1978,7 @@ function renderSlicePads() {
       >
         <span class="slice-pad-key">[ ${key} ]</span>
         <div class="slice-pad-label">Slice ${i + 1}</div>
-        <div style="font-size: 0.65rem; color: var(--text-muted);">${durationMs}ms</div>
+        <div style="font-size: 0.65rem; color: var(--dds-ink-muted);">${durationMs}ms</div>
       </div>
     `;
     })
@@ -2149,10 +2155,10 @@ function downloadRenamedSample() {
 // ============================================================================
 
 let euclideanTracks = [
-  { id: 'kick', name: 'Kick Drum', type: 'kick', steps: 16, pulses: 4, color: '#ec4899', pattern: [] },
-  { id: 'snare', name: 'Snare Drum', type: 'snare', steps: 16, pulses: 2, color: '#06b6d4', pattern: [] },
-  { id: 'hat', name: 'Closed Hat', type: 'hat', steps: 16, pulses: 7, color: '#f59e0b', pattern: [] },
-  { id: 'perc', name: 'Perc / Rim', type: 'perc', steps: 12, pulses: 5, color: '#10b981', pattern: [] },
+  { id: 'kick', name: 'Kick Drum', type: 'kick', steps: 16, pulses: 4, color: 'var(--dds-viz-2)', pattern: [] },
+  { id: 'snare', name: 'Snare Drum', type: 'snare', steps: 16, pulses: 2, color: 'var(--dds-viz-1)', pattern: [] },
+  { id: 'hat', name: 'Closed Hat', type: 'hat', steps: 16, pulses: 7, color: 'var(--dds-viz-6)', pattern: [] },
+  { id: 'perc', name: 'Perc / Rim', type: 'perc', steps: 12, pulses: 5, color: 'var(--dds-viz-5)', pattern: [] },
 ];
 
 let euclideanPlaying = false;
@@ -2172,8 +2178,8 @@ function renderEuclideanTracks() {
       (tr) => `
     <div class="euclidean-track-card">
       <div>
-        <div style="font-size: 0.85rem; font-weight: 800; color: #fff;">${tr.name}</div>
-        <div style="font-size: 0.72rem; color: ${tr.color}; font-family: monospace;">
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--dds-ink);">${tr.name}</div>
+        <div class="lane-meta"><span class="lane-dot" style="background: ${tr.color};"></span>
           E(${tr.pulses}, ${tr.steps}) • ${Math.round((tr.pulses / tr.steps) * 100)}% density
         </div>
       </div>
@@ -2196,11 +2202,11 @@ function renderEuclideanTracks() {
 
       <div style="display: flex; gap: 0.5rem; align-items: center;">
         <div style="flex: 1;">
-          <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Steps</label>
+          <label style="font-size: 0.65rem; color: var(--dds-ink-muted); display: block;">Steps</label>
           <input type="number" class="theory-select" value="${tr.steps}" min="4" max="32" style="width: 50px; padding: 2px 4px; font-size: 0.75rem;" onchange="window.updateEuclideanTrack('${tr.id}', this.value, null)" />
         </div>
         <div style="flex: 1;">
-          <label style="font-size: 0.65rem; color: var(--text-muted); display: block;">Pulses</label>
+          <label style="font-size: 0.65rem; color: var(--dds-ink-muted); display: block;">Pulses</label>
           <input type="number" class="theory-select" value="${tr.pulses}" min="0" max="${tr.steps}" style="width: 50px; padding: 2px 4px; font-size: 0.75rem;" onchange="window.updateEuclideanTrack('${tr.id}', null, this.value)" />
         </div>
       </div>
@@ -2247,13 +2253,13 @@ function toggleEuclideanPlayback() {
     euclideanPlaying = false;
     if (euclideanStepTimer) clearInterval(euclideanStepTimer);
     euclideanStepTimer = null;
-    if (btn) btn.innerHTML = '▶ Play Polyrhythm Loop';
+    if (btn) btn.innerHTML = 'Play Polyrhythm Loop';
     document.querySelectorAll('.euclidean-step.current').forEach((el) => el.classList.remove('current'));
     return;
   }
 
   euclideanPlaying = true;
-  if (btn) btn.innerHTML = '⏹ Stop Loop';
+  if (btn) btn.innerHTML = 'Stop Loop';
 
   const bpm = projectTransport ? projectTransport.bpm : (progressionBpm || 90);
   const sixteenthMs = (60000 / bpm) / 4;
@@ -2486,26 +2492,24 @@ async function toggleSamplerMicRecording() {
   if (!samplerEngine.isRecording) {
     const res = await samplerEngine.startMicRecording();
     if (res.success) {
-      btn.textContent = '⏹️ Stop Recording';
-      btn.style.background = '#ef4444';
-      btn.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.6)';
-      showToast('🎙️ Recording live microphone audio...', 'info');
+      btn.innerHTML = `${icon('square')}Stop recording`;
+      btn.classList.add('is-recording');
+      showToast('Recording live microphone audio...', 'info');
     } else {
       showToast(res.error || 'Microphone access denied', 'error');
     }
   } else {
-    btn.textContent = '⏳ Processing Mic...';
+    btn.textContent = 'Processing Mic...';
     const rootSelect = document.getElementById('samplerRootSelect');
     const rootMidi = parseInt(rootSelect?.value || 60);
     const res = await samplerEngine.stopMicRecording(rootMidi);
 
-    btn.textContent = '🎙️ Record Mic';
-    btn.style.background = 'linear-gradient(135deg, #ef4444, #f43f5e)';
-    btn.style.boxShadow = 'none';
+    btn.innerHTML = `${icon('mic')}Record mic`;
+    btn.classList.remove('is-recording');
 
     if (res && res.success) {
       drawSamplerWaveform();
-      showToast('✅ Microphone recording mapped across keyboard!', 'success');
+      showToast('Microphone recording mapped across keyboard!', 'success');
     } else {
       showToast(res?.error || 'Failed to capture recording', 'error');
     }
@@ -2528,7 +2532,7 @@ async function handleSamplerFileUpload(event) {
 
     samplerEngine.loadBuffer(audioBuffer, file.name, rootMidi);
     drawSamplerWaveform();
-    showToast(`✅ Loaded ${file.name} across keyboard!`, 'success');
+    showToast(`Loaded ${file.name} across keyboard!`, 'success');
   } catch (err) {
     console.error('[Sampler File Error]', err);
     showToast('Could not decode audio file', 'error');
@@ -2550,19 +2554,14 @@ function drawSamplerWaveform() {
   const amp = height / 2;
 
   // Center zero line
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.strokeStyle = cssToken('--dds-border-color');
   ctx.beginPath();
   ctx.moveTo(0, amp);
   ctx.lineTo(width, amp);
   ctx.stroke();
 
-  // Waveform gradient
-  const gradient = ctx.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0, '#f472b6');
-  gradient.addColorStop(0.5, '#67e8f9');
-  gradient.addColorStop(1, '#fbbf24');
-
-  ctx.fillStyle = gradient;
+  // Waveform (flat accent fill)
+  ctx.fillStyle = cssToken('--dds-accent');
   for (let i = 0; i < width; i++) {
     let min = 1.0;
     let max = -1.0;
@@ -2580,12 +2579,14 @@ function drawSamplerWaveform() {
   const startX = Math.floor(samplerEngine.startRatio * width);
   const endX = Math.floor(samplerEngine.endRatio * width);
 
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+  ctx.globalAlpha = 0.65;
+  ctx.fillStyle = cssToken('--dds-canvas');
   if (startX > 0) ctx.fillRect(0, 0, startX, height);
   if (endX < width) ctx.fillRect(endX, 0, width - endX, height);
+  ctx.globalAlpha = 1;
 
   // Start Line
-  ctx.strokeStyle = '#67e8f9';
+  ctx.strokeStyle = cssToken('--dds-ink');
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(startX, 0);
@@ -2593,7 +2594,7 @@ function drawSamplerWaveform() {
   ctx.stroke();
 
   // End Line
-  ctx.strokeStyle = '#f472b6';
+  ctx.strokeStyle = cssToken('--dds-ink');
   ctx.beginPath();
   ctx.moveTo(endX, 0);
   ctx.lineTo(endX, height);
@@ -2619,9 +2620,8 @@ function toggleSamplerLoop() {
   samplerEngine.isLooping = !samplerEngine.isLooping;
   const btn = document.getElementById('samplerLoopBtn');
   if (btn) {
-    btn.textContent = samplerEngine.isLooping ? '🔁 Loop: ON' : '🔁 Loop: OFF';
-    btn.style.color = samplerEngine.isLooping ? '#10b981' : '#fff';
-    btn.style.borderColor = samplerEngine.isLooping ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-subtle)';
+    btn.textContent = samplerEngine.isLooping ? 'Loop: on' : 'Loop: off';
+    setPressed(btn, samplerEngine.isLooping);
   }
 }
 
@@ -2629,9 +2629,8 @@ function toggleSamplerReverse() {
   samplerEngine.isReversed = !samplerEngine.isReversed;
   const btn = document.getElementById('samplerReverseBtn');
   if (btn) {
-    btn.textContent = samplerEngine.isReversed ? '⏪ Reverse: ON' : '⏪ Reverse: OFF';
-    btn.style.color = samplerEngine.isReversed ? '#f472b6' : '#fff';
-    btn.style.borderColor = samplerEngine.isReversed ? 'rgba(236, 72, 153, 0.4)' : 'var(--border-subtle)';
+    btn.textContent = samplerEngine.isReversed ? 'Reverse: on' : 'Reverse: off';
+    setPressed(btn, samplerEngine.isReversed);
   }
   drawSamplerWaveform();
 }
@@ -2665,6 +2664,7 @@ function updateSamplerFilter() {
 
 // Expose globals for HTML onclicks
 window.switchTheoryTab = switchTheoryTab;
+initTabKeyboard(document.getElementById('theoryTabBar'));
 window.selectPreset = selectPreset;
 window.handleKeyChange = handleKeyChange;
 window.handleBpmChange = handleBpmChange;
@@ -2758,10 +2758,10 @@ let editorActiveBar = 0; // 0, 1, 2, ... up to projectTransport.loopBars - 1
 let editorCurrentView = 'drums'; // 'drums' | 'piano'
 
 const DRUM_GRID_ROWS = [
-  { key: 'kick_punchy', name: 'Kick Drum (Z)', color: '#ec4899' },
-  { key: 'snare_acoustic', name: 'Snare (C)', color: '#38bdf8' },
-  { key: 'hat_closed', name: 'Closed Hat (D)', color: '#fbbf24' },
-  { key: 'clap', name: 'Clap / Perc (V)', color: '#34d399' },
+  { key: 'kick_punchy', name: 'Kick Drum (Z)', color: 'var(--dds-viz-2)' },
+  { key: 'snare_acoustic', name: 'Snare (C)', color: 'var(--dds-viz-1)' },
+  { key: 'hat_closed', name: 'Closed Hat (D)', color: 'var(--dds-viz-6)' },
+  { key: 'clap', name: 'Clap / Perc (V)', color: 'var(--dds-viz-5)' },
 ];
 
 const PIANO_ROLL_NOTES = [
@@ -2790,7 +2790,7 @@ function renderDrumGrid() {
   DRUM_GRID_ROWS.forEach((row) => {
     html += `<div class="drum-grid-row">
       <div class="drum-grid-label">
-        <span style="color: ${row.color};">●</span>
+        <span class="lane-dot" style="background: ${row.color};"></span>
         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 4px; flex: 1;">${row.name}</span>
       </div>
       <div class="drum-grid-steps">`;
@@ -2800,7 +2800,7 @@ function renderDrumGrid() {
       const isHit = projectTransport.hasDrumStep(row.key, stepIdx);
       const isBeatStart = i % 4 === 0;
       const hitStyle = isHit 
-        ? `background: ${row.color}; border-color: ${row.color}; color: #000; box-shadow: 0 0 10px ${row.color};` 
+        ? `background: ${row.color}; border-color: ${row.color}; color: var(--dds-ink-on-accent);` 
         : '';
 
       html += `<div 
@@ -2881,34 +2881,14 @@ function switchEditorView(view) {
   if (view === 'drums') {
     if (drumSec) drumSec.style.display = 'block';
     if (pianoSec) pianoSec.style.display = 'none';
-    if (drumBtn) {
-      drumBtn.className = 'btn btn-sm active';
-      drumBtn.style.background = 'rgba(245, 158, 11, 0.2)';
-      drumBtn.style.color = '#fbbf24';
-      drumBtn.style.borderColor = 'rgba(245, 158, 11, 0.5)';
-    }
-    if (pianoBtn) {
-      pianoBtn.className = 'btn btn-secondary btn-sm';
-      pianoBtn.style.background = '';
-      pianoBtn.style.color = '';
-      pianoBtn.style.borderColor = '';
-    }
+    setPressed(drumBtn, true);
+    setPressed(pianoBtn, false);
     renderDrumGrid();
   } else {
     if (drumSec) drumSec.style.display = 'none';
     if (pianoSec) pianoSec.style.display = 'block';
-    if (pianoBtn) {
-      pianoBtn.className = 'btn btn-sm active';
-      pianoBtn.style.background = 'rgba(236, 72, 153, 0.2)';
-      pianoBtn.style.color = '#f472b6';
-      pianoBtn.style.borderColor = 'rgba(236, 72, 153, 0.5)';
-    }
-    if (drumBtn) {
-      drumBtn.className = 'btn btn-secondary btn-sm';
-      drumBtn.style.background = '';
-      drumBtn.style.color = '';
-      drumBtn.style.borderColor = '';
-    }
+    setPressed(pianoBtn, true);
+    setPressed(drumBtn, false);
     renderPianoRoll();
   }
   updateActiveTrackEventCount();
@@ -2918,12 +2898,7 @@ window.switchEditorView = switchEditorView;
 function setEditorActiveBar(barIdx) {
   editorActiveBar = Math.max(0, Math.min(projectTransport.loopBars - 1, Number(barIdx) || 0));
   document.querySelectorAll('.bar-select-btn').forEach((btn) => {
-    const b = Number(btn.getAttribute('data-bar'));
-    if (b === editorActiveBar) {
-      btn.className = 'btn btn-sm active bar-select-btn';
-    } else {
-      btn.className = 'btn btn-secondary btn-sm bar-select-btn';
-    }
+    setPressed(btn, Number(btn.getAttribute('data-bar')) === editorActiveBar);
   });
 
   if (editorCurrentView === 'drums') {
@@ -2938,10 +2913,10 @@ function updateBarSelectorButtons() {
   const wrap = document.getElementById('editorBarSelectorWrap');
   if (!wrap) return;
   const bars = projectTransport.loopBars;
-  let html = `<span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-right: 0.25rem;">Bar Page:</span>`;
+  let html = `<span class="field-label">Bar page</span>`;
   for (let b = 0; b < bars; b++) {
     const isActive = b === editorActiveBar;
-    html += `<button type="button" class="btn ${isActive ? 'btn-sm active' : 'btn-secondary btn-sm'} bar-select-btn" data-bar="${b}" onclick="window.setEditorActiveBar(${b})" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">Bar ${b + 1}</button>`;
+    html += `<button type="button" class="btn btn-sm bar-select-btn${isActive ? ' active' : ''}" aria-pressed="${isActive}" data-bar="${b}" onclick="window.setEditorActiveBar(${b})">Bar ${b + 1}</button>`;
   }
   wrap.innerHTML = html;
 }
@@ -2958,8 +2933,8 @@ function toggleTrackMute(trackId) {
   const isMuted = projectTransport.toggleTrackMute(trackId);
   const labelEl = document.getElementById(`${trackId}MuteLabel`);
   if (labelEl) {
-    labelEl.textContent = isMuted ? 'MUTED' : 'ON';
-    labelEl.style.color = isMuted ? '#f87171' : '#34d399';
+    labelEl.textContent = isMuted ? 'muted' : 'on';
+    labelEl.className = isMuted ? 'state-off' : 'state-on';
   }
 }
 window.toggleTrackMute = toggleTrackMute;
@@ -3014,31 +2989,20 @@ function initProjectTransportWireup() {
       const playBtn = document.getElementById('projectPlayBtn');
       const recBtn = document.getElementById('projectRecBtn');
       if (playBtn) {
+        playBtn.classList.toggle('is-playing', data.isPlaying);
+        playBtn.setAttribute('aria-pressed', String(data.isPlaying));
         if (data.isPlaying) {
-          playBtn.innerHTML = '⏹ STOP';
-          playBtn.style.background = '#ef4444';
-          playBtn.style.color = '#fff';
+          playBtn.innerHTML = `${icon('pause')}Pause`;
         } else {
-          playBtn.innerHTML = '▶ PLAY';
-          playBtn.style.background = 'linear-gradient(135deg, #10b981, #06b6d4)';
-          playBtn.style.color = '#000';
+          playBtn.innerHTML = `${icon('play')}Play`;
           document.querySelectorAll('.drum-grid-step.current, .piano-roll-cell.current').forEach((el) => el.classList.remove('current'));
         }
       }
-      if (recBtn && !data.isRecording) {
-        recBtn.classList.remove('active');
-        recBtn.style.background = '';
-      }
+      if (recBtn && !data.isRecording) setPressed(recBtn, false);
     } else if (event === 'recordState') {
       const recBtn = document.getElementById('projectRecBtn');
       if (recBtn) {
-        if (data.isRecording) {
-          recBtn.classList.add('active');
-          recBtn.style.background = 'rgba(239, 68, 68, 0.2)';
-        } else {
-          recBtn.classList.remove('active');
-          recBtn.style.background = '';
-        }
+        setPressed(recBtn, data.isRecording);
       }
     } else if (event === 'bpm') {
       handleMasterBpmChange(data.bpm);
@@ -3049,56 +3013,27 @@ function initProjectTransportWireup() {
     } else if (event === 'armedTrack') {
       const pianoBtn = document.getElementById('armPianoTrackBtn');
       const drumsBtn = document.getElementById('armDrumsTrackBtn');
-      if (data.armedTrack === 'piano') {
-        if (pianoBtn) {
-          pianoBtn.className = 'btn btn-sm active';
-          pianoBtn.style.background = 'rgba(236, 72, 153, 0.2)';
-          pianoBtn.style.color = '#f472b6';
-          pianoBtn.style.border = '1px solid rgba(236, 72, 153, 0.5)';
-        }
-        if (drumsBtn) {
-          drumsBtn.className = 'btn btn-secondary btn-sm';
-          drumsBtn.style.background = '';
-          drumsBtn.style.color = '';
-          drumsBtn.style.border = '';
-        }
-      } else {
-        if (drumsBtn) {
-          drumsBtn.className = 'btn btn-sm active';
-          drumsBtn.style.background = 'rgba(245, 158, 11, 0.2)';
-          drumsBtn.style.color = '#fbbf24';
-          drumsBtn.style.border = '1px solid rgba(245, 158, 11, 0.5)';
-        }
-        if (pianoBtn) {
-          pianoBtn.className = 'btn btn-secondary btn-sm';
-          pianoBtn.style.background = '';
-          pianoBtn.style.color = '';
-          pianoBtn.style.border = '';
-        }
-      }
+      setPressed(pianoBtn, data.armedTrack === 'piano');
+      setPressed(drumsBtn, data.armedTrack !== 'piano');
     } else if (event === 'metronome') {
       const metroLabel = document.getElementById('projectMetroLabel');
       const metroBtn = document.getElementById('projectMetroBtn');
       if (metroLabel) {
-        metroLabel.textContent = data.enabled ? 'ON' : 'OFF';
-        metroLabel.style.color = data.enabled ? '#34d399' : '#94a3b8';
+        metroLabel.textContent = data.enabled ? 'on' : 'off';
+        metroLabel.className = data.enabled ? 'state-on' : 'state-off';
       }
-      if (metroBtn) {
-        metroBtn.style.borderColor = data.enabled ? '#34d399' : '';
-      }
+      setPressed(metroBtn, data.enabled);
     } else if (event === 'countInTick') {
       const countEl = document.getElementById('projectCountInBadge');
       if (countEl) {
-        countEl.textContent = `Count-in: Beat ${data.beat} / ${data.total}`;
-        countEl.style.color = '#fbbf24';
-        countEl.style.background = 'rgba(245, 158, 11, 0.2)';
+        countEl.textContent = `Count-in: beat ${data.beat} / ${data.total}`;
+        countEl.classList.add('is-counting');
       }
     } else if (event === 'countInFinished') {
       const countEl = document.getElementById('projectCountInBadge');
       if (countEl) {
-        countEl.textContent = '1-Bar Count-in';
-        countEl.style.color = '#94a3b8';
-        countEl.style.background = 'rgba(255,255,255,0.06)';
+        countEl.textContent = '1-bar count-in';
+        countEl.classList.remove('is-counting');
       }
     } else if (event === 'trackUpdated') {
       if (editorCurrentView === 'drums') renderDrumGrid();

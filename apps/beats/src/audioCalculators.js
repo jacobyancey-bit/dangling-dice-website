@@ -322,15 +322,16 @@ export function calculateRoomModes(length, width, height, unit = 'feet') {
 
   let assessment = 'Good acoustic dimension distribution.';
   if (isSquare) {
-    assessment = '⚠️ Square or Cube dimensions detected! High risk of extreme acoustic standing waves and cancellation nulls.';
+    assessment = 'Square or Cube dimensions detected! High risk of extreme acoustic standing waves and cancellation nulls.';
   } else if (isMultiple) {
-    assessment = '⚠️ Harmonic ratio alert: One dimension is a direct multiple of another. Expect modal stacking in low sub-bass.';
+    assessment = 'Harmonic ratio alert: One dimension is a direct multiple of another. Expect modal stacking in low sub-bass.';
   }
 
   return {
     modes,
     dangerZones,
     assessment,
+    warning: isSquare || isMultiple,
     lwRatio,
     lhRatio,
     volumeCuFt: unit === 'feet' ? Math.round(l * w * h) : Math.round(l * w * h * 35.3147),

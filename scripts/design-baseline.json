@@ -24,12 +24,12 @@
     "emoji": 0
   },
   "beats": {
-    "gradient": 31,
-    "blur": 4,
-    "shadow": 64,
-    "radius_gt8": 30,
-    "hex_color": 440,
-    "emoji": 335
+    "gradient": 0,
+    "blur": 0,
+    "shadow": 0,
+    "radius_gt8": 0,
+    "hex_color": 0,
+    "emoji": 0
   },
   "dev": {
     "gradient": 0,
