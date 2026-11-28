@@ -10,8 +10,11 @@ Dangling Dice Studios™ is an independent software development, music productio
 - **Developer Suite & Sandboxes**: https://dev.dangling-dice-studios.com/
 - **Gaming Lab (Footstep EQ & Game Configs)**: https://games.dangling-dice-studios.com/
 - **Dedicated Public API Gateway**: https://api.dangling-dice-studios.com/
+- **Rx Savings Watch (Web App)**: https://rx.dangling-dice-studios.com/
 - **YouTube Channel**: https://www.youtube.com/@danglingdicestudios
-- **Google Play Store**: https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator
+- **Google Play — Tutor Calculator**: https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator
+- **Google Play — Rx Savings Watch**: https://play.google.com/store/apps/details?id=com.danglingdicestudios.rx
+- **Google Play — Dangling Dice VPN**: Coming soon (WireGuard zero-log Android app finishing Play Store testing)
 - **GitHub**: https://github.com/jacobyancey-bit
 
 ---

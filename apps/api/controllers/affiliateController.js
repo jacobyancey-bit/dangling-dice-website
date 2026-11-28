@@ -36,12 +36,21 @@ const PARTNER_DIRECTORY = {
     featured: true,
   },
   calculator: {
-    name: 'AI Calculator on Google Play',
+    name: 'Tutor Calculator on Google Play',
     targetUrl: 'https://play.google.com/store/apps/details?id=com.danglingdicestudios.aicalculator',
     category: 'Mobile Apps',
-    description: 'Smart Android homework solver with step-by-step arithmetic, scientific calculation, and AI OCR scanning.',
+    description: 'Smart Android math solver with step-by-step explanations, graphing, and camera OCR scanning.',
     perkBadge: 'Official Google Play App',
     icon: '📱',
+    featured: true,
+  },
+  rxsavings: {
+    name: 'Rx Savings Watch on Google Play',
+    targetUrl: 'https://play.google.com/store/apps/details?id=com.danglingdicestudios.rx',
+    category: 'Mobile Apps',
+    description: 'Offline-first Android medication list, refill reminders, and FDA generic launch & pharmacy savings lookup with zero accounts or ads.',
+    perkBadge: 'Official Google Play App',
+    icon: '💊',
     featured: true,
   },
   youtube: {
