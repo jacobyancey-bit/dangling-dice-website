@@ -2,11 +2,11 @@
  * Dangling Dice Studios — Design Tokens (single source of truth)
  *
  * Hub-and-spoke rule: every subdomain shares these structural tokens exactly.
- * A subdomain may override ONLY --accent and --accent-hover, selected via
+ * A subdomain may override ONLY --dds-accent and --dds-accent-hover, selected via
  * <html data-site="web|beats|dev|games|media">. Surfaces are never accent-tinted.
  *
  * Theme: dark is the default. Light applies with <html data-theme="light">.
- * (Whether light follows the OS setting or a toggle is decided before Phase 2.)
+ * Decision (Phase 2): dark only for now; light tokens are kept ready for later.
  *
  * This is the ONLY stylesheet allowed to contain hex colors (enforced by scripts/lint-design.js).
  * Contrast (WCAG 2.2) verified for every pairing below; see scripts/lint-design.js.
@@ -14,99 +14,100 @@
 
 :root {
   /* ---------- Typography ---------- */
-  --font-sans: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
-  --tracking-display: -0.03em;
-  --tracking-body: -0.005em;
+  --dds-font-sans: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --dds-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --dds-tracking-display: -0.03em;
+  --dds-tracking-body: -0.005em;
 
-  --text-xs: 0.75rem;     /* 12px — captions, table meta */
-  --text-sm: 0.84375rem;  /* 13.5px — nav links, secondary UI */
-  --text-base: 0.9375rem; /* 15px — body */
-  --text-md: 1.0625rem;   /* 17px — lead text */
-  --text-lg: 1.375rem;    /* 22px — section titles */
-  --text-xl: 1.875rem;    /* 30px — page titles */
-  --text-2xl: clamp(2.125rem, 1.4rem + 2.6vw, 3.25rem); /* hero display */
+  --dds-text-xs: 0.75rem;     /* 12px — captions, table meta */
+  --dds-text-sm: 0.84375rem;  /* 13.5px — nav links, secondary UI */
+  --dds-text-base: 0.9375rem; /* 15px — body */
+  --dds-text-md: 1.0625rem;   /* 17px — lead text */
+  --dds-text-lg: 1.375rem;    /* 22px — section titles */
+  --dds-text-xl: 1.875rem;    /* 30px — page titles */
+  --dds-text-2xl: clamp(2.125rem, 1.4rem + 2.6vw, 3.25rem); /* hero display */
 
-  --leading-tight: 1.15;
-  --leading-normal: 1.55;
-  --measure: 58ch;
+  --dds-leading-tight: 1.15;
+  --dds-leading-normal: 1.55;
+  --dds-measure: 58ch;
 
   /* ---------- Geometry ---------- */
-  --radius-control: 6px; /* buttons, inputs, tags */
-  --radius-panel: 8px;   /* cards, panels, dialogs */
-  --border-width: 1px;
-  --accent-bar: 3px;     /* left accent border on hero / featured blocks */
-  --shell-height: 56px;
+  --dds-radius-control: 6px; /* buttons, inputs, tags */
+  --dds-radius-panel: 8px;   /* cards, panels, dialogs */
+  --dds-border-width: 1px;
+  --dds-accent-bar: 3px;     /* left accent border on hero / featured blocks */
+  --dds-shell-height: 56px;
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
+  --dds-space-1: 4px;
+  --dds-space-2: 8px;
+  --dds-space-3: 12px;
+  --dds-space-4: 16px;
+  --dds-space-5: 24px;
+  --dds-space-6: 32px;
+  --dds-space-7: 48px;
+  --dds-space-8: 64px;
 
-  --icon-stroke: 1.5;
-  --icon-size: 18px;
+  --dds-icon-stroke: 1.5;
+  --dds-icon-size: 18px;
 
-  --duration-fast: 120ms;
-  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dds-duration-fast: 120ms;
+  --dds-ease: cubic-bezier(0.2, 0, 0, 1);
 
   /* ---------- Dark theme (default) ---------- */
-  --canvas: #0A0B0B;
-  --surface: #121414;
-  --surface-subtle: #1A1D1D;
-  --border-color: #232726;
-  --border-control: #646D6B; /* >= 3:1 on canvas & surfaces (WCAG 1.4.11) for inputs */
-  --ink: #EDEDEF;
-  --ink-muted: #9CA3AF;
-  --ink-on-accent: #FFFFFF;
+  --dds-canvas: #0A0B0B;
+  --dds-surface: #121414;
+  --dds-surface-subtle: #1A1D1D;
+  --dds-border-color: #232726;
+  --dds-border-control: #646D6B; /* >= 3:1 on canvas & surfaces (WCAG 1.4.11) for inputs */
+  --dds-ink: #EDEDEF;
+  --dds-ink-muted: #9CA3AF;
+  --dds-ink-on-accent: #FFFFFF;
+  --dds-scrim: rgba(0, 0, 0, 0.6); /* modal backdrop */
 
   /* Semantic status (text-safe on both themes' surfaces) */
-  --status-ok: #15803D;
-  --status-warn: #B45309;
-  --status-error: #B91C1C;
+  --dds-status-ok: #15803D;
+  --dds-status-warn: #B45309;
+  --dds-status-error: #B91C1C;
 
   /* Default accent = studio root (overridden per site below) */
-  --accent: #0E7490;
-  --accent-hover: #155E75;
+  --dds-accent: #0E7490;
+  --dds-accent-hover: #155E75;
 
-  --border: var(--border-width) solid var(--border-color);
-  --focus-ring: 2px solid var(--accent);
-  --focus-offset: 2px;
+  --dds-border: var(--dds-border-width) solid var(--dds-border-color);
+  --dds-focus-ring: 2px solid var(--dds-accent);
+  --dds-focus-offset: 2px;
 
   color-scheme: dark;
 }
 
 :root[data-theme='light'] {
-  --canvas: #FAF9F6;
-  --surface: #FFFFFF;
-  --surface-subtle: #F3F2EE;
-  --border-color: #E5E4E0;
-  --border-control: #858B93;
-  --ink: #11181C;
-  --ink-muted: #59636E;
+  --dds-canvas: #FAF9F6;
+  --dds-surface: #FFFFFF;
+  --dds-surface-subtle: #F3F2EE;
+  --dds-border-color: #E5E4E0;
+  --dds-border-control: #858B93;
+  --dds-ink: #11181C;
+  --dds-ink-muted: #59636E;
   color-scheme: light;
 }
 
 /* ---------- Subdomain accents (the ONLY per-site override) ----------
  * Each value: >= 4.5:1 with white text AND >= 3:1 against the dark canvas,
  * so one value serves CTAs and focus rings in both themes. */
-:root[data-site='web']   { --accent: #0E7490; --accent-hover: #155E75; }
-:root[data-site='beats'] { --accent: #BE185D; --accent-hover: #9D174D; }
-:root[data-site='dev']   { --accent: #2563EB; --accent-hover: #1D4ED8; }
-:root[data-site='games'] { --accent: #7C3AED; --accent-hover: #6D28D9; }
-:root[data-site='media'] { --accent: #047857; --accent-hover: #065F46; }
+:root[data-site='web']   { --dds-accent: #0E7490; --dds-accent-hover: #155E75; }
+:root[data-site='beats'] { --dds-accent: #BE185D; --dds-accent-hover: #9D174D; }
+:root[data-site='dev']   { --dds-accent: #2563EB; --dds-accent-hover: #1D4ED8; }
+:root[data-site='games'] { --dds-accent: #7C3AED; --dds-accent-hover: #6D28D9; }
+:root[data-site='media'] { --dds-accent: #047857; --dds-accent-hover: #065F46; }
 
 /* ---------- Data-visualization palette (exception zone) ----------
  * Allowed ONLY inside charts, meters, DAW lanes and game boards (elements marked
  * [data-viz]). Never for surfaces, CTAs or navigation. */
 :root {
-  --viz-1: #0E7490;
-  --viz-2: #BE185D;
-  --viz-3: #2563EB;
-  --viz-4: #7C3AED;
-  --viz-5: #047857;
-  --viz-6: #B45309;
+  --dds-viz-1: #0E7490;
+  --dds-viz-2: #BE185D;
+  --dds-viz-3: #2563EB;
+  --dds-viz-4: #7C3AED;
+  --dds-viz-5: #047857;
+  --dds-viz-6: #B45309;
 }

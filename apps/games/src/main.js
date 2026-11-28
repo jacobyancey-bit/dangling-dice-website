@@ -2,7 +2,7 @@
  * Dangling Dice Gaming Lab™ — Application Logic
  */
 
-import { initStaffCommandPalette, initPwaServiceWorker } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -1802,6 +1802,7 @@ window.refreshLeaderboard = loadLeaderboardStandings;
 updateStreakBadge();
 loadLeaderboardStandings();
 
-// Initialize Hidden Staff Command Palette (Ctrl+K)
+// Shared ecosystem shell behavior + hidden staff command palette (Ctrl+K)
+initStudioShell();
 initStaffCommandPalette();
 

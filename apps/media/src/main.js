@@ -3,7 +3,7 @@
  * 1-Click Fast URL to MP3 Transcoder
  */
 
-import { initStaffCommandPalette, initPwaServiceWorker } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -564,5 +564,6 @@ function dismissBmcTip(isSupporter) {
 
 window.dismissBmcTip = dismissBmcTip;
 
-// Initialize Hidden Staff Command Palette (Ctrl+K)
+// Shared ecosystem shell behavior + hidden staff command palette (Ctrl+K)
+initStudioShell();
 initStaffCommandPalette();

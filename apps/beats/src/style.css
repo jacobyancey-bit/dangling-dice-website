@@ -1,4 +1,8 @@
-@import "./studio-rail.css";
+/* Shared design system: tokens, self-hosted fonts, ecosystem shell; legacy chrome until Phase 3 */
+@import '@dangling-dice/shared/fonts.css';
+@import '@dangling-dice/shared/tokens.css';
+@import '@dangling-dice/shared/shell.css';
+@import '@dangling-dice/shared/legacy-chrome.css';
 
 :root {
   --bg-dark: #07090e;

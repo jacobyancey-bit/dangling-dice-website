@@ -1,5 +1,5 @@
 import './style.css';
-import { initStaffCommandPalette, initPwaServiceWorker } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -953,6 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAffiliates();
   loadShowcase();
   setupModal();
+  initStudioShell();
   initStaffCommandPalette();
   initRailwaySandboxUI();
 });

@@ -8,12 +8,12 @@
     "emoji": 0
   },
   "shared-legacy": {
-    "gradient": 12,
-    "blur": 36,
-    "shadow": 102,
-    "radius_gt8": 24,
-    "hex_color": 315,
-    "emoji": 19
+    "gradient": 1,
+    "blur": 0,
+    "shadow": 0,
+    "radius_gt8": 0,
+    "hex_color": 4,
+    "emoji": 7
   },
   "web": {
     "gradient": 56,
@@ -21,7 +21,7 @@
     "shadow": 41,
     "radius_gt8": 25,
     "hex_color": 447,
-    "emoji": 371
+    "emoji": 362
   },
   "beats": {
     "gradient": 31,
@@ -29,7 +29,7 @@
     "shadow": 64,
     "radius_gt8": 30,
     "hex_color": 441,
-    "emoji": 343
+    "emoji": 335
   },
   "dev": {
     "gradient": 14,
@@ -37,15 +37,15 @@
     "shadow": 15,
     "radius_gt8": 6,
     "hex_color": 118,
-    "emoji": 63
+    "emoji": 55
   },
   "games": {
     "gradient": 37,
     "blur": 8,
-    "shadow": 38,
+    "shadow": 37,
     "radius_gt8": 21,
     "hex_color": 192,
-    "emoji": 233
+    "emoji": 225
   },
   "media": {
     "gradient": 22,
@@ -53,6 +53,6 @@
     "shadow": 21,
     "radius_gt8": 7,
     "hex_color": 152,
-    "emoji": 82
+    "emoji": 74
   }
 }

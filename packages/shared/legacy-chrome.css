@@ -1,0 +1,192 @@
+/**
+ * Dangling Dice Studios — legacy page chrome (TEMPORARY, Phase 2 -> Phase 3)
+ *
+ * Non-rail rules split out of the retired studio-rail.css that existing pages still rely on:
+ * the per-app brand <header>, skeleton loaders, and the My Stash drawer. Each app drops this
+ * import when it migrates to the design system in Phase 3; delete the file once none use it.
+ * Counted under "shared-legacy" by scripts/lint-design.js.
+ */
+
+/* ============================================================================
+   3. Streamlined Header & Prominent Left Brand Typography
+   Removes redundant top navbar links (now elegantly housed in the studio rail)
+   and elevates the left brand icon and typography with prominent sizing.
+   ============================================================================ */
+header {
+  padding: 0.95rem 2rem !important;
+  min-height: 84px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+header .nav-container,
+header .gaming-header-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+header .nav-links {
+  display: none !important;
+}
+
+.brand {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 1.25rem !important;
+  text-decoration: none !important;
+}
+
+/* Prominent Brand Logo Icon */
+.brand img,
+.brand .brand-logo-img {
+  width: 78px !important;
+  height: 78px !important;
+  min-width: 78px !important;
+  max-height: 78px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.25)) !important;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.brand:hover img,
+.brand:hover .brand-logo-img {
+  transform: scale(1.06) rotate(-2deg) !important;
+}
+
+/* Bold, Impactful Brand Title — 100% Solid Visible White (Zero Darkness / Zero Text-Clip Glitch) */
+.brand .brand-title,
+.brand .brand-text h1,
+.brand h1,
+.brand .brand-name-colored {
+  font-size: 1.85rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  filter: none !important;
+  display: block !important;
+}
+
+/* Clear, Legible Tagline Subtitle */
+.brand .brand-tagline,
+.brand .brand-text p,
+.brand p {
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  margin: 0.25rem 0 0 0 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 768px) {
+  header {
+    padding: 0.75rem 1rem !important;
+    min-height: 64px !important;
+  }
+
+  .brand {
+    gap: 0.85rem !important;
+  }
+
+  .brand img,
+  .brand .brand-logo-img {
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    max-height: 52px !important;
+  }
+
+  .brand .brand-title,
+  .brand .brand-text h1,
+  .brand h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .brand .brand-tagline,
+  .brand .brand-text p,
+  .brand p {
+    font-size: 0.76rem !important;
+  }
+}
+
+/* ============================================================================
+   Accessible focus rings: site accent outline, no glow (design system rule)
+   ============================================================================ */
+:focus-visible {
+  outline: 2px solid var(--dds-accent) !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   Skeleton Shimmer Loaders (Asset & Waveform Placeholders)
+   ============================================================================ */
+@keyframes ddsShimmerAnim {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.dds-shimmer,
+.dds-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(6, 182, 212, 0.12) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: ddsShimmerAnim 1.6s infinite ease-in-out !important;
+  border-radius: 8px !important;
+}
+
+
+/* ============================================================================
+   My Stash drawer (web): opens under the shell's stash button, top-right
+   ============================================================================ */
+.my-stash-drawer {
+  position: fixed !important;
+  top: calc(var(--dds-shell-height) + 8px) !important;
+  right: 16px !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 360px !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: min(480px, calc(100vh - var(--dds-shell-height) - 24px)) !important;
+  background: var(--dds-surface) !important;
+  border: var(--dds-border) !important;
+  border-radius: var(--dds-radius-panel) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 1050 !important;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Legacy floating bottom-right trigger stays hidden; the shell owns the stash button */
+.my-stash-trigger {
+  display: none !important;
+}

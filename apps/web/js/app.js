@@ -2,7 +2,7 @@
  * Dangling Dice Studios™ — Public Catalog & Developer Tools Client Application
  */
 
-import { initStaffCommandPalette, initPwaServiceWorker } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -2050,6 +2050,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await fetchDevShowcase();
 
   // Initialize Hidden Staff Command Palette (Ctrl+K)
+  initStudioShell();
   initStaffCommandPalette();
 
   // Smooth-scroll on hash or click

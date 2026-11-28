@@ -24,7 +24,7 @@ export const ICONS = [
   // Domain
   'settings', 'user', 'lock', 'key-round', 'shield-check', 'zap', 'server', 'database', 'cloud', 'terminal',
   'dice-5', 'smartphone', 'calculator', 'sun', 'moon', 'credit-card', 'mail', 'qr-code', 'globe',
-  'chart-column', 'file-audio', 'headphones', 'mic', 'disc-3', 'trophy', 'list', 'book-open',
+  'chart-column', 'file-audio', 'headphones', 'mic', 'disc-3', 'trophy', 'list', 'book-open', 'archive',
 ];
 
 const extractInner = (svg) => {

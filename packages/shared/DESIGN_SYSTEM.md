@@ -22,7 +22,7 @@ button.innerHTML = `${icon('download')} Download kit`;
 ```
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `tokens.css` | The only file allowed to contain hex colors. Surfaces, ink, borders, radii, type scale, per-site accents, data-viz palette. |
 | `base.css` | Buttons, inputs, tags, cards, stat cards, tables, split hero, icons, focus rings, skeletons. Scoped under `.dds`. |
 | `fonts.css` | Self-hosted Plus Jakarta Sans and JetBrains Mono (variable, OFL). No Google Fonts request. |
@@ -31,13 +31,34 @@ button.innerHTML = `${icon('download')} Download kit`;
 
 To add an icon, put its Lucide name in `scripts/build-icons.js` and run `npm run build:icons`.
 
+## Ecosystem shell (top bar)
+
+Every site shows the same 56px sticky bar: dice mark, "Dangling Dice Studios / site" (site name in
+monospace), links to the other four sites, a "More" menu (catalog, VPN shield, Discord, YouTube),
+and one accent-colored CTA. Below 900px the links collapse into a Menu button. Web also shows the
+My Stash button. Staff mode adds a "Staff" button that opens the Ctrl+K palette; public visitors
+never see it.
+
+- Source: `packages/shared/shell.js` (`SHELL_SITES` holds each site's name, URL and CTA).
+- The markup is written into each `index.html` at build time between `<!-- dds-shell:start -->`
+  and `<!-- dds-shell:end -->`, so navigation works without JavaScript and causes no layout shift.
+  After editing `shell.js`, run `npm run build:shell`. `npm test` fails if any page is out of date.
+- `initStudioShell()` (exported from `@dangling-dice/shared`) adds menu behavior: open/close,
+  Escape, outside click, and focus return.
+- The bar is a `<div>`, not `<header>`, because legacy app CSS styles bare `header` elements with
+  `!important`. It becomes the page `<header>` when each app retires its legacy header in Phase 3.
+- `legacy-chrome.css` holds the rules old page headers still need (brand header, skeletons, stash
+  drawer position). Drop its import when an app migrates; delete it when no app uses it.
+
+Theme decision (Phase 2): dark only. Light tokens stay defined for later.
+
 ## Accents
 
 Each accent passes 4.5:1 with white text and 3:1 against the dark canvas, so one value works
 for CTAs and focus rings in both themes.
 
-| Site | `--accent` | `--accent-hover` |
-|---|---|---|
+| Site | `--dds-accent` | `--dds-accent-hover` |
+| --- | --- | --- |
 | web | `#0E7490` | `#155E75` |
 | beats | `#BE185D` | `#9D174D` |
 | dev | `#2563EB` | `#1D4ED8` |
@@ -45,7 +66,7 @@ for CTAs and focus rings in both themes.
 | media | `#047857` | `#065F46` |
 
 Accent is for primary CTAs, focus rings and the 3px left bar on hero or featured blocks only.
-Never tint surfaces with it. `--viz-1` to `--viz-6` are allowed only inside charts, meters, DAW
+Never tint surfaces with it. `--dds-viz-1` to `--dds-viz-6` are allowed only inside charts, meters, DAW
 lanes and game boards.
 
 ## Guardrail
@@ -60,7 +81,7 @@ lower numbers. It also re-checks every token contrast pair.
 Lighthouse 13.6 (performance / accessibility / best practices / SEO):
 
 | Page | Mobile | Desktop |
-|---|---|---|
+| --- | --- | --- |
 | web | 81 / 89 / 100 / 92 | 98 / 89 / 100 / 92 |
 | beats | trace failed (`NO_NAVSTART`, reproducible) / 79 / 100 / 92 | 97 / 79 / 100 / 92 |
 | dev | 97 / 93 / 100 / 92 | 100 / 93 / 100 / 92 |

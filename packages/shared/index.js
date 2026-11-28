@@ -3,6 +3,11 @@
  * Acts as the Single Source of Truth (SSOT) across all Dangling Dice Studios apps.
  */
 
+import { icon } from './icons.js';
+
+export { icon } from './icons.js';
+export { initStudioShell } from './shell.js';
+
 export const ITEM_CATEGORIES = [
   'Coding Tutorials',
   'Beats & Audio',
@@ -122,7 +127,7 @@ export function initStaffCommandPalette() {
   let clickCount = 0;
   let clickTimer = null;
   const setupLogoTrigger = () => {
-    const brandEls = document.querySelectorAll('.rail-brand, .brand');
+    const brandEls = document.querySelectorAll('.dds-shell-brand, .brand');
     brandEls.forEach((el) => {
       el.addEventListener('click', (e) => {
         clickCount++;
@@ -140,28 +145,24 @@ export function initStaffCommandPalette() {
     });
   };
 
-  // 3. Mount / Remove Staff Rail Item
+  // 3. Mount / Remove the staff entry in the shell's top bar (staff only; never rendered for the public)
   function updateRailItem() {
-    const railNav = document.querySelector('.dds-studio-rail .rail-nav-group:last-of-type') || document.querySelector('.dds-studio-rail');
-    let staffItem = document.getElementById('railStaffItem');
+    const slot = document.getElementById('ddsShellStaffSlot');
+    let staffItem = document.getElementById('ddsShellStaffBtn');
 
     if (isStaff()) {
-      if (!staffItem && railNav) {
-        staffItem = document.createElement('a');
-        staffItem.href = 'javascript:void(0)';
-        staffItem.id = 'railStaffItem';
-        staffItem.className = 'rail-item rail-staff';
-        staffItem.title = 'Staff Command Palette (Ctrl+K)';
-        staffItem.innerHTML = `
-          <span class="rail-icon">⚡</span>
-          <span class="rail-text">Staff (Ctrl+K)</span>
-          <span class="rail-badge" style="background:#06b6d4;color:#000;font-weight:700;">STAFF</span>
-        `;
+      if (!staffItem && slot) {
+        staffItem = document.createElement('button');
+        staffItem.type = 'button';
+        staffItem.id = 'ddsShellStaffBtn';
+        staffItem.className = 'dds-shell-link dds-shell-staff';
+        staffItem.title = 'Staff command palette (Ctrl+K)';
+        staffItem.innerHTML = `${icon('command')}<span>Staff</span><kbd>Ctrl K</kbd>`;
         staffItem.addEventListener('click', (e) => {
           e.preventDefault();
           openPalette();
         });
-        railNav.appendChild(staffItem);
+        slot.appendChild(staffItem);
       }
     } else if (staffItem) {
       staffItem.remove();
@@ -184,17 +185,17 @@ export function initStaffCommandPalette() {
 
   const COMMANDS = [
     // Navigation
-    { id: 'nav-hq', group: 'Studio Hubs', title: 'Main Studio HQ', icon: '🏠', tag: 'HUB', action: () => { window.location.href = 'https://dangling-dice-studios.com/'; } },
-    { id: 'nav-beats', group: 'Studio Hubs', title: 'Beats Studio & DAW', icon: '🎛️', tag: 'HUB', action: () => { window.location.href = 'https://beats.dangling-dice-studios.com/'; } },
-    { id: 'nav-games', group: 'Studio Hubs', title: 'Gaming Hub & OmniSound', icon: '🎯', tag: 'HUB', action: () => { window.location.href = 'https://games.dangling-dice-studios.com/'; } },
-    { id: 'nav-media', group: 'Studio Hubs', title: 'Media Converter Hub', icon: '🎵', tag: 'HUB', action: () => { window.location.href = 'https://media.dangling-dice-studios.com/'; } },
-    { id: 'nav-dev', group: 'Studio Hubs', title: 'Developer Hub & APIs', icon: '💻', tag: 'HUB', action: () => { window.location.href = 'https://dev.dangling-dice-studios.com/'; } },
+    { id: 'nav-hq', group: 'Studio Hubs', title: 'Main Studio HQ', icon: 'house', tag: 'HUB', action: () => { window.location.href = 'https://dangling-dice-studios.com/'; } },
+    { id: 'nav-beats', group: 'Studio Hubs', title: 'Beats Studio & DAW', icon: 'music', tag: 'HUB', action: () => { window.location.href = 'https://beats.dangling-dice-studios.com/'; } },
+    { id: 'nav-games', group: 'Studio Hubs', title: 'Gaming Hub & OmniSound', icon: 'gamepad-2', tag: 'HUB', action: () => { window.location.href = 'https://games.dangling-dice-studios.com/'; } },
+    { id: 'nav-media', group: 'Studio Hubs', title: 'Media Converter Hub', icon: 'audio-waveform', tag: 'HUB', action: () => { window.location.href = 'https://media.dangling-dice-studios.com/'; } },
+    { id: 'nav-dev', group: 'Studio Hubs', title: 'Developer Hub & APIs', icon: 'code', tag: 'HUB', action: () => { window.location.href = 'https://dev.dangling-dice-studios.com/'; } },
     // Staff Diagnostics & Railway
     {
       id: 'staff-sandbox',
       group: 'Railway & Staff Diagnostics',
       title: 'Open Railway Live Sandbox Console',
-      icon: '🧪',
+      icon: 'terminal',
       tag: 'RAILWAY',
       action: () => {
         closePalette();
@@ -210,7 +211,7 @@ export function initStaffCommandPalette() {
       id: 'staff-ping-api',
       group: 'Railway & Staff Diagnostics',
       title: 'Ping Central API Health & Latency',
-      icon: '📊',
+      icon: 'activity',
       tag: 'TELEMETRY',
       action: async () => {
         closePalette();
@@ -232,8 +233,8 @@ export function initStaffCommandPalette() {
     {
       id: 'staff-toast-demo',
       group: 'Railway & Staff Diagnostics',
-      title: 'Fire Glassmorphism Toast Demo',
-      icon: '🔔',
+      title: 'Fire toast demo',
+      icon: 'info',
       tag: 'UI/UX',
       action: () => {
         closePalette();
@@ -246,7 +247,7 @@ export function initStaffCommandPalette() {
       id: 'staff-clear-cache',
       group: 'Railway & Staff Diagnostics',
       title: 'Flush Local Storage & Studio Stash',
-      icon: '🧹',
+      icon: 'trash-2',
       tag: 'DEV',
       action: () => {
         closePalette();
@@ -263,7 +264,7 @@ export function initStaffCommandPalette() {
       id: 'staff-lock',
       group: 'Staff Security',
       title: 'Lock Staff Mode (Exit Private Preview)',
-      icon: '🔒',
+      icon: 'lock',
       tag: 'SECURITY',
       action: () => {
         toggleStaffMode();
@@ -280,7 +281,7 @@ export function initStaffCommandPalette() {
     backdrop.innerHTML = `
       <div class="dds-palette-modal" role="dialog" aria-modal="true" aria-label="Staff Command Palette">
         <div class="dds-palette-header">
-          <span class="dds-palette-search-icon">🔍</span>
+          <span class="dds-palette-search-icon">${icon('search')}</span>
           <input type="text" class="dds-palette-input" placeholder="Type a command or search hub... (Esc to close)" />
           <span class="dds-palette-esc">ESC</span>
         </div>
@@ -344,7 +345,7 @@ export function initStaffCommandPalette() {
     });
 
     if (filteredActions.length === 0) {
-      list.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #64748b; font-size: 0.85rem;">No matching commands found.</div>`;
+      list.innerHTML = `<div class="dds-palette-empty">No matching commands found.</div>`;
       return;
     }
 
@@ -363,7 +364,7 @@ export function initStaffCommandPalette() {
       itemEl.setAttribute('data-index', idx);
       itemEl.innerHTML = `
         <div class="dds-palette-item-left">
-          <span class="dds-palette-item-icon">${cmd.icon}</span>
+          <span class="dds-palette-item-icon">${icon(cmd.icon)}</span>
           <span>${cmd.title}</span>
         </div>
         <span class="dds-palette-item-tag">${cmd.tag}</span>

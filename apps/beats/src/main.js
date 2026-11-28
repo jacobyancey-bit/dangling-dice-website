@@ -2,7 +2,7 @@
 // Dangling Beats Studio™ — Specialized Music & Producer Radio Application
 // ============================================================================
 
-import { initStaffCommandPalette, initPwaServiceWorker } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -3149,6 +3149,7 @@ document.addEventListener("DOMContentLoaded", () => {
   runRoomModesCalc();
   init808Designer();
   initSamplerUI();
+  initStudioShell();
   initStaffCommandPalette();
 
   // Route to calculators if hash matches #calculators

@@ -16,12 +16,12 @@
 
 .dds {
   margin: 0;
-  background: var(--canvas);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: var(--leading-normal);
-  letter-spacing: var(--tracking-body);
+  background: var(--dds-canvas);
+  color: var(--dds-ink);
+  font-family: var(--dds-font-sans);
+  font-size: var(--dds-text-base);
+  line-height: var(--dds-leading-normal);
+  letter-spacing: var(--dds-tracking-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -32,63 +32,63 @@
 .dds h3,
 .dds .display {
   margin: 0;
-  color: var(--ink);
+  color: var(--dds-ink);
   font-weight: 700;
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-display);
+  line-height: var(--dds-leading-tight);
+  letter-spacing: var(--dds-tracking-display);
 }
-.dds h1, .dds .display { font-size: var(--text-2xl); }
-.dds h2 { font-size: var(--text-xl); }
-.dds h3 { font-size: var(--text-lg); }
-.dds p { margin: 0; max-width: var(--measure); }
-.dds .muted { color: var(--ink-muted); }
+.dds h1, .dds .display { font-size: var(--dds-text-2xl); }
+.dds h2 { font-size: var(--dds-text-xl); }
+.dds h3 { font-size: var(--dds-text-lg); }
+.dds p { margin: 0; max-width: var(--dds-measure); }
+.dds .muted { color: var(--dds-ink-muted); }
 .dds .mono,
 .dds code,
 .dds kbd,
 .dds samp,
 .dds .metric,
 .dds time {
-  font-family: var(--font-mono);
+  font-family: var(--dds-font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
 }
 .dds a { color: inherit; text-underline-offset: 3px; }
-.dds a:hover { color: var(--accent); }
+.dds a:hover { color: var(--dds-accent); }
 
 /* ---------- Focus (keyboard only, always visible) ---------- */
 .dds :focus { outline: none; }
 .dds :focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-  border-radius: var(--radius-control);
+  outline: var(--dds-focus-ring);
+  outline-offset: var(--dds-focus-offset);
+  border-radius: var(--dds-radius-control);
 }
 
 /* ---------- Buttons ---------- */
 .dds .btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--dds-space-2);
   min-height: 36px;
-  padding: 0 var(--space-4);
-  border: var(--border);
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  color: var(--ink);
+  padding: 0 var(--dds-space-4);
+  border: var(--dds-border);
+  border-radius: var(--dds-radius-control);
+  background: var(--dds-surface);
+  color: var(--dds-ink);
   font: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--dds-text-sm);
   font-weight: 600;
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease), border-color var(--duration-fast) var(--ease);
+  transition: background-color var(--dds-duration-fast) var(--dds-ease), border-color var(--dds-duration-fast) var(--dds-ease);
 }
-.dds .btn:hover { background: var(--surface-subtle); color: var(--ink); }
+.dds .btn:hover { background: var(--dds-surface-subtle); color: var(--dds-ink); }
 .dds .btn-primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--ink-on-accent);
+  border-color: var(--dds-accent);
+  background: var(--dds-accent);
+  color: var(--dds-ink-on-accent);
 }
-.dds .btn-primary:hover { border-color: var(--accent-hover); background: var(--accent-hover); color: var(--ink-on-accent); }
+.dds .btn-primary:hover { border-color: var(--dds-accent-hover); background: var(--dds-accent-hover); color: var(--dds-ink-on-accent); }
 .dds .btn-ghost { border-color: transparent; background: transparent; }
 .dds .btn:disabled,
 .dds .btn[aria-disabled='true'] { opacity: 0.5; cursor: not-allowed; }
@@ -99,84 +99,84 @@
 .dds .textarea {
   width: 100%;
   min-height: 36px;
-  padding: var(--space-2) var(--space-3);
-  border: var(--border-width) solid var(--border-control);
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  color: var(--ink);
+  padding: var(--dds-space-2) var(--dds-space-3);
+  border: var(--dds-border-width) solid var(--dds-border-control);
+  border-radius: var(--dds-radius-control);
+  background: var(--dds-surface);
+  color: var(--dds-ink);
   font: inherit;
 }
 .dds .input::placeholder,
-.dds .textarea::placeholder { color: var(--ink-muted); opacity: 1; }
+.dds .textarea::placeholder { color: var(--dds-ink-muted); opacity: 1; }
 .dds .input:focus-visible,
 .dds .select:focus-visible,
-.dds .textarea:focus-visible { outline-offset: 0; border-color: var(--accent); }
-.dds .field { display: grid; gap: var(--space-1); }
-.dds .label { color: var(--ink-muted); font-size: var(--text-sm); font-weight: 600; }
+.dds .textarea:focus-visible { outline-offset: 0; border-color: var(--dds-accent); }
+.dds .field { display: grid; gap: var(--dds-space-1); }
+.dds .label { color: var(--dds-ink-muted); font-size: var(--dds-text-sm); font-weight: 600; }
 
 /* ---------- Tags ---------- */
 .dds .tag {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 2px var(--space-2);
-  border: var(--border);
-  border-radius: var(--radius-control);
-  background: var(--surface-subtle);
-  color: var(--ink-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  gap: var(--dds-space-1);
+  padding: 2px var(--dds-space-2);
+  border: var(--dds-border);
+  border-radius: var(--dds-radius-control);
+  background: var(--dds-surface-subtle);
+  color: var(--dds-ink-muted);
+  font-family: var(--dds-font-mono);
+  font-size: var(--dds-text-xs);
 }
 
 /* ---------- Cards / panels ---------- */
 .dds .card {
-  border: var(--border);
-  border-radius: var(--radius-panel);
-  background: var(--surface);
-  padding: var(--space-5);
+  border: var(--dds-border);
+  border-radius: var(--dds-radius-panel);
+  background: var(--dds-surface);
+  padding: var(--dds-space-5);
 }
-.dds .card-featured { border-left: var(--accent-bar) solid var(--accent); }
-.dds .panel-subtle { background: var(--surface-subtle); }
+.dds .card-featured { border-left: var(--dds-accent-bar) solid var(--dds-accent); }
+.dds .panel-subtle { background: var(--dds-surface-subtle); }
 
 /* KPI / stat card: number pinned to the bottom, monospace */
 .dds .stat {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--dds-space-3);
   min-height: 112px;
 }
-.dds .stat .metric { font-size: var(--text-xl); font-weight: 600; margin-top: auto; }
+.dds .stat .metric { font-size: var(--dds-text-xl); font-weight: 600; margin-top: auto; }
 
 /* ---------- Tables ---------- */
-.dds .table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.dds .table { width: 100%; border-collapse: collapse; font-size: var(--dds-text-sm); }
 .dds .table th,
-.dds .table td { padding: var(--space-2) var(--space-3); border-bottom: var(--border); text-align: left; }
-.dds .table th { color: var(--ink-muted); font-weight: 600; }
+.dds .table td { padding: var(--dds-space-2) var(--dds-space-3); border-bottom: var(--dds-border); text-align: left; }
+.dds .table th { color: var(--dds-ink-muted); font-weight: 600; }
 
 /* ---------- Layout: asymmetric split hero ---------- */
 .dds .hero-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-7);
+  gap: var(--dds-space-7);
   align-items: start;
-  padding-block: var(--space-8);
+  padding-block: var(--dds-space-8);
 }
 @media (min-width: 960px) {
   .dds .hero-split { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
 }
-.dds .hero-split .hero-copy { max-width: var(--measure); }
-.dds .hero-split .hero-tool { border-left: var(--accent-bar) solid var(--accent); }
+.dds .hero-split .hero-copy { max-width: var(--dds-measure); }
+.dds .hero-split .hero-tool { border-left: var(--dds-accent-bar) solid var(--dds-accent); }
 
-.dds .container { width: min(1200px, 100% - 2 * var(--space-5)); margin-inline: auto; }
+.dds .container { width: min(1200px, 100% - 2 * var(--dds-space-5)); margin-inline: auto; }
 
 /* ---------- Icons ---------- */
 .dds .icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
+  width: var(--dds-icon-size);
+  height: var(--dds-icon-size);
   flex: none;
   stroke: currentColor;
-  stroke-width: var(--icon-stroke);
+  stroke-width: var(--dds-icon-stroke);
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -184,9 +184,9 @@
 
 /* ---------- Loading states ---------- */
 .dds .skeleton {
-  border-radius: var(--radius-control);
-  background: var(--surface-subtle);
-  animation: dds-pulse 1.4s var(--ease) infinite;
+  border-radius: var(--dds-radius-control);
+  background: var(--dds-surface-subtle);
+  animation: dds-pulse 1.4s var(--dds-ease) infinite;
 }
 @keyframes dds-pulse { 50% { opacity: 0.55; } }
 

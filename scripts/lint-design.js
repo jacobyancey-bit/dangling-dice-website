@@ -33,11 +33,11 @@ const list = (dir, exts) =>
 // ---------- Scopes ----------
 const SHARED = path.join(root, 'packages', 'shared');
 const TOKENS = path.join(SHARED, 'tokens.css');
-const RAIL_COPIES = new Set(['web/css', 'beats/src', 'dev/src', 'games/src', 'media/src'].map((d) => path.join(root, 'apps', ...d.split('/'), 'studio-rail.css')));
 
 const scopes = {
-  'shared-design': [path.join(SHARED, 'base.css'), path.join(SHARED, 'fonts.css'), path.join(SHARED, 'design.css'), path.join(SHARED, 'icons.js')],
-  'shared-legacy': [path.join(SHARED, 'index.js'), path.join(SHARED, 'studio-rail.css'), ...RAIL_COPIES],
+  'shared-design': ['tokens.css', 'base.css', 'fonts.css', 'design.css', 'shell.css', 'shell.js', 'icons.js', 'icons.generated.js'].map((f) => path.join(SHARED, f)),
+  // Temporary: staff palette module + legacy page chrome, retired as apps migrate (Phase 3)
+  'shared-legacy': ['index.js', 'legacy-chrome.css'].map((f) => path.join(SHARED, f)),
 };
 for (const app of ['web', 'beats', 'dev', 'games', 'media']) {
   const base = path.join(root, 'apps', app);
@@ -46,7 +46,7 @@ for (const app of ['web', 'beats', 'dev', 'games', 'media']) {
     ...list(path.join(base, 'src'), ['.css', '.js']),
     ...list(path.join(base, 'css'), ['.css']),
     ...list(path.join(base, 'js'), ['.js']),
-  ].filter((f) => !RAIL_COPIES.has(f));
+  ];
   scopes[app] = files;
 }
 
@@ -54,8 +54,10 @@ for (const app of ['web', 'beats', 'dev', 'games', 'media']) {
 const NOT_EMOJI = new Set(['™', '©', '®']); // ™ © ® are brand/legal marks
 const RULES = {
   gradient: (src) => (src.match(/(?:linear|radial|conic)-gradient\(/gi) || []).length,
-  blur: (src) => (src.match(/backdrop-filter\s*:|filter\s*:\s*[^;"']*blur\(/gi) || []).length,
-  shadow: (src) => (src.match(/box-shadow\s*:\s*(?!none\b)/gi) || []).length,
+  // `: none` resets (e.g. overriding legacy glows) are allowed; the lookahead skips whitespace itself
+  // so the engine cannot backtrack past it and miscount `box-shadow: none`.
+  blur: (src) => (src.match(/backdrop-filter\s*:(?!\s*none\b)|(?<![-\w])filter\s*:\s*[^;"']*blur\(/gi) || []).length,
+  shadow: (src) => (src.match(/box-shadow\s*:(?!\s*none\b)/gi) || []).length,
   radius_gt8: (src) =>
     [...src.matchAll(/border-radius\s*:\s*([^;"'}]+)/gi)].filter(([, v]) =>
       v.split(/[\s/]+/).some((t) => {
@@ -94,7 +96,7 @@ const block = (selector) => {
   const i = tokensSrc.indexOf(selector);
   return i < 0 ? '' : tokensSrc.slice(i, tokensSrc.indexOf('}', i));
 };
-const varIn = (blk, name) => blk.match(new RegExp(`--${name}:\\s*(#[0-9A-Fa-f]{6})`))?.[1];
+const varIn = (blk, name) => blk.match(new RegExp(`--dds-${name}:\\s*(#[0-9A-Fa-f]{6})`))?.[1];
 const dark = block(':root {');
 const light = block(":root[data-theme='light']");
 const T = (blk, n) => varIn(blk, n) || varIn(dark, n);
@@ -111,7 +113,7 @@ for (const [theme, blk] of [['dark', dark], ['light', light]]) {
     need(`${theme} control border on ${bg}`, T(blk, 'border-control'), T(blk, bg), 3);
   }
 }
-for (const m of tokensSrc.matchAll(/data-site='(\w+)'\]\s*\{\s*--accent:\s*(#[0-9A-Fa-f]{6});\s*--accent-hover:\s*(#[0-9A-Fa-f]{6})/g)) {
+for (const m of tokensSrc.matchAll(/data-site='(\w+)'\]\s*\{\s*--dds-accent:\s*(#[0-9A-Fa-f]{6});\s*--dds-accent-hover:\s*(#[0-9A-Fa-f]{6})/g)) {
   const [, site, accent, hover] = m;
   need(`${site} accent with white text`, '#FFFFFF', accent, 4.5);
   need(`${site} accent-hover with white text`, '#FFFFFF', hover, 4.5);
