@@ -213,7 +213,8 @@
 }
 @media (max-width: 520px) {
   .dds-shell-inner { gap: var(--dds-space-3); padding-inline: var(--dds-space-3); }
-  .dds-shell-name { display: none; }        /* keep mark + /site on small phones */
+  /* Small phones show only mark + /site; the name stays in the link's accessible name (WCAG 2.5.3) */
+  .dds-shell-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .dds-shell-sep { display: none; }
   .dds-shell-cta { padding: 0 var(--dds-space-3); }
 }

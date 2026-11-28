@@ -35,7 +35,7 @@ const SHARED = path.join(root, 'packages', 'shared');
 const TOKENS = path.join(SHARED, 'tokens.css');
 
 const scopes = {
-  'shared-design': ['tokens.css', 'base.css', 'fonts.css', 'design.css', 'shell.css', 'shell.js', 'icons.js', 'icons.generated.js'].map((f) => path.join(SHARED, f)),
+  'shared-design': ['tokens.css', 'base.css', 'fonts.css', 'design.css', 'shell.css', 'shell.js', 'icons.js', 'icons.generated.js', 'tabs.js'].map((f) => path.join(SHARED, f)),
   // Temporary: staff palette module + legacy page chrome, retired as apps migrate (Phase 3)
   'shared-legacy': ['index.js', 'legacy-chrome.css'].map((f) => path.join(SHARED, f)),
 };

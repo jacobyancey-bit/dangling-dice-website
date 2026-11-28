@@ -270,6 +270,79 @@
 }
 .dds .callout.is-ok { border-left-color: var(--dds-status-ok); color: var(--dds-status-ok); }
 .dds .callout.is-error { border-left-color: var(--dds-status-error); color: var(--dds-status-error); }
+.dds .callout.is-warn { border-left-color: var(--dds-status-warn); }
+
+/* ---------- Tabs (WAI-ARIA; keyboard support in tabs.js) ---------- */
+.dds .tabs {
+  display: flex;
+  gap: var(--dds-space-1);
+  overflow-x: auto;
+  overflow-y: hidden; /* the active tab's -1px underline overlap must not spawn a vertical scrollbar */
+  scrollbar-width: thin;
+  border-bottom: var(--dds-border);
+  scroll-margin-top: calc(var(--dds-shell-height) + var(--dds-space-3));
+}
+.dds .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dds-space-2);
+  padding: var(--dds-space-3) var(--dds-space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--dds-ink-muted);
+  font: inherit;
+  font-size: var(--dds-text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dds .tab:hover { color: var(--dds-ink); }
+.dds .tab.active { border-bottom-color: var(--dds-accent); color: var(--dds-ink); font-weight: 600; }
+.dds .tab .icon { width: 16px; height: 16px; }
+
+/* ---------- Toasts (stacked, bottom-right) ---------- */
+.dds .toast-stack {
+  position: fixed;
+  right: var(--dds-space-4);
+  bottom: var(--dds-space-4);
+  z-index: 4000;
+  display: grid;
+  gap: var(--dds-space-2);
+  max-width: min(420px, calc(100vw - 32px));
+}
+.dds .toast {
+  padding: var(--dds-space-3) var(--dds-space-4);
+  border: var(--dds-border);
+  border-left: var(--dds-accent-bar) solid var(--dds-accent);
+  border-radius: var(--dds-radius-control);
+  background: var(--dds-surface);
+  font-size: var(--dds-text-sm);
+  transition: opacity 300ms var(--dds-ease), transform 300ms var(--dds-ease);
+}
+.dds .toast.toast-success { border-left-color: var(--dds-status-ok); }
+.dds .toast.toast-error { border-left-color: var(--dds-status-error); }
+.dds .toast.is-leaving { opacity: 0; transform: translateY(10px); }
+
+/* ---------- Milestone tip card (download milestones, auto-dismisses) ---------- */
+.dds .tip-card {
+  position: fixed;
+  left: var(--dds-space-4);
+  bottom: var(--dds-space-4);
+  z-index: 3500;
+  display: grid;
+  gap: var(--dds-space-3);
+  width: min(380px, calc(100vw - 32px));
+  padding: var(--dds-space-4);
+  border: var(--dds-border);
+  border-left: var(--dds-accent-bar) solid var(--dds-accent);
+  border-radius: var(--dds-radius-panel);
+  background: var(--dds-surface);
+  transition: opacity 300ms var(--dds-ease), transform 300ms var(--dds-ease);
+}
+.dds .tip-card.is-leaving { opacity: 0; transform: translateY(20px); }
+.dds .tip-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-space-2); }
+.dds .tip-card-title { font-size: var(--dds-text-sm); font-weight: 600; }
 
 /* ---------- Motion & accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {

@@ -8,7 +8,6 @@
 @import '@dangling-dice/shared/shell.css';
 
 /* ---------- Page scaffolding (generic patterns live in shared base.css) ---------- */
-.dds .tab .icon,
 .dds .trust-strip .icon,
 .dds .subcard-title .icon { width: 16px; height: 16px; }
 
@@ -103,33 +102,6 @@
 }
 .dds .console-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dds-space-3); }
 
-/* ---------- Sandbox tabs ---------- */
-.dds .tabs {
-  display: flex;
-  gap: var(--dds-space-1);
-  overflow-x: auto;
-  overflow-y: hidden; /* the active tab's -1px underline overlap must not spawn a vertical scrollbar */
-  scrollbar-width: thin;
-  border-bottom: var(--dds-border);
-  scroll-margin-top: calc(var(--dds-shell-height) + var(--dds-space-3));
-}
-.dds .tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--dds-space-2);
-  padding: var(--dds-space-3) var(--dds-space-3);
-  border: 0;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  background: transparent;
-  color: var(--dds-ink-muted);
-  font: inherit;
-  font-size: var(--dds-text-sm);
-  white-space: nowrap;
-  cursor: pointer;
-}
-.dds .tab:hover { color: var(--dds-ink); }
-.dds .tab.active { border-bottom-color: var(--dds-accent); color: var(--dds-ink); font-weight: 600; }
 
 /* ---------- Sections ---------- */
 .dds .toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--dds-space-3); margin-bottom: var(--dds-space-4); }

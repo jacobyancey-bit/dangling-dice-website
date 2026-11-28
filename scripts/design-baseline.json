@@ -40,12 +40,12 @@
     "emoji": 0
   },
   "games": {
-    "gradient": 37,
-    "blur": 8,
-    "shadow": 37,
-    "radius_gt8": 21,
-    "hex_color": 191,
-    "emoji": 225
+    "gradient": 0,
+    "blur": 0,
+    "shadow": 0,
+    "radius_gt8": 0,
+    "hex_color": 0,
+    "emoji": 0
   },
   "media": {
     "gradient": 0,

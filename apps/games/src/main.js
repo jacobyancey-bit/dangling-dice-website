@@ -2,7 +2,18 @@
  * Dangling Dice Gaming Lab™ — Application Logic
  */
 
-import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
+import {
+  initStaffCommandPalette,
+  initPwaServiceWorker,
+  initStudioShell,
+  initTabKeyboard,
+  icon,
+  hydrateIcons,
+} from '@dangling-dice/shared';
+import { GAMES_CATALOG, ACCESSORIES_CATALOG, SOFTWARE_GUIDE, AUDIO_SETUPS } from './gameData.js';
+
+// Swap <span data-icon> placeholders for stroke icons before any handlers run
+hydrateIcons();
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -11,7 +22,7 @@ const API_GATEWAY_URL = (typeof window !== 'undefined' && window.location.hostna
   ? 'http://localhost:5000'
   : 'https://api.dangling-dice-studios.com';
 
-import { GAMES_CATALOG, ACCESSORIES_CATALOG, SOFTWARE_GUIDE, AUDIO_SETUPS } from './gameData.js';
+const DISCORD_URL = 'https://discord.gg/uFYMQahNZz';
 
 // State
 let selectedGameId = 'warzone';
@@ -19,20 +30,33 @@ let activeDashboardTab = 'audio';
 let activeGearCategory = 'all';
 let activeAudioSetupId = 'analog-35mm';
 
+const currentGame = () => GAMES_CATALOG.find((g) => g.id === selectedGameId) || GAMES_CATALOG[0];
+const findGame = (gameId) => GAMES_CATALOG.find((g) => g.id === gameId);
+const fileSlug = (name) => name.toLowerCase().replace(/\s+/g, '_');
+
+// Security Escape Helper
+function escapeHtml(str) {
+  if (str === null || str === undefined || str === '') return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Toast Notification Helper
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
   if (!container) return;
   const toast = document.createElement('div');
-  toast.className = 'toast';
+  toast.className = `toast${type === 'success' ? ' toast-success' : type === 'error' ? ' toast-error' : ''}`;
   toast.textContent = message;
   container.appendChild(toast);
 
   setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
-    toast.style.transition = 'all 0.25s ease';
-    setTimeout(() => toast.remove(), 250);
+    toast.classList.add('is-leaving');
+    setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
 
@@ -52,7 +76,7 @@ function sanitizeUrl(rawUrl) {
   return '#';
 }
 
-// Download Helper (Generates client-side text/binary blob with sanitized filename & memory cleanup)
+// Download Helper (Generates client-side text blob with sanitized filename & memory cleanup)
 function downloadTextFile(filename, content) {
   const safeFilename = String(filename || 'download.txt').replace(/[/\\?%*:|"<>]/g, '_');
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -66,7 +90,7 @@ function downloadTextFile(filename, content) {
     link.remove();
     URL.revokeObjectURL(url);
   }, 1000);
-  showToast(`📥 Downloaded: ${safeFilename}!`);
+  showToast(`Downloaded ${safeFilename}`, 'success');
   checkDownloadMilestoneForTip();
 }
 
@@ -94,22 +118,21 @@ function showGentleMilestoneTipCard(count) {
 
   const card = document.createElement('div');
   card.id = 'bmcGentleTipCard';
-  card.className = 'bmc-gentle-card';
+  card.className = 'tip-card';
+  card.setAttribute('role', 'status');
   card.innerHTML = `
-    <div class="bmc-gentle-header">
-      <span class="bmc-gentle-title">🎉 Download #${count} Complete!</span>
-      <button type="button" class="bmc-gentle-close" onclick="window.dismissBmcTip(false)" aria-label="Close">&times;</button>
+    <div class="tip-card-head">
+      <span class="tip-card-title">Download #${Number(count)} complete</span>
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" onclick="window.dismissBmcTip(false)" aria-label="Dismiss">${icon('x')}</button>
     </div>
-    <p class="bmc-gentle-body">
-      Enjoying the free game configs? We keep everything 100% free with zero paywalls. If our settings helped your gameplay, consider dropping a tip in the studio coffee jar!
+    <p class="small muted">
+      Enjoying the free game configs? Everything stays free with zero paywalls. If our settings helped your gameplay, a tip helps cover server costs.
     </p>
-    <div class="bmc-gentle-actions">
-      <a href="https://buymeacoffee.com/danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-coffee btn-sm" onclick="window.dismissBmcTip(true)">
-        ☕ Buy a Coffee ($5 or Custom) ↗
+    <div class="button-row">
+      <a href="https://buymeacoffee.com/danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" onclick="window.dismissBmcTip(true)">
+        ${icon('coffee')}Buy a coffee<span class="sr-only"> (opens in a new tab)</span>
       </a>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="window.dismissBmcTip(false)">
-        Maybe Later
-      </button>
+      <button type="button" class="btn btn-sm" onclick="window.dismissBmcTip(false)">Maybe later</button>
     </div>
   `;
 
@@ -125,9 +148,7 @@ function showGentleMilestoneTipCard(count) {
 function dismissBmcTip(isSupporter) {
   const card = document.getElementById('bmcGentleTipCard');
   if (card) {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'all 0.3s ease';
+    card.classList.add('is-leaving');
     setTimeout(() => card.remove(), 300);
   }
 
@@ -145,78 +166,146 @@ window.dismissBmcTip = dismissBmcTip;
 async function copyToClipboard(text, successMessage) {
   try {
     await navigator.clipboard.writeText(text);
-    showToast(successMessage || '📋 Copied to clipboard!');
+    showToast(successMessage || 'Copied to clipboard', 'success');
   } catch (err) {
     showToast('Failed to copy. Please select and copy manually.', 'error');
   }
 }
 
-// Curated top played games for the clean single-line quick row
-const TOP_PLAYED_GAME_IDS = ['warzone', 'cs2', 'tarkov', 'rust', 'fortnite', 'apex', 'r6-siege', 'valorant'];
+// ============================================================================
+// 10-band EQ curve (canvas). Colors come from design tokens so the chart follows the site accent.
+// ============================================================================
+function drawEqCurve(canvas, bands) {
+  if (!canvas || !bands || bands.length < 2) return;
+  const styles = getComputedStyle(document.documentElement);
+  const token = (name) => styles.getPropertyValue(name).trim();
+  const accent = token('--dds-accent');
+  const grid = token('--dds-border-color');
+  const zero = token('--dds-border-control');
+  const muted = token('--dds-ink-muted');
 
-window.scrollGameChips = function (offset) {
-  const container = document.getElementById('gameChipsRow');
-  if (container) {
-    container.scrollBy({ left: offset, behavior: 'smooth' });
-    setTimeout(updateChipsArrows, 200);
-  }
-};
+  const w = canvas.clientWidth || canvas.width;
+  const h = canvas.clientHeight || canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
 
-function updateChipsArrows() {
-  const container = document.getElementById('gameChipsRow');
-  const leftBtn = document.getElementById('chipsScrollLeft');
-  const rightBtn = document.getElementById('chipsScrollRight');
-  if (!container || !leftBtn || !rightBtn) return;
+  const zeroY = h / 2;
+  const dbToY = (db) => zeroY - (db / 10) * (h / 2 - 12); // +/- 10 dB fills the height
 
-  const maxScroll = container.scrollWidth - container.clientWidth;
-  if (maxScroll <= 5) {
-    leftBtn.style.display = 'none';
-    rightBtn.style.display = 'none';
-    return;
-  }
-  leftBtn.style.display = 'flex';
-  rightBtn.style.display = 'flex';
+  // Grid: +6 / -6 dB, then the 0 dB line on top
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = grid;
+  [6, -6].forEach((db) => {
+    ctx.beginPath();
+    ctx.moveTo(0, dbToY(db));
+    ctx.lineTo(w, dbToY(db));
+    ctx.stroke();
+  });
+  ctx.strokeStyle = zero;
+  ctx.beginPath();
+  ctx.moveTo(0, zeroY);
+  ctx.lineTo(w, zeroY);
+  ctx.stroke();
 
-  const atStart = container.scrollLeft <= 5;
-  const atEnd = container.scrollLeft >= maxScroll - 5;
+  const points = bands.map((b, i) => ({
+    x: (i / (bands.length - 1)) * (w - 32) + 16,
+    y: dbToY(b.gain),
+    gain: b.gain,
+  }));
 
-  leftBtn.classList.toggle('disabled', atStart);
-  rightBtn.classList.toggle('disabled', atEnd);
+  const tracePath = () => {
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const midX = (p0.x + p1.x) / 2;
+      ctx.bezierCurveTo(midX, p0.y, midX, p1.y, p1.x, p1.y);
+    }
+  };
+
+  // Flat translucent fill between the curve and 0 dB (no gradients)
+  ctx.beginPath();
+  tracePath();
+  ctx.lineTo(points[points.length - 1].x, zeroY);
+  ctx.lineTo(points[0].x, zeroY);
+  ctx.closePath();
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = accent;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  ctx.beginPath();
+  tracePath();
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  points.forEach((p) => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = p.gain > 0 ? accent : muted;
+    ctx.fill();
+  });
 }
 
-// Render Quick Game Chips (Clean single-line row of most played games)
+function redrawCharts() {
+  const game = currentGame();
+  drawEqCurve(document.getElementById('heroEqCanvas'), game.audioProfile.bands);
+  if (activeDashboardTab === 'audio') drawEqCurve(document.getElementById('eqCanvas'), game.audioProfile.bands);
+}
+
+const formatGain = (gain) => `${gain > 0 ? '+' : ''}${gain} dB`;
+
+// Hero tool: live footstep EQ preview for the selected game
+function renderHeroEq() {
+  const game = currentGame();
+  const set = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  set('heroEqTitle', game.title);
+  set('heroEqProfile', game.audioProfile.profileName);
+  set('heroEqMix', game.audioProfile.targetMix);
+
+  const peaks = document.getElementById('heroEqPeaks');
+  if (peaks) {
+    peaks.innerHTML = [...game.audioProfile.bands]
+      .filter((b) => b.gain > 0)
+      .sort((a, b) => b.gain - a.gain)
+      .slice(0, 3)
+      .map((b) => `<li><span class="mono muted">${escapeHtml(b.freq)}</span><span class="mono ink">${formatGain(b.gain)}</span><span class="muted">${escapeHtml(b.label)}</span></li>`)
+      .join('');
+  }
+  requestAnimationFrame(() => drawEqCurve(document.getElementById('heroEqCanvas'), game.audioProfile.bands));
+}
+
+// ============================================================================
+// Quick game chips (most played)
+// ============================================================================
+const TOP_PLAYED_GAME_IDS = ['warzone', 'cs2', 'tarkov', 'rust', 'fortnite', 'apex', 'r6-siege', 'valorant'];
+
 function renderGameChips() {
   const container = document.getElementById('gameChipsRow');
   if (!container) return;
 
-  const topGames = TOP_PLAYED_GAME_IDS
-    .map((id) => GAMES_CATALOG.find((g) => g.id === id))
-    .filter(Boolean);
+  const topGames = TOP_PLAYED_GAME_IDS.map((id) => findGame(id)).filter(Boolean);
 
   // If a game outside the top list is currently selected, include it dynamically
-  const activeCustomGame = (!TOP_PLAYED_GAME_IDS.includes(selectedGameId) && selectedGameId !== 'all')
-    ? GAMES_CATALOG.find((g) => g.id === selectedGameId)
-    : null;
+  const activeCustomGame = !TOP_PLAYED_GAME_IDS.includes(selectedGameId) ? findGame(selectedGameId) : null;
+  const chip = (g) => {
+    const active = selectedGameId === g.id;
+    return `<button type="button" class="btn btn-sm game-chip${active ? ' active' : ''}" aria-pressed="${active}" onclick="window.selectGame('${g.id}', { scroll: false })">${escapeHtml(g.shortName)}</button>`;
+  };
 
-  const chipsHtml = [
-    `<span class="quick-chips-label">🔥 Most Played:</span>`,
-    ...topGames.map(
-      (g) => `<button type="button" class="game-chip ${selectedGameId === g.id ? 'active' : ''}" onclick="window.selectGame('${g.id}')">${g.icon} ${g.shortName}</button>`
-    ),
-    activeCustomGame
-      ? `<button type="button" class="game-chip active" onclick="window.selectGame('${activeCustomGame.id}')">${activeCustomGame.icon} ${activeCustomGame.shortName}</button>`
-      : '',
-    `<button type="button" class="game-chip game-chip-all ${selectedGameId === 'all' ? 'active' : ''}" onclick="window.selectGameChip('all')">🎯 View All 20 ↓</button>`,
-  ].filter(Boolean).join('');
-
-  container.innerHTML = chipsHtml;
-  requestAnimationFrame(() => {
-    updateChipsArrows();
-    const activeChip = container.querySelector('.game-chip.active');
-    if (activeChip) {
-      activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-  });
+  container.innerHTML = [
+    ...topGames.map(chip),
+    activeCustomGame ? chip(activeCustomGame) : '',
+    `<button type="button" class="btn btn-ghost btn-sm game-chip-all" onclick="window.selectGameChip('all')">All ${GAMES_CATALOG.length} games${icon('chevron-down')}</button>`,
+  ].join('');
 }
 
 // Game Search Aliases Dictionary for intelligent search matching
@@ -259,18 +348,30 @@ function matchesGameQuery(game, rawQ) {
   return aliases.some((alias) => alias.includes(q) || q.includes(alias));
 }
 
+// ============================================================================
+// Search combobox (input + listbox of matching games)
+// ============================================================================
 let focusedDropdownIndex = -1;
 
-// Render Floating Instant Search Dropdown
+function setDropdownOpen(open) {
+  const dropdown = document.getElementById('searchResultsDropdown');
+  const input = document.getElementById('gameSearchInput');
+  if (dropdown) dropdown.style.display = open ? 'block' : 'none';
+  if (input) {
+    input.setAttribute('aria-expanded', String(open));
+    if (!open) input.removeAttribute('aria-activedescendant');
+  }
+}
+
 function renderSearchDropdown(query = '') {
   const dropdown = document.getElementById('searchResultsDropdown');
   if (!dropdown) return;
 
   const q = query.trim();
   if (!q) {
-    dropdown.style.display = 'none';
     dropdown.innerHTML = '';
     focusedDropdownIndex = -1;
+    setDropdownOpen(false);
     return;
   }
 
@@ -278,62 +379,45 @@ function renderSearchDropdown(query = '') {
 
   if (matches.length === 0) {
     dropdown.innerHTML = `
-      <div class="search-dropdown-empty">
-        <div style="font-size: 1.8rem;">🔍</div>
-        <div class="search-dropdown-empty-title">No calibrated profile matching "${escapeHtml(q)}"</div>
-        <p style="font-size: 0.8rem; margin-top: 0.35rem;">
-          Request this title's EQ curves and configs in our <a href="https://discord.gg/uFYMQahNZz" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan); font-weight: 700;">Discord Community ↗</a>
-        </p>
+      <div class="search-empty">
+        <p class="ink">No calibrated profile matching "${escapeHtml(q)}"</p>
+        <p class="muted small">Request this title's EQ curves and configs in our <a href="${DISCORD_URL}" target="_blank" rel="noopener noreferrer">Discord community<span class="sr-only"> (opens in a new tab)</span></a>.</p>
       </div>
     `;
-    dropdown.style.display = 'flex';
     focusedDropdownIndex = -1;
+    setDropdownOpen(true);
+    document.getElementById('gameSearchInput')?.removeAttribute('aria-activedescendant');
     return;
   }
 
   dropdown.innerHTML = `
-    <div class="search-dropdown-header">
-      <span>Matching Game Profiles (${matches.length})</span>
-      <span>Press Enter to Open &bull; Esc to Close</span>
+    <div class="search-results-head small muted">
+      <span>${matches.length} matching profile${matches.length === 1 ? '' : 's'}</span>
+      <span>Enter to open · Esc to close</span>
     </div>
-    ${matches
-      .map(
-        (g, idx) => `
-      <div 
-        class="search-dropdown-item ${idx === 0 ? 'focused' : ''}" 
-        data-game-id="${g.id}" 
-        data-index="${idx}"
-        onclick="window.selectGameFromSearch('${g.id}')"
-      >
-        <div class="search-item-left">
-          <span class="search-item-icon">${g.icon}</span>
-          <div class="search-item-info">
-            <div class="search-item-title">
-              <span>${escapeHtml(g.title)}</span>
-              <span class="search-item-badge">${escapeHtml(g.badge)}</span>
-            </div>
-            <div class="search-item-subtitle">${escapeHtml(g.audioProfile.profileName)} &bull; <code>${escapeHtml(g.configProfile.fileName)}</code></div>
-          </div>
-        </div>
-        <div class="search-item-action">
-          <span>View Profiles &rarr;</span>
-        </div>
-      </div>
-    `
-      )
-      .join('')}
+    <ul class="search-options" id="searchResultsList" role="listbox" aria-label="Matching games">
+      ${matches
+        .map(
+          (g, idx) => `
+        <li class="search-option${idx === 0 ? ' focused' : ''}" role="option" id="searchOpt-${g.id}" aria-selected="${idx === 0}" data-game-id="${g.id}" data-index="${idx}" onclick="window.selectGameFromSearch('${g.id}')">
+          <span class="search-option-title"><span class="ink">${escapeHtml(g.title)}</span><span class="tag">${escapeHtml(g.badge)}</span></span>
+          <span class="muted small">${escapeHtml(g.audioProfile.profileName)} · <code>${escapeHtml(g.configProfile.fileName)}</code></span>
+        </li>`
+        )
+        .join('')}
+    </ul>
   `;
 
-  dropdown.style.display = 'flex';
   focusedDropdownIndex = 0;
+  setDropdownOpen(true);
+  document.getElementById('gameSearchInput')?.setAttribute('aria-activedescendant', `searchOpt-${matches[0].id}`);
 }
 
 window.selectGameFromSearch = function (gameId) {
-  const dropdown = document.getElementById('searchResultsDropdown');
-  if (dropdown) dropdown.style.display = 'none';
+  setDropdownOpen(false);
 
   const searchInput = document.getElementById('gameSearchInput');
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (searchInput && game) {
     searchInput.value = game.shortName;
   }
@@ -341,7 +425,9 @@ window.selectGameFromSearch = function (gameId) {
   window.selectGame(gameId);
 };
 
-// Render Games Catalog Grid
+// ============================================================================
+// Games catalog grid
+// ============================================================================
 function renderGamesCatalog(query = '') {
   const grid = document.getElementById('gamesGrid');
   const countBadge = document.getElementById('gamesCountBadge');
@@ -350,771 +436,442 @@ function renderGamesCatalog(query = '') {
   const filtered = GAMES_CATALOG.filter((g) => matchesGameQuery(g, query));
 
   if (countBadge) {
-    countBadge.textContent = `${filtered.length} Game${filtered.length === 1 ? '' : 's'} Available`;
+    countBadge.textContent = `${filtered.length} game${filtered.length === 1 ? '' : 's'} available`;
   }
 
   if (filtered.length === 0) {
     grid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
-        <div style="font-size: 1.1rem; color: #fff; font-weight: 700;">No games found matching "${escapeHtml(query)}"</div>
-        <p style="font-size: 0.85rem; margin-top: 0.25rem;">
-          Want us to calibrate sound profiles and configs for this game? 
-          <a href="https://discord.gg/uFYMQahNZz" target="_blank" rel="noopener noreferrer" style="color: var(--neon-cyan);">Request it in Discord ↗</a>
+      <div class="card empty-state">
+        <p class="ink">No games found matching "${escapeHtml(query)}"</p>
+        <p class="muted small">
+          Want calibrated sound profiles and configs for this game?
+          <a href="${DISCORD_URL}" target="_blank" rel="noopener noreferrer">Request it in Discord<span class="sr-only"> (opens in a new tab)</span></a>
         </p>
       </div>
     `;
     return;
   }
 
+  // Card pattern: the title button is the single focus stop; its ::after stretches over the card
   grid.innerHTML = filtered
     .map(
       (g) => `
-    <div class="game-card" onclick="window.selectGame('${g.id}')">
-      <div>
-        <div class="game-card-header">
-          <span class="game-card-icon">${g.icon}</span>
-          <span class="game-card-badge">${escapeHtml(g.badge)}</span>
-        </div>
-        <div class="game-card-title">${escapeHtml(g.title)}</div>
-        <div class="game-card-summary">${escapeHtml(g.summary)}</div>
+    <article class="card game-card${g.id === selectedGameId ? ' is-selected' : ''}">
+      <span class="tag">${escapeHtml(g.badge)}</span>
+      <h3 class="game-card-title">
+        <button type="button" class="game-card-link" onclick="window.selectGame('${g.id}')">${escapeHtml(g.title)}</button>
+      </h3>
+      <p class="muted small">${escapeHtml(g.summary)}</p>
+      <div class="game-card-foot small">
+        <span class="muted">${escapeHtml(g.genre)}</span>
+        <span class="ink">View profiles${icon('arrow-right')}</span>
       </div>
-      <div class="game-card-footer">
-        <span>${escapeHtml(g.genre)}</span>
-        <span>View Profiles &amp; Files &rarr;</span>
-      </div>
-    </div>
+    </article>
   `
     )
     .join('');
 }
 
-// Render Active Game Dashboard
+// ============================================================================
+// Selected game dashboard (5 tabs)
+// ============================================================================
+const DASHBOARD_TABS = [
+  { id: 'audio', label: 'Audio & footstep EQ', icon: 'headphones', panel: 'tabContentAudio' },
+  { id: 'controller', label: 'Controller & stick curves', icon: 'gamepad-2', panel: 'tabContentController' },
+  { id: 'console', label: 'Console (PS5 & Xbox)', icon: 'monitor', panel: 'tabContentConsole' },
+  { id: 'config', label: 'Config files & FPS', icon: 'file-code', panel: 'tabContentConfig' },
+  { id: 'sens', label: 'Sens & crosshairs', icon: 'crosshair', panel: 'tabContentSens' },
+];
+
+// PS5 Tempest 3D headphone EQ: one calibrated 5-band curve for every title
+const PS5_BANDS = [
+  { freq: '100 Hz', gain: -3, label: 'Mud cut' },
+  { freq: '400 Hz', gain: -1, label: 'Debris' },
+  { freq: '1 kHz', gain: 0, label: 'Comms' },
+  { freq: '4 kHz', gain: 6, label: 'Footsteps' },
+  { freq: '10 kHz', gain: -3, label: 'Gun ring' },
+];
+
+const specGrid = (items) => `
+  <dl class="spec-grid">
+    ${items.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}
+  </dl>`;
+
+const bandGrid = (bands, extraClass = '') => `
+  <ul class="band-grid ${extraClass}">
+    ${bands
+      .map(
+        (b) => `
+      <li class="band${b.gain > 0 ? ' is-boost' : ''}">
+        <span class="band-freq mono">${escapeHtml(b.freq)}</span>
+        <span class="band-gain mono">${formatGain(b.gain)}</span>
+        <span class="band-label" title="${escapeHtml(b.label)}">${escapeHtml(b.label)}</span>
+      </li>`
+      )
+      .join('')}
+  </ul>`;
+
+function gearCardHtml(item, { compact = false } = {}) {
+  return `
+    <article class="card gear-card">
+      <p class="eyebrow mono">${escapeHtml(item.categoryLabel)}</p>
+      <h3 class="gear-title">${escapeHtml(item.title)}</h3>
+      <p class="small ink">${escapeHtml(item.tag)}</p>
+      <p class="muted small">${escapeHtml(item.desc)}</p>
+      ${compact ? '' : `<p class="muted small mono gear-specs">${escapeHtml(item.specs)}</p>`}
+      <div class="gear-foot">
+        <span class="gear-price mono">${escapeHtml(item.price)}</span>
+        <span class="gear-rating small muted">${icon('star')}<span class="sr-only">Rated </span>${escapeHtml(item.rating)}</span>
+        <a href="${sanitizeUrl(item.link)}" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-primary btn-sm push-right">
+          Check deal<span class="sr-only"> for ${escapeHtml(item.title)} (opens in a new tab)</span>
+        </a>
+      </div>
+    </article>`;
+}
+
+// Contextual gear for a dashboard tab: only the recommended items in that tab's category
+function renderContextualGearHtml(gearIds = [], category, heading) {
+  const items = ACCESSORIES_CATALOG.filter((item) => gearIds.includes(item.id) && (!category || item.category === category));
+  if (items.length === 0) return '';
+  return `
+    <div class="dash-block">
+      <h4 class="eyebrow mono">${escapeHtml(heading)}</h4>
+      <div class="gear-grid gear-grid-compact">${items.map((item) => gearCardHtml(item, { compact: true })).join('')}</div>
+    </div>`;
+}
+
 function renderGameDashboard() {
   const dashboard = document.getElementById('gameDashboardSection');
   if (!dashboard) return;
 
-  const game = GAMES_CATALOG.find((g) => g.id === selectedGameId) || GAMES_CATALOG[0];
+  const game = currentGame();
+  const cp = game.controllerProfile;
+  const ap = game.audioProfile;
 
   dashboard.style.display = 'block';
   dashboard.innerHTML = `
-    <div class="dashboard-header">
-      <div class="dashboard-game-title-wrap">
-        <span class="dashboard-game-icon">${game.icon}</span>
-        <div>
-          <h2 class="dashboard-game-title">${escapeHtml(game.title)}</h2>
-          <div class="dashboard-game-meta">
-            ${escapeHtml(game.genre)} &bull; Engine: ${escapeHtml(game.engine)} &bull; Calibrated Profiles Available
-          </div>
-        </div>
+    <div class="section-head section-head-row">
+      <div>
+        <p class="eyebrow mono">Selected game · ${escapeHtml(game.genre)} · ${escapeHtml(game.engine)}</p>
+        <h2 class="section-title" id="dashboardGameTitle" tabindex="-1">${escapeHtml(game.title)}</h2>
       </div>
-      <span class="pill-count" style="background: rgba(251, 191, 36, 0.15); color: var(--neon-gold); border-color: rgba(251, 191, 36, 0.3);">
-        ${escapeHtml(game.badge)}
-      </span>
+      <span class="tag">${escapeHtml(game.badge)}</span>
     </div>
 
-    <!-- 5 Sub-Tabs -->
-    <div class="dashboard-tabs" role="tablist">
-      <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'audio' ? 'active' : ''}" data-tab="audio" onclick="window.switchDashboardTab('audio')">
-        🎧 Audio &amp; Footstep EQ
-      </button>
-      <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'controller' ? 'active' : ''}" data-tab="controller" onclick="window.switchDashboardTab('controller')">
-        🎮 Controller &amp; Stick Curves
-      </button>
-      <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'console' ? 'active' : ''}" data-tab="console" onclick="window.switchDashboardTab('console')">
-        🕹️ Console Setup (PS5 &amp; Xbox)
-      </button>
-      <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'config' ? 'active' : ''}" data-tab="config" onclick="window.switchDashboardTab('config')">
-        ⚙️ Config Files &amp; FPS Tweaks
-      </button>
-      <button type="button" class="dashboard-tab-btn ${activeDashboardTab === 'sens' ? 'active' : ''}" data-tab="sens" onclick="window.switchDashboardTab('sens')">
-        🎯 Sens &amp; Pro Crosshairs
-      </button>
+    <div class="tabs" role="tablist" aria-label="${escapeHtml(game.shortName)} profiles" id="dashboardTabs">
+      ${DASHBOARD_TABS.map((t) => {
+        const active = activeDashboardTab === t.id;
+        return `<button type="button" class="tab${active ? ' active' : ''}" role="tab" id="dashTab-${t.id}" data-tab="${t.id}" aria-selected="${active}" aria-controls="${t.panel}" tabindex="${active ? 0 : -1}" onclick="window.switchDashboardTab('${t.id}')">${icon(t.icon)}${escapeHtml(t.label)}</button>`;
+      }).join('')}
     </div>
 
     <!-- Tab 1: Audio EQ -->
-    <div id="tabContentAudio" style="display: ${activeDashboardTab === 'audio' ? 'block' : 'none'};">
-      <div style="margin-bottom: 1rem;">
-        <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff;">${escapeHtml(game.audioProfile.profileName)}</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-          ${escapeHtml(game.audioProfile.description)} Target In-Game Mix: <strong>${escapeHtml(game.audioProfile.targetMix)}</strong>
-        </p>
+    <div class="tab-panel" id="tabContentAudio" role="tabpanel" aria-labelledby="dashTab-audio" tabindex="0"${activeDashboardTab === 'audio' ? '' : ' hidden'}>
+      <h3 class="panel-title">${escapeHtml(ap.profileName)}</h3>
+      <p class="muted">${escapeHtml(ap.description)} Target in-game mix: <strong class="ink">${escapeHtml(ap.targetMix)}</strong></p>
+
+      <div class="eq-box">
+        <canvas id="eqCanvas" class="eq-canvas eq-canvas-lg" width="900" height="180" aria-hidden="true"></canvas>
+        ${bandGrid(ap.bands)}
       </div>
 
-      <!-- 10-Band EQ Visualizer Canvas -->
-      <div class="eq-visualizer-box">
-        <canvas id="eqCanvas" class="eq-canvas" width="900" height="180"></canvas>
-        <div class="bands-grid">
-          ${game.audioProfile.bands
-            .map(
-              (b) => `
-            <div class="band-pill">
-              <div class="band-freq">${b.freq}</div>
-              <div class="band-gain ${b.gain > 0 ? 'gain-boost' : b.gain < 0 ? 'gain-cut' : 'gain-flat'}">
-                ${b.gain > 0 ? '+' : ''}${b.gain} dB
-              </div>
-              <div class="band-label" title="${escapeHtml(b.label)}">${escapeHtml(b.label)}</div>
-            </div>
-          `
-            )
-            .join('')}
-        </div>
+      <div class="button-row">
+        <button type="button" class="btn btn-primary" onclick="window.downloadApoTxtConfig('${game.id}')">${icon('download')}Download .txt (Equalizer APO)</button>
+        <button type="button" class="btn" onclick="window.downloadPeaceConfig('${game.id}')">${icon('download')}Download .peace (Peace GUI)</button>
+        <button type="button" class="btn" onclick="window.copyApoTxtConfig('${game.id}')">${icon('copy')}Copy config.txt code</button>
+        <button type="button" class="btn" onclick="window.copySonarValues('${game.id}')">${icon('copy')}Copy Sonar values</button>
+        <button type="button" class="btn" onclick="window.copyDolbyValues('${game.id}')">${icon('copy')}Copy Dolby Atmos</button>
       </div>
 
-      <div class="card-actions-row">
-        <button type="button" class="btn btn-primary" onclick="window.downloadApoTxtConfig('${game.id}')">
-          📥 Download .txt (Equalizer APO)
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="window.downloadPeaceConfig('${game.id}')">
-          📥 Download .peace (Peace GUI)
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="window.copyApoTxtConfig('${game.id}')">
-          📋 Copy config.txt Code
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="window.copySonarValues('${game.id}')">
-          📋 Copy Sonar Values
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="window.copyDolbyValues('${game.id}')">
-          📋 Copy Dolby Atmos
-        </button>
-      </div>
+      <p class="note">${icon('info')}<span>New to Equalizer APO or Peace GUI? <a href="#softwareSection">Read the 2-minute setup guide</a>.</span></p>
 
-      <div style="margin-top: 0.85rem;">
-        <a href="#softwareSection" class="software-guide-shortcut">
-          💡 New to Equalizer APO or Peace GUI? Read the 2-minute step-by-step setup guide ↓
-        </a>
-      </div>
-
-      <!-- Contextual Gear Recommendations -->
-      <div style="margin-top: 2rem;">
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--neon-gold); text-transform: uppercase; margin-bottom: 0.5rem;">
-          🎧 Recommended Hardware Calibrated For This Profile:
-        </div>
-        <div class="accessories-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-          ${renderContextualGearHtml(game.recommendedGear)}
-        </div>
-      </div>
+      ${renderContextualGearHtml(game.recommendedGear, 'audio', 'Recommended audio gear for this profile')}
     </div>
 
     <!-- Tab 2: Controller -->
-    <div id="tabContentController" style="display: ${activeDashboardTab === 'controller' ? 'block' : 'none'};">
-      <div style="margin-bottom: 1rem;">
-        <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.profileName)}</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-          Optimized deadzone threshold and acceleration curve targeting micro-adjustments with zero stick drift.
-        </p>
+    <div class="tab-panel" id="tabContentController" role="tabpanel" aria-labelledby="dashTab-controller" tabindex="0"${activeDashboardTab === 'controller' ? '' : ' hidden'}>
+      <h3 class="panel-title">${escapeHtml(cp.profileName)}</h3>
+      <p class="muted">Optimized deadzone threshold and acceleration curve targeting micro-adjustments with zero stick drift.</p>
+      ${specGrid([
+        ['Response curve', cp.curveType],
+        ['Left stick deadzone', cp.leftStickDeadzoneMin],
+        ['Right stick deadzone', cp.rightStickDeadzoneMin],
+        ['Trigger threshold', cp.leftTriggerDeadzone],
+      ])}
+      <div class="button-row">
+        ${cp.steamConfigCode ? `<a href="${sanitizeUrl(cp.steamConfigCode)}" class="btn btn-primary">${icon('external-link')}Apply Steam Input config</a>` : ''}
+        ${cp.ds4xmlSnippet ? `<button type="button" class="btn" onclick="window.copyDs4Config('${game.id}')">${icon('copy')}Copy DS4Windows XML</button>` : ''}
+        <button type="button" class="btn" onclick="window.copyControllerValues('${game.id}')">${icon('copy')}Copy deadzone specs</button>
+      </div>
+      ${renderContextualGearHtml(game.recommendedGear, 'controllers', 'Recommended controller upgrades')}
+    </div>
+
+    <!-- Tab 3: Console Guide (PS5 & Xbox) -->
+    <div class="tab-panel" id="tabContentConsole" role="tabpanel" aria-labelledby="dashTab-console" tabindex="0"${activeDashboardTab === 'console' ? '' : ' hidden'}>
+      <h3 class="panel-title">PlayStation 5 and Xbox Series X|S calibration</h3>
+      <p class="muted">
+        Every setting here works on console. Follow these steps to apply the footstep EQ and controller curve inside your PS5 or Xbox system menus.
+      </p>
+
+      <div class="console-grid">
+        <div class="card console-card">
+          <div class="console-card-head">
+            <h4 class="feature-title">PlayStation 5 (Tempest 3D)</h4>
+            <span class="tag">Native 5-band EQ</span>
+          </div>
+          <ol class="step-list">
+            <li>Plug your headset into the DualSense controller jack or a PS5 USB port.</li>
+            <li>Go to <strong class="ink">Settings &gt; Sound &gt; Audio Output &gt; Headphone Equalizer</strong>.</li>
+            <li>Select a <strong class="ink">Custom Preset</strong> and set the 5 sliders:</li>
+          </ol>
+          <p class="eyebrow mono">Calibrated PS5 sliders for ${escapeHtml(game.shortName)}</p>
+          ${bandGrid(PS5_BANDS, 'band-grid-5')}
+          <p class="muted small">In-game mix: open ${escapeHtml(game.shortName)} settings &gt; Audio and set Master Audio Mix to <strong class="ink">${escapeHtml(ap.targetMix)}</strong>.</p>
+        </div>
+
+        <div class="card console-card">
+          <div class="console-card-head">
+            <h4 class="feature-title">Xbox Series X|S and One (Dolby Access)</h4>
+            <span class="tag">10-band Atmos EQ</span>
+          </div>
+          <ol class="step-list">
+            <li>Download the free <strong class="ink">Dolby Access</strong> app from the Xbox Store.</li>
+            <li>In Xbox Settings &gt; General &gt; Volume &amp; audio output, set Headset audio to <strong class="ink">Dolby Atmos for Headphones</strong>.</li>
+            <li>Open Dolby Access &gt; Settings &gt; Custom 1 and enter this 10-band curve:</li>
+          </ol>
+          <p class="eyebrow mono">Calibrated Dolby Access settings</p>
+          <pre class="code-block code-block-wrap"><code>${escapeHtml(ap.dolbyValues)}</code></pre>
+          <p class="muted small">In-game mix: open ${escapeHtml(game.shortName)} settings &gt; Audio and set Master Audio Mix to <strong class="ink">${escapeHtml(ap.targetMix)}</strong>.</p>
+        </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Response Curve</div>
-          <div style="font-size: 0.95rem; font-weight: 800; color: var(--neon-cyan);">${escapeHtml(game.controllerProfile.curveType)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Left Stick Deadzone</div>
-          <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.leftStickDeadzoneMin)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Right Stick Deadzone</div>
-          <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.rightStickDeadzoneMin)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Trigger Threshold</div>
-          <div style="font-size: 0.95rem; font-weight: 800; color: var(--neon-gold);">${escapeHtml(game.controllerProfile.leftTriggerDeadzone)}</div>
-        </div>
+      <div class="dash-block">
+        <h4 class="eyebrow mono">In-game controller settings (PS5 / Xbox menu)</h4>
+        ${specGrid([
+          ['Response curve type', cp.curveType],
+          ['Left stick min deadzone', cp.leftStickDeadzoneMin],
+          ['Right stick min deadzone', cp.rightStickDeadzoneMin],
+          ['Sensitivity multipliers', `Look: ${cp.horizontalSens} | ADS: ${cp.verticalSens}`],
+        ])}
       </div>
 
-      <div class="card-actions-row">
-        ${
-          game.controllerProfile.steamConfigCode
-            ? `<a href="${sanitizeUrl(game.controllerProfile.steamConfigCode)}" class="btn btn-primary">📥 Apply Steam Input Config ↗</a>`
-            : ''
-        }
-        ${
-          game.controllerProfile.ds4xmlSnippet
-            ? `<button type="button" class="btn btn-secondary" onclick="window.copyDs4Config('${game.id}')">📋 Copy DS4Windows XML</button>`
-            : ''
-        }
-        <button type="button" class="btn btn-secondary" onclick="window.copyControllerValues('${game.id}')">
-          📋 Copy Deadzone Specs
-        </button>
-      </div>
-
-      <!-- Contextual Gear -->
-      <div style="margin-top: 2rem;">
-        <div style="font-size: 0.78rem; font-weight: 700; color: var(--neon-gold); text-transform: uppercase; margin-bottom: 0.5rem;">
-          🎮 Recommended Controller Upgrades:
-        </div>
-        <div class="accessories-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-          ${renderContextualGearHtml(game.recommendedGear)}
-        </div>
+      <div class="button-row">
+        <button type="button" class="btn btn-primary" onclick="window.copyConsoleCheatSheet('${game.id}')">${icon('copy')}Copy console cheat sheet</button>
+        <button type="button" class="btn" onclick="window.downloadConsoleGuideTxt('${game.id}')">${icon('download')}Download console .txt guide</button>
       </div>
     </div>
 
-    <!-- Tab 3: Config Files -->
-    <div id="tabContentConfig" style="display: ${activeDashboardTab === 'config' ? 'block' : 'none'};">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
-        <div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">${escapeHtml(game.configProfile.fileName)}</h3>
-            <span class="pill-count" style="font-size: 0.68rem; text-transform: uppercase;">${escapeHtml(game.engine)}</span>
-          </div>
-          <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <span>Target Path:</span>
-            <code style="color: var(--neon-cyan); background: rgba(0,0,0,0.4); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.78rem;">${escapeHtml(game.configProfile.targetPath)}</code>
-            <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;" onclick="window.copyTargetFilePath('${game.id}')">📋 Copy Path</button>
-          </div>
+    <!-- Tab 4: Config Files -->
+    <div class="tab-panel" id="tabContentConfig" role="tabpanel" aria-labelledby="dashTab-config" tabindex="0"${activeDashboardTab === 'config' ? '' : ' hidden'}>
+      <div class="config-head">
+        <h3 class="panel-title mono">${escapeHtml(game.configProfile.fileName)}</h3>
+        <span class="tag">${escapeHtml(game.engine)}</span>
+        <span class="tag push-right">Plain-text preset · no ban risk</span>
+      </div>
+      <p class="config-path small muted">
+        <span>Target path:</span>
+        <code>${escapeHtml(game.configProfile.targetPath)}</code>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="window.copyTargetFilePath('${game.id}')">${icon('copy')}Copy path</button>
+      </p>
+
+      <div class="callout">
+        <strong class="ink">Quick setup:</strong> if you'd rather not download a file, click <strong class="ink">Copy raw code</strong>, paste it into a blank Notepad file and save it into the target directory.
+      </div>
+
+      <div class="code-frame">
+        <div class="code-frame-head small">
+          <span class="mono muted">${escapeHtml(game.configProfile.fileName)}</span>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="window.copyConfigFileContent('${game.id}')">${icon('copy')}Copy code</button>
         </div>
-        <div class="pill-tag pill-tag-yellow" style="font-size: 0.72rem;">⚡ Plain Text Preset (0% Ban Risk)</div>
+        <pre class="code-block code-block-scroll" tabindex="0" aria-label="${escapeHtml(game.configProfile.fileName)} contents"><code>${escapeHtml(game.configProfile.fileContent)}</code></pre>
       </div>
 
-      <div style="background: rgba(6, 182, 212, 0.08); border-left: 3px solid var(--neon-cyan); padding: 0.75rem 1rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.82rem; color: #cbd5e1; margin-bottom: 1rem;">
-        💡 <strong>Quick Setup:</strong> If you don't want to download a file, click <strong>"Copy Raw Code"</strong> below, open a blank file in Notepad, paste the lines, and save it directly into the target directory!
+      <div class="button-row">
+        <button type="button" class="btn btn-primary" onclick="window.copyConfigFileContent('${game.id}')">${icon('copy')}Copy raw code (recommended)</button>
+        <button type="button" class="btn" onclick="window.downloadGameConfigFile('${game.id}')">${icon('download')}Download ${escapeHtml(game.configProfile.fileName)}</button>
+        <button type="button" class="btn" onclick="window.copyTargetFilePath('${game.id}')">${icon('copy')}Copy target directory path</button>
       </div>
 
-      <div style="position: relative;">
-        <div style="position: absolute; right: 12px; top: 12px; z-index: 5;">
-          <button type="button" class="btn btn-secondary btn-sm" style="background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); border-color: rgba(255,255,255,0.2);" onclick="window.copyConfigFileContent('${game.id}')">
-            📋 Copy Code
-          </button>
-        </div>
-        <pre class="code-block-preview" style="max-height: 380px; overflow-y: auto;"><code>${escapeHtml(game.configProfile.fileContent)}</code></pre>
-      </div>
-
-      <div class="card-actions-row" style="margin-top: 1rem;">
-        <button type="button" class="btn btn-primary" onclick="window.copyConfigFileContent('${game.id}')">
-          📋 Copy Raw Code (Recommended)
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="window.downloadGameConfigFile('${game.id}')">
-          📥 Download ${escapeHtml(game.configProfile.fileName)}
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="window.copyTargetFilePath('${game.id}')">
-          📋 Copy Target Directory Path
-        </button>
-      </div>
-
-      <div style="margin-top: 1.5rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-        <div style="font-size: 0.82rem; font-weight: 800; color: var(--neon-gold); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.5rem;">
-          ⚡ Pro Installation &amp; Performance Tips:
-        </div>
-        <ul style="padding-left: 1.25rem; font-size: 0.82rem; color: #cbd5e1; line-height: 1.6; display: flex; flex-direction: column; gap: 0.35rem;">
+      <div class="dash-block">
+        <h4 class="eyebrow mono">Installation and performance tips</h4>
+        <ul class="tips-list">
           ${game.configProfile.fpsTips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('')}
         </ul>
       </div>
     </div>
 
-    <!-- Tab 4: Sens & Crosshairs -->
-    <div id="tabContentSens" style="display: ${activeDashboardTab === 'sens' ? 'block' : 'none'};">
-      <div style="margin-bottom: 1rem;">
-        <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff;">Sensitivity &amp; Pro Crosshair Codes</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
-          Verified competitive sensitivity multipliers and ready-to-import crosshair codes.
-        </p>
-      </div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.85rem; background: rgba(0,0,0,0.3); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Horizontal / Base Sens</div>
-          <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.horizontalSens)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Vertical / ADS Multiplier</div>
-          <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.verticalSens)}</div>
-        </div>
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Aim Assist / Input Mode</div>
-          <div style="font-size: 0.95rem; font-weight: 800; color: var(--neon-cyan);">${escapeHtml(game.controllerProfile.aimAssistType)}</div>
-        </div>
-      </div>
-
-      <div class="card-actions-row">
-        <button type="button" class="btn btn-secondary" onclick="window.copySensValues('${game.id}')">
-          📋 Copy Sens Values
-        </button>
-      </div>
-    </div>
-
-    <!-- Tab 5: Console Guide (PS5 & Xbox) -->
-    <div id="tabContentConsole" style="display: ${activeDashboardTab === 'console' ? 'block' : 'none'};">
-      <div style="margin-bottom: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
-          <h3 style="font-size: 1.2rem; font-weight: 800; color: #fff;">PlayStation 5 &amp; Xbox Series X|S Calibration</h3>
-          <span class="pill-tag pill-tag-cyan" style="font-size: 0.72rem;">🎮 100% Console Compatible</span>
-        </div>
-        <p style="font-size: 0.88rem; color: var(--text-muted);">
-          Every setting on this page works on consoles. Follow this step-by-step to apply this footstep EQ curve and controller curve directly inside your PS5 or Xbox system menus.
-        </p>
-      </div>
-
-      <!-- 2-Column Grid: PS5 vs Xbox -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
-        <!-- PlayStation 5 Card -->
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="font-size: 1.3rem;">🎮</span>
-              <strong style="color: #fff; font-size: 1.05rem;">PlayStation 5 (Tempest 3D)</strong>
-            </div>
-            <span style="font-size: 0.72rem; color: #60a5fa; background: rgba(59, 130, 246, 0.15); padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 700;">PS5 Native 5-Band EQ</span>
-          </div>
-
-          <ol style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.6; margin-bottom: 1rem;">
-            <li>Plug your headset into your DualSense controller jack or PS5 USB port.</li>
-            <li>Go to: <strong style="color: #fff;">Settings &gt; Sound &gt; Audio Output &gt; Headphone Equalizer</strong>.</li>
-            <li>Select a <strong style="color: #fff;">Custom Preset</strong> and set the 5 sliders:</li>
-          </ol>
-
-          <!-- PS5 5-Band EQ Box -->
-          <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--neon-cyan); font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;">
-              Calibrated PS5 Sliders for ${escapeHtml(game.shortName)}:
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35rem; text-align: center;">
-              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">100 Hz</div>
-                <div style="font-size: 0.9rem; font-weight: 800; color: #f43f5e;">-3 dB</div>
-                <div style="font-size: 0.65rem; color: #64748b;">Mud Cut</div>
-              </div>
-              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">400 Hz</div>
-                <div style="font-size: 0.9rem; font-weight: 800; color: #f43f5e;">-1 dB</div>
-                <div style="font-size: 0.65rem; color: #64748b;">Debris</div>
-              </div>
-              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">1 kHz</div>
-                <div style="font-size: 0.9rem; font-weight: 800; color: #38bdf8;">0 dB</div>
-                <div style="font-size: 0.65rem; color: #64748b;">Comms</div>
-              </div>
-              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px; border: 1px solid rgba(6, 182, 212, 0.4);">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">4 kHz</div>
-                <div style="font-size: 0.9rem; font-weight: 800; color: var(--neon-cyan);">+6 dB</div>
-                <div style="font-size: 0.65rem; color: var(--neon-cyan);">Footsteps</div>
-              </div>
-              <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.2rem; border-radius: 4px;">
-                <div style="font-size: 0.7rem; color: var(--text-muted);">10 kHz</div>
-                <div style="font-size: 0.9rem; font-weight: 800; color: #f43f5e;">-3 dB</div>
-                <div style="font-size: 0.65rem; color: #64748b;">Gun Ring</div>
-              </div>
-            </div>
-          </div>
-
-          <div style="font-size: 0.8rem; color: #94a3b8;">
-            💡 <strong>In-Game Mix:</strong> Open ${escapeHtml(game.shortName)} settings &gt; Audio &gt; set Master Audio Mix to <strong style="color: #fff;">${escapeHtml(game.audioProfile.targetMix)}</strong>.
-          </div>
-        </div>
-
-        <!-- Xbox Series X/S Card -->
-        <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="font-size: 1.3rem;">🟢</span>
-              <strong style="color: #fff; font-size: 1.05rem;">Xbox Series X|S &amp; One (Dolby Access)</strong>
-            </div>
-            <span style="font-size: 0.72rem; color: #34d399; background: rgba(16, 185, 129, 0.15); padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 700;">10-Band Atmos EQ</span>
-          </div>
-
-          <ol style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.6; margin-bottom: 1rem;">
-            <li>Download the free <strong style="color: #fff;">Dolby Access</strong> app from the Xbox Store.</li>
-            <li>In Xbox Settings &gt; General &gt; Volume &amp; audio output, set Headset audio to <strong style="color: #fff;">Dolby Atmos for Headphones</strong>.</li>
-            <li>Open Dolby Access &gt; Settings &gt; Custom 1, and input this 10-band curve:</li>
-          </ol>
-
-          <!-- Xbox 10-Band EQ Box -->
-          <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--neon-green); font-weight: 800; text-transform: uppercase; margin-bottom: 0.35rem; letter-spacing: 0.05em;">
-              Calibrated Dolby Access Settings:
-            </div>
-            <code style="font-family: var(--font-mono); font-size: 0.78rem; color: #e2e8f0; display: block; word-break: break-all; line-height: 1.5;">
-              ${escapeHtml(game.audioProfile.dolbyValues)}
-            </code>
-          </div>
-
-          <div style="font-size: 0.8rem; color: #94a3b8;">
-            💡 <strong>In-Game Mix:</strong> Open ${escapeHtml(game.shortName)} settings &gt; Audio &gt; set Master Audio Mix to <strong style="color: #fff;">${escapeHtml(game.audioProfile.targetMix)}</strong>.
-          </div>
-        </div>
-      </div>
-
-      <!-- In-Game Controller & Deadzone Settings for Console -->
-      <div style="background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
-        <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span>🎯</span> In-Game Controller Settings (Enter in PS5/Xbox Menu)
-        </h4>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
-          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Response Curve Type</div>
-            <div style="font-size: 0.95rem; font-weight: 800; color: var(--neon-cyan);">${escapeHtml(game.controllerProfile.curveType)}</div>
-          </div>
-          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Left Stick Min Deadzone</div>
-            <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.leftStickDeadzoneMin)}</div>
-          </div>
-          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Right Stick Min Deadzone</div>
-            <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(game.controllerProfile.rightStickDeadzoneMin)}</div>
-          </div>
-          <div style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: var(--radius-sm);">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Sensitivity Multipliers</div>
-            <div style="font-size: 0.95rem; font-weight: 800; color: #fff;">Look: ${escapeHtml(game.controllerProfile.horizontalSens)} | ADS: ${escapeHtml(game.controllerProfile.verticalSens)}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="card-actions-row">
-        <button type="button" class="btn btn-primary" onclick="window.copyConsoleCheatSheet('${game.id}')">
-          📋 Copy Console Cheat Sheet to Clipboard
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="window.downloadConsoleGuideTxt('${game.id}')">
-          📥 Download Console .txt Guide
-        </button>
+    <!-- Tab 5: Sens & Crosshairs -->
+    <div class="tab-panel" id="tabContentSens" role="tabpanel" aria-labelledby="dashTab-sens" tabindex="0"${activeDashboardTab === 'sens' ? '' : ' hidden'}>
+      <h3 class="panel-title">Sensitivity and pro crosshair codes</h3>
+      <p class="muted">Verified competitive sensitivity multipliers and ready-to-import crosshair codes.</p>
+      ${specGrid([
+        ['Horizontal / base sens', cp.horizontalSens],
+        ['Vertical / ADS multiplier', cp.verticalSens],
+        ['Aim assist / input mode', cp.aimAssistType],
+      ])}
+      <div class="button-row">
+        <button type="button" class="btn" onclick="window.copySensValues('${game.id}')">${icon('copy')}Copy sens values</button>
       </div>
     </div>
   `;
 
   // Draw the EQ curve onto the canvas if on Audio tab
   if (activeDashboardTab === 'audio') {
-    requestAnimationFrame(() => drawEqCurve(game.audioProfile.bands));
+    requestAnimationFrame(() => drawEqCurve(document.getElementById('eqCanvas'), ap.bands));
   }
 }
 
-// Canvas Drawer for 10-Band EQ Curve
-function drawEqCurve(bands) {
-  const canvas = document.getElementById('eqCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width;
-  const h = canvas.height;
-
-  ctx.clearRect(0, 0, w, h);
-
-  // Background Grid Lines
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-  ctx.lineWidth = 1;
-
-  // Zero dB center line
-  const zeroY = h / 2;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.beginPath();
-  ctx.moveTo(0, zeroY);
-  ctx.lineTo(w, zeroY);
-  ctx.stroke();
-
-  // Grid lines (+6dB, -6dB)
-  [-6, 6].forEach((db) => {
-    const y = zeroY - (db / 12) * (h / 2.3);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y);
-    ctx.stroke();
-  });
-
-  // Calculate points
-  const points = bands.map((b, i) => {
-    const x = (i / (bands.length - 1)) * (w - 60) + 30;
-    // Max scale: +/- 10dB
-    const y = zeroY - (b.gain / 10) * (h / 2.4);
-    return { x, y, gain: b.gain };
-  });
-
-  // Gradient under curve
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, 'rgba(236, 72, 153, 0.35)');
-  grad.addColorStop(0.5, 'rgba(6, 182, 212, 0.15)');
-  grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
-
-  // Draw smooth Bezier curve
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const midX = (p0.x + p1.x) / 2;
-    ctx.bezierCurveTo(midX, p0.y, midX, p1.y, p1.x, p1.y);
-  }
-
-  // Fill gradient
-  ctx.lineTo(points[points.length - 1].x, h);
-  ctx.lineTo(points[0].x, h);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Draw main stroke line
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const midX = (p0.x + p1.x) / 2;
-    ctx.bezierCurveTo(midX, p0.y, midX, p1.y, p1.x, p1.y);
-  }
-  ctx.strokeStyle = '#ec4899';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  // Draw frequency node dots
-  points.forEach((p) => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
-    ctx.fillStyle = p.gain > 0 ? '#ec4899' : p.gain < 0 ? '#60a5fa' : '#cbd5e1';
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  });
-}
-
-// Render Contextual Gear for Game
-function renderContextualGearHtml(gearIds = []) {
-  const items = ACCESSORIES_CATALOG.filter((item) => gearIds.includes(item.id));
-  return items
-    .map(
-      (item) => `
-    <div class="accessory-card" style="padding: 1rem;">
-      <div>
-        <div class="accessory-tag">${escapeHtml(item.tag)}</div>
-        <div class="accessory-title" style="font-size: 0.92rem;">${escapeHtml(item.title)}</div>
-        <div class="accessory-desc" style="font-size: 0.78rem;">${escapeHtml(item.desc)}</div>
-      </div>
-      <div class="accessory-footer">
-        <span class="accessory-price" style="font-size: 1rem;">${escapeHtml(item.price)}</span>
-        <a href="${sanitizeUrl(item.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
-          Check Deal ↗
-        </a>
-      </div>
-    </div>
-  `
-    )
-    .join('');
-}
-
-// Render Master Accessories Grid
+// ============================================================================
+// Gear directory, software guide and audio setup wizard
+// ============================================================================
 function renderMasterAccessories(cat = 'all') {
   const grid = document.getElementById('accessoriesGrid');
   if (!grid) return;
 
-  const filtered = ACCESSORIES_CATALOG.filter((item) => {
-    if (cat === 'all') return true;
-    return item.category === cat;
-  });
-
-  grid.innerHTML = filtered
-    .map(
-      (item) => `
-    <div class="accessory-card">
-      <div>
-        <div class="accessory-tag">${escapeHtml(item.tag)}</div>
-        <div class="accessory-title">${escapeHtml(item.title)}</div>
-        <div class="accessory-desc">${escapeHtml(item.desc)}</div>
-        <div class="accessory-specs">${escapeHtml(item.specs)}</div>
-      </div>
-      <div class="accessory-footer">
-        <div>
-          <span class="accessory-price">${escapeHtml(item.price)}</span>
-          <span style="font-size: 0.75rem; color: var(--neon-gold); margin-left: 0.35rem;">${escapeHtml(item.rating)}</span>
-        </div>
-        <a href="${sanitizeUrl(item.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
-          Check Deal ↗
-        </a>
-      </div>
-    </div>
-  `
-    )
-    .join('');
+  const filtered = ACCESSORIES_CATALOG.filter((item) => cat === 'all' || item.category === cat);
+  grid.innerHTML = filtered.map((item) => gearCardHtml(item)).join('');
 }
 
-// Render Software Toolkit Guide
 function renderSoftwareGuide() {
   const container = document.getElementById('softwareGrid');
   if (!container) return;
 
+  // steps / troubleshooting are trusted static markup from gameData.js (they contain <strong>/<code>)
   container.innerHTML = SOFTWARE_GUIDE.map(
     (tool) => `
-    <div class="software-card">
-      <div>
-        <div class="software-card-header">
-          <div style="display: flex; gap: 0.85rem; align-items: center;">
-            <div class="software-icon-wrap">${tool.icon}</div>
-            <div>
-              <div class="software-title">${escapeHtml(tool.name)}</div>
-              <div class="software-category">${escapeHtml(tool.category)}</div>
-            </div>
-          </div>
-          <span class="pill-count" style="font-size: 0.72rem; border-color: rgba(6,182,212,0.4);">${escapeHtml(tool.price)}</span>
+    <article class="card software-card">
+      <div class="software-head">
+        <span class="software-icon">${icon(tool.icon)}</span>
+        <div>
+          <h3 class="feature-title">${escapeHtml(tool.name)}</h3>
+          <p class="muted small">${escapeHtml(tool.category)}</p>
         </div>
-
-        <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.5rem;">
-          ${escapeHtml(tool.description)}
-        </p>
-
-        <div class="software-why-box">
-          <strong>Why you need it:</strong> ${escapeHtml(tool.whyNeedIt)}
-        </div>
-
-        <div class="software-steps-header">
-          <span>📋 Step-by-Step Setup:</span>
-        </div>
-        <ol class="software-steps-list">
-          ${tool.steps.map((s) => `<li class="software-step-item">${s}</li>`).join('')}
-        </ol>
-
-        ${
-          tool.troubleshooting && tool.troubleshooting.length > 0
-            ? `
-          <div class="software-troubleshoot">
-            <strong>⚠️ Pro Tips &amp; Troubleshooting:</strong>
-            <ul style="margin-top: 0.35rem; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem;">
-              ${tool.troubleshooting.map((t) => `<li>${t}</li>`).join('')}
-            </ul>
-          </div>
-        `
-            : ''
-        }
+        <span class="tag push-right">${escapeHtml(tool.price)}</span>
       </div>
 
-      <div class="software-actions">
+      <p class="muted small">${escapeHtml(tool.description)}</p>
+      <p class="small"><strong class="ink">Why you need it:</strong> <span class="muted">${escapeHtml(tool.whyNeedIt)}</span></p>
+
+      <h4 class="eyebrow mono">Step-by-step setup</h4>
+      <ol class="step-list">
+        ${tool.steps.map((s) => `<li>${s}</li>`).join('')}
+      </ol>
+
+      ${
+        tool.troubleshooting && tool.troubleshooting.length > 0
+          ? `
+        <div class="callout is-warn">
+          <strong class="ink">Tips and troubleshooting</strong>
+          <ul class="tips-list">
+            ${tool.troubleshooting.map((t) => `<li>${t}</li>`).join('')}
+          </ul>
+        </div>`
+          : ''
+      }
+
+      <div class="button-row software-actions">
         <a href="${sanitizeUrl(tool.downloadUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
-          📥 Official Download (${escapeHtml(tool.version)}) ↗
+          ${icon('download')}Official download (${escapeHtml(tool.version)})<span class="sr-only"> (opens in a new tab)</span>
         </a>
         ${
           tool.id === 'equalizer-apo' || tool.id === 'peace-gui'
-            ? `<button type="button" class="btn btn-secondary btn-sm" onclick="window.downloadSetupGuideTxt()">
-                📄 Download Setup Guide (.txt)
-              </button>`
+            ? `<button type="button" class="btn btn-sm" onclick="window.downloadSetupGuideTxt()">${icon('download')}Setup guide (.txt)</button>`
             : ''
         }
-        <a href="${sanitizeUrl(tool.officialSite)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
-          Docs ↗
+        <a href="${sanitizeUrl(tool.officialSite)}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">
+          Docs<span class="sr-only"> for ${escapeHtml(tool.name)} (opens in a new tab)</span>${icon('external-link')}
         </a>
       </div>
-    </div>
+    </article>
   `
   ).join('');
 }
 
-// Render Audio Setup Isolator & Wizard
 function renderAudioSetupWizard() {
   const selectorGrid = document.getElementById('audioSetupSelectorGrid');
   const detailBox = document.getElementById('audioSetupDetailBox');
   if (!selectorGrid || !detailBox) return;
 
-  // Render Selector Buttons
-  selectorGrid.innerHTML = AUDIO_SETUPS.map(
-    (s) => `
-    <button type="button" class="setup-selector-card ${activeAudioSetupId === s.id ? 'active' : ''}" onclick="window.selectAudioSetup('${s.id}')">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span class="setup-selector-icon">${s.icon}</span>
-        <span style="font-size: 0.65rem; color: var(--neon-cyan); font-weight: 700; text-transform: uppercase;">${escapeHtml(s.category)}</span>
-      </div>
-      <div class="setup-selector-title">${escapeHtml(s.shortTitle)}</div>
-      <div class="setup-selector-sub">${escapeHtml(s.badge)}</div>
-    </button>
-  `
-  ).join('');
+  selectorGrid.innerHTML = AUDIO_SETUPS.map((s) => {
+    const active = activeAudioSetupId === s.id;
+    return `
+    <button type="button" class="setup-option${active ? ' active' : ''}" aria-pressed="${active}" onclick="window.selectAudioSetup('${s.id}')">
+      ${icon(s.icon)}
+      <span class="eyebrow mono">${escapeHtml(s.category)}</span>
+      <span class="setup-option-title">${escapeHtml(s.shortTitle)}</span>
+      <span class="muted small">${escapeHtml(s.badge)}</span>
+    </button>`;
+  }).join('');
 
-  // Render Detail for Active Setup
   const setup = AUDIO_SETUPS.find((s) => s.id === activeAudioSetupId) || AUDIO_SETUPS[0];
 
+  // steps / windowsSettings are trusted static markup from gameData.js
   detailBox.innerHTML = `
-    <div class="setup-detail-header">
-      <div style="display: flex; gap: 1rem; align-items: center;">
-        <div class="software-icon-wrap" style="width: 54px; height: 54px; font-size: 1.8rem; background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.4);">
-          ${setup.icon}
-        </div>
-        <div>
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff;">${escapeHtml(setup.title)}</h3>
-          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
-            Typical gear: <span style="color: #cbd5e1;">${escapeHtml(setup.examples)}</span>
-          </div>
-        </div>
+    <div class="setup-detail-head">
+      <span class="software-icon">${icon(setup.icon)}</span>
+      <div>
+        <h3 class="panel-title">${escapeHtml(setup.title)}</h3>
+        <p class="muted small">Typical gear: ${escapeHtml(setup.examples)}</p>
       </div>
-      <span class="pill-count" style="border-color: rgba(236, 72, 153, 0.5); color: #f472b6;">${escapeHtml(setup.badge)}</span>
+      <span class="tag push-right">${escapeHtml(setup.badge)}</span>
     </div>
 
-    <!-- 3 Meta Cards -->
-    <div class="setup-meta-grid">
-      <div class="setup-meta-card">
-        <div class="setup-meta-label">Equalizer APO Target Device</div>
-        <div class="setup-meta-val" style="color: var(--neon-cyan);">${escapeHtml(setup.configuratorCheck)}</div>
-      </div>
-      <div class="setup-meta-card">
-        <div class="setup-meta-label">Required Install Mode</div>
-        <div class="setup-meta-val" style="color: var(--neon-gold);">${escapeHtml(setup.installMode)}</div>
-      </div>
-      <div class="setup-meta-card">
-        <div class="setup-meta-label">Recommended Software</div>
-        <div class="setup-meta-val" style="color: #fff;">${escapeHtml(setup.softwareRecommendation)}</div>
-      </div>
-    </div>
+    ${specGrid([
+      ['Equalizer APO target device', setup.configuratorCheck],
+      ['Required install mode', setup.installMode],
+      ['Recommended software', setup.softwareRecommendation],
+    ])}
 
-    <!-- 2 Column Instructions Grid -->
-    <div class="setup-instructions-grid">
-      <div class="setup-section-block">
-        <div class="setup-section-heading">
-          <span>🛠️ Tailored Installation Steps:</span>
-        </div>
-        <ol class="software-steps-list">
-          ${setup.steps.map((st) => `<li class="software-step-item">${st}</li>`).join('')}
+    <div class="setup-columns">
+      <div>
+        <h4 class="eyebrow mono">Installation steps</h4>
+        <ol class="step-list">
+          ${setup.steps.map((st) => `<li>${st}</li>`).join('')}
         </ol>
       </div>
-
-      <div class="setup-section-block">
-        <div class="setup-section-heading">
-          <span>🎛️ Windows Sound Settings (mmsys.cpl):</span>
-        </div>
-        <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+      <div>
+        <h4 class="eyebrow mono">Windows sound settings (mmsys.cpl)</h4>
+        <ul class="tips-list">
           ${setup.windowsSettings.map((ws) => `<li>${ws}</li>`).join('')}
         </ul>
       </div>
     </div>
 
-    <!-- Common Trap / Warning Callout -->
-    <div class="setup-warning-callout">
-      <div style="font-size: 1.25rem;">⚠️</div>
-      <div>
-        <strong style="color: #f59e0b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em;">Critical Hardware Trap &amp; Fix:</strong>
-        <p style="margin-top: 0.25rem;">${escapeHtml(setup.pitfalls)}</p>
-      </div>
+    <div class="callout is-warn">
+      <strong class="ink">Common hardware trap and fix:</strong> <span class="muted">${escapeHtml(setup.pitfalls)}</span>
     </div>
 
-    <div class="software-actions" style="margin-top: 1.5rem;">
-      <button type="button" class="btn btn-primary btn-sm" onclick="window.downloadAudioSetupCheatSheet('${setup.id}')">
-        📥 Download ${escapeHtml(setup.shortTitle)} Guide (.txt)
-      </button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="window.copyAudioSetupChecklist('${setup.id}')">
-        📋 Copy Setup Checklist
-      </button>
-      <a href="#softwareSection" class="btn btn-secondary btn-sm">
-        View Software Downloads ↑
-      </a>
+    <div class="button-row">
+      <button type="button" class="btn btn-primary btn-sm" onclick="window.downloadAudioSetupCheatSheet('${setup.id}')">${icon('download')}Download ${escapeHtml(setup.shortTitle)} guide (.txt)</button>
+      <button type="button" class="btn btn-sm" onclick="window.copyAudioSetupChecklist('${setup.id}')">${icon('copy')}Copy setup checklist</button>
+      <a href="#softwareSection" class="btn btn-ghost btn-sm">View software downloads</a>
     </div>
   `;
 }
 
-// Security Escape Helper
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
+// ============================================================================
 // Global Window Handlers
-window.selectGame = function (gameId) {
+// ============================================================================
+window.selectGame = function (gameId, { scroll = true } = {}) {
+  if (!findGame(gameId)) return;
   selectedGameId = gameId;
   renderGameChips();
+  renderHeroEq();
   renderGameDashboard();
-  const dashEl = document.getElementById('gameDashboardSection');
-  if (dashEl) {
-    dashEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.game-card').forEach((card) => {
+    card.classList.toggle('is-selected', card.querySelector('.game-card-link')?.getAttribute('onclick')?.includes(`'${gameId}'`) || false);
+  });
+  if (scroll) {
+    const dashEl = document.getElementById('gameDashboardSection');
+    if (dashEl) dashEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Move keyboard focus to the newly opened profile so screen reader users land on it
+    document.getElementById('dashboardGameTitle')?.focus({ preventScroll: true });
   }
+};
+
+// Kept for legacy chip markup / deep links; chips now wrap instead of scrolling
+window.scrollGameChips = function (offset) {
+  document.getElementById('gameChipsRow')?.scrollBy({ left: offset, behavior: 'smooth' });
 };
 
 window.selectGameChip = function (chipId) {
@@ -1129,13 +886,28 @@ window.selectGameChip = function (chipId) {
   }
 };
 
+// Switch tabs in place (no re-render) so keyboard focus stays on the tab
 window.switchDashboardTab = function (tabName) {
+  if (!DASHBOARD_TABS.some((t) => t.id === tabName)) return;
   activeDashboardTab = tabName;
-  renderGameDashboard();
+  DASHBOARD_TABS.forEach((t) => {
+    const btn = document.getElementById(`dashTab-${t.id}`);
+    const panel = document.getElementById(t.panel);
+    const active = t.id === tabName;
+    if (btn) {
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', String(active));
+      btn.tabIndex = active ? 0 : -1;
+    }
+    if (panel) panel.hidden = !active;
+  });
+  if (tabName === 'audio') {
+    requestAnimationFrame(() => drawEqCurve(document.getElementById('eqCanvas'), currentGame().audioProfile.bands));
+  }
 };
 
 window.downloadApoTxtConfig = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
   const content = `# ==============================================================================
 # Dangling Dice Gaming Lab™ — Equalizer APO Native Configuration
@@ -1148,22 +920,22 @@ window.downloadApoTxtConfig = function (gameId) {
 #           paste lines below, and press Ctrl+S. (Updates in real-time!)
 # Option 2: Place this file in C:\\Program Files\\EqualizerAPO\\config\\
 #           and add this line to your config.txt:
-#           Include: ${game.shortName.toLowerCase().replace(/\s+/g, '_')}_eq.txt
+#           Include: ${fileSlug(game.shortName)}_eq.txt
 # ==============================================================================
 
 Preamp: -3.0 dB
 ${game.audioProfile.peaceConfig}
 `;
-  downloadTextFile(`${game.shortName.toLowerCase().replace(/\s+/g, '_')}_eq.txt`, content);
+  downloadTextFile(`${fileSlug(game.shortName)}_eq.txt`, content);
 };
 
 window.copyApoTxtConfig = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
   const content = `# Dangling Dice Gaming Lab™ — ${game.shortName} Footstep Audio EQ
 Preamp: -3.0 dB
 ${game.audioProfile.peaceConfig}`;
-  copyToClipboard(content, `📋 Copied Equalizer APO config text for ${game.shortName}!`);
+  copyToClipboard(content, `Copied Equalizer APO config text for ${game.shortName}`);
 };
 
 window.downloadSetupGuideTxt = function () {
@@ -1242,137 +1014,113 @@ Join our Discord: https://discord.gg/uFYMQahNZz
 };
 
 window.downloadPeaceConfig = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
-  downloadTextFile(`${game.shortName.toLowerCase().replace(/\s+/g, '_')}_peace_eq.peace`, game.audioProfile.peaceConfig);
+  downloadTextFile(`${fileSlug(game.shortName)}_peace_eq.peace`, game.audioProfile.peaceConfig);
 };
 
 window.copySonarValues = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
-  copyToClipboard(game.audioProfile.sonarValues.join('\n'), '📋 Copied SteelSeries Sonar Parametric Values!');
+  copyToClipboard(game.audioProfile.sonarValues.join('\n'), 'Copied SteelSeries Sonar parametric values');
 };
 
 window.copyDolbyValues = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
-  copyToClipboard(game.audioProfile.dolbyValues, '📋 Copied Dolby Atmos Settings!');
+  copyToClipboard(game.audioProfile.dolbyValues, 'Copied Dolby Atmos settings');
 };
 
 window.copyDs4Config = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
-  copyToClipboard(game.controllerProfile.ds4xmlSnippet, '📋 Copied DS4Windows XML Snippet!');
+  copyToClipboard(game.controllerProfile.ds4xmlSnippet, 'Copied DS4Windows XML snippet');
 };
 
 window.copyControllerValues = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
   const p = game.controllerProfile;
   const txt = `Curve: ${p.curveType}\nLeft Min Deadzone: ${p.leftStickDeadzoneMin}\nRight Min Deadzone: ${p.rightStickDeadzoneMin}\nTriggers: ${p.leftTriggerDeadzone}\nSens: ${p.horizontalSens}`;
-  copyToClipboard(txt, '📋 Copied Deadzone & Controller Tuning Specs!');
+  copyToClipboard(txt, 'Copied deadzone and controller tuning specs');
 };
 
 window.downloadGameConfigFile = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
   downloadTextFile(game.configProfile.fileName, game.configProfile.fileContent);
 };
 
 window.copyConfigFileContent = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
-  copyToClipboard(game.configProfile.fileContent, `📋 Copied ${game.configProfile.fileName} contents!`);
+  copyToClipboard(game.configProfile.fileContent, `Copied ${game.configProfile.fileName} contents`);
 };
 
 window.copyTargetFilePath = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
-  copyToClipboard(game.configProfile.targetPath, `📋 Copied target path for ${game.shortName}!`);
+  copyToClipboard(game.configProfile.targetPath, `Copied target path for ${game.shortName}`);
 };
 
 window.copySensValues = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
   const p = game.controllerProfile;
-  copyToClipboard(`Horizontal Sens: ${p.horizontalSens}\nVertical Sens: ${p.verticalSens}\nMode: ${p.aimAssistType}`, '📋 Copied Sensitivity Specs!');
+  copyToClipboard(`Horizontal Sens: ${p.horizontalSens}\nVertical Sens: ${p.verticalSens}\nMode: ${p.aimAssistType}`, 'Copied sensitivity specs');
 };
 
-window.copyConsoleCheatSheet = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
-  if (!game) return;
-
-  const text = `================================================================================\n` +
+// Plain-text console guide shared by the copy and download actions
+function buildConsoleGuide(game) {
+  const cp = game.controllerProfile;
+  return `================================================================================\n` +
     `DANGLING DICE GAMING LAB™ — CONSOLE SETUP QUICK-GUIDE (PS5 & XBOX)\n` +
     `Game: ${game.title}\n` +
     `Target In-Game Audio Mix: ${game.audioProfile.targetMix}\n` +
     `Website: https://games.dangling-dice-studios.com/\n` +
     `================================================================================\n\n` +
-    `🎮 PLAYSTATION 5 (TEMPEST 3D NATIVE 5-BAND EQ)\n` +
+    `[PLAYSTATION 5] TEMPEST 3D NATIVE 5-BAND EQ\n` +
     `Location: Settings > Sound > Audio Output > Headphone Equalizer > Custom\n` +
     `  • 100 Hz:  -3 dB (Cuts sub-bass mud and explosion artillery rumble)\n` +
     `  • 400 Hz:  -1 dB (Clears voice / debris clutter)\n` +
     `  • 1 kHz:    0 dB (Natural team comms & weapon reloads)\n` +
     `  • 4 kHz:   +6 dB (CRITICAL: Isolates footsteps, tile clicks & broken glass)\n` +
     `  • 10 kHz:  -3 dB (Tames shrill gunshot ear fatigue)\n\n` +
-    `🟢 XBOX SERIES X|S & ONE (DOLBY ACCESS 10-BAND EQ)\n` +
+    `[XBOX] SERIES X|S & ONE (DOLBY ACCESS 10-BAND EQ)\n` +
     `Location: Xbox Store > Dolby Access app > Settings > Custom 1\n` +
     `  • Values: ${game.audioProfile.dolbyValues}\n\n` +
-    `🎯 CONSOLE IN-GAME CONTROLLER SETTINGS\n` +
-    `  • Response Curve: ${game.controllerProfile.curveType}\n` +
-    `  • Left Stick Deadzone: ${game.controllerProfile.leftStickDeadzoneMin}\n` +
-    `  • Right Stick Deadzone: ${game.controllerProfile.rightStickDeadzoneMin}\n` +
-    `  • Max Deadzone: ${game.controllerProfile.stickDeadzoneMax}\n` +
-    `  • Sensitivity: Look (${game.controllerProfile.horizontalSens}) / ADS (${game.controllerProfile.verticalSens})\n` +
-    `  • Aim Assist Mode: ${game.controllerProfile.aimAssistType}\n\n` +
-    `⚡ CONSOLE GRAPHICS & FPS TIPS:\n` +
+    `[CONTROLLER] CONSOLE IN-GAME CONTROLLER SETTINGS\n` +
+    `  • Response Curve: ${cp.curveType}\n` +
+    `  • Left Stick Deadzone: ${cp.leftStickDeadzoneMin}\n` +
+    `  • Right Stick Deadzone: ${cp.rightStickDeadzoneMin}\n` +
+    `  • Max Deadzone: ${cp.stickDeadzoneMax}\n` +
+    `  • Sensitivity: Look (${cp.horizontalSens}) / ADS (${cp.verticalSens})\n` +
+    `  • Aim Assist Mode: ${cp.aimAssistType}\n\n` +
+    `[GRAPHICS] CONSOLE GRAPHICS & FPS TIPS:\n` +
     `  • Turn OFF Motion Blur & Depth of Field in game settings.\n` +
     `  • Enable 120Hz / Performance Mode in console display settings.\n` +
     `  • Set Field of View (FOV) to 105 - 115 if supported.`;
+}
 
-  copyToClipboard(text, `📋 Copied PS5 & Xbox Console Cheat Sheet for ${game.shortName}!`);
+window.copyConsoleCheatSheet = function (gameId) {
+  const game = findGame(gameId);
+  if (!game) return;
+  copyToClipboard(buildConsoleGuide(game), `Copied PS5 & Xbox console cheat sheet for ${game.shortName}`);
 };
 
 window.downloadConsoleGuideTxt = function (gameId) {
-  const game = GAMES_CATALOG.find((g) => g.id === gameId);
+  const game = findGame(gameId);
   if (!game) return;
-
   const filename = `${game.shortName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_console_setup.txt`;
-  const text = `================================================================================\n` +
-    `DANGLING DICE GAMING LAB™ — CONSOLE SETUP QUICK-GUIDE (PS5 & XBOX)\n` +
-    `Game: ${game.title}\n` +
-    `Target In-Game Audio Mix: ${game.audioProfile.targetMix}\n` +
-    `Website: https://games.dangling-dice-studios.com/\n` +
-    `================================================================================\n\n` +
-    `🎮 PLAYSTATION 5 (TEMPEST 3D NATIVE 5-BAND EQ)\n` +
-    `Location: Settings > Sound > Audio Output > Headphone Equalizer > Custom\n` +
-    `  • 100 Hz:  -3 dB (Cuts sub-bass mud and explosion artillery rumble)\n` +
-    `  • 400 Hz:  -1 dB (Clears voice / debris clutter)\n` +
-    `  • 1 kHz:    0 dB (Natural team comms & weapon reloads)\n` +
-    `  • 4 kHz:   +6 dB (CRITICAL: Isolates footsteps, tile clicks & broken glass)\n` +
-    `  • 10 kHz:  -3 dB (Tames shrill gunshot ear fatigue)\n\n` +
-    `🟢 XBOX SERIES X|S & ONE (DOLBY ACCESS 10-BAND EQ)\n` +
-    `Location: Xbox Store > Dolby Access app > Settings > Custom 1\n` +
-    `  • Values: ${game.audioProfile.dolbyValues}\n\n` +
-    `🎯 CONSOLE IN-GAME CONTROLLER SETTINGS\n` +
-    `  • Response Curve: ${game.controllerProfile.curveType}\n` +
-    `  • Left Stick Deadzone: ${game.controllerProfile.leftStickDeadzoneMin}\n` +
-    `  • Right Stick Deadzone: ${game.controllerProfile.rightStickDeadzoneMin}\n` +
-    `  • Max Deadzone: ${game.controllerProfile.stickDeadzoneMax}\n` +
-    `  • Sensitivity: Look (${game.controllerProfile.horizontalSens}) / ADS (${game.controllerProfile.verticalSens})\n` +
-    `  • Aim Assist Mode: ${game.controllerProfile.aimAssistType}\n\n` +
-    `⚡ CONSOLE GRAPHICS & FPS TIPS:\n` +
-    `  • Turn OFF Motion Blur & Depth of Field in game settings.\n` +
-    `  • Enable 120Hz / Performance Mode in console display settings.\n` +
-    `  • Set Field of View (FOV) to 105 - 115 if supported.`;
-
-  downloadTextFile(filename, text);
+  downloadTextFile(filename, buildConsoleGuide(game));
 };
 
 // Audio Setup Wizard Handlers
 window.selectAudioSetup = function (setupId) {
   activeAudioSetupId = setupId;
   renderAudioSetupWizard();
+  // Re-rendering replaced the pressed button; keep keyboard focus on the new one
+  document.querySelector('#audioSetupSelectorGrid .setup-option.active')?.focus();
 };
 
 window.downloadAudioSetupCheatSheet = function (setupId) {
@@ -1402,7 +1150,7 @@ STEP-BY-STEP SETUP INSTRUCTIONS:
 ${setup.steps.map((st, i) => `${i + 1}. ${st.replace(/<[^>]+>/g, '')}`).join('\n')}
 
 WINDOWS SOUND CONTROL PANEL SETTINGS (mmsys.cpl):
-${setup.windowsSettings.map((ws, i) => `- ${ws.replace(/<[^>]+>/g, '')}`).join('\n')}
+${setup.windowsSettings.map((ws) => `- ${ws.replace(/<[^>]+>/g, '')}`).join('\n')}
 
 CRITICAL PITFALL & HARDWARE TRAP:
 ${setup.pitfalls}
@@ -1414,24 +1162,27 @@ ${setup.pitfalls}
 
 window.copyAudioSetupChecklist = function (setupId) {
   const setup = AUDIO_SETUPS.find((s) => s.id === setupId) || AUDIO_SETUPS[0];
-  const text = `🎧 Setup: ${setup.title}\n` +
+  const text = `Setup: ${setup.title}\n` +
     `Target: ${setup.configuratorCheck}\n` +
     `Mode: ${setup.installMode}\n` +
     `Pitfall: ${setup.pitfalls}`;
-  copyToClipboard(text, `📋 Copied setup checklist for ${setup.shortTitle}!`);
+  copyToClipboard(text, `Copied setup checklist for ${setup.shortTitle}`);
 };
 
-// Search Bar Input, Floating Autocomplete & Keyboard Listeners
+// ============================================================================
+// Search input, combobox keyboard handling
+// ============================================================================
 const searchInput = document.getElementById('gameSearchInput');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
 
 function updateDropdownFocus(items) {
   items.forEach((item, idx) => {
-    if (idx === focusedDropdownIndex) {
-      item.classList.add('focused');
-      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    } else {
-      item.classList.remove('focused');
+    const focused = idx === focusedDropdownIndex;
+    item.classList.toggle('focused', focused);
+    item.setAttribute('aria-selected', String(focused));
+    if (focused) {
+      item.scrollIntoView({ block: 'nearest' });
+      searchInput?.setAttribute('aria-activedescendant', item.id);
     }
   });
 }
@@ -1439,7 +1190,7 @@ function updateDropdownFocus(items) {
 if (searchInput) {
   searchInput.addEventListener('input', (e) => {
     const val = e.target.value;
-    if (clearSearchBtn) clearSearchBtn.style.display = val ? 'block' : 'none';
+    if (clearSearchBtn) clearSearchBtn.style.display = val ? 'inline-flex' : 'none';
     renderSearchDropdown(val);
     renderGamesCatalog(val);
   });
@@ -1447,39 +1198,33 @@ if (searchInput) {
   searchInput.addEventListener('keydown', (e) => {
     const dropdown = document.getElementById('searchResultsDropdown');
     const isDropdownOpen = dropdown && dropdown.style.display !== 'none';
+    const items = dropdown ? dropdown.querySelectorAll('.search-option') : [];
 
     if (e.key === 'ArrowDown' && isDropdownOpen) {
       e.preventDefault();
-      const items = dropdown.querySelectorAll('.search-dropdown-item');
       if (items.length > 0) {
         focusedDropdownIndex = (focusedDropdownIndex + 1) % items.length;
         updateDropdownFocus(items);
       }
     } else if (e.key === 'ArrowUp' && isDropdownOpen) {
       e.preventDefault();
-      const items = dropdown.querySelectorAll('.search-dropdown-item');
       if (items.length > 0) {
         focusedDropdownIndex = (focusedDropdownIndex - 1 + items.length) % items.length;
         updateDropdownFocus(items);
       }
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (isDropdownOpen) {
-        const items = dropdown.querySelectorAll('.search-dropdown-item');
+      if (isDropdownOpen && items.length > 0) {
         const target = items[focusedDropdownIndex >= 0 ? focusedDropdownIndex : 0];
-        if (target) {
-          const gameId = target.getAttribute('data-game-id');
-          if (gameId) window.selectGameFromSearch(gameId);
-        }
+        const gameId = target?.getAttribute('data-game-id');
+        if (gameId) window.selectGameFromSearch(gameId);
       } else {
         const val = searchInput.value.trim();
         const firstMatch = GAMES_CATALOG.find((g) => matchesGameQuery(g, val));
-        if (firstMatch) {
-          window.selectGameFromSearch(firstMatch.id);
-        }
+        if (firstMatch) window.selectGameFromSearch(firstMatch.id);
       }
     } else if (e.key === 'Escape') {
-      if (dropdown) dropdown.style.display = 'none';
+      setDropdownOpen(false);
     }
   });
 
@@ -1504,10 +1249,9 @@ if (clearSearchBtn) {
 
 // Close search dropdown when clicking outside
 document.addEventListener('click', (e) => {
-  const searchContainer = document.querySelector('.search-bar-container');
-  const dropdown = document.getElementById('searchResultsDropdown');
-  if (dropdown && searchContainer && !searchContainer.contains(e.target)) {
-    dropdown.style.display = 'none';
+  const searchContainer = document.querySelector('.search');
+  if (searchContainer && !searchContainer.contains(e.target)) {
+    setDropdownOpen(false);
   }
 });
 
@@ -1515,44 +1259,44 @@ document.addEventListener('click', (e) => {
 const gearPills = document.querySelectorAll('.gear-filter-pill');
 gearPills.forEach((pill) => {
   pill.addEventListener('click', () => {
-    gearPills.forEach((p) => p.classList.remove('active'));
+    gearPills.forEach((p) => {
+      p.classList.remove('active');
+      p.setAttribute('aria-pressed', 'false');
+    });
     pill.classList.add('active');
+    pill.setAttribute('aria-pressed', 'true');
     activeGearCategory = pill.getAttribute('data-cat') || 'all';
     renderMasterAccessories(activeGearCategory);
   });
 });
 
+// Hero preview download uses whichever game is selected
+document.getElementById('heroEqDownloadBtn')?.addEventListener('click', () => window.downloadApoTxtConfig(selectedGameId));
+
+// Dashboard tabs: arrow keys / Home / End (delegated, survives re-renders)
+initTabKeyboard(document.getElementById('gameDashboardSection'));
+
 // App Startup
 document.addEventListener('DOMContentLoaded', () => {
   renderGameChips();
+  renderHeroEq();
   renderGamesCatalog('');
   renderGameDashboard();
   renderSoftwareGuide();
   renderAudioSetupWizard();
   renderMasterAccessories('all');
 
-  const chipsContainer = document.getElementById('gameChipsRow');
-  if (chipsContainer) {
-    chipsContainer.addEventListener('scroll', () => {
-      updateChipsArrows();
-    }, { passive: true });
-
-    chipsContainer.addEventListener('wheel', (e) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        chipsContainer.scrollLeft += e.deltaY;
-        updateChipsArrows();
-      }
-    }, { passive: false });
-  }
-
+  let resizeFrame = 0;
   window.addEventListener('resize', () => {
-    updateChipsArrows();
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(redrawCharts);
   });
 });
 
 // ============================================================================
 // Provably Fair Dice Arena & Duels Engine
+// Commit-reveal: the SHA-256 of the next server seed is published before the roll,
+// the seed itself is revealed after, and both rolls derive from HMAC-SHA256(seed, clientSeed:nonce).
 // ============================================================================
 let arenaState = {
   playerScore: 0,
@@ -1560,31 +1304,43 @@ let arenaState = {
   streak: Number(localStorage.getItem('dds_dice_streak') || 0),
   nonce: 1,
   isRolling: false,
+  clientSeed: '',
+  nextServerSeed: null,
+  nextServerHash: null,
 };
 
+const randomHex = (bytes) =>
+  Array.from(crypto.getRandomValues(new Uint8Array(bytes)))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
 function updateStreakBadge() {
-  const el = document.getElementById('arenaStreakCount');
-  if (el) el.textContent = arenaState.streak;
+  setText('arenaStreakCount', arenaState.streak);
 }
 
 function randomizeClientSeed() {
   const input = document.getElementById('arenaClientSeed');
   if (input) {
-    const randomHex = Array.from(crypto.getRandomValues(new Uint8Array(8)))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-    input.value = `seed_${randomHex}`;
-    showToast('🎲 New random client seed generated!');
+    input.value = `seed_${randomHex(8)}`;
+    showToast('New random client seed generated');
   }
 }
 
 function toggleProofDetails() {
   const content = document.getElementById('proofDetailsContent');
-  const icon = document.getElementById('proofToggleIcon');
+  const btn = document.getElementById('proofToggleBtn');
   if (content) {
     const isHidden = content.style.display === 'none';
-    content.style.display = isHidden ? 'flex' : 'none';
-    if (icon) icon.textContent = isHidden ? '▲' : '▼';
+    content.style.display = isHidden ? 'grid' : 'none';
+    if (btn) {
+      btn.setAttribute('aria-expanded', String(isHidden));
+      btn.classList.toggle('is-open', isHidden);
+    }
   }
 }
 
@@ -1611,13 +1367,20 @@ async function computeSha256Browser(text) {
     .join('');
 }
 
+// Generate and publish the commitment for the next roll
+async function prepareNextCommitment() {
+  arenaState.nextServerSeed = randomHex(32);
+  arenaState.nextServerHash = await computeSha256Browser(arenaState.nextServerSeed);
+  setText('proofNextHash', arenaState.nextServerHash);
+}
+
 async function playDiceDuel() {
   if (arenaState.isRolling) return;
   arenaState.isRolling = true;
 
   const diceSides = parseInt(document.getElementById('arenaDiceType')?.value || '20', 10);
-  const clientSeedInput = document.getElementById('arenaClientSeed');
-  const clientSeed = clientSeedInput?.value?.trim() || 'default_seed';
+  const clientSeed = document.getElementById('arenaClientSeed')?.value?.trim() || 'default_seed';
+  arenaState.clientSeed = clientSeed;
 
   const rollBtn = document.getElementById('rollDiceDuelBtn');
   const pBox = document.getElementById('playerDiceBox');
@@ -1630,29 +1393,32 @@ async function playDiceDuel() {
   const bannerText = document.getElementById('duelMatchText');
 
   if (rollBtn) rollBtn.disabled = true;
-  if (pBox) pBox.classList.add('rolling');
-  if (bBox) bBox.classList.add('rolling');
-  if (pCard) pCard.className = 'arena-player-card';
-  if (bCard) bCard.className = 'arena-player-card';
+  if (pBox) pBox.classList.add('is-rolling');
+  if (bBox) bBox.classList.add('is-rolling');
+  if (pCard) pCard.className = 'duel-player';
+  if (bCard) bCard.className = 'duel-player';
   if (banner) banner.style.display = 'none';
 
-  // Sound effect / haptic feedback
+  // Haptic feedback
   if ('vibrate' in navigator) navigator.vibrate(50);
 
-  // Animate rolls for 700ms
+  // Animate rolls for ~750ms
   const shakeInterval = setInterval(() => {
     if (pRoll) pRoll.textContent = Math.floor(Math.random() * diceSides) + 1;
     if (bRoll) bRoll.textContent = Math.floor(Math.random() * diceSides) + 1;
   }, 75);
 
-  const serverSecret = `dds_secret_${Date.now()}_${arenaState.nonce}`;
-  const serverHash = await computeSha256Browser(serverSecret);
-  const hmacSig = await computeHmacSha256Browser(serverSecret, `${clientSeed}:${arenaState.nonce}`);
+  if (!arenaState.nextServerSeed) await prepareNextCommitment();
+  const serverSeed = arenaState.nextServerSeed;
+  const serverHash = arenaState.nextServerHash;
+  const nonce = arenaState.nonce;
+  const message = `${clientSeed}:${nonce}`;
+  const hmacSig = await computeHmacSha256Browser(serverSeed, message);
 
   setTimeout(async () => {
     clearInterval(shakeInterval);
-    if (pBox) pBox.classList.remove('rolling');
-    if (bBox) bBox.classList.remove('rolling');
+    if (pBox) pBox.classList.remove('is-rolling');
+    if (bBox) bBox.classList.remove('is-rolling');
 
     // Deterministic dice derivation from HMAC
     const pVal = (parseInt(hmacSig.slice(0, 8), 16) % diceSides) + 1;
@@ -1663,31 +1429,30 @@ async function playDiceDuel() {
 
     arenaState.nonce++;
 
-    // Reveal Cryptographic proof
-    const hashEl = document.getElementById('proofServerHash');
-    const hmacEl = document.getElementById('proofHmac');
-    if (hashEl) hashEl.textContent = serverHash;
-    if (hmacEl) hmacEl.textContent = hmacSig;
+    // Reveal this roll's proof, then commit to the next one
+    setText('proofServerHash', serverHash);
+    setText('proofServerSeed', serverSeed);
+    setText('proofMessage', message);
+    setText('proofHmac', hmacSig);
+    prepareNextCommitment();
 
     // Evaluate Round
     if (pVal > bVal) {
       arenaState.playerScore++;
-      if (pCard) pCard.classList.add('winner');
-      if (bCard) bCard.classList.add('loser');
-      showToast(`🏆 Round won! You rolled ${pVal} vs Byte's ${bVal}!`);
+      if (pCard) pCard.classList.add('is-winner');
+      if (bCard) bCard.classList.add('is-loser');
+      showToast(`Round won: you rolled ${pVal} vs Byte's ${bVal}`, 'success');
     } else if (bVal > pVal) {
       arenaState.botScore++;
-      if (bCard) bCard.classList.add('winner');
-      if (pCard) pCard.classList.add('loser');
-      showToast(`⚔️ Round lost! Byte rolled ${bVal} vs your ${pVal}`);
+      if (bCard) bCard.classList.add('is-winner');
+      if (pCard) pCard.classList.add('is-loser');
+      showToast(`Round lost: Byte rolled ${bVal} vs your ${pVal}`);
     } else {
-      showToast(`🤝 It's a tie at ${pVal}!`);
+      showToast(`Tie at ${pVal}`);
     }
 
-    const pScoreBadge = document.getElementById('playerScoreBadge');
-    const bScoreBadge = document.getElementById('botScoreBadge');
-    if (pScoreBadge) pScoreBadge.textContent = `Rounds Won: ${arenaState.playerScore}`;
-    if (bScoreBadge) bScoreBadge.textContent = `Rounds Won: ${arenaState.botScore}`;
+    setText('playerScoreBadge', `Rounds won: ${arenaState.playerScore}`);
+    setText('botScoreBadge', `Rounds won: ${arenaState.botScore}`);
 
     // Check Match Completion (Best of 3)
     if (arenaState.playerScore >= 2 || arenaState.botScore >= 2) {
@@ -1696,16 +1461,16 @@ async function playDiceDuel() {
         arenaState.streak++;
         localStorage.setItem('dds_dice_streak', arenaState.streak);
         if (banner) {
-          banner.className = 'duel-match-banner';
-          bannerText.textContent = `👑 MATCH VICTORY! You defeated Byte 2-${arenaState.botScore}! Streak: ${arenaState.streak} 🔥`;
+          banner.className = 'callout duel-banner is-ok';
+          bannerText.textContent = `Match victory: you beat Byte 2-${arenaState.botScore}. Streak: ${arenaState.streak}`;
         }
         submitLeaderboardScore(arenaState.streak);
       } else {
         arenaState.streak = 0;
         localStorage.setItem('dds_dice_streak', 0);
         if (banner) {
-          banner.className = 'duel-match-banner loss';
-          bannerText.textContent = `💀 MATCH DEFEAT! Byte took the match 2-${arenaState.playerScore}. Streak reset!`;
+          banner.className = 'callout duel-banner is-error';
+          bannerText.textContent = `Match defeat: Byte took it 2-${arenaState.playerScore}. Streak reset.`;
         }
       }
       updateStreakBadge();
@@ -1720,8 +1485,10 @@ async function playDiceDuel() {
 }
 
 /**
- * 👑 Global Dice Duel Leaderboard API Integration
+ * Global Dice Duel Leaderboard API Integration
  */
+const leaderboardMessage = (text) => `<li class="muted small">${escapeHtml(text)}</li>`;
+
 async function loadLeaderboardStandings() {
   const container = document.getElementById('arenaLeaderboardList');
   if (!container) return;
@@ -1729,14 +1496,14 @@ async function loadLeaderboardStandings() {
   try {
     const res = await fetch(`${API_GATEWAY_URL}/v1/games/leaderboard/dice_duel`);
     if (!res.ok) {
-      container.innerHTML = `<div style="text-align: center; padding: 0.5rem; color: #64748b;">Leaderboard ready for new champion rolls!</div>`;
+      container.innerHTML = leaderboardMessage('Leaderboard ready for new champion rolls.');
       return;
     }
     const json = await res.json();
     const list = json?.data?.leaderboard || [];
     renderLeaderboardUi(list);
   } catch (err) {
-    container.innerHTML = `<div style="text-align: center; padding: 0.5rem; color: #64748b;">Standings available via API (/v1/games/leaderboard)</div>`;
+    container.innerHTML = leaderboardMessage('Standings are temporarily unavailable.');
   }
 }
 
@@ -1745,21 +1512,19 @@ function renderLeaderboardUi(standings = []) {
   if (!container) return;
 
   if (!standings || standings.length === 0) {
-    container.innerHTML = `<div style="text-align: center; padding: 0.5rem; color: #64748b;">No duel champions recorded yet. Claim Rank #1!</div>`;
+    container.innerHTML = leaderboardMessage('No duel champions recorded yet. Claim rank #1.');
     return;
   }
 
-  const medals = ['🥇', '🥈', '🥉'];
+  // Player names come from the API (user-submitted): always escape
   container.innerHTML = standings
     .slice(0, 5)
     .map((item, idx) => `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0.5rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
-        <div style="display: flex; align-items: center; gap: 0.4rem;">
-          <span>${medals[idx] || `#${idx + 1}`}</span>
-          <span style="font-weight: 700; color: #f1f5f9;">${String(item.playerName || 'Anonymous').slice(0, 18)}</span>
-        </div>
-        <span style="color: #fbbf24; font-family: var(--font-mono); font-weight: 700;">Streak: ${item.score} 🔥</span>
-      </div>
+      <li class="leaderboard-row${idx === 0 ? ' is-first' : ''}">
+        <span class="mono muted">#${idx + 1}</span>
+        <span class="ink">${escapeHtml(String(item.playerName || 'Anonymous').slice(0, 18))}</span>
+        <span class="mono push-right">Streak ${Number(item.score) || 0}</span>
+      </li>
     `)
     .join('');
 }
@@ -1767,7 +1532,7 @@ function renderLeaderboardUi(standings = []) {
 async function submitLeaderboardScore(streak) {
   if (!streak || streak < 1) return;
   const storedName = localStorage.getItem('dds_player_callsign') || 'Studio Champion';
-  
+
   try {
     const res = await fetch(`${API_GATEWAY_URL}/v1/games/leaderboard/submit`, {
       method: 'POST',
@@ -1784,7 +1549,7 @@ async function submitLeaderboardScore(streak) {
       }),
     });
     if (res.ok) {
-      showToast(`🏆 Win streak of ${streak} recorded to Global Leaderboard!`, 'success');
+      showToast(`Win streak of ${streak} recorded to the global leaderboard`, 'success');
       loadLeaderboardStandings();
     }
   } catch (err) {
@@ -1798,11 +1563,11 @@ window.toggleProofDetails = toggleProofDetails;
 window.playDiceDuel = playDiceDuel;
 window.refreshLeaderboard = loadLeaderboardStandings;
 
-// Initialize streak count and live leaderboard on boot
+// Initialize streak count, the first fairness commitment and the live leaderboard on boot
 updateStreakBadge();
+prepareNextCommitment();
 loadLeaderboardStandings();
 
 // Shared ecosystem shell behavior + hidden staff command palette (Ctrl+K)
 initStudioShell();
 initStaffCommandPalette();
-

@@ -113,8 +113,8 @@ Design-rule violations at baseline: see `scripts/design-baseline.json`
 | --- | --- | --- | --- |
 | dev | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 93 / 92) |
 | media | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 91 / 92) |
-| games | Next | see baseline | 92 / 92 baseline |
-| web | Pending | see baseline | 89 / 92 baseline |
+| games | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 92 / 92) |
+| web | Next | see baseline | 89 / 92 baseline |
 | beats | Pending | see baseline | 79 / 92 baseline |
 
 How an app migrates (Dev is the reference):
@@ -128,6 +128,9 @@ How an app migrates (Dev is the reference):
    of writing colors. Decorative icons use `<span data-icon="name">` placeholders hydrated with `icon()`.
 5. Escape all API/user data rendered with `innerHTML`; only `http(s)` URLs may become `href`s.
 6. `npm run lint:design:update` to lock the app at zero.
+
+Shared helpers added during migration: `initTabKeyboard(tablist)` (WAI-ARIA tabs), and in `base.css`
+`.tabs`/`.tab`, `.toast-stack`/`.toast`, `.tip-card` and `.callout.is-warn`.
 
 Notes:
 

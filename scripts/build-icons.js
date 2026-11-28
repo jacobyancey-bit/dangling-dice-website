@@ -26,6 +26,9 @@ export const ICONS = [
   'dice-5', 'smartphone', 'calculator', 'sun', 'moon', 'credit-card', 'mail', 'qr-code', 'globe',
   'chart-column', 'file-audio', 'headphones', 'mic', 'disc-3', 'trophy', 'list', 'book-open', 'archive',
   'clipboard-paste', 'film', 'coffee', 'tag', 'gift',
+  // Games: hardware, setup and dashboard tabs
+  'radar', 'sliders-horizontal', 'sliders-vertical', 'cable', 'usb', 'wifi', 'bluetooth', 'crosshair',
+  'keyboard', 'mouse', 'star', 'bot', 'file-code', 'message-circle', 'monitor', 'audio-lines',
 ];
 
 const extractInner = (svg) => {

@@ -7,6 +7,7 @@ import { icon } from './icons.js';
 
 export { icon, hydrateIcons } from './icons.js';
 export { initStudioShell } from './shell.js';
+export { initTabKeyboard } from './tabs.js';
 
 export const ITEM_CATEGORIES = [
   'Coding Tutorials',

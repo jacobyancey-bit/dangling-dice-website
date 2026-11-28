@@ -1,5 +1,5 @@
 import './style.css';
-import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell, icon, hydrateIcons } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell, initTabKeyboard, icon, hydrateIcons } from '@dangling-dice/shared';
 import { initHeroConsole } from './heroConsole.js';
 
 // Universal PWA Service Worker Registration
@@ -78,27 +78,6 @@ function switchDevSection(sectionId) {
     btn.tabIndex = selected ? 0 : -1;
   });
 }
-
-// WAI-ARIA tabs: Left/Right/Home/End move between sandbox tabs
-function initTabKeyboard() {
-  const list = document.getElementById('sandboxes');
-  if (!list) return;
-  list.addEventListener('keydown', (e) => {
-    const tabs = [...list.querySelectorAll('[role="tab"]')];
-    const i = tabs.indexOf(document.activeElement);
-    if (i < 0) return;
-    let next = null;
-    if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
-    else if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
-    else if (e.key === 'Home') next = tabs[0];
-    else if (e.key === 'End') next = tabs[tabs.length - 1];
-    if (!next) return;
-    e.preventDefault();
-    next.focus();
-    next.click();
-  });
-}
-
 
 // ============================================================================
 // 1. API Studio: Live Glass-Box Runner & Code Generator
@@ -943,7 +922,7 @@ function initRailwaySandboxUI() {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
   hydrateIcons();
-  initTabKeyboard();
+  initTabKeyboard(document.getElementById('sandboxes'));
   initHeroConsole();
   initApiStudio();
   initDataTypesStudio();

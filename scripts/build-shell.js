@@ -17,7 +17,7 @@ const PAGES = [
   { site: 'web', file: 'apps/web/index.html', options: { stash: true } },
   { site: 'beats', file: 'apps/beats/index.html' },
   { site: 'dev', file: 'apps/dev/index.html', options: { landmark: true } }, // migrated (Phase 3)
-  { site: 'games', file: 'apps/games/index.html' },
+  { site: 'games', file: 'apps/games/index.html', options: { landmark: true } }, // migrated (Phase 3)
   { site: 'media', file: 'apps/media/index.html', options: { landmark: true } }, // migrated (Phase 3)
 ];
 

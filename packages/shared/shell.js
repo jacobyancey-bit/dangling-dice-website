@@ -64,7 +64,7 @@ export function renderShell(site, { stash = false, landmark = false } = {}) {
   const tag = landmark ? 'header' : 'div';
   return `<${tag} class="dds-shell" data-dds-shell="${esc(site)}">
   <div class="dds-shell-inner">
-    <a class="dds-shell-brand" href="${brandHref}" aria-label="Dangling Dice Studios home">
+    <a class="dds-shell-brand" href="${brandHref}">
       ${icon('dice-5', { className: 'dds-shell-mark' })}
       <span class="dds-shell-name">Dangling Dice Studios</span>${site === 'web' ? '' : `<span class="dds-shell-sep" aria-hidden="true">/</span><span class="dds-shell-site">${esc(site)}</span>`}
     </a>
