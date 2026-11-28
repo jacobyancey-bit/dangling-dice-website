@@ -32,7 +32,8 @@
   --dds-measure: 58ch;
 
   /* ---------- Geometry ---------- */
-  --dds-radius-control: 6px; /* buttons, inputs, tags */
+  --dds-radius-control: 6px; /* buttons, inputs */
+  --dds-radius-tag: 4px;     /* monospace tags and badges */
   --dds-radius-panel: 8px;   /* cards, panels, dialogs */
   --dds-border-width: 1px;
   --dds-accent-bar: 3px;     /* left accent border on hero / featured blocks */
@@ -102,6 +103,16 @@
 :root[data-site='dev']   { --dds-accent: #2563EB; --dds-accent-hover: #1D4ED8; }
 :root[data-site='games'] { --dds-accent: #7C3AED; --dds-accent-hover: #6D28D9; }
 :root[data-site='media'] { --dds-accent: #047857; --dds-accent-hover: #065F46; }
+
+/* Every site's accent as a constant, for the hub's subdomain markers only (a 2px top border or
+ * a small status dot on a division card). CTAs always use the page's own --dds-accent. */
+:root {
+  --dds-site-web: #0E7490;
+  --dds-site-beats: #BE185D;
+  --dds-site-dev: #2563EB;
+  --dds-site-games: #7C3AED;
+  --dds-site-media: #047857;
+}
 
 /* ---------- Data-visualization palette (exception zone) ----------
  * Allowed ONLY inside charts, meters, DAW lanes and game boards (elements marked

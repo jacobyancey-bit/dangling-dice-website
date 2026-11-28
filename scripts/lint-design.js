@@ -49,6 +49,10 @@ for (const app of ['web', 'beats', 'dev', 'games', 'media']) {
   ];
   scopes[app] = files;
 }
+// The admin console (admin.html + css/main.css + js/admin.js) migrates separately (Phase 4)
+const ADMIN_FILES = ['admin.html', 'css/main.css', 'js/admin.js'].map((f) => path.join(root, 'apps', 'web', f));
+scopes.web = scopes.web.filter((f) => !ADMIN_FILES.includes(f));
+scopes.admin = ADMIN_FILES.filter((f) => fs.existsSync(f));
 
 // ---------- Rules ----------
 const NOT_EMOJI = new Set(['™', '©', '®']); // ™ © ® are brand/legal marks

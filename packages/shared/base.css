@@ -121,7 +121,7 @@
   gap: var(--dds-space-1);
   padding: 2px var(--dds-space-2);
   border: var(--dds-border);
-  border-radius: var(--dds-radius-control);
+  border-radius: var(--dds-radius-tag);
   background: var(--dds-surface-subtle);
   color: var(--dds-ink-muted);
   font-family: var(--dds-font-mono);
@@ -300,6 +300,28 @@
 .dds .tab:hover { color: var(--dds-ink); }
 .dds .tab.active { border-bottom-color: var(--dds-accent); color: var(--dds-ink); font-weight: 600; }
 .dds .tab .icon { width: 16px; height: 16px; }
+
+/* ---------- Dialogs (.modal-overlay > .modal[role=dialog]) ---------- */
+.dds .modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8vh var(--dds-space-4) var(--dds-space-4);
+  overflow-y: auto;
+  background: var(--dds-scrim);
+}
+.dds .modal {
+  width: min(560px, 100%);
+  padding: var(--dds-space-5);
+  border: var(--dds-border);
+  border-radius: var(--dds-radius-panel);
+  background: var(--dds-surface);
+}
+.dds .modal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-space-3); margin-bottom: var(--dds-space-4); }
+.dds .modal-actions { justify-content: flex-end; }
+.dds .modal-lg { width: min(820px, 100%); }
 
 /* ---------- Toasts (stacked, bottom-right) ---------- */
 .dds .toast-stack {

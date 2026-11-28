@@ -14,7 +14,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { renderShell } = await import(pathToFileURL(path.join(root, 'packages', 'shared', 'shell.js')).href);
 
 const PAGES = [
-  { site: 'web', file: 'apps/web/index.html', options: { stash: true } },
+  { site: 'web', file: 'apps/web/index.html', options: { stash: true, landmark: true } }, // migrated (Phase 3)
   { site: 'beats', file: 'apps/beats/index.html' },
   { site: 'dev', file: 'apps/dev/index.html', options: { landmark: true } }, // migrated (Phase 3)
   { site: 'games', file: 'apps/games/index.html', options: { landmark: true } }, // migrated (Phase 3)

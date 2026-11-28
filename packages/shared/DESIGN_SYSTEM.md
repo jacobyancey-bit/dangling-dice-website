@@ -114,8 +114,9 @@ Design-rule violations at baseline: see `scripts/design-baseline.json`
 | dev | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 93 / 92) |
 | media | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 91 / 92) |
 | games | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 92 / 92) |
-| web | Next | see baseline | 89 / 92 baseline |
-| beats | Pending | see baseline | 79 / 92 baseline |
+| web (landing) | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 89 / 92) |
+| admin | Phase 4 (own lint scope) | see baseline | 100 baseline |
+| beats | Next | see baseline | 79 / 92 baseline |
 
 How an app migrates (Dev is the reference):
 
@@ -130,7 +131,11 @@ How an app migrates (Dev is the reference):
 6. `npm run lint:design:update` to lock the app at zero.
 
 Shared helpers added during migration: `initTabKeyboard(tablist)` (WAI-ARIA tabs), and in `base.css`
-`.tabs`/`.tab`, `.toast-stack`/`.toast`, `.tip-card` and `.callout.is-warn`.
+`.tabs`/`.tab`, `.toast-stack`/`.toast`, `.tip-card`, `.modal-overlay`/`.modal` and `.callout.is-warn`.
+
+Hub markers: the landing page shows each subdomain only as a 2px top border and a status dot
+(`--dds-site-*` constants). Every action uses the page's own `--dds-accent`. Tags are 4px monospace
+(`--dds-radius-tag`); buttons and inputs are 6px.
 
 Notes:
 

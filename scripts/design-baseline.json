@@ -16,12 +16,12 @@
     "emoji": 7
   },
   "web": {
-    "gradient": 56,
-    "blur": 18,
-    "shadow": 41,
-    "radius_gt8": 25,
-    "hex_color": 446,
-    "emoji": 362
+    "gradient": 0,
+    "blur": 0,
+    "shadow": 0,
+    "radius_gt8": 0,
+    "hex_color": 0,
+    "emoji": 0
   },
   "beats": {
     "gradient": 31,
@@ -54,5 +54,13 @@
     "radius_gt8": 0,
     "hex_color": 0,
     "emoji": 0
+  },
+  "admin": {
+    "gradient": 42,
+    "blur": 15,
+    "shadow": 37,
+    "radius_gt8": 24,
+    "hex_color": 257,
+    "emoji": 156
   }
 }

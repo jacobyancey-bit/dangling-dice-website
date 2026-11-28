@@ -339,26 +339,7 @@
 .dds .item-desc { color: var(--dds-ink-muted); font-size: var(--dds-text-sm); }
 .dds .item-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--dds-space-2); margin-top: auto; font-size: var(--dds-text-sm); }
 
-/* ---------- Modal & toast ---------- */
-.dds .modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 8vh var(--dds-space-4) var(--dds-space-4);
-  overflow-y: auto;
-  background: var(--dds-scrim);
-}
-.dds .modal {
-  width: min(560px, 100%);
-  padding: var(--dds-space-5);
-  border: var(--dds-border);
-  border-radius: var(--dds-radius-panel);
-  background: var(--dds-surface);
-}
-.dds .modal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-space-3); margin-bottom: var(--dds-space-4); }
-.dds .modal-actions { justify-content: flex-end; }
+/* ---------- Toast ---------- */
 .dds .toast {
   position: fixed;
   right: var(--dds-space-4);

@@ -56,7 +56,7 @@ export function renderShell(site, { stash = false, landmark = false } = {}) {
     .join('');
 
   const stashBtn = stash
-    ? `<button type="button" class="dds-shell-icon-btn" onclick="toggleMyStash()" aria-label="My Studio Stash">${icon('archive')}<span id="stashCountBadge" class="dds-shell-count">0</span></button>`
+    ? `<button type="button" class="dds-shell-icon-btn" onclick="toggleMyStash()">${icon('archive')}<span class="dds-sr-only">My Studio Stash: </span><span id="stashCountBadge" class="dds-shell-count">0</span><span class="dds-sr-only"> saved items</span></button>`
     : '';
 
   // Legacy app CSS styles bare `header` elements with !important rules, so unmigrated apps get a

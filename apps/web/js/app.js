@@ -2,7 +2,17 @@
  * Dangling Dice Studios™ — Public Catalog & Developer Tools Client Application
  */
 
-import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
+import {
+  initStaffCommandPalette,
+  initPwaServiceWorker,
+  initStudioShell,
+  initTabKeyboard,
+  icon,
+  hydrateIcons,
+} from '@dangling-dice/shared';
+
+// Swap <span data-icon> placeholders for stroke icons before any handlers run
+hydrateIcons();
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -15,13 +25,36 @@ const API_BASE =
     ? "http://localhost:5000/api"
     : window.location.origin + "/api";
 
+function escapeHtml(str) {
+  if (str === null || str === undefined || str === "") return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Only http(s) URLs (or same-site paths/anchors when allowed) may become hrefs or srcs
+function safeUrl(raw, { allowRelative = true } = {}) {
+  const value = String(raw || "").trim();
+  if (!value) return "";
+  if (allowRelative && (value.startsWith("#") || (value.startsWith("/") && !value.startsWith("//")))) return value;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.href : "";
+  } catch (e) {
+    return "";
+  }
+}
+
 // YouTube Embed Helper with Privacy-Enhanced Mode (youtube-nocookie.com)
 function getYouTubeEmbedUrl(url) {
   if (!url) return null;
   try {
     const vMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
     const playlistMatch = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
-    
+
     // Privacy-Enhanced Mode (youtube-nocookie.com prevents tracking cookies until user plays):
     if (vMatch && playlistMatch) {
       return `https://www.youtube-nocookie.com/embed/${vMatch[1]}?list=${playlistMatch[1]}&autoplay=1`;
@@ -46,60 +79,82 @@ function getYouTubeEmbedUrl(url) {
   return null;
 }
 
+// ============================================================================
+// Dialogs: open/close with focus management; Escape closes the topmost one
+// ============================================================================
+const openDialogs = [];
+
+function openDialog(id, focusSelector) {
+  const overlay = document.getElementById(id);
+  if (!overlay) return;
+  if (overlay.style.display !== "flex") {
+    openDialogs.push({ id, returnTo: document.activeElement });
+  }
+  overlay.style.display = "flex";
+  const target = (focusSelector && overlay.querySelector(focusSelector)) || overlay.querySelector('button, [href], input, select, textarea');
+  target?.focus();
+}
+
+function closeDialog(id) {
+  const overlay = document.getElementById(id);
+  if (!overlay || overlay.style.display === "none") return;
+  overlay.style.display = "none";
+  const idx = openDialogs.map((d) => d.id).lastIndexOf(id);
+  if (idx !== -1) {
+    const [entry] = openDialogs.splice(idx, 1);
+    if (entry.returnTo && document.contains(entry.returnTo)) entry.returnTo.focus();
+  }
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const top = openDialogs[openDialogs.length - 1];
+  if (top) {
+    if (top.id === "cinemaModal") closeCinemaModal();
+    else closeDialog(top.id);
+    return;
+  }
+  const stash = document.getElementById("myStashDrawer");
+  if (stash && stash.style.display !== "none") toggleMyStash(false);
+});
+
+// Clicking the scrim (outside the dialog box) closes it
+document.addEventListener("click", (e) => {
+  const top = openDialogs[openDialogs.length - 1];
+  if (top && e.target === document.getElementById(top.id)) {
+    if (top.id === "cinemaModal") closeCinemaModal();
+    else closeDialog(top.id);
+  }
+});
+
 // Cinema Modal Controls
 function openCinemaModal(title, urlOrEmbed) {
-  const modal = document.getElementById("cinemaModal");
   const titleEl = document.getElementById("cinemaTitle");
   const iframeEl = document.getElementById("cinemaIframe");
 
-  // Pause corner mini-player if it is running to prevent overlapping audio
-  const dockIframe = document.getElementById("dockIframe");
-  if (dockIframe && isDockAudioActive) {
-    dockIframe.src = "";
-    const dockDrawer = document.getElementById("dockVideoDrawer");
-    if (dockDrawer) dockDrawer.style.display = "none";
-    const dock = document.getElementById("beatsDock");
-    const btn = document.getElementById("dockPlayBtn");
-    if (dock) dock.classList.remove("playing");
-    if (btn) btn.textContent = "▶ Play";
-    isDockAudioActive = false;
-  }
-  
   // Guarantee valid embed format in Privacy-Enhanced mode
-  let embedUrl = (urlOrEmbed && (urlOrEmbed.includes("youtube.com/embed/") || urlOrEmbed.includes("youtube-nocookie.com/embed/")))
+  const embedUrl = (urlOrEmbed && (urlOrEmbed.includes("youtube.com/embed/") || urlOrEmbed.includes("youtube-nocookie.com/embed/")))
     ? urlOrEmbed.replace("www.youtube.com/embed/", "www.youtube-nocookie.com/embed/")
     : (getYouTubeEmbedUrl(urlOrEmbed) || urlOrEmbed);
 
   if (titleEl) titleEl.textContent = title;
-  if (iframeEl) iframeEl.src = embedUrl;
-  if (modal) modal.style.display = "flex";
+  if (iframeEl) iframeEl.src = safeUrl(embedUrl, { allowRelative: false });
+  openDialog("cinemaModal");
 }
 
 function closeCinemaModal() {
-  const modal = document.getElementById("cinemaModal");
   const iframeEl = document.getElementById("cinemaIframe");
-  if (modal) modal.style.display = "none";
   if (iframeEl) iframeEl.src = "";
+  closeDialog("cinemaModal");
 }
 
 // Expose modal functions to window for inline HTML onclick handlers
 window.openCinemaModal = openCinemaModal;
 window.closeCinemaModal = closeCinemaModal;
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeCinemaModal();
-});
-
-document.addEventListener("click", (e) => {
-  const modal = document.getElementById("cinemaModal");
-  if (e.target === modal) closeCinemaModal();
-});
-
 // Logging helper (Developer Console)
 function logMessage(msg, type = "info") {
   if (type === "error") console.error(`[DanglingDice] ${msg}`);
-  else if (type === "success")
-    console.log(`%c[DanglingDice] ${msg}`, "color: #10b981;");
   else console.log(`[DanglingDice] ${msg}`);
 }
 
@@ -134,7 +189,11 @@ window.getStudioTelemetry = async function () {
   }
 };
 
+// ============================================================================
+// Catalog
+// ============================================================================
 let allResources = [];
+let renderedResources = [];
 let selectedCategory = "All";
 let searchQuery = "";
 let sortOption = "newest";
@@ -146,15 +205,9 @@ window.filterCategory = function (cat) {
   selectedCategory = cat;
   isCatalogExpanded = false;
   document.querySelectorAll(".pill-btn").forEach((btn) => {
-    const text = btn.textContent;
-    const matches =
-      (cat === "All" && text.includes("All")) ||
-      (cat === "Coding Tutorials" && text.includes("Coding")) ||
-      (cat === "Beats & Audio" && text.includes("Beats")) ||
-      (cat === "Mobile Apps" && text.includes("Mobile")) ||
-      (cat === "Studio Games" && text.includes("Games")) ||
-      (cat === "Developer Tools" && (text.includes("Dev Tools") || text.includes("Web Apps")));
-    btn.classList.toggle("active", matches);
+    const active = btn.dataset.cat === cat;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
   });
   renderCatalog();
 };
@@ -163,13 +216,16 @@ window.handleSearch = function (q) {
   searchQuery = (q || "").trim().toLowerCase();
   isCatalogExpanded = false;
   const clearBtn = document.getElementById("searchClearBtn");
-  if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
+  if (clearBtn) clearBtn.style.display = searchQuery ? "inline-flex" : "none";
   renderCatalog();
 };
 
 window.clearSearch = function () {
   const input = document.getElementById("catalogSearchInput");
-  if (input) input.value = "";
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
   searchQuery = "";
   isCatalogExpanded = false;
   const clearBtn = document.getElementById("searchClearBtn");
@@ -201,8 +257,21 @@ async function fetchResources() {
     renderCatalog();
   } catch (err) {
     if (grid)
-      grid.innerHTML = `<div style="grid-column: 1 / -1; color: #f87171; text-align: center; padding: 2rem;">Error: ${escapeHtml(err.message)}</div>`;
+      grid.innerHTML = `<div class="card empty-state"><p class="small">The catalog is temporarily unavailable. Please try again shortly.</p></div>`;
     logMessage(`Fetch error: ${err.message}`, "error");
+  }
+}
+
+function openCatalogItem(item) {
+  if (!item) return;
+  const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
+  const targetUrl = safeUrl(item.liveUrl || item.mediaUrl || "#catalog") || "#catalog";
+  if (ytEmbed) {
+    openCinemaModal(item.title || "Studio release", ytEmbed);
+  } else if (targetUrl.startsWith("#")) {
+    document.querySelector(targetUrl)?.scrollIntoView({ behavior: "smooth" });
+  } else {
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
   }
 }
 
@@ -225,26 +294,21 @@ function renderCatalog() {
   });
 
   // 2. Filter by Category & Search Query
-  let filtered = studioOnlyResources.filter((item) => {
-    const matchesCategory =
-      selectedCategory === "All" || item.category === selectedCategory;
+  const filtered = studioOnlyResources.filter((item) => {
+    const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
     if (!matchesCategory) return false;
     if (!searchQuery) return true;
 
     const titleMatch = (item.title || "").toLowerCase().includes(searchQuery);
-    const descMatch = (item.description || "")
-      .toLowerCase()
-      .includes(searchQuery);
+    const descMatch = (item.description || "").toLowerCase().includes(searchQuery);
     const catMatch = (item.category || "").toLowerCase().includes(searchQuery);
     const cleanQuery = searchQuery.replace(/^#/, "");
-    const tagsMatch = (item.tags || []).some((t) =>
-      t.toLowerCase().includes(cleanQuery),
-    );
+    const tagsMatch = (item.tags || []).some((t) => t.toLowerCase().includes(cleanQuery));
 
     return titleMatch || descMatch || catMatch || tagsMatch;
   });
 
-  // 2. Sort
+  // 3. Sort
   if (sortOption === "alpha") {
     filtered.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
   } else if (sortOption === "price-low") {
@@ -252,127 +316,104 @@ function renderCatalog() {
   } else if (sortOption === "price-high") {
     filtered.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
   } else {
-    filtered.sort(
-      (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
-    );
+    filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   }
 
-  // 3. Count Badge
+  // 4. Count Badge
   if (countBadge) {
     if (searchQuery || selectedCategory !== "All") {
-      countBadge.textContent = `${filtered.length} of ${studioOnlyResources.length} Releases`;
+      countBadge.textContent = `${filtered.length} of ${studioOnlyResources.length} releases`;
     } else {
-      countBadge.textContent = `${filtered.length} Studio ${filtered.length === 1 ? "Release" : "Releases"}`;
+      countBadge.textContent = `${filtered.length} studio ${filtered.length === 1 ? "release" : "releases"}`;
     }
   }
 
-  // 4. Empty State
+  // 5. Empty State
   if (filtered.length === 0) {
     if (expandWrapper) expandWrapper.style.display = "none";
     const filterNotice = searchQuery
-      ? `No items matching "<strong>${escapeHtml(searchQuery)}</strong>"${selectedCategory !== "All" ? ` in ${escapeHtml(selectedCategory)}` : ""}.`
-      : `No items found in category <strong>${escapeHtml(selectedCategory)}</strong>.`;
+      ? `No items match "<strong class="ink">${escapeHtml(searchQuery)}</strong>"${selectedCategory !== "All" ? ` in ${escapeHtml(selectedCategory)}` : ""}.`
+      : `No items found in <strong class="ink">${escapeHtml(selectedCategory)}</strong>.`;
 
     grid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1.5rem; color: var(--text-muted); border: 2px dashed var(--border-subtle); border-radius: var(--radius-md);">
-        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔍</div>
-        <h4 style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.5rem;">No matching releases found</h4>
-        <p style="margin-bottom: 1.25rem;">${filterNotice}</p>
-        <button class="btn btn-secondary btn-sm" onclick="clearSearch(); filterCategory('All');">Reset All Filters</button>
+      <div class="card empty-state">
+        <h3 class="tool-title">No matching releases</h3>
+        <p class="muted small">${filterNotice}</p>
+        <button type="button" class="btn btn-sm" onclick="clearSearch(); filterCategory('All');">Reset all filters</button>
       </div>
     `;
+    renderedResources = [];
     return;
   }
 
-  // 5. Expand Button Visibility & Label
+  // 6. Expand Button Visibility & Label
   const totalMatches = filtered.length;
   if (expandWrapper && toggleBtn) {
     if (totalMatches > RECENT_ROW_LIMIT) {
-      expandWrapper.style.display = "block";
+      expandWrapper.style.display = "flex";
       toggleBtn.innerHTML = isCatalogExpanded
-        ? "▲ Show Recent Uploads Only"
-        : `📂 View Entire Course Catalog (${totalMatches} Items) ▾`;
+        ? `Show recent uploads only${icon("chevron-down", { className: "is-flipped" })}`
+        : `View the entire catalog (${totalMatches} items)${icon("chevron-down")}`;
+      toggleBtn.setAttribute("aria-expanded", String(isCatalogExpanded));
     } else {
       expandWrapper.style.display = "none";
     }
   }
 
-  // 6. Slice to Recent Row unless Expanded
-  const itemsToRender = isCatalogExpanded
-    ? filtered
-    : filtered.slice(0, RECENT_ROW_LIMIT);
+  // 7. Slice to Recent Row unless Expanded
+  renderedResources = isCatalogExpanded ? filtered : filtered.slice(0, RECENT_ROW_LIMIT);
 
-  // 7. Render Grid Cards (Every card & thumbnail is 100% clickable)
-  grid.innerHTML = itemsToRender
-    .map((item) => {
-      const thumb = item.imageUrl || "/images/banner.jpg";
+  // 8. Cards: the title button opens the item (stretched over the card); data attributes, never inline JS
+  grid.innerHTML = renderedResources
+    .map((item, index) => {
+      const thumb = safeUrl(item.imageUrl) || "/images/banner.jpg";
       const ytEmbed = getYouTubeEmbedUrl(item.mediaUrl);
-      const safeTitle = escapeHtml(item.title).replace(/'/g, "\\'");
-      const targetUrl = item.liveUrl || item.mediaUrl || "#catalog";
+      const targetUrl = safeUrl(item.liveUrl || item.mediaUrl || "#catalog") || "#catalog";
       const isInternalAnchor = targetUrl.startsWith("#");
-      const safeTargetUrl = escapeHtml(targetUrl).replace(/'/g, "\\'");
+      const mediaUrl = safeUrl(item.mediaUrl, { allowRelative: false });
 
-      const cardClickHandler = ytEmbed
-        ? `openCinemaModal('${safeTitle}', '${ytEmbed}')`
-        : isInternalAnchor
-          ? `const el = document.querySelector('${safeTargetUrl}'); if (el) el.scrollIntoView({ behavior: 'smooth' });`
-          : `window.open('${safeTargetUrl}', '_blank', 'noopener,noreferrer')`;
-
-      let actionButtons = "";
-
+      let actionButton = "";
       if (item.isTool) {
         const isGithub = targetUrl.includes("github.com");
-        const actionLabel = isInternalAnchor
-          ? "Explore Sandboxes ⚡"
-          : isGithub
-            ? "View on GitHub ↗"
-            : "Launch Web App ↗";
-        actionButtons = `
-        <a href="${escapeHtml(targetUrl)}" onclick="event.stopPropagation();" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn ${isGithub ? "btn-secondary" : "btn-primary"} btn-sm" style="min-width: 152px;">
-          ${actionLabel}
-        </a>
-      `;
+        const label = isInternalAnchor ? "Explore sandboxes" : isGithub ? "View on GitHub" : "Launch web app";
+        actionButton = `<a href="${escapeHtml(targetUrl)}" ${isInternalAnchor ? "" : 'target="_blank" rel="noopener noreferrer"'} class="btn ${isGithub ? "" : "btn-primary"} btn-sm">${label}${isInternalAnchor ? "" : '<span class="sr-only"> (opens in a new tab)</span>'}</a>`;
       } else if (ytEmbed) {
-        actionButtons = `
-        <button class="btn btn-youtube btn-sm" style="min-width: 152px;" onclick="event.stopPropagation(); openCinemaModal('${safeTitle}', '${ytEmbed}')">▶ Stream on Site</button>
-      `;
-      } else if (item.mediaUrl && item.mediaUrl.includes("play.google.com")) {
-        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-playstore btn-sm" style="min-width: 152px;">▶ Google Play ↗</a>`;
-      } else if (item.mediaUrl) {
-        actionButtons = `<a href="${escapeHtml(item.mediaUrl)}" onclick="event.stopPropagation();" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="min-width: 152px;">▶ Open Channel ↗</a>`;
+        actionButton = `<button type="button" class="btn btn-sm" data-action="open" data-index="${index}">${icon("play")}Stream on site</button>`;
+      } else if (mediaUrl && mediaUrl.includes("play.google.com")) {
+        actionButton = `<a href="${escapeHtml(mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm">Google Play<span class="sr-only"> (opens in a new tab)</span></a>`;
+      } else if (mediaUrl) {
+        actionButton = `<a href="${escapeHtml(mediaUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm">Open channel<span class="sr-only"> (opens in a new tab)</span></a>`;
       }
 
       return `
-      <div class="resource-card ${item.isTool ? "resource-card-tool" : ""}" style="cursor: pointer;" onclick="${cardClickHandler}" title="Click to open ${escapeHtml(item.title)}">
-        <div class="resource-thumb-box">
-          <img src="${thumb}" alt="${escapeHtml(item.title)}" class="resource-thumb" onerror="this.src='/images/banner.jpg'" />
-          ${
-            ytEmbed
-              ? `
-            <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.45)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'">
-              <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #ff0033, #cc0000); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.15rem; box-shadow: 0 4px 16px rgba(255,0,51,0.5);">▶</div>
-            </div>
-          `
-              : ""
-          }
+      <article class="card resource-card">
+        <div class="resource-thumb">
+          <img src="${escapeHtml(thumb)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/images/banner.jpg'" />
+          ${ytEmbed ? `<span class="resource-play">${icon("play")}</span>` : ""}
         </div>
         <div class="resource-body">
-          <h3 class="resource-title">${escapeHtml(item.title)}</h3>
-          <p class="resource-desc">${escapeHtml(item.description)}</p>
-          <div class="resource-footer">
-            <span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">${escapeHtml(item.category || "Official Release")}</span>
-            ${actionButtons}
+          <h3 class="resource-title"><button type="button" class="resource-open" data-action="open" data-index="${index}">${escapeHtml(item.title)}</button></h3>
+          <p class="muted small">${escapeHtml(item.description)}</p>
+          <div class="resource-foot">
+            <span class="tag">${escapeHtml(item.category || "Official release")}</span>
+            ${actionButton}
           </div>
         </div>
-      </div>
+      </article>
     `;
     })
     .join("");
 }
 
+document.getElementById("resourcesGrid")?.addEventListener("click", (e) => {
+  const trigger = e.target.closest('[data-action="open"]');
+  if (!trigger) return;
+  openCatalogItem(renderedResources[Number(trigger.dataset.index)]);
+});
+
 /**
  * ============================================================================
- * Interactive MongoDB Connection URI & Query Inspector (100% Client-Side)
+ * MongoDB Connection URI & Query Inspector (100% Client-Side)
  * Strictly in-memory; zero network calls or credentials transmitted.
  * ============================================================================
  */
@@ -391,7 +432,7 @@ window.inspectMongoUri = function (uri) {
   let protocol = "Unknown";
   let host = "—";
   let dbName = "default (test)";
-  let warnings = [];
+  const warnings = [];
 
   try {
     if (cleanUri.startsWith("mongodb+srv://")) {
@@ -399,9 +440,7 @@ window.inspectMongoUri = function (uri) {
     } else if (cleanUri.startsWith("mongodb://")) {
       protocol = "mongodb (Standard Connection)";
     } else {
-      warnings.push(
-        "URI must start with either <code>mongodb://</code> or <code>mongodb+srv://</code>",
-      );
+      warnings.push("URI must start with either <code>mongodb://</code> or <code>mongodb+srv://</code>");
     }
 
     // Parse user:password@host/db
@@ -430,7 +469,7 @@ window.inspectMongoUri = function (uri) {
         forbiddenChars.forEach(({ char, code }) => {
           if (rawPassword.includes(char)) {
             warnings.push(
-              `Your password contains an unescaped <code>${char}</code> symbol. MongoDB requires this to be percent-encoded as <code>${code}</code> to prevent connection parser failures.`,
+              `Your password contains an unescaped <code>${escapeHtml(char)}</code> symbol. MongoDB requires this to be percent-encoded as <code>${code}</code> to prevent connection parser failures.`,
             );
           }
         });
@@ -457,17 +496,19 @@ window.inspectMongoUri = function (uri) {
 
     // Render Warnings or Health
     if (warnings.length > 0) {
-      if (resHealth)
-        resHealth.innerHTML =
-          '<span style="color: #f87171;">Syntax Issues Detected</span>';
+      if (resHealth) {
+        resHealth.textContent = "Syntax issues detected";
+        resHealth.className = "is-error";
+      }
       if (warningBox) {
         warningBox.style.display = "block";
-        warningBox.innerHTML = `⚠️ <strong>Configuration Alert:</strong><ul style="margin: 0.5rem 0 0 1rem; padding: 0;">${warnings.map((w) => `<li>${w}</li>`).join("")}</ul>`;
+        warningBox.innerHTML = `<strong>Configuration alert:</strong><ul class="tips-list">${warnings.map((w) => `<li>${w}</li>`).join("")}</ul>`;
       }
     } else {
-      if (resHealth)
-        resHealth.innerHTML =
-          '<span style="color: var(--neon-emerald);">Valid Connection String</span>';
+      if (resHealth) {
+        resHealth.textContent = "Valid connection string";
+        resHealth.className = "is-ok";
+      }
       if (warningBox) warningBox.style.display = "none";
     }
 
@@ -501,27 +542,18 @@ window.loadSampleUri = function () {
   }
 };
 
-// Universal Toast Notification System (10015.io inspired)
+// Toasts (shared .toast-stack); messages are always plain text
 window.showToast = function (message, type = "info") {
-  let container = document.getElementById("toastContainer");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "toastContainer";
-    container.className = "toast-container";
-    document.body.appendChild(container);
-  }
-
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
   const toast = document.createElement("div");
-  toast.className = `toast ${type === "success" ? "toast-success" : ""}`;
-  toast.innerHTML = message;
-
+  toast.className = `toast${type === "success" ? " toast-success" : type === "error" ? " toast-error" : ""}`;
+  toast.textContent = message;
   container.appendChild(toast);
 
   setTimeout(() => {
-    toast.classList.add("toast-fadeout");
-    setTimeout(() => {
-      if (toast.parentElement) toast.parentElement.removeChild(toast);
-    }, 300);
+    toast.classList.add("is-leaving");
+    setTimeout(() => toast.remove(), 300);
   }, 3200);
 };
 
@@ -529,571 +561,87 @@ window.copyEnvSnippet = function () {
   const snippet = document.getElementById("envOutputSnippet")?.textContent;
   if (snippet) {
     navigator.clipboard.writeText(snippet);
-    window.showToast(
-      "Sanitized .env snippet copied to clipboard! (Remember to substitute your real password)",
-      "success",
-    );
-  }
-};
-
-// WireGuard Sample Configuration Tools (10015.io & Transform.tools inspired)
-window.loadSampleWireGuard = function () {
-  const sample = `# Dangling Dice WireGuard Client Configuration
-# Generated for client tunnel (Zero Server Logs)
-[Interface]
-PrivateKey = aAAAa111SampleClientPrivateKeyHereGenerated1=
-Address = 10.13.13.2/32
-DNS = 1.1.1.1, 8.8.8.8
-
-[Peer]
-PublicKey = sSSSs222SampleServerPublicKeyHereValidated2=
-Endpoint = vpn.dangling-dice-studios.com:51820
-AllowedIPs = 0.0.0.0/0, ::/0
-PersistentKeepalive = 25`;
-
-  const output = document.getElementById("wgSampleOutput");
-  if (output) {
-    output.textContent = sample;
-    window.showToast("Loaded sample WireGuard client config!", "success");
-  }
-};
-
-window.copyWireGuardConfig = function () {
-  const output = document.getElementById("wgSampleOutput");
-  const text = output?.textContent;
-  if (text && !text.startsWith('# Click "Load Sample Config"')) {
-    navigator.clipboard.writeText(text);
-    window.showToast("WireGuard configuration copied to clipboard!", "success");
-  } else {
-    window.loadSampleWireGuard();
-    const generated = document.getElementById("wgSampleOutput")?.textContent;
-    if (generated) navigator.clipboard.writeText(generated);
-    window.showToast("Generated and copied sample config!", "success");
+    window.showToast("Sanitized .env snippet copied (remember to substitute your real password)", "success");
   }
 };
 
 // ============================================================================
-// Multi-Station Beats Audio Dock & Indie Music Radio Engine
+// Studio tech stack directory (verified partners)
 // ============================================================================
-let isDockAudioActive = false;
-let isPlaylistDrawerOpen = false;
-
-// 1. Official Dangling Beats Studio Stations (Privacy-Enhanced Mode via youtube-nocookie.com)
-const officialStations = [
+const FALLBACK_PARTNERS = [
   {
-    id: "lofi-drive",
-    title: "Dangling Beats • Lo-Fi Drive",
-    subtitle: "Official Lo-Fi Focus Radio",
-    badge: "Lo-Fi",
-    videoId: "2J-U0EUATHs",
-    url: "https://www.youtube-nocookie.com/embed/2J-U0EUATHs?list=PLAg2ptU_xF5c&autoplay=1&enablejsapi=1&playsinline=1",
+    slug: "atlas",
+    name: "MongoDB Atlas Cloud",
+    category: "Cloud Hosting & Databases",
+    description: "Fully managed cloud document database with auto-scaling, global clusters, and vector search.",
+    perkBadge: "Free 512MB M0 Cluster",
+    redirectUrl: "/go/atlas",
   },
   {
-    id: "dreamcore",
-    title: "Dangling Beats • Dreamcore",
-    subtitle: "Ethereal Ambient Soundscapes",
-    badge: "Dreamcore",
-    videoId: "BGW1y-9bVJc",
-    url: "https://www.youtube-nocookie.com/embed/BGW1y-9bVJc?list=PLByFVPrF7p0s&autoplay=1&enablejsapi=1&playsinline=1",
+    slug: "digitalocean",
+    name: "DigitalOcean Droplets",
+    category: "Cloud Hosting & Databases",
+    description: "Simple, scalable cloud computing and virtual machines built for developers and startups.",
+    perkBadge: "$200 Free 60-Day Credit",
+    redirectUrl: "/go/digitalocean",
   },
   {
-    id: "relaxing-jazz",
-    title: "Dangling Beats • Relaxing Jazz",
-    subtitle: "Smooth Rhodes & Jazzy Vibes",
-    badge: "Jazz",
-    videoId: "0YknzKYiDXo",
-    url: "https://www.youtube-nocookie.com/embed/0YknzKYiDXo?list=PLZzyR4Y8j_gA&autoplay=1&enablejsapi=1&playsinline=1",
+    slug: "vpn",
+    name: "Dangling Dice WireGuard VPN",
+    category: "Developer Tools",
+    description: "Ultra-fast in-kernel WireGuard encrypted tunnel with zero activity logs and leak protection.",
+    perkBadge: "100% Free Developer Tool",
+    redirectUrl: "/go/vpn",
   },
   {
-    id: "jk-pop",
-    title: "Dangling Beats • J/K Pop Background",
-    subtitle: "Upbeat Coding & Creative Rhythm",
-    badge: "Pop",
-    videoId: "8Z0e3VIb-4U",
-    url: "https://www.youtube-nocookie.com/embed/8Z0e3VIb-4U?list=PLUOqd5Jfm3gw&autoplay=1&enablejsapi=1&playsinline=1",
+    slug: "calculator",
+    name: "AI Calculator on Google Play",
+    category: "Mobile Apps",
+    description: "Smart Android homework solver with step-by-step arithmetic, scientific calculation, and AI OCR scanning.",
+    perkBadge: "Official Google Play App",
+    redirectUrl: "/go/calculator",
   },
   {
-    id: "yacht-rock",
-    title: "Dangling Beats • Yacht Rock",
-    subtitle: "Classic Sunset Grooves",
-    badge: "Groove",
-    videoId: "2Onu8sRtlk8",
-    url: "https://www.youtube-nocookie.com/embed/2Onu8sRtlk8?list=PLOQPFjHz5Vs4&autoplay=1&enablejsapi=1&playsinline=1",
-  },
-  {
-    id: "sleep-music",
-    title: "Dangling Beats • Sleep Music",
-    subtitle: "Deep Relaxation & Binaural Waves",
-    badge: "Sleep",
-    videoId: "fdBVmykxMqE",
-    url: "https://www.youtube-nocookie.com/embed/fdBVmykxMqE?list=PLJL6dnrrRw-k&autoplay=1&enablejsapi=1&playsinline=1",
-  },
-  {
-    id: "music-albums",
-    title: "Dangling Beats • Music Albums",
-    subtitle: "Full Studio Album Catalog",
-    badge: "Albums",
-    videoId: "YIaOzPji1Kk",
-    url: "https://www.youtube-nocookie.com/embed/YIaOzPji1Kk?list=PLR6uUDnIO7P0&autoplay=1&enablejsapi=1&playsinline=1",
-  },
-  {
-    id: "live-videos",
-    title: "Dangling Beats • Live Sessions",
-    subtitle: "Live Studio Broadcasts",
-    badge: "Live",
-    videoId: "YY8mKBKGM5o",
-    url: "https://www.youtube-nocookie.com/embed/YY8mKBKGM5o?list=PLFLqzwDKWUyQ&autoplay=1&enablejsapi=1&playsinline=1",
+    slug: "youtube",
+    name: "Dangling Beats Official Channel",
+    category: "Official Channels",
+    description: "Original lofi, dark trap, and synthwave instrumentals crafted for code sessions and content creators.",
+    perkBadge: "24/7 Focus Beats & Masterclasses",
+    redirectUrl: "/go/youtube",
   },
 ];
 
-// 2. Custom User Added Playlists (Persisted in localStorage)
-let customStations = [];
-try {
-  customStations = JSON.parse(localStorage.getItem("customBeatsStations") || "[]");
-} catch (e) {
-  customStations = [];
-}
-
-// 3. Featured Indie Music Producer Stations (Dynamically expanded via /api/showcase)
-let indieStations = [];
-
-let activeStationId = localStorage.getItem("activeBeatsStation") || "lofi-drive";
-
-function getActiveStation() {
-  return (
-    officialStations.find((s) => s.id === activeStationId) ||
-    customStations.find((s) => s.id === activeStationId) ||
-    indieStations.find((s) => s.id === activeStationId) ||
-    officialStations[0]
-  );
-}
-
-function renderStationsList() {
-  const customSection = document.getElementById("customStationsSection");
-  const customContainer = document.getElementById("customStationsList");
-  const officialContainer = document.getElementById("officialStationsList");
-  const indieContainer = document.getElementById("indieStationsList");
-
-  // Render Custom Playlists
-  if (customContainer && customSection) {
-    if (customStations.length > 0) {
-      customSection.style.display = "block";
-      customContainer.innerHTML = customStations
-        .map(
-          (s) => `
-          <div class="dock-station-item ${s.id === activeStationId ? "active" : ""}" onclick="selectStation('${s.id}')">
-            <div class="dock-station-info">
-              <span class="dock-station-title">${s.title}</span>
-              <span class="dock-station-sub" style="color: #67e8f9;">${s.subtitle}</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <span style="font-size: 0.72rem; color: ${s.id === activeStationId ? "#f472b6" : "var(--text-muted)"};">
-                ${s.id === activeStationId ? "▶ Playing" : "▶"}
-              </span>
-              <button type="button" onclick="removeCustomStation('${s.id}', event)" title="Remove playlist" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-size: 0.8rem; padding: 0.1rem 0.25rem;">&times;</button>
-            </div>
-          </div>
-        `
-        )
-        .join("");
-    } else {
-      customSection.style.display = "none";
-    }
-  }
-
-  // Render Official Dangling Beats Playlists
-  if (officialContainer) {
-    officialContainer.innerHTML = officialStations
-      .map(
-        (s) => `
-        <div class="dock-station-item ${s.id === activeStationId ? "active" : ""}" onclick="selectStation('${s.id}')">
-          <div class="dock-station-info">
-            <span class="dock-station-title">${s.title}</span>
-            <span class="dock-station-sub">${s.subtitle}</span>
-          </div>
-          <span style="font-size: 0.75rem; color: ${s.id === activeStationId ? "#f472b6" : "var(--text-muted)"};">
-            ${s.id === activeStationId ? "▶ Playing" : "▶"}
-          </span>
-        </div>
-      `
-      )
-      .join("");
-  }
-
-  // Render Indie Producer Stations
-  if (indieContainer) {
-    if (indieStations.length === 0) {
-      indieContainer.innerHTML = `
-        <div style="font-size: 0.72rem; color: var(--text-muted); padding: 0.5rem; text-align: center;">
-          No community beats yet. Click <strong>+ Submit Beats</strong> above!
-        </div>
-      `;
-    } else {
-      indieContainer.innerHTML = indieStations
-        .map(
-          (s) => `
-          <div class="dock-station-item ${s.id === activeStationId ? "active" : ""}" onclick="selectStation('${s.id}')">
-            <div class="dock-station-info">
-              <span class="dock-station-title">${s.title}</span>
-              <span class="dock-station-sub" style="color: #67e8f9;">${s.subtitle}</span>
-            </div>
-            <span style="font-size: 0.75rem; color: ${s.id === activeStationId ? "#f472b6" : "var(--text-muted)"};">
-              ${s.id === activeStationId ? "▶ Playing" : "▶"}
-            </span>
-          </div>
-        `
-        )
-        .join("");
-    }
-  }
-}
-
-window.toggleCustomStationForm = function () {
-  const form = document.getElementById("dockAddStationForm");
-  if (!form) return;
-  const isHidden = form.style.display === "none";
-  form.style.display = isHidden ? "block" : "none";
-  if (isHidden) {
-    const titleInput = document.getElementById("customStationTitle");
-    if (titleInput) titleInput.focus();
-  }
-};
-
-window.submitCustomStation = function () {
-  const titleInput = document.getElementById("customStationTitle");
-  const urlInput = document.getElementById("customStationUrl");
-  const title = titleInput?.value?.trim() || "";
-  const url = urlInput?.value?.trim() || "";
-
-  if (!url) {
-    window.showToast("Please enter a YouTube playlist or video link", "error");
-    return;
-  }
-
-  const embed = getYouTubeEmbedUrl(url);
-  if (!embed) {
-    window.showToast("Invalid YouTube URL. Please provide a playlist or watch link.", "error");
-    return;
-  }
-
-  const stationName = title || "Custom Beats Playlist";
-  const newStation = {
-    id: "custom-" + Date.now(),
-    title: stationName,
-    subtitle: "Custom YouTube Station",
-    badge: "Custom",
-    url: embed.includes("autoplay=1") ? embed : `${embed}${embed.includes("?") ? "&" : "?"}autoplay=1&enablejsapi=1`,
-    isCustom: true,
-  };
-
-  customStations.unshift(newStation);
-  try {
-    localStorage.setItem("customBeatsStations", JSON.stringify(customStations));
-  } catch (e) {}
-
-  if (titleInput) titleInput.value = "";
-  if (urlInput) urlInput.value = "";
-  window.toggleCustomStationForm();
-  renderStationsList();
-  window.selectStation(newStation.id);
-  window.showToast(`✅ Added & playing: ${stationName}`, "success");
-};
-
-window.removeCustomStation = function (stationId, event) {
-  if (event) event.stopPropagation();
-  customStations = customStations.filter((s) => s.id !== stationId);
-  try {
-    localStorage.setItem("customBeatsStations", JSON.stringify(customStations));
-  } catch (e) {}
-  if (activeStationId === stationId) {
-    window.selectStation(officialStations[0].id);
-  } else {
-    renderStationsList();
-  }
-  window.showToast("Station removed", "info");
-};
-
-function isMobileViewport() {
-  return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-window.togglePlaylistDrawer = function () {
-  const drawer = document.getElementById("dockPlaylistDrawer");
-  const backdrop = document.getElementById("dockBackdrop");
-  if (!drawer) return;
-  isPlaylistDrawerOpen = !isPlaylistDrawerOpen;
-  drawer.style.display = isPlaylistDrawerOpen ? "flex" : "none";
-  if (backdrop) {
-    backdrop.style.display = (isPlaylistDrawerOpen && isMobileViewport()) ? "block" : "none";
-  }
-  if (isPlaylistDrawerOpen) {
-    renderStationsList();
-  }
-};
-
-window.selectStation = function (stationId) {
-  activeStationId = stationId;
-  try {
-    localStorage.setItem("activeBeatsStation", stationId);
-  } catch (e) {}
-
-  const station = getActiveStation();
-  const titleEl = document.getElementById("dockTrackTitle");
-  const subEl = document.getElementById("dockTrackSubtitle");
-  if (titleEl) titleEl.textContent = station.title;
-  if (subEl) subEl.textContent = station.subtitle;
-
-  const iframe = document.getElementById("dockIframe");
-  const drawer = document.getElementById("dockVideoDrawer");
-  const dock = document.getElementById("beatsDock");
-  const btn = document.getElementById("dockPlayBtn");
-
-  // On desktop PC, show mini video drawer; on phone, stream background audio without blocking screen
-  if (drawer) {
-    drawer.style.display = isMobileViewport() ? "none" : "block";
-  }
-  if (dock) {
-    dock.classList.add("playing");
-    if (!isMobileViewport()) {
-      dock.classList.remove("minimized");
-    }
-  }
-  if (btn) btn.textContent = "⏸ Pause";
-  isDockAudioActive = true;
-
-  // Set iframe src synchronously within the click event to preserve browser user activation
-  if (iframe) {
-    const origin = window.location.origin;
-    let url = station.url;
-    if (!url.includes("origin=")) {
-      url += (url.includes("?") ? "&" : "?") + `origin=${encodeURIComponent(origin)}`;
-    }
-    iframe.src = url;
-  }
-
-  // Close drawer and backdrop after selection
-  isPlaylistDrawerOpen = false;
-  const pDrawer = document.getElementById("dockPlaylistDrawer");
-  if (pDrawer) pDrawer.style.display = "none";
-  const backdrop = document.getElementById("dockBackdrop");
-  if (backdrop) backdrop.style.display = "none";
-
-  renderStationsList();
-  window.showToast(`▶ Now Playing: ${station.title}`, "success");
-};
-
-window.openCurrentStationCinema = function () {
-  const station = getActiveStation();
-  if (window.openCinemaModal) {
-    window.openCinemaModal(station.title, station.url);
-  }
-};
-
-window.toggleDockAudio = function () {
-  const dock = document.getElementById("beatsDock");
-  const btn = document.getElementById("dockPlayBtn");
-  const drawer = document.getElementById("dockVideoDrawer");
-  const iframe = document.getElementById("dockIframe");
-  isDockAudioActive = !isDockAudioActive;
-
-  const currentStation = getActiveStation();
-
-  if (isDockAudioActive) {
-    if (dock) {
-      dock.classList.add("playing");
-      if (!isMobileViewport()) {
-        dock.classList.remove("minimized");
-      }
-    }
-    const minBtn = dock?.querySelector(".beats-dock-min-btn");
-    if (minBtn && dock && !dock.classList.contains("minimized")) {
-      minBtn.textContent = "—";
-    }
-
-    if (btn) btn.textContent = "⏸ Pause";
-    // On desktop, show video drawer; on mobile phone, keep hidden to save screen space
-    if (drawer) {
-      drawer.style.display = isMobileViewport() ? "none" : "block";
-    }
-    if (iframe) {
-      const origin = window.location.origin;
-      let url = currentStation.url;
-      if (!url.includes("origin=")) {
-        url += (url.includes("?") ? "&" : "?") + `origin=${encodeURIComponent(origin)}`;
-      }
-      iframe.src = url;
-    }
-    window.showToast(`▶ Streaming ${currentStation.title}`, "success");
-  } else {
-    if (dock) dock.classList.remove("playing");
-    if (btn) btn.textContent = "▶ Play";
-    if (iframe) iframe.src = "";
-    if (drawer) drawer.style.display = "none";
-  }
-};
-
-window.toggleDockMinimize = function () {
-  const dock = document.getElementById("beatsDock");
-  const minBtn = dock?.querySelector(".beats-dock-min-btn");
-  if (!dock) return;
-  const isMin = dock.classList.toggle("minimized");
-  if (minBtn) minBtn.textContent = isMin ? "+" : "—";
-
-  // Hide playlist drawer if minimized
-  if (isMin) {
-    const drawer = document.getElementById("dockPlaylistDrawer");
-    if (drawer) drawer.style.display = "none";
-    const backdrop = document.getElementById("dockBackdrop");
-    if (backdrop) backdrop.style.display = "none";
-    isPlaylistDrawerOpen = false;
-  }
-
-  try {
-    localStorage.setItem("beatsDockMinimized", isMin ? "true" : "false");
-  } catch (e) {}
-};
-
-function initDockState() {
-  const isMobile = isMobileViewport();
-  try {
-    const savedMin = localStorage.getItem("beatsDockMinimized");
-    const dock = document.getElementById("beatsDock");
-    const minBtn = dock?.querySelector(".beats-dock-min-btn");
-
-    // Phone vs PC separation:
-    // On mobile phone, start minimized by default so it never covers the screen.
-    // On desktop PC, start open unless the user previously minimized it.
-    if (savedMin === "true" || (savedMin === null && isMobile)) {
-      if (dock) dock.classList.add("minimized");
-      if (minBtn) minBtn.textContent = "+";
-    }
-  } catch (e) {}
-
-  const currentStation = getActiveStation();
-  const titleEl = document.getElementById("dockTrackTitle");
-  const subEl = document.getElementById("dockTrackSubtitle");
-  if (titleEl) titleEl.textContent = currentStation.title;
-  if (subEl) subEl.textContent = currentStation.subtitle;
-
-  renderStationsList();
-
-  const dockPlayBtn = document.getElementById("dockPlayBtn");
-  if (dockPlayBtn) {
-    dockPlayBtn.onclick = function (e) {
-      if (e) e.preventDefault();
-      window.toggleDockAudio();
-    };
-  }
-}
-
-// Studio Tech Stack Directory (Wes Bos inspired)
 async function fetchTechStack() {
   const grid = document.getElementById("techStackGrid");
   if (!grid) return;
 
+  let partners = [];
   try {
     const res = await fetch(`${API_BASE}/affiliates`);
-    let partners = [];
     if (res.ok) {
       const json = await res.json();
       partners = json.data || [];
     }
-
-    if (!partners || partners.length === 0) {
-      partners = [
-        {
-          slug: "atlas",
-          name: "MongoDB Atlas Cloud",
-          category: "Cloud Hosting & Databases",
-          description:
-            "Fully managed cloud document database with auto-scaling, global clusters, and vector search.",
-          perkBadge: "Free 512MB M0 Cluster",
-          icon: "🍃",
-          redirectUrl: "/go/atlas",
-        },
-        {
-          slug: "digitalocean",
-          name: "DigitalOcean Droplets",
-          category: "Cloud Hosting & Databases",
-          description:
-            "Simple, scalable cloud computing and virtual machines built for developers and startups.",
-          perkBadge: "$200 Free 60-Day Credit",
-          icon: "🌊",
-          redirectUrl: "/go/digitalocean",
-        },
-        {
-          slug: "vpn",
-          name: "Dangling Dice WireGuard VPN",
-          category: "Developer Tools",
-          description:
-            "Ultra-fast in-kernel WireGuard encrypted tunnel with zero activity logs and leak protection.",
-          perkBadge: "100% Free Developer Tool",
-          icon: "🛡️",
-          redirectUrl: "/go/vpn",
-        },
-        {
-          slug: "calculator",
-          name: "AI Calculator on Google Play",
-          category: "Mobile Apps",
-          description:
-            "Smart Android homework solver with step-by-step arithmetic, scientific calculation, and AI OCR scanning.",
-          perkBadge: "Official Google Play App",
-          icon: "📱",
-          redirectUrl: "/go/calculator",
-        },
-        {
-          slug: "youtube",
-          name: "Dangling Beats Official Channel",
-          category: "Official Channels",
-          description:
-            "Original lofi, dark trap, and synthwave instrumentals crafted for code sessions and content creators.",
-          perkBadge: "24/7 Focus Beats & Masterclasses",
-          icon: "🎧",
-          redirectUrl: "/go/youtube",
-        },
-      ];
-    }
-
-    grid.innerHTML = partners
-      .map(
-        (p) => `
-      <div class="tech-stack-card">
-        <div>
-          <div class="tech-card-header">
-            <span class="tech-card-icon">${escapeHtml(p.icon || "⚡")}</span>
-            <span class="tech-card-badge">${escapeHtml(p.perkBadge || "Verified Partner")}</span>
-          </div>
-          <div class="pill-tag pill-tag-cyan" style="display: inline-block; margin-bottom: 0.5rem; font-size: 0.68rem; padding: 0.15rem 0.5rem;">
-            ${escapeHtml(p.category || "Tech Stack")}
-          </div>
-          <h3 class="tech-card-title">${escapeHtml(p.name)}</h3>
-          <p class="tech-card-desc">${escapeHtml(p.description)}</p>
-        </div>
-        <div class="tech-card-footer">
-          <span style="font-size: 0.72rem; color: var(--text-muted);">
-            Verified Partner Perk
-          </span>
-          <a href="${escapeHtml(p.redirectUrl)}?src=tech_stack" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
-            Access Deal ↗
-          </a>
-        </div>
-      </div>
-    `,
-      )
-      .join("");
   } catch (err) {
     logMessage(`Failed to load tech stack: ${err.message}`, "error");
   }
-}
+  if (!partners || partners.length === 0) partners = FALLBACK_PARTNERS;
 
-function escapeHtml(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  grid.innerHTML = partners
+    .map((p) => {
+      const href = safeUrl(p.redirectUrl);
+      return `
+      <article class="card tool-card">
+        <p class="eyebrow mono">${escapeHtml(p.category || "Tech stack")}</p>
+        <h3 class="tool-title">${escapeHtml(p.name)}</h3>
+        <p class="muted small">${escapeHtml(p.description)}</p>
+        <div class="tool-foot">
+          <span class="tag">${escapeHtml(p.perkBadge || "Verified partner")}</span>
+          ${href ? `<a href="${escapeHtml(href)}?src=tech_stack" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-sm push-right">Access deal<span class="sr-only"> for ${escapeHtml(p.name)} (opens in a new tab)</span></a>` : ""}
+        </div>
+      </article>`;
+    })
+    .join("");
 }
 
 // =========================================================================
@@ -1101,7 +649,7 @@ function escapeHtml(str) {
 // =========================================================================
 const SANDBOX_PRESETS = {
   schema: {
-    title: "🧩 JSON & SQL Schema Converter",
+    title: "JSON & SQL schema converter",
     endpoint: "/v1/schema/infer",
     payload: {
       rootName: "UserAccount",
@@ -1115,7 +663,7 @@ const SANDBOX_PRESETS = {
     },
   },
   geo: {
-    title: "🗺️ Land Acreage & GPS Calculator",
+    title: "Land acreage & GPS calculator",
     endpoint: "/v1/geo/parcel-metrics",
     payload: {
       coordinates: [
@@ -1127,7 +675,7 @@ const SANDBOX_PRESETS = {
     },
   },
   privacy: {
-    title: "🛡️ Sensitive Data & Log Redactor",
+    title: "Sensitive data & log redactor",
     endpoint: "/v1/privacy/redact",
     payload: {
       mode: "mask",
@@ -1135,7 +683,7 @@ const SANDBOX_PRESETS = {
     },
   },
   finance: {
-    title: "💰 Loan Payoff & ROI Calculator",
+    title: "Loan payoff & ROI calculator",
     endpoint: "/v1/finance/amortization",
     payload: {
       principal: 250000,
@@ -1146,23 +694,32 @@ const SANDBOX_PRESETS = {
 };
 
 let activeSandboxKey = "schema";
+let sandboxOpener = null;
 
 window.openCloudSandbox = async function (key) {
   const preset = SANDBOX_PRESETS[key] || SANDBOX_PRESETS.schema;
   activeSandboxKey = key in SANDBOX_PRESETS ? key : "schema";
+  sandboxOpener = document.activeElement;
   const drawer = document.getElementById("cloudSandboxDrawer");
   const titleEl = document.getElementById("sandboxTitle");
   const badgeEl = document.getElementById("sandboxBadge");
   const inputEl = document.getElementById("sandboxInput");
 
   if (titleEl) titleEl.textContent = preset.title;
-  if (badgeEl) badgeEl.textContent = `LIVE CLOUD SANDBOX • POST ${preset.endpoint}`;
+  if (badgeEl) badgeEl.textContent = `Live cloud sandbox · POST ${preset.endpoint}`;
   if (inputEl) inputEl.value = JSON.stringify(preset.payload, null, 2);
   if (drawer) {
-    drawer.style.display = "block";
+    drawer.style.display = "grid";
     drawer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    inputEl?.focus({ preventScroll: true });
   }
   await window.runCloudSandbox();
+};
+
+window.closeCloudSandbox = function () {
+  const drawer = document.getElementById("cloudSandboxDrawer");
+  if (drawer) drawer.style.display = "none";
+  if (sandboxOpener && document.contains(sandboxOpener)) sandboxOpener.focus();
 };
 
 window.runCloudSandbox = async function () {
@@ -1190,7 +747,7 @@ window.runCloudSandbox = async function () {
     });
     const json = await res.json();
     if (labelEl) {
-      labelEl.textContent = `Live Engine Output (${json.latencyMs ?? 1}ms • ${res.status} OK)`;
+      labelEl.textContent = `Live engine output (${json.latencyMs ?? 1}ms · HTTP ${res.status})`;
     }
     if (activeSandboxKey === "finance" && json.data?.schedule) {
       outputEl.textContent = JSON.stringify(
@@ -1215,40 +772,42 @@ window.runCloudSandbox = async function () {
 // ============================================================================
 // Multi-Category Indie Developer & Creator Showcase
 // ============================================================================
-function populateCategorySpotlight(prefix, app, defaultCategory) {
-  if (!app) return;
-  const titleEl = document.getElementById(`${prefix}SpotlightTitle`);
-  const taglineEl = document.getElementById(`${prefix}SpotlightTagline`);
-  const descEl = document.getElementById(`${prefix}SpotlightDesc`);
-  const authorEl = document.getElementById(`${prefix}SpotlightAuthor`);
-  const liveEl = document.getElementById(`${prefix}SpotlightLive`);
-  const githubEl = document.getElementById(`${prefix}SpotlightGithub`);
-  const badgeEl = document.getElementById(`${prefix}SpotlightCatBadge`);
-  const stackEl = document.getElementById(`${prefix}SpotlightStack`);
+const tagListHtml = (items = []) => items.map((tech) => `<li class="tag">${escapeHtml(tech)}</li>`).join("");
 
-  if (titleEl) titleEl.textContent = app.title;
-  if (taglineEl) taglineEl.textContent = app.tagline;
-  if (descEl) descEl.textContent = app.description;
-  if (authorEl) {
-    authorEl.textContent = app.authorSocial ? `${app.authorName} (${app.authorSocial})` : app.authorName;
-  }
-  if (liveEl) liveEl.href = app.appUrl;
-  if (githubEl) {
-    if (app.githubUrl) {
-      githubEl.href = app.githubUrl;
-      githubEl.style.display = "inline-flex";
-    } else {
-      githubEl.style.display = "none";
-    }
-  }
-  if (badgeEl) badgeEl.textContent = app.category || defaultCategory;
-  if (stackEl && Array.isArray(app.techStack)) {
-    const pillClass = prefix === "creator" ? "pill-tag-purple" : prefix === "music" ? "pill-tag-pink" : "pill-tag-cyan";
-    stackEl.innerHTML = app.techStack
-      .map((tech) => `<span class="pill-tag ${pillClass}">${escapeHtml(tech)}</span>`)
-      .join("");
+function setLink(el, url) {
+  if (!el) return;
+  const href = safeUrl(url, { allowRelative: false });
+  if (href) {
+    el.href = href;
+    el.style.display = "";
+  } else {
+    el.style.display = "none";
   }
 }
+
+function populateSpotlight(ids, app, defaultCategory) {
+  if (!app) return;
+  const el = (key) => document.getElementById(ids[key]);
+  if (el("title")) el("title").textContent = app.title;
+  if (el("tagline")) el("tagline").textContent = app.tagline;
+  if (el("desc")) el("desc").textContent = app.description;
+  if (el("author")) el("author").textContent = app.authorSocial ? `${app.authorName} (${app.authorSocial})` : app.authorName;
+  setLink(el("live"), app.appUrl);
+  setLink(el("github"), app.githubUrl);
+  if (el("category")) el("category").textContent = app.category || defaultCategory;
+  if (el("stack") && Array.isArray(app.techStack)) el("stack").innerHTML = tagListHtml(app.techStack);
+}
+
+const spotlightIds = (prefix) => ({
+  title: `${prefix}SpotlightTitle`,
+  tagline: `${prefix}SpotlightTagline`,
+  desc: `${prefix}SpotlightDesc`,
+  author: `${prefix}SpotlightAuthor`,
+  live: `${prefix}SpotlightLive`,
+  github: `${prefix}SpotlightGithub`,
+  category: `${prefix}SpotlightCatBadge`,
+  stack: `${prefix}SpotlightStack`,
+});
 
 async function fetchDevShowcase() {
   try {
@@ -1257,75 +816,37 @@ async function fetchDevShowcase() {
     const json = await res.json();
     const data = json.data || {};
 
-    // 1. Populate Category-Specific Spotlights across all Suites
+    // 1. Category spotlights across all suites
     const spotlights = data.spotlights || {};
-    populateCategorySpotlight("creator", spotlights.creator, "Social & Video");
-    populateCategorySpotlight("music", spotlights.music, "Audio & Music");
-    populateCategorySpotlight("developer", spotlights.developer, "Developer Tools");
+    populateSpotlight(spotlightIds("creator"), spotlights.creator, "Social & Video");
+    populateSpotlight(spotlightIds("music"), spotlights.music, "Audio & Music");
+    populateSpotlight(spotlightIds("developer"), spotlights.developer, "Developer Tools");
 
-    // 1b. Update Dynamic Indie Music Producer Stations in Floating Beats Dock
-    if (Array.isArray(data.projects)) {
-      const musicProjects = data.projects.filter(
-        (p) => p.categoryGroup === "music" || p.category === "Audio & Music"
-      );
-      if (musicProjects.length > 0) {
-        indieStations = musicProjects.map((p) => ({
-          id: p._id,
-          title: p.title,
-          subtitle: `Producer: ${p.authorSocial || p.authorName}`,
-          badge: "Indie Producer",
-          url: getYouTubeEmbedUrl(p.appUrl) || p.appUrl,
-        }));
-        renderStationsList();
-      }
-    }
-
-    // 2. Render App of the Week in Central Community Section
+    // 2. App of the week
     const aotw = data.appOfTheWeek || spotlights.developer || spotlights.music || spotlights.creator;
-    if (aotw) {
-      const titleEl = document.getElementById("aotwTitle");
-      const taglineEl = document.getElementById("aotwTagline");
-      const descEl = document.getElementById("aotwDescription");
-      const authorEl = document.getElementById("aotwAuthor");
-      const liveLinkEl = document.getElementById("aotwLiveLink");
-      const githubLinkEl = document.getElementById("aotwGithubLink");
-      const categoryEl = document.getElementById("aotwCategory");
-      const stackEl = document.getElementById("aotwTechStack");
+    populateSpotlight(
+      {
+        title: "aotwTitle",
+        tagline: "aotwTagline",
+        desc: "aotwDescription",
+        author: "aotwAuthor",
+        live: "aotwLiveLink",
+        github: "aotwGithubLink",
+        category: "aotwCategory",
+        stack: "aotwTechStack",
+      },
+      aotw,
+      "Developer Tool",
+    );
 
-      if (titleEl) titleEl.textContent = aotw.title;
-      if (taglineEl) taglineEl.textContent = aotw.tagline;
-      if (descEl) descEl.textContent = aotw.description;
-      if (authorEl) {
-        authorEl.textContent = aotw.authorSocial
-          ? `${aotw.authorName} (${aotw.authorSocial})`
-          : aotw.authorName;
-      }
-      if (liveLinkEl) liveLinkEl.href = aotw.appUrl;
-      if (githubLinkEl) {
-        if (aotw.githubUrl) {
-          githubLinkEl.href = aotw.githubUrl;
-          githubLinkEl.style.display = "inline-flex";
-        } else {
-          githubLinkEl.style.display = "none";
-        }
-      }
-      if (categoryEl) categoryEl.textContent = aotw.category;
-      if (stackEl && Array.isArray(aotw.techStack)) {
-        stackEl.innerHTML = aotw.techStack
-          .map((tech) => `<span class="pill-tag pill-tag-cyan">${escapeHtml(tech)}</span>`)
-          .join("");
-      }
-    }
-
-    // 3. Render Showcase Grid
+    // 3. Showcase grid
     const gridEl = document.getElementById("devShowcaseGrid");
     if (!gridEl) return;
 
     if (!data.projects || data.projects.length === 0) {
       gridEl.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem; color: var(--text-muted);">
-          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🛠️</div>
-          <div>Be the first indie creator featured! Click <strong>+ Submit Your App</strong> above.</div>
+        <div class="card empty-state">
+          <p class="small muted">Be the first indie creator featured: use <strong class="ink">Submit your app</strong> above.</p>
         </div>
       `;
       return;
@@ -1333,42 +854,20 @@ async function fetchDevShowcase() {
 
     gridEl.innerHTML = data.projects
       .map((proj) => {
-        const stackBadges = (proj.techStack || [])
-          .slice(0, 3)
-          .map((t) => `<span class="pill-tag pill-tag-purple" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">${escapeHtml(t)}</span>`)
-          .join(" ");
-
-        const safeAppUrl = proj.appUrl && (proj.appUrl.startsWith('http://') || proj.appUrl.startsWith('https://'))
-          ? encodeURI(proj.appUrl)
-          : '#';
-
+        const appUrl = safeUrl(proj.appUrl, { allowRelative: false });
+        const description = String(proj.description || "");
         return `
-          <div class="tech-stack-card" style="border-color: ${proj.isAppOfTheWeek ? 'rgba(245, 158, 11, 0.4)' : 'var(--border-subtle)'};">
-            <div>
-              <div class="tech-card-header">
-                <span class="tech-card-icon">🚀</span>
-                <span class="tech-card-badge" style="color: ${proj.isAppOfTheWeek ? '#fbbf24' : 'var(--neon-cyan)'};">
-                  ${proj.isAppOfTheWeek ? '⭐ Active Spotlight' : escapeHtml(proj.category)}
-                </span>
-              </div>
-              <div style="margin-bottom: 0.4rem; display: flex; gap: 0.3rem; flex-wrap: wrap;">
-                ${stackBadges}
-              </div>
-              <h3 class="tech-card-title">${escapeHtml(proj.title)}</h3>
-              <p style="font-size: 0.78rem; font-weight: 600; color: var(--neon-cyan); margin-bottom: 0.4rem;">
-                ${escapeHtml(proj.tagline)}
-              </p>
-              <p class="tech-card-desc">${escapeHtml(proj.description.slice(0, 140))}${proj.description.length > 140 ? '...' : ''}</p>
+          <article class="card tool-card${proj.isAppOfTheWeek ? " is-inhouse" : ""}">
+            <p class="eyebrow mono">${proj.isAppOfTheWeek ? "Active spotlight" : escapeHtml(proj.category)}</p>
+            <h3 class="tool-title">${escapeHtml(proj.title)}</h3>
+            <p class="tool-tagline">${escapeHtml(proj.tagline)}</p>
+            <p class="muted small">${escapeHtml(description.slice(0, 140))}${description.length > 140 ? "..." : ""}</p>
+            <ul class="tag-list" aria-label="Tech stack">${tagListHtml((proj.techStack || []).slice(0, 3))}</ul>
+            <div class="tool-foot">
+              <span class="small muted">by <strong class="ink">${escapeHtml(proj.authorName)}</strong></span>
+              ${appUrl ? `<a href="${escapeHtml(appUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm push-right">Try app<span class="sr-only"> ${escapeHtml(proj.title)} (opens in a new tab)</span></a>` : ""}
             </div>
-            <div class="tech-card-footer" style="padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.72rem; color: var(--text-muted);">
-                by <strong style="color: #fff;">${escapeHtml(proj.authorName)}</strong>
-              </span>
-              <a href="${safeAppUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">
-                Try App ↗
-              </a>
-            </div>
-          </div>
+          </article>
         `;
       })
       .join("");
@@ -1377,10 +876,9 @@ async function fetchDevShowcase() {
   }
 }
 
-// Modal controls
+// Submission dialog
 function openDevSubmissionModal(defaultCategory) {
-  const el = document.getElementById("devSubmissionModal");
-  if (el) el.style.display = "flex";
+  openDialog("devSubmissionModal", "#subAppTitle");
   if (defaultCategory) {
     const selectEl = document.getElementById("subCategory");
     if (selectEl) {
@@ -1398,44 +896,34 @@ function openDevSubmissionModal(defaultCategory) {
 }
 
 function closeDevSubmissionModal() {
-  const el = document.getElementById("devSubmissionModal");
-  if (el) el.style.display = "none";
+  closeDialog("devSubmissionModal");
 }
 
 async function handleDevSubmission(e) {
   e.preventDefault();
   const alertEl = document.getElementById("submissionAlert");
   const submitBtn = document.getElementById("subSubmitBtn");
-
-  const title = document.getElementById("subAppTitle")?.value;
-  const category = document.getElementById("subCategory")?.value;
-  const tagline = document.getElementById("subTagline")?.value;
-  const description = document.getElementById("subDescription")?.value;
-  const appUrl = document.getElementById("subAppUrl")?.value;
-  const githubUrl = document.getElementById("subGithubUrl")?.value;
-  const authorName = document.getElementById("subAuthorName")?.value;
-  const authorSocial = document.getElementById("subAuthorSocial")?.value;
-  const techStack = document.getElementById("subTechStack")?.value;
+  const value = (id) => document.getElementById(id)?.value;
 
   try {
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = "⏳ Submitting...";
+      submitBtn.textContent = "Submitting...";
     }
 
     const res = await fetch(`${API_BASE}/showcase/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title,
-        category,
-        tagline,
-        description,
-        appUrl,
-        githubUrl,
-        authorName,
-        authorSocial,
-        techStack,
+        title: value("subAppTitle"),
+        category: value("subCategory"),
+        tagline: value("subTagline"),
+        description: value("subDescription"),
+        appUrl: value("subAppUrl"),
+        githubUrl: value("subGithubUrl"),
+        authorName: value("subAuthorName"),
+        authorSocial: value("subAuthorSocial"),
+        techStack: value("subTechStack"),
         "cf-turnstile-response": document.querySelector('#devSubmissionForm [name="cf-turnstile-response"]')?.value || '',
       }),
     });
@@ -1444,8 +932,8 @@ async function handleDevSubmission(e) {
     if (!res.ok) throw new Error(json.message || "Failed to submit project.");
 
     if (alertEl) {
-      alertEl.className = "alert alert-success";
-      alertEl.textContent = "🎉 Project submitted successfully! Our team will review and spotlight it.";
+      alertEl.className = "callout is-ok";
+      alertEl.textContent = "Project submitted. Our team will review it for the spotlight.";
       alertEl.style.display = "block";
     }
 
@@ -1456,27 +944,25 @@ async function handleDevSubmission(e) {
     }, 2500);
   } catch (err) {
     if (alertEl) {
-      alertEl.className = "alert alert-error";
-      alertEl.textContent = `❌ ${err.message}`;
+      alertEl.className = "callout is-error";
+      alertEl.textContent = err.message;
       alertEl.style.display = "block";
     }
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = "🚀 Submit for Review";
+      submitBtn.textContent = "Submit for review";
     }
   }
 }
 
 // Privacy Policy & Cookie Preferences Controls
 function openPrivacyModal() {
-  const modal = document.getElementById("privacyModal");
-  if (modal) modal.style.display = "flex";
+  openDialog("privacyModal");
 }
 
 function closePrivacyModal() {
-  const modal = document.getElementById("privacyModal");
-  if (modal) modal.style.display = "none";
+  closeDialog("privacyModal");
 }
 
 function closeCookieBanner(preference) {
@@ -1485,8 +971,7 @@ function closeCookieBanner(preference) {
   } catch (e) {}
   const banner = document.getElementById("cookieConsentBanner");
   if (banner) {
-    banner.style.opacity = "0";
-    banner.style.transform = "translateY(15px)";
+    banner.classList.add("is-leaving");
     setTimeout(() => {
       banner.style.display = "none";
     }, 250);
@@ -1500,7 +985,7 @@ function initCookieConsent() {
       const banner = document.getElementById("cookieConsentBanner");
       if (banner) {
         setTimeout(() => {
-          banner.style.display = "flex";
+          banner.style.display = "grid";
         }, 800);
       }
     }
@@ -1508,10 +993,8 @@ function initCookieConsent() {
 }
 
 // ============================================================================
-// RETENTION & VIRAL HOOKS: Persona Switcher, Live Hero Playground & My Stash
+// Hero: persona switch, live playground & My Stash
 // ============================================================================
-
-let currentPersona = "creator";
 let selectedHeroFormat = "mp3-320";
 let miniSynthCtx = null;
 
@@ -1528,48 +1011,41 @@ function getMiniSynthContext() {
   return miniSynthCtx;
 }
 
-// 1. Persona Switcher
-function setStudioPersona(persona) {
-  currentPersona = persona;
-  try {
-    localStorage.setItem("dds_persona", persona);
-  } catch (e) {}
-
-  const creatorTab = document.getElementById("personaCreatorTab");
-  const devTab = document.getElementById("personaDevTab");
-  const creatorView = document.getElementById("creatorHeroView");
-  const devView = document.getElementById("developerHeroView");
-
-  if (persona === "creator") {
-    if (creatorTab) creatorTab.classList.add("active");
-    if (devTab) devTab.classList.remove("active");
-    if (creatorView) creatorView.style.display = "block";
-    if (devView) devView.style.display = "none";
-    switchPlaygroundTab("mp3");
-  } else {
-    if (creatorTab) creatorTab.classList.remove("active");
-    if (devTab) devTab.classList.add("active");
-    if (creatorView) creatorView.style.display = "none";
-    if (devView) devView.style.display = "block";
-    switchPlaygroundTab("compute");
+function setTabState(btn, panel, active) {
+  if (btn) {
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", String(active));
+    btn.tabIndex = active ? 0 : -1;
   }
+  if (panel) panel.hidden = !active;
 }
 
-// 2. Hero Playground Tabs
+// 1. Persona switch (creators / developers)
+function setStudioPersona(persona) {
+  const isCreator = persona !== "developer";
+  try {
+    localStorage.setItem("dds_persona", isCreator ? "creator" : "developer");
+  } catch (e) {}
+
+  setTabState(document.getElementById("personaCreatorTab"), document.getElementById("creatorHeroView"), isCreator);
+  setTabState(document.getElementById("personaDevTab"), document.getElementById("developerHeroView"), !isCreator);
+  switchPlaygroundTab(isCreator ? "mp3" : "compute");
+}
+
+// 2. Hero playground tabs
 function switchPlaygroundTab(tab) {
-  const tabs = ["mp3", "sampler", "compute"];
-  tabs.forEach((t) => {
-    const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
-    const panel = document.getElementById(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`);
-    if (btn) btn.classList.toggle("active", t === tab);
-    if (panel) panel.style.display = t === tab ? "flex" : "none";
+  ["mp3", "sampler", "compute"].forEach((t) => {
+    const name = t.charAt(0).toUpperCase() + t.slice(1);
+    setTabState(document.getElementById(`tab${name}Btn`), document.getElementById(`panel${name}`), t === tab);
   });
 }
 
 function selectHeroFormat(btnEl, format) {
   selectedHeroFormat = format;
   document.querySelectorAll(".hero-format-pill").forEach((pill) => {
-    pill.classList.toggle("active", pill === btnEl);
+    const active = pill === btnEl;
+    pill.classList.toggle("active", active);
+    pill.setAttribute("aria-pressed", String(active));
   });
 }
 
@@ -1580,7 +1056,7 @@ async function pasteToHeroInput() {
     const text = await navigator.clipboard.readText();
     if (text) {
       input.value = text.trim();
-      window.showToast("URL pasted from clipboard!", "success");
+      window.showToast("URL pasted from clipboard", "success");
       input.focus();
     }
   } catch (e) {
@@ -1597,6 +1073,7 @@ async function executeHeroMediaExtract() {
   const progressStatus = document.getElementById("heroProgressStatus");
   const resultBox = document.getElementById("heroExtractResult");
   const btn = document.getElementById("heroExtractBtn");
+  const btnLabel = `${icon("download")}Extract &amp; save track`;
 
   if (!rawUrl) {
     window.showToast("Please enter a YouTube or audio URL", "error");
@@ -1606,11 +1083,14 @@ async function executeHeroMediaExtract() {
 
   if (btn) {
     btn.disabled = true;
-    btn.textContent = "⏳ Resolving Media Stream...";
+    btn.innerHTML = `${icon("loader-circle")}Resolving media stream...`;
   }
-  if (progressBox) progressBox.style.display = "block";
+  if (progressBox) progressBox.style.display = "grid";
   if (resultBox) resultBox.style.display = "none";
-  if (progressBar) progressBar.style.width = "40%";
+  if (progressBar) {
+    progressBar.classList.remove("is-done", "is-error");
+    progressBar.style.width = "40%";
+  }
   if (progressStatus) progressStatus.textContent = "Resolving high-speed media stream...";
 
   try {
@@ -1625,17 +1105,22 @@ async function executeHeroMediaExtract() {
       throw new Error(data.message || "Failed to resolve media URL");
     }
 
-    if (progressBar) progressBar.style.width = "100%";
-    if (progressStatus) progressStatus.textContent = "Ready! Generating direct download link...";
+    if (progressBar) {
+      progressBar.classList.add("is-done");
+      progressBar.style.width = "100%";
+    }
+    if (progressStatus) progressStatus.textContent = "Ready: direct download link generated";
 
-    const media = data.data;
-    const downloadUrl = media.downloadUrl || `${API_BASE}/media/download?token=${encodeURIComponent(media.streamToken || "")}`;
+    const media = data.data || {};
+    const downloadUrl =
+      safeUrl(media.downloadUrl) || `${API_BASE}/media/download?token=${encodeURIComponent(media.streamToken || "")}`;
+    const thumb = safeUrl(media.thumbnail) || "/images/banner.jpg";
+    const title = media.title || media.cleanTitle || "Extracted track";
 
-    // Add to My Stash
     addToStash({
       id: Date.now(),
-      type: "Audio Track",
-      title: media.title || media.cleanTitle || "Extracted Track",
+      type: "Audio track",
+      title,
       format: selectedHeroFormat.toUpperCase(),
       url: downloadUrl,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -1643,36 +1128,33 @@ async function executeHeroMediaExtract() {
 
     if (resultBox) {
       resultBox.innerHTML = `
-        <div style="display: flex; gap: 0.65rem; align-items: center;">
-          <img src="${media.thumbnail || "/images/banner.jpg"}" alt="" style="width: 52px; height: 38px; object-fit: cover; border-radius: 4px;" />
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 0.82rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${escapeHtml(media.title || media.cleanTitle)}
-            </div>
-            <div style="font-size: 0.7rem; color: #10b981;">✓ 320kbps Audio Ready &bull; Saved in My Stash</div>
+        <div class="extract-track">
+          <img src="${escapeHtml(thumb)}" alt="" />
+          <div style="min-width: 0;">
+            <div class="extract-track-title">${escapeHtml(title)}</div>
+            <div class="extract-track-meta">Audio ready · saved in My Stash</div>
           </div>
         </div>
-        <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
-          <a href="${downloadUrl}" download="${escapeHtml(media.cleanTitle || 'Track')}" class="btn btn-sm btn-primary" style="flex: 1; justify-content: center;">
-            📥 Direct Download Now
-          </a>
-          <button type="button" class="btn btn-sm btn-secondary" onclick="resetHeroExtractor()">
-            ✨ New Track
-          </button>
+        <div class="button-row">
+          <a href="${escapeHtml(downloadUrl)}" download="${escapeHtml(media.cleanTitle || "Track")}" class="btn btn-primary btn-sm">${icon("download")}Download now</a>
+          <button type="button" class="btn btn-sm" onclick="resetHeroExtractor()">New track</button>
         </div>
       `;
-      resultBox.style.display = "flex";
+      resultBox.style.display = "grid";
     }
 
-    window.showToast("Track resolved & saved to My Stash!", "success");
+    window.showToast("Track resolved and saved to My Stash", "success");
   } catch (err) {
-    if (progressBar) progressBar.style.width = "100%";
-    if (progressStatus) progressStatus.textContent = `⚠️ Error: ${err.message}`;
+    if (progressBar) {
+      progressBar.classList.add("is-error");
+      progressBar.style.width = "100%";
+    }
+    if (progressStatus) progressStatus.textContent = `Error: ${err.message}`;
     window.showToast(err.message, "error");
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "⚡ Extract & Save Track";
+      btn.innerHTML = btnLabel;
     }
   }
 }
@@ -1793,7 +1275,7 @@ function playSamplerGrooveDemo() {
   const ctx = getMiniSynthContext();
   if (!ctx) return;
 
-  window.showToast("Playing 4-Bar Lo-Fi Groove...", "info");
+  window.showToast("Playing a 4-bar lo-fi groove", "info");
   const stepMs = 240; // ~125 BPM 8th notes
   const pattern = [
     ["kick", "chord"],
@@ -1825,10 +1307,8 @@ function playSamplerGrooveDemo() {
   }, stepMs);
 }
 
-// 4. Instant 1-Click Free Studio Sample Kit (.WAV & .ZIP Download)
+// 4. Instant 1-Click Free Studio Sample Kit (.WAV)
 function downloadFreeSampleKit() {
-  window.showToast("🎁 Downloading Free Studio Sound Kit (.WAV) — 8-Bar Lo-Fi Master (85 BPM)...", "info");
-
   // Routed through the R2 zero-egress redirect (falls back to the bundled copy if not yet uploaded)
   const wavUrl = "/api/storage/download/dangling-dice-studio-sound-kit.wav";
   const tempLink = document.createElement("a");
@@ -1840,14 +1320,14 @@ function downloadFreeSampleKit() {
 
   addToStash({
     id: Date.now(),
-    type: "Sound Kit",
+    type: "Sound kit",
     title: "Dangling Dice Studio 8-Bar Lo-Fi Kit (85 BPM .WAV)",
-    format: "16-BIT 44.1KHZ PCM MASTER",
+    format: "16-bit 44.1kHz PCM master",
     url: wavUrl,
     timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   });
 
-  window.showToast("✅ Full 8-Bar Studio Sound Kit (.WAV) saved to Downloads & My Stash!", "success");
+  window.showToast("8-bar studio sound kit (.WAV) downloading and saved to My Stash", "success");
 }
 
 // 5. Quick Compute Test
@@ -1855,23 +1335,19 @@ async function runQuickComputeTest(testType) {
   const codeEl = document.getElementById("computeOutputCode");
   const latencyTag = document.getElementById("computeLatencyTag");
   const labelEl = document.getElementById("computeEndpointLabel");
+  const buttonIds = { schema: "btnTestSchema", luhn: "btnTestLuhn", loan: "btnTestLoan" };
 
-  document.querySelectorAll(".compute-quick-btn").forEach((btn) => {
-    btn.classList.remove("active");
+  Object.entries(buttonIds).forEach(([key, id]) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.toggle("active", key === testType);
+    btn.setAttribute("aria-pressed", String(key === testType));
   });
-  if (testType === "schema") document.getElementById("btnTestSchema")?.classList.add("active");
-  if (testType === "luhn") document.getElementById("btnTestLuhn")?.classList.add("active");
-  if (testType === "loan") document.getElementById("btnTestLoan")?.classList.add("active");
 
   const t0 = performance.now();
-  if (labelEl) {
-    labelEl.textContent =
-      testType === "schema"
-        ? "POST /v1/schema/infer"
-        : testType === "luhn"
-        ? "POST /v1/privacy/redact-pii"
-        : "POST /v1/finance/amortize";
-  }
+  const endpointLabel =
+    testType === "schema" ? "POST /v1/schema/infer" : testType === "luhn" ? "POST /v1/privacy/redact-pii" : "POST /v1/finance/amortize";
+  if (labelEl) labelEl.textContent = endpointLabel;
 
   try {
     let payload = {};
@@ -1898,14 +1374,12 @@ async function runQuickComputeTest(testType) {
     const data = await res.json();
 
     if (latencyTag) latencyTag.textContent = `${elapsed}ms`;
-    if (codeEl) {
-      codeEl.querySelector("code").textContent = JSON.stringify(data, null, 2);
-    }
+    if (codeEl) codeEl.querySelector("code").textContent = JSON.stringify(data, null, 2);
 
     addToStash({
       id: Date.now(),
-      type: "API Benchmark",
-      title: `${labelEl.textContent} (${elapsed}ms)`,
+      type: "API benchmark",
+      title: `${endpointLabel} (${elapsed}ms)`,
       format: "JSON REST",
       url: "#computeApiSuite",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -1913,9 +1387,7 @@ async function runQuickComputeTest(testType) {
   } catch (err) {
     const elapsed = Math.round(performance.now() - t0);
     if (latencyTag) latencyTag.textContent = `${elapsed}ms`;
-    if (codeEl) {
-      codeEl.querySelector("code").textContent = JSON.stringify({ error: err.message, status: 500 }, null, 2);
-    }
+    if (codeEl) codeEl.querySelector("code").textContent = JSON.stringify({ error: err.message, status: 500 }, null, 2);
   }
 }
 
@@ -1949,13 +1421,21 @@ function updateStashBadge() {
   if (badge) badge.textContent = count;
 }
 
+let stashOpener = null;
 function toggleMyStash(forceOpen) {
   const drawer = document.getElementById("myStashDrawer");
   if (!drawer) return;
   const isOpen = drawer.style.display !== "none";
   const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
-  drawer.style.display = shouldOpen ? "flex" : "none";
-  if (shouldOpen) renderStash();
+  if (shouldOpen === isOpen) return;
+  drawer.style.display = shouldOpen ? "grid" : "none";
+  if (shouldOpen) {
+    stashOpener = document.activeElement;
+    renderStash();
+    drawer.querySelector("button")?.focus();
+  } else if (stashOpener && document.contains(stashOpener)) {
+    stashOpener.focus();
+  }
 }
 
 function renderStash() {
@@ -1965,32 +1445,32 @@ function renderStash() {
 
   if (items.length === 0) {
     list.innerHTML = `
-      <div class="stash-empty-msg">
-        <div>📁 Your Stash is empty.</div>
-        <div style="font-size: 0.72rem; margin-top: 0.35rem; color: var(--text-muted);">
-          Extract an audio track, tap the sampler, or download our free sound kit to save items here!
-        </div>
-      </div>
+      <li class="stash-empty">
+        <p class="small ink">Your stash is empty.</p>
+        <p class="small muted">Extract an audio track, run an API speed test, or download the free sound kit to save items here.</p>
+      </li>
     `;
     return;
   }
 
   list.innerHTML = items
-    .map(
-      (item) => `
-    <div class="stash-item">
+    .map((item) => {
+      const href = safeUrl(item.url) || "#";
+      const isAnchor = href.startsWith("#");
+      return `
+    <li class="stash-item">
       <div class="stash-item-meta">
         <div class="stash-item-title">${escapeHtml(item.title)}</div>
-        <div class="stash-item-tag">${escapeHtml(item.type)} &bull; ${escapeHtml(item.format || '')} &bull; ${escapeHtml(item.timestamp || '')}</div>
+        <div class="small muted">${escapeHtml(item.type)} · ${escapeHtml(item.format || "")} · ${escapeHtml(item.timestamp || "")}</div>
       </div>
       ${
-        item.url.startsWith('#')
-          ? `<a href="${item.url}" class="stash-item-action" onclick="toggleMyStash(false)">View</a>`
-          : `<a href="${item.url}" download="${escapeHtml(item.title)}" class="stash-item-action">Download</a>`
+        isAnchor
+          ? `<a href="${escapeHtml(href)}" class="btn btn-ghost btn-sm" onclick="toggleMyStash(false)">View</a>`
+          : `<a href="${escapeHtml(href)}" download="${escapeHtml(item.title)}" class="btn btn-ghost btn-sm">Download</a>`
       }
-    </div>
-  `
-    )
+    </li>
+  `;
+    })
     .join("");
 }
 
@@ -2001,10 +1481,12 @@ function clearMyStash() {
   window.showToast("Studio Stash cleared", "info");
 }
 
-// Keyboard shortcuts for sampler pads (1, 2, 3, 4, Q, W, E, R)
+// Keyboard shortcuts for sampler pads (1-4, Q/W/E/R) while the sampler tab is open
 window.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
   const tag = e.target.tagName?.toLowerCase();
-  if (tag === "input" || tag === "textarea" || e.target.isContentEditable) return;
+  if (tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable) return;
+  if (document.getElementById("panelSampler")?.hidden !== false) return;
 
   const key = e.key.toLowerCase();
   if (key === "1" || key === "q") triggerSamplerPad("kick");
@@ -2020,8 +1502,6 @@ window.handleDevSubmission = handleDevSubmission;
 window.openPrivacyModal = openPrivacyModal;
 window.closePrivacyModal = closePrivacyModal;
 window.closeCookieBanner = closeCookieBanner;
-
-// New Viral & Retention Window bindings
 window.setStudioPersona = setStudioPersona;
 window.switchPlaygroundTab = switchPlaygroundTab;
 window.selectHeroFormat = selectHeroFormat;
@@ -2035,23 +1515,25 @@ window.runQuickComputeTest = runQuickComputeTest;
 window.toggleMyStash = toggleMyStash;
 window.clearMyStash = clearMyStash;
 
+// WAI-ARIA tabs: arrow keys / Home / End for the persona switch and playground
+initTabKeyboard(document.querySelector(".persona-switch"));
+initTabKeyboard(document.getElementById("playgroundTabs"));
+
 // Startup
 window.addEventListener("DOMContentLoaded", async () => {
-  initDockState();
   initCookieConsent();
   updateStashBadge();
   try {
     const savedPersona = localStorage.getItem("dds_persona") || "creator";
     setStudioPersona(savedPersona);
   } catch (e) {}
-  await checkHealth();
-  await fetchResources();
-  await fetchTechStack();
-  await fetchDevShowcase();
 
-  // Initialize Hidden Staff Command Palette (Ctrl+K)
+  // Initialize shared shell + hidden staff command palette (Ctrl+K) before the network calls
   initStudioShell();
   initStaffCommandPalette();
+
+  await checkHealth();
+  await Promise.all([fetchResources(), fetchTechStack(), fetchDevShowcase()]);
 
   // Smooth-scroll on hash or click
   if (window.location.hash) {
