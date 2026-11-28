@@ -118,9 +118,9 @@
 .dds .code-block-wrap { white-space: pre-wrap; word-break: break-word; }
 
 /* ---------- Catalog ---------- */
-.dds .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--dds-space-3); }
-.dds .game-card { position: relative; display: grid; align-content: start; gap: var(--dds-space-2); padding: var(--dds-space-4); transition: border-color var(--dds-duration-fast) var(--dds-ease); }
-.dds .game-card .tag { justify-self: start; }
+.dds .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--dds-space-4); }
+.dds .game-card { position: relative; display: flex; flex-direction: column; gap: var(--dds-space-2); padding: var(--dds-space-4); transition: border-color var(--dds-duration-fast) var(--dds-ease); }
+.dds .game-card .tag { align-self: flex-start; }
 .dds .game-card:hover { border-color: var(--dds-border-control); }
 .dds .game-card.is-selected { border-left: var(--dds-accent-bar) solid var(--dds-accent); }
 .dds .game-card-title { font-size: var(--dds-text-base); letter-spacing: var(--dds-tracking-body); }
@@ -159,7 +159,7 @@
 
 /* ---------- Software guide & audio setup ---------- */
 .dds .software-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--dds-space-4); }
-.dds .software-card { display: grid; align-content: start; gap: var(--dds-space-3); padding: var(--dds-space-5); }
+.dds .software-card { display: flex; flex-direction: column; gap: var(--dds-space-3); padding: var(--dds-space-5); }
 .dds .software-head,
 .dds .setup-detail-head { display: flex; align-items: flex-start; gap: var(--dds-space-3); }
 .dds .software-head .tag,
@@ -196,12 +196,13 @@
 /* ---------- Gear ---------- */
 .dds .filter-row { display: flex; flex-wrap: wrap; gap: var(--dds-space-2); margin-bottom: var(--dds-space-4); }
 .dds .gear-filter-pill.active { border-color: var(--dds-accent); color: var(--dds-ink); font-weight: 600; }
-.dds .gear-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--dds-space-3); }
-.dds .gear-card { display: grid; align-content: start; gap: var(--dds-space-2); padding: var(--dds-space-4); }
+.dds .gear-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: var(--dds-space-4); }
+.dds .gear-card { display: flex; flex-direction: column; gap: var(--dds-space-2); padding: var(--dds-space-5); }
 .dds .gear-card .eyebrow { margin: 0; }
 .dds .gear-title { font-size: var(--dds-text-base); letter-spacing: var(--dds-tracking-body); }
 .dds .gear-specs { font-size: var(--dds-text-xs); }
-.dds .gear-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dds-space-3); margin-top: auto; padding-top: var(--dds-space-3); border-top: var(--dds-border); }
+.dds .gear-foot { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--dds-space-2); margin-top: auto; padding-top: var(--dds-space-3); border-top: var(--dds-border); }
+.dds .gear-foot .btn { flex-shrink: 0; white-space: nowrap; }
 .dds .gear-price { color: var(--dds-ink); font-weight: 600; }
 .dds .gear-rating { display: inline-flex; align-items: center; gap: var(--dds-space-1); }
 .dds .gear-rating .icon { width: 14px; height: 14px; }

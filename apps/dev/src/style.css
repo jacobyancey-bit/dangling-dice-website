@@ -284,7 +284,7 @@
 .dds .key-box-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dds-space-3); margin-bottom: var(--dds-space-3); }
 .dds .key-string { display: block; padding: 0; border: 0; background: none; font-family: var(--dds-font-mono); font-size: var(--dds-text-sm); word-break: break-all; }
 .dds .key-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--dds-space-3); margin-top: var(--dds-space-3); }
-.dds .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--dds-space-4); margin-top: var(--dds-space-5); }
+.dds .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--dds-space-4); margin-top: var(--dds-space-5); }
 .dds .plan { display: flex; flex-direction: column; gap: var(--dds-space-3); }
 .dds .plan-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-space-2); }
 .dds .plan-name { font-size: var(--dds-text-base); letter-spacing: var(--dds-tracking-body); }
@@ -332,12 +332,14 @@
 }
 
 /* ---------- Showcase & tooling cards ---------- */
-.dds .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--dds-space-4); }
+.dds .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: var(--dds-space-4); }
 .dds .card-grid:empty::after { content: 'Nothing listed yet.'; color: var(--dds-ink-muted); font-size: var(--dds-text-sm); }
-.dds .item-card { display: flex; flex-direction: column; gap: var(--dds-space-3); padding: var(--dds-space-4); }
+.dds .item-card { display: flex; flex-direction: column; gap: var(--dds-space-3); padding: var(--dds-space-5); }
 .dds .item-title { font-size: var(--dds-text-base); letter-spacing: var(--dds-tracking-body); }
 .dds .item-desc { color: var(--dds-ink-muted); font-size: var(--dds-text-sm); }
-.dds .item-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--dds-space-2); margin-top: auto; font-size: var(--dds-text-sm); }
+.dds .item-foot { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--dds-space-2); margin-top: auto; padding-top: var(--dds-space-3); border-top: var(--dds-border); font-size: var(--dds-text-sm); }
+.dds .item-foot .tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dds .item-foot .btn { flex-shrink: 0; white-space: nowrap; }
 
 /* ---------- Toast ---------- */
 .dds .toast {

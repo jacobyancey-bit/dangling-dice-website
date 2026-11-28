@@ -253,14 +253,14 @@
 .dds .promo-copy .eyebrow { margin-bottom: var(--dds-space-1); }
 .dds .promo-title { font-size: var(--dds-text-md); letter-spacing: var(--dds-tracking-body); }
 .dds .promo-section { margin-block: var(--dds-space-5) var(--dds-space-7); }
-.dds .promo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--dds-space-3); }
-.dds .promo-card { display: flex; flex-direction: column; gap: var(--dds-space-3); padding: var(--dds-space-4); }
+.dds .promo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: var(--dds-space-4); }
+.dds .promo-card { display: flex; flex-direction: column; gap: var(--dds-space-3); padding: var(--dds-space-5); }
 .dds .promo-head { display: flex; align-items: center; gap: var(--dds-space-3); }
 .dds .promo-head .eyebrow { margin: 0 0 2px; }
 .dds .promo-icon-box { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border: var(--dds-border); border-radius: var(--dds-radius-panel); background: var(--dds-surface-subtle); color: var(--dds-ink); }
 .dds .promo-icon-box .icon { width: 22px; height: 22px; }
 .dds .promo-card .promo-icon { width: 48px; height: 48px; }
-.dds .promo-card .button-row { margin-top: auto; padding-top: var(--dds-space-2); }
+.dds .promo-card .button-row { margin-top: auto; padding-top: var(--dds-space-3); border-top: var(--dds-border); }
 /* ---------- Footer ---------- */
 .dds .site-footer { padding-block: var(--dds-space-6); border-top: var(--dds-border); }
 .dds .footer-inner { display: grid; gap: var(--dds-space-3); }
