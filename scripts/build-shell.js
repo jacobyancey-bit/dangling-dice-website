@@ -16,7 +16,7 @@ const { renderShell } = await import(pathToFileURL(path.join(root, 'packages', '
 const PAGES = [
   { site: 'web', file: 'apps/web/index.html', options: { stash: true } },
   { site: 'beats', file: 'apps/beats/index.html' },
-  { site: 'dev', file: 'apps/dev/index.html' },
+  { site: 'dev', file: 'apps/dev/index.html', options: { landmark: true } }, // migrated (Phase 3)
   { site: 'games', file: 'apps/games/index.html' },
   { site: 'media', file: 'apps/media/index.html' },
 ];

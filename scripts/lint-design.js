@@ -67,7 +67,8 @@ const RULES = {
         return /rem|em/.test(t) ? n * 16 > 8 : n > 8;
       })
     ).length,
-  hex_color: (src, file) => (file === TOKENS ? 0 : (src.match(/#[0-9a-fA-F]{3,8}\b(?![-\w])/g) || []).filter((h) => [4, 5, 7, 9].includes(h.length)).length),
+  // <meta name="theme-color"> must be a literal (the browser reads it before CSS loads), so it is exempt
+  hex_color: (src, file) => (file === TOKENS ? 0 : (src.replace(/<meta[^>]*name=["']theme-color["'][^>]*>/gi, '').match(/#[0-9a-fA-F]{3,8}\b(?![-\w])/g) || []).filter((h) => [4, 5, 7, 9].includes(h.length)).length),
   emoji: (src, file) =>
     /\.(html|js)$/.test(file) ? [...src.matchAll(/\p{Extended_Pictographic}/gu)].filter(([c]) => !NOT_EMOJI.has(c)).length : 0,
 };
@@ -111,6 +112,7 @@ for (const [theme, blk] of [['dark', dark], ['light', light]]) {
     need(`${theme} ink on ${bg}`, T(blk, 'ink'), T(blk, bg), 4.5);
     need(`${theme} muted ink on ${bg}`, T(blk, 'ink-muted'), T(blk, bg), 4.5);
     need(`${theme} control border on ${bg}`, T(blk, 'border-control'), T(blk, bg), 3);
+    for (const st of ['status-ok', 'status-warn', 'status-error']) need(`${theme} ${st} on ${bg}`, T(blk, st), T(blk, bg), 4.5);
   }
 }
 for (const m of tokensSrc.matchAll(/data-site='(\w+)'\]\s*\{\s*--dds-accent:\s*(#[0-9A-Fa-f]{6});\s*--dds-accent-hover:\s*(#[0-9A-Fa-f]{6})/g)) {

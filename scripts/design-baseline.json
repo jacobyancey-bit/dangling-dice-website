@@ -20,7 +20,7 @@
     "blur": 18,
     "shadow": 41,
     "radius_gt8": 25,
-    "hex_color": 447,
+    "hex_color": 446,
     "emoji": 362
   },
   "beats": {
@@ -28,23 +28,23 @@
     "blur": 4,
     "shadow": 64,
     "radius_gt8": 30,
-    "hex_color": 441,
+    "hex_color": 440,
     "emoji": 335
   },
   "dev": {
-    "gradient": 14,
-    "blur": 2,
-    "shadow": 15,
-    "radius_gt8": 6,
-    "hex_color": 118,
-    "emoji": 55
+    "gradient": 0,
+    "blur": 0,
+    "shadow": 0,
+    "radius_gt8": 0,
+    "hex_color": 0,
+    "emoji": 0
   },
   "games": {
     "gradient": 37,
     "blur": 8,
     "shadow": 37,
     "radius_gt8": 21,
-    "hex_color": 192,
+    "hex_color": 191,
     "emoji": 225
   },
   "media": {
@@ -52,7 +52,7 @@
     "blur": 6,
     "shadow": 21,
     "radius_gt8": 7,
-    "hex_color": 152,
+    "hex_color": 151,
     "emoji": 74
   }
 }

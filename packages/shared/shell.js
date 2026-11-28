@@ -30,10 +30,12 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
 /**
  * @param {keyof SHELL_SITES} site
- * @param {{ stash?: boolean }} options  stash: render the My Stash button (web only)
+ * @param {{ stash?: boolean, landmark?: boolean }} options
+ *   stash: render the My Stash button (web only)
+ *   landmark: render as the page <header> (apps migrated in Phase 3 that no longer ship legacy header CSS)
  * @returns {string} shell HTML
  */
-export function renderShell(site, { stash = false } = {}) {
+export function renderShell(site, { stash = false, landmark = false } = {}) {
   const current = SHELL_SITES[site];
   if (!current) throw new Error(`Unknown shell site "${site}"`);
   const brandHref = site === 'web' ? '/' : `${ROOT}/`;
@@ -57,9 +59,10 @@ export function renderShell(site, { stash = false } = {}) {
     ? `<button type="button" class="dds-shell-icon-btn" onclick="toggleMyStash()" aria-label="My Studio Stash">${icon('archive')}<span id="stashCountBadge" class="dds-shell-count">0</span></button>`
     : '';
 
-  // A <div>, not <header>: legacy app CSS styles bare `header` elements with !important rules.
-  // Becomes the page <header> landmark in Phase 3 once each app retires its legacy header.
-  return `<div class="dds-shell" data-dds-shell="${esc(site)}">
+  // Legacy app CSS styles bare `header` elements with !important rules, so unmigrated apps get a
+  // <div>; migrated apps (landmark: true) get the real page <header> landmark.
+  const tag = landmark ? 'header' : 'div';
+  return `<${tag} class="dds-shell" data-dds-shell="${esc(site)}">
   <div class="dds-shell-inner">
     <a class="dds-shell-brand" href="${brandHref}" aria-label="Dangling Dice Studios home">
       ${icon('dice-5', { className: 'dds-shell-mark' })}
@@ -84,7 +87,7 @@ export function renderShell(site, { stash = false } = {}) {
     <div class="dds-shell-mobile-divider"></div>
     ${moreItems}
   </div>
-</div>`;
+</${tag}>`;
 }
 
 /** Wires up the build-time shell: More menu, mobile menu, Escape / outside-click to close. */

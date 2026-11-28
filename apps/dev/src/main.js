@@ -1,5 +1,6 @@
 import './style.css';
-import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell, icon } from '@dangling-dice/shared';
+import { initHeroConsole } from './heroConsole.js';
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -66,17 +67,43 @@ function switchDevSection(sectionId) {
   };
 
   Object.entries(sections).forEach(([key, el]) => {
-    if (el) el.style.display = key === sectionId ? 'block' : 'none';
+    if (el) el.hidden = key !== sectionId;
   });
 
   Object.entries(buttons).forEach(([key, btn]) => {
-    if (btn) btn.classList.toggle('active', key === sectionId);
+    if (!btn) return;
+    const selected = key === sectionId;
+    btn.classList.toggle('active', selected);
+    btn.setAttribute('aria-selected', String(selected));
+    btn.tabIndex = selected ? 0 : -1;
   });
+}
 
-  if (sectionId === 'showcase') {
-    const tooling = document.getElementById('tooling');
-    if (tooling) tooling.style.display = 'block';
-  }
+// WAI-ARIA tabs: Left/Right/Home/End move between sandbox tabs
+function initTabKeyboard() {
+  const list = document.getElementById('sandboxes');
+  if (!list) return;
+  list.addEventListener('keydown', (e) => {
+    const tabs = [...list.querySelectorAll('[role="tab"]')];
+    const i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    let next = null;
+    if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+    else if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+    else if (e.key === 'Home') next = tabs[0];
+    else if (e.key === 'End') next = tabs[tabs.length - 1];
+    if (!next) return;
+    e.preventDefault();
+    next.focus();
+    next.click();
+  });
+}
+
+// Static HTML uses <span data-icon="name"> placeholders; swap in the shared stroke icons
+function hydrateIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach((el) => {
+    el.outerHTML = icon(el.dataset.icon);
+  });
 }
 
 // ============================================================================
@@ -211,7 +238,7 @@ async function executeLiveApiCall() {
 
     if (statusBadge) {
       statusBadge.textContent = `${res.status} ${res.statusText || (res.ok ? 'OK' : 'Error')}`;
-      statusBadge.className = `glass-badge ${res.ok ? 'badge-status-ok' : 'badge-status-err'}`;
+      statusBadge.className = `tag ${res.ok ? 'is-ok' : 'is-error'}`;
       statusBadge.style.display = 'inline-block';
     }
 
@@ -236,12 +263,12 @@ async function executeLiveApiCall() {
       .join('\n');
 
     if (consoleEl) consoleEl.textContent = outputText;
-    showToast(`✅ ${activeEndpoint.path} returned HTTP ${res.status} (${duration}ms)`);
+    showToast(`${activeEndpoint.path} returned HTTP ${res.status} (${duration}ms)`);
   } catch (err) {
     const duration = Math.round(performance.now() - startTime);
     if (statusBadge) {
       statusBadge.textContent = 'CORS / Network Error';
-      statusBadge.className = 'glass-badge badge-status-err';
+      statusBadge.className = 'tag is-error';
       statusBadge.style.display = 'inline-block';
     }
     if (consoleEl) {
@@ -251,7 +278,7 @@ async function executeLiveApiCall() {
   } finally {
     if (execBtn) {
       execBtn.disabled = false;
-      execBtn.textContent = '▶ Send Request to API Gateway';
+      execBtn.textContent = 'Send request to API gateway';
     }
   }
 }
@@ -274,7 +301,7 @@ async function generateWebhookSignature(presetOverride) {
   try {
     const hex = await computeHmacSha256(secret, payloadStr);
     if (displayEl) {
-      displayEl.innerHTML = `<span style="color: #94a3b8;">X-Signature-SHA256:</span> sha256=${hex}`;
+      displayEl.innerHTML = `<span class="muted">X-Signature-SHA256:</span> sha256=${hex}`;
     }
   } catch (err) {
     if (displayEl) displayEl.textContent = 'Error computing HMAC signature';
@@ -363,17 +390,11 @@ function runRegexEvaluation() {
   const result = analyzeRegex(patternInput.value, flagsInput?.value || 'g', testInput.value);
 
   if (alertEl) {
-    if (result.isRedosVulnerable) {
-      alertEl.style.background = 'rgba(239, 68, 68, 0.15)';
-      alertEl.style.borderColor = '#ef4444';
-      alertEl.style.color = '#f87171';
-      alertEl.textContent = result.redosReason;
-    } else {
-      alertEl.style.background = 'rgba(16, 185, 129, 0.1)';
-      alertEl.style.borderColor = '#10b981';
-      alertEl.style.color = '#34d399';
-      alertEl.textContent = '🟢 ReDoS Check: Safe linear matching complexity O(n).';
-    }
+    alertEl.classList.toggle('is-error', Boolean(result.isRedosVulnerable));
+    alertEl.classList.toggle('is-ok', !result.isRedosVulnerable);
+    alertEl.textContent = result.isRedosVulnerable
+      ? result.redosReason
+      : 'ReDoS check: safe linear matching complexity O(n).';
   }
 
   if (!result.valid) {
@@ -386,7 +407,7 @@ function runRegexEvaluation() {
     return;
   }
 
-  outputEl.innerHTML = result.matches
+  outputEl.textContent = result.matches
     .map(
       (m, i) =>
         `Match #${i + 1} at index [${m.index}]: "${m.match}"${
@@ -414,32 +435,23 @@ function runJwtDecode() {
 
   const result = decodeJwt(area.value);
   if (!result.valid) {
-    display.innerHTML = `<div style="color: #ef4444; font-size: 0.82rem; font-family: monospace;">${result.error}</div>`;
+    display.innerHTML = `<div class="jwt-error">${escapeHtml(String(result.error))}</div>`;
     return;
   }
 
+  // Pasted tokens are attacker-controllable: always escape decoded content before rendering
   display.innerHTML = `
-    <div class="jwt-segment-box jwt-header-box">
-      <div class="jwt-seg-title" style="color: #f87171;">1. Header (Algorithm &amp; Token Type)</div>
-      <pre style="font-family: monospace; font-size: 0.8rem; color: #fca5a5; margin: 0;">${JSON.stringify(
-        result.header,
-        null,
-        2
-      )}</pre>
+    <div class="jwt-segment jwt-header">
+      <div class="readout-label">1. Header (algorithm &amp; token type)</div>
+      <pre>${escapeHtml(JSON.stringify(result.header, null, 2))}</pre>
     </div>
-    <div class="jwt-segment-box jwt-payload-box">
-      <div class="jwt-seg-title" style="color: #c084fc;">2. Payload (Claims &amp; Expiration) — ${result.expRelative}</div>
-      <pre style="font-family: monospace; font-size: 0.8rem; color: #e9d5ff; margin: 0;">${JSON.stringify(
-        result.payload,
-        null,
-        2
-      )}</pre>
+    <div class="jwt-segment jwt-payload">
+      <div class="readout-label">2. Payload (claims &amp; expiration) — ${escapeHtml(String(result.expRelative))}</div>
+      <pre>${escapeHtml(JSON.stringify(result.payload, null, 2))}</pre>
     </div>
-    <div class="jwt-segment-box jwt-sig-box">
-      <div class="jwt-seg-title" style="color: #22d3ee;">3. Signature</div>
-      <div style="font-family: monospace; font-size: 0.8rem; color: #67e8f9; word-break: break-all;">
-        HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)
-      </div>
+    <div class="jwt-segment jwt-signature">
+      <div class="readout-label">3. Signature</div>
+      <div class="jwt-sig">HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)</div>
     </div>
   `;
 }
@@ -487,11 +499,7 @@ function updateBucketUI() {
   fill.style.height = `${pct}%`;
   label.textContent = `${Math.floor(tokenBucket.tokens)} / ${tokenBucket.capacity} Tokens`;
 
-  if (pct < 15) {
-    fill.style.background = 'linear-gradient(180deg, #ef4444, #b91c1c)';
-  } else {
-    fill.style.background = 'linear-gradient(180deg, rgba(6, 182, 212, 0.8), rgba(59, 130, 246, 0.9))';
-  }
+  fill.classList.toggle('is-low', pct < 15);
 }
 
 function renderBucketLogs() {
@@ -501,9 +509,7 @@ function renderBucketLogs() {
   consoleEl.innerHTML = tokenBucket.history
     .map(
       (h) => `
-      <div style="color: ${h.allowed ? '#34d399' : '#f87171'}; padding: 2px 0;">
-        [${h.timestamp}] ${h.message} (Remaining: ${h.tokensLeft})
-      </div>
+      <div class="${h.allowed ? 'log-ok' : 'log-error'}">[${h.timestamp}] ${escapeHtml(String(h.message))} (Remaining: ${h.tokensLeft})</div>
     `
     )
     .join('');
@@ -519,9 +525,9 @@ function runCronTranslation() {
   descEl.textContent = res.english;
 
   if (res.valid && res.nextRuns) {
-    listEl.innerHTML = res.nextRuns.map((r, i) => `<li>• Run #${i + 1}: ${r}</li>`).join('');
+    listEl.innerHTML = res.nextRuns.map((r, i) => `<li>Run #${i + 1}: ${escapeHtml(String(r))}</li>`).join('');
   } else {
-    listEl.innerHTML = '<li style="color: #ef4444;">Invalid cron format</li>';
+    listEl.innerHTML = '<li class="is-error">Invalid cron format</li>';
   }
 }
 
@@ -535,19 +541,14 @@ function renderHttpStatusMatrix() {
   const grid = document.getElementById('httpStatusGrid');
   if (!grid) return;
 
-  const statusCards = HTTP_STATUS_CATALOG.map((item) => {
-    let color = '#34d399';
-    if (item.type === 'client_error') color = '#f87171';
-    else if (item.type === 'server_error') color = '#f43f5e';
-    else if (item.type === 'redirect') color = '#38bdf8';
-
-    return `
-      <div class="http-status-card">
-        <span class="glass-badge" style="background: rgba(255,255,255,0.06); color: ${color};">${item.title}</span>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.5;">${item.rule}</p>
+  const statusCards = HTTP_STATUS_CATALOG.map(
+    (item) => `
+      <div class="http-card">
+        <span class="tag is-${item.type}">${item.title}</span>
+        <p>${item.rule}</p>
       </div>
-    `;
-  }).join('');
+    `
+  ).join('');
 
   grid.innerHTML = statusCards;
 }
@@ -568,19 +569,17 @@ async function loadAffiliates() {
     grid.innerHTML = partners
       .map(
         (p) => `
-        <div class="showcase-card">
-          <div>
-            <span class="showcase-badge">${p.badge || 'Cloud Infrastructure'}</span>
-            <h4 class="showcase-title">${p.name}</h4>
-            <p class="showcase-desc">${p.description}</p>
-          </div>
-          <div class="showcase-footer">
-            <span style="color: var(--neon-cyan); font-weight: 700;">${p.perk || 'Verified Partner'}</span>
-            <a href="${p.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.72rem;">
-              Explore ↗
+        <article class="card item-card">
+          <span class="tag">${escapeHtml(p.badge || 'Cloud infrastructure')}</span>
+          <h3 class="item-title">${escapeHtml(p.name)}</h3>
+          <p class="item-desc">${escapeHtml(p.description || '')}</p>
+          <div class="item-foot">
+            <span>${escapeHtml(p.perk || 'Verified partner')}</span>
+            <a href="${escapeHtml(safeHttpUrl(p.url))}" target="_blank" rel="noopener noreferrer" class="btn btn-sm">
+              Explore${icon('external-link')}<span class="sr-only"> ${escapeHtml(p.name)} (opens in a new tab)</span>
             </a>
           </div>
-        </div>
+        </article>
       `
       )
       .join('');
@@ -599,24 +598,27 @@ async function loadShowcase() {
     grid.innerHTML = apps
       .map(
         (app) => `
-        <div class="showcase-card">
-          <div>
-            <span class="showcase-badge">${escapeHtml(app.category || 'Community Project')}</span>
-            <h4 class="showcase-title">${escapeHtml(app.title)}</h4>
-            <p class="showcase-desc">${escapeHtml(app.description || '')}</p>
+        <article class="card item-card">
+          <span class="tag">${escapeHtml(app.category || 'Community project')}</span>
+          <h3 class="item-title">${escapeHtml(app.title)}</h3>
+          <p class="item-desc">${escapeHtml(app.description || '')}</p>
+          <div class="item-foot">
+            <span class="muted">by <strong class="ink">${escapeHtml(app.author || 'Anonymous')}</strong></span>
+            <span class="button-row">
+              ${app.repoUrl ? `<a href="${escapeHtml(safeHttpUrl(app.repoUrl))}" target="_blank" rel="noopener noreferrer" class="btn btn-sm">Repo<span class="sr-only"> (opens in a new tab)</span></a>` : ''}
+              ${app.url ? `<a href="${escapeHtml(safeHttpUrl(app.url))}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Visit${icon('external-link')}<span class="sr-only"> (opens in a new tab)</span></a>` : ''}
+            </span>
           </div>
-          <div class="showcase-footer">
-            <span style="color: var(--text-muted);">by <strong style="color: #fff;">${escapeHtml(app.author || 'Anonymous')}</strong></span>
-            <div style="display: flex; gap: 0.4rem;">
-              ${app.repoUrl ? `<a href="${escapeHtml(app.repoUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.72rem;">Repo</a>` : ''}
-              ${app.url ? `<a href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.72rem;">Visit ↗</a>` : ''}
-            </div>
-          </div>
-        </div>
+        </article>
       `
       )
       .join('');
   } catch (err) {}
+}
+
+// Only http(s) links from API data may become hrefs (blocks javascript: URLs in community submissions)
+function safeHttpUrl(url) {
+  return /^https?:\/\//i.test(String(url || '')) ? String(url) : '#';
 }
 
 function escapeHtml(str) {
@@ -631,12 +633,23 @@ function setupModal() {
   const cancelBtn = document.getElementById('cancelSubmitBtn');
   const form = document.getElementById('submitAppForm');
 
-  if (openBtn) openBtn.onclick = () => (modal.style.display = 'flex');
-  if (closeBtn) closeBtn.onclick = () => (modal.style.display = 'none');
-  if (cancelBtn) cancelBtn.onclick = () => (modal.style.display = 'none');
+  const open = () => {
+    modal.style.display = 'flex';
+    document.getElementById('appTitle')?.focus();
+  };
+  const close = () => {
+    modal.style.display = 'none';
+    openBtn?.focus();
+  };
+  if (openBtn) openBtn.onclick = open;
+  if (closeBtn) closeBtn.onclick = close;
+  if (cancelBtn) cancelBtn.onclick = close;
 
   window.addEventListener('click', (e) => {
-    if (e.target === modal) modal.style.display = 'none';
+    if (e.target === modal) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display !== 'none') close();
   });
 
   if (form) {
@@ -701,19 +714,8 @@ function renderActiveKey(keyDoc) {
   const tier = (keyDoc.tier || 'free').toUpperCase();
   if (badge) {
     badge.textContent = `${tier} TIER`;
-    if (tier === 'PRO') {
-      badge.style.background = 'rgba(6, 182, 212, 0.2)';
-      badge.style.borderColor = 'rgba(6, 182, 212, 0.5)';
-      badge.style.color = 'var(--neon-cyan)';
-    } else if (tier === 'ULTRA' || tier === 'ENTERPRISE') {
-      badge.style.background = 'rgba(245, 158, 11, 0.2)';
-      badge.style.borderColor = 'rgba(245, 158, 11, 0.5)';
-      badge.style.color = 'var(--neon-amber)';
-    } else {
-      badge.style.background = 'rgba(16, 185, 129, 0.2)';
-      badge.style.borderColor = 'rgba(16, 185, 129, 0.5)';
-      badge.style.color = 'var(--neon-emerald)';
-    }
+    const tierClass = tier === 'PRO' ? 'tier-pro' : tier === 'ULTRA' || tier === 'ENTERPRISE' ? 'tier-ultra' : 'tier-free';
+    badge.className = `tag ${tierClass}`;
   }
 
   const reqUsed = keyDoc.requestsThisMonth || 0;
@@ -820,7 +822,7 @@ async function initBillingStudio() {
   // Handle post-checkout redirect return: #billingSuccess?session_id=...&key=...
   const hash = window.location.hash || '';
   if (hash.includes('billingSuccess')) {
-    showToast('🎉 Stripe payment confirmed! Your API key quota has been upgraded.');
+    showToast('Stripe payment confirmed. Your API key quota has been upgraded.');
     const params = new URLSearchParams(hash.split('?')[1] || '');
     const upgradedKey = params.get('key');
     if (upgradedKey) {
@@ -899,7 +901,7 @@ function initRailwaySandboxUI() {
   runBtn.addEventListener('click', async () => {
     const preset = presetSelect?.value || 'provably_fair';
     runBtn.disabled = true;
-    runBtn.innerHTML = '<span>⏳</span> Executing in MicroVM...';
+    runBtn.innerHTML = `${icon('loader-circle')} Executing in microVM...`;
     terminal.textContent = `[Sandbox Gateway] Requesting ephemeral Railway microVM for preset '${preset}'...\n`;
 
     // Staff token is never bundled into public JS. Staff paste it once per tab session.
@@ -907,9 +909,9 @@ function initRailwaySandboxUI() {
     if (!staffToken) {
       staffToken = (prompt('Enter staff sandbox token:') || '').trim();
       if (!staffToken) {
-        terminal.textContent += '\n🔒 Staff token required to run sandboxes.';
+        terminal.textContent += '\nStaff token required to run sandboxes.';
         runBtn.disabled = false;
-        runBtn.innerHTML = '<span>▶</span> Run in Railway Sandbox';
+        runBtn.innerHTML = `${icon('play')} Run in Railway sandbox`;
         return;
       }
       sessionStorage.setItem('dds_staff_token', staffToken);
@@ -930,22 +932,25 @@ function initRailwaySandboxUI() {
       if (data.success) {
         terminal.textContent = data.output + `\n\n[Stats] Container: ${data.sandboxId} | Boot: ${data.bootMs}ms | Exec: ${data.execMs}ms | Mem: ${data.memoryUsedMb}`;
         if (typeof showToast === 'function') {
-          showToast(`✅ Sandbox microVM executed (${data.execMs}ms)`);
+          showToast(`Sandbox microVM executed (${data.execMs}ms)`);
         }
       } else {
-        terminal.textContent += `\n❌ Error: ${data.error || 'Sandbox run failed.'}`;
+        terminal.textContent += `\nError: ${data.error || 'Sandbox run failed.'}`;
       }
     } catch (err) {
-      terminal.textContent += `\n❌ Gateway Network Error: ${err.message}`;
+      terminal.textContent += `\nGateway network error: ${err.message}`;
     } finally {
       runBtn.disabled = false;
-      runBtn.innerHTML = '<span>▶</span> Run in Railway Sandbox';
+      runBtn.innerHTML = `${icon('play')} Run in Railway sandbox`;
     }
   });
 }
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
+  hydrateIcons();
+  initTabKeyboard();
+  initHeroConsole();
   initApiStudio();
   initDataTypesStudio();
   initSystemSandbox();

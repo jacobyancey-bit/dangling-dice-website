@@ -27,9 +27,9 @@
 }
 
 /* ---------- Typography ---------- */
-.dds h1,
-.dds h2,
-.dds h3,
+:where(.dds) h1,
+:where(.dds) h2,
+:where(.dds) h3,
 .dds .display {
   margin: 0;
   color: var(--dds-ink);
@@ -37,23 +37,23 @@
   line-height: var(--dds-leading-tight);
   letter-spacing: var(--dds-tracking-display);
 }
-.dds h1, .dds .display { font-size: var(--dds-text-2xl); }
-.dds h2 { font-size: var(--dds-text-xl); }
-.dds h3 { font-size: var(--dds-text-lg); }
-.dds p { margin: 0; max-width: var(--dds-measure); }
+:where(.dds) h1, .dds .display { font-size: var(--dds-text-2xl); }
+:where(.dds) h2 { font-size: var(--dds-text-xl); }
+:where(.dds) h3 { font-size: var(--dds-text-lg); }
+:where(.dds) p { margin: 0; max-width: var(--dds-measure); }
 .dds .muted { color: var(--dds-ink-muted); }
 .dds .mono,
-.dds code,
-.dds kbd,
-.dds samp,
+:where(.dds) code,
+:where(.dds) kbd,
+:where(.dds) samp,
 .dds .metric,
-.dds time {
+:where(.dds) time {
   font-family: var(--dds-font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
 }
-.dds a { color: inherit; text-underline-offset: 3px; }
-.dds a:hover { color: var(--dds-accent); }
+:where(.dds) a { color: inherit; text-underline-offset: 3px; }
+:where(.dds) a:hover { color: var(--dds-accent); }
 
 /* ---------- Focus (keyboard only, always visible) ---------- */
 .dds :focus { outline: none; }

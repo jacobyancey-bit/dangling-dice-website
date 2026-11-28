@@ -153,7 +153,7 @@ export function analyzeRegex(patternStr, flags, testText) {
     if (rx.test(patternStr)) {
       isRedosVulnerable = true;
       redosReason =
-        '⚠️ DANGEROUS REDOS DETECTED: Nested quantifier pattern found! Evaluator could suffer exponential backtracking O(2^n) on non-matching strings, freezing the Node.js event loop.';
+        'Dangerous ReDoS pattern: nested quantifier found. Evaluator could suffer exponential backtracking O(2^n) on non-matching strings, freezing the Node.js event loop.';
       break;
     }
   }

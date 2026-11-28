@@ -106,3 +106,32 @@ Design-rule violations at baseline: see `scripts/design-baseline.json`
 - Lighthouse accessibility at least 95 on every page, SEO 100 on public pages
 - Zero focus-indicator failures
 - Every app scope in `design-baseline.json` at zero (data-viz files excepted)
+
+## Migration status (Phase 3)
+
+| App | Status | Design violations | Lighthouse a11y / SEO |
+| --- | --- | --- | --- |
+| dev | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 93 / 92) |
+| media | Next | see baseline | 91 / 92 baseline |
+| games | Pending | see baseline | 92 / 92 baseline |
+| web | Pending | see baseline | 89 / 92 baseline |
+| beats | Pending | see baseline | 79 / 92 baseline |
+
+How an app migrates (Dev is the reference):
+
+1. Its stylesheet imports `design.css` + `shell.css` only (drop `fonts.css`/`tokens.css`/`legacy-chrome.css`
+   imports and the Google Fonts `<link>`s), and `<body class="dds">`.
+2. Remove the legacy brand `<header>`; set `landmark: true` for the app in `scripts/build-shell.js` so the
+   shell renders as the page `<header>`. The page's single `<h1>` lives in the hero.
+3. Hero: `.hero-split` with `.hero-copy` (max 58ch) and a live `.card.hero-tool` on the right.
+4. No inline `style=""` colors; JavaScript toggles state classes (`is-ok`, `is-error`, `is-low`...) instead
+   of writing colors. Decorative icons use `<span data-icon="name">` placeholders hydrated with `icon()`.
+5. Escape all API/user data rendered with `innerHTML`; only `http(s)` URLs may become `href`s.
+6. `npm run lint:design:update` to lock the app at zero.
+
+Notes:
+
+- `base.css` element rules use `:where(.dds)` so component classes (for example the shell CTA) always
+  win. Do not raise their specificity.
+- Vite configs never inline fonts (`assetsInlineLimit`), because CSP `font-src` allows `'self'` only.
+- Status colors differ per theme so they pass 4.5:1 on every surface; the lint verifies them.

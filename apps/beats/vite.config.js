@@ -11,6 +11,8 @@ export default defineConfig({
     },
   },
   build: {
+    // Never inline fonts as data: URIs; CSP font-src allows 'self' only, and hashed files cache immutably
+    assetsInlineLimit: (filePath) => (filePath.endsWith('.woff2') || filePath.endsWith('.woff') ? false : undefined),
     rollupOptions: {
       input: {
         main: './index.html',

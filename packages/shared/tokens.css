@@ -64,10 +64,10 @@
   --dds-ink-on-accent: #FFFFFF;
   --dds-scrim: rgba(0, 0, 0, 0.6); /* modal backdrop */
 
-  /* Semantic status (text-safe on both themes' surfaces) */
-  --dds-status-ok: #15803D;
-  --dds-status-warn: #B45309;
-  --dds-status-error: #B91C1C;
+  /* Semantic status text (>= 4.5:1 on every surface; verified by scripts/lint-design.js) */
+  --dds-status-ok: #4ADE80;
+  --dds-status-warn: #FBBF24;
+  --dds-status-error: #F87171;
 
   /* Default accent = studio root (overridden per site below) */
   --dds-accent: #0E7490;
@@ -88,6 +88,9 @@
   --dds-border-control: #858B93;
   --dds-ink: #11181C;
   --dds-ink-muted: #59636E;
+  --dds-status-ok: #166534;
+  --dds-status-warn: #92400E;
+  --dds-status-error: #B91C1C;
   color-scheme: light;
 }
 
