@@ -5,7 +5,17 @@
   "type": "module",
   "main": "./index.js",
   "exports": {
-    ".": "./index.js"
+    ".": "./index.js",
+    "./icons": "./icons.js",
+    "./design.css": "./design.css",
+    "./tokens.css": "./tokens.css",
+    "./base.css": "./base.css",
+    "./fonts.css": "./fonts.css",
+    "./studio-rail.css": "./studio-rail.css"
+  },
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "lucide-static": "^1.83.0"
   }
 }
-

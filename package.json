@@ -18,7 +18,7 @@
     "dev:dev": "npm run dev --workspace=apps/dev",
     "dev:games": "npm run dev --workspace=apps/games",
     "seed": "npm run seed --workspace=apps/api",
-    "test": "npm run test --workspace=apps/api",
+    "test": "npm run test --workspace=apps/api && node scripts/lint-design.js",
     "test:smoke": "node apps/api/tests/smokescreen.test.js",
     "smoke": "node scripts/smokescreen.js",
     "smoke:live": "node scripts/smokescreen.js",
@@ -27,7 +27,10 @@
     "build:media": "npm run build --workspace=apps/media",
     "build:beats": "npm run build --workspace=apps/beats",
     "build:dev": "npm run build --workspace=apps/dev",
-    "build:games": "npm run build --workspace=apps/games"
+    "build:games": "npm run build --workspace=apps/games",
+    "lint:design": "node scripts/lint-design.js",
+    "lint:design:update": "node scripts/lint-design.js --update",
+    "build:icons": "node scripts/build-icons.js"
   },
   "keywords": [
     "dangling-dice-studios",

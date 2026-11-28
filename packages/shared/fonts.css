@@ -1,0 +1,7 @@
+/**
+ * Self-hosted variable fonts (OFL-1.1) bundled by Vite into each app's /assets/.
+ * Replaces Google Fonts: faster (same origin, immutable cache) and no visitor IP sent to Google.
+ * unicode-range subsetting means browsers download only the scripts a page uses.
+ */
+@import '@fontsource-variable/plus-jakarta-sans';
+@import '@fontsource-variable/jetbrains-mono';

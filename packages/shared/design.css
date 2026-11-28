@@ -1,0 +1,8 @@
+/**
+ * Dangling Dice Studios design system entry point.
+ *   @import '@dangling-dice/shared/design.css';
+ * Then set <html data-site="beats"> and add class="dds" to <body> (or a migrated section).
+ */
+@import './fonts.css';
+@import './tokens.css';
+@import './base.css';

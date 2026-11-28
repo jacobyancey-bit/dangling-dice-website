@@ -1,0 +1,200 @@
+/**
+ * Dangling Dice Studios — Base primitives
+ * Built exclusively on tokens.css. No gradients, no shadows, no blur, radius <= 8px.
+ * Elevation = surface color + hairline border. Focus = outline in the site accent.
+ *
+ * Opt-in: these rules are scoped under .dds (e.g. <body class="dds">) so legacy pages are
+ * untouched until each app migrates in Phase 3.
+ */
+
+.dds,
+.dds *,
+.dds *::before,
+.dds *::after {
+  box-sizing: border-box;
+}
+
+.dds {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Typography ---------- */
+.dds h1,
+.dds h2,
+.dds h3,
+.dds .display {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-display);
+}
+.dds h1, .dds .display { font-size: var(--text-2xl); }
+.dds h2 { font-size: var(--text-xl); }
+.dds h3 { font-size: var(--text-lg); }
+.dds p { margin: 0; max-width: var(--measure); }
+.dds .muted { color: var(--ink-muted); }
+.dds .mono,
+.dds code,
+.dds kbd,
+.dds samp,
+.dds .metric,
+.dds time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.dds a { color: inherit; text-underline-offset: 3px; }
+.dds a:hover { color: var(--accent); }
+
+/* ---------- Focus (keyboard only, always visible) ---------- */
+.dds :focus { outline: none; }
+.dds :focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-control);
+}
+
+/* ---------- Buttons ---------- */
+.dds .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease), border-color var(--duration-fast) var(--ease);
+}
+.dds .btn:hover { background: var(--surface-subtle); color: var(--ink); }
+.dds .btn-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+.dds .btn-primary:hover { border-color: var(--accent-hover); background: var(--accent-hover); color: var(--ink-on-accent); }
+.dds .btn-ghost { border-color: transparent; background: transparent; }
+.dds .btn:disabled,
+.dds .btn[aria-disabled='true'] { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Form controls ---------- */
+.dds .input,
+.dds .select,
+.dds .textarea {
+  width: 100%;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--border-control);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.dds .input::placeholder,
+.dds .textarea::placeholder { color: var(--ink-muted); opacity: 1; }
+.dds .input:focus-visible,
+.dds .select:focus-visible,
+.dds .textarea:focus-visible { outline-offset: 0; border-color: var(--accent); }
+.dds .field { display: grid; gap: var(--space-1); }
+.dds .label { color: var(--ink-muted); font-size: var(--text-sm); font-weight: 600; }
+
+/* ---------- Tags ---------- */
+.dds .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/* ---------- Cards / panels ---------- */
+.dds .card {
+  border: var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  padding: var(--space-5);
+}
+.dds .card-featured { border-left: var(--accent-bar) solid var(--accent); }
+.dds .panel-subtle { background: var(--surface-subtle); }
+
+/* KPI / stat card: number pinned to the bottom, monospace */
+.dds .stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 112px;
+}
+.dds .stat .metric { font-size: var(--text-xl); font-weight: 600; margin-top: auto; }
+
+/* ---------- Tables ---------- */
+.dds .table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.dds .table th,
+.dds .table td { padding: var(--space-2) var(--space-3); border-bottom: var(--border); text-align: left; }
+.dds .table th { color: var(--ink-muted); font-weight: 600; }
+
+/* ---------- Layout: asymmetric split hero ---------- */
+.dds .hero-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+  align-items: start;
+  padding-block: var(--space-8);
+}
+@media (min-width: 960px) {
+  .dds .hero-split { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+}
+.dds .hero-split .hero-copy { max-width: var(--measure); }
+.dds .hero-split .hero-tool { border-left: var(--accent-bar) solid var(--accent); }
+
+.dds .container { width: min(1200px, 100% - 2 * var(--space-5)); margin-inline: auto; }
+
+/* ---------- Icons ---------- */
+.dds .icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex: none;
+  stroke: currentColor;
+  stroke-width: var(--icon-stroke);
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Loading states ---------- */
+.dds .skeleton {
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
+  animation: dds-pulse 1.4s var(--ease) infinite;
+}
+@keyframes dds-pulse { 50% { opacity: 0.55; } }
+
+/* ---------- Motion & accessibility ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .dds *, .dds *::before, .dds *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+.dds .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
