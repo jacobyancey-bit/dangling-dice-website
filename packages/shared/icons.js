@@ -25,3 +25,14 @@ export function icon(name, { label = '', size, className = '' } = {}) {
 }
 
 export const ICON_NAMES = Object.keys(ICON_PATHS);
+
+/**
+ * Static HTML can't call icon(), so pages write <span data-icon="name"></span> placeholders
+ * (base.css reserves their 16px box, so nothing shifts) and hydrate them once on load.
+ */
+export function hydrateIcons(root = typeof document !== 'undefined' ? document : null) {
+  if (!root) return;
+  root.querySelectorAll('[data-icon]').forEach((el) => {
+    el.outerHTML = icon(el.dataset.icon);
+  });
+}

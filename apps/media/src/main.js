@@ -3,7 +3,10 @@
  * 1-Click Fast URL to MP3 Transcoder
  */
 
-import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell, icon, hydrateIcons } from '@dangling-dice/shared';
+
+// Swap <span data-icon> placeholders for stroke icons before any handlers run
+hydrateIcons();
 
 // Universal PWA Service Worker Registration
 initPwaServiceWorker();
@@ -28,9 +31,7 @@ function showToast(message, type = 'info') {
   container.appendChild(toast);
 
   setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
-    toast.style.transition = 'all 0.3s ease';
+    toast.classList.add('is-leaving');
     setTimeout(() => {
       if (toast.parentElement) toast.parentElement.removeChild(toast);
     }, 300);
@@ -43,8 +44,12 @@ const formatPills = document.querySelectorAll('.format-pill');
 
 formatPills.forEach((pill) => {
   pill.addEventListener('click', () => {
-    formatPills.forEach((p) => p.classList.remove('active'));
+    formatPills.forEach((p) => {
+      p.classList.remove('active');
+      p.setAttribute('aria-pressed', 'false');
+    });
     pill.classList.add('active');
+    pill.setAttribute('aria-pressed', 'true');
     selectedFormat = pill.getAttribute('data-format');
     const title = pill.querySelector('.format-title')?.textContent || selectedFormat;
     showToast(`Format set to: ${title}`);
@@ -167,7 +172,7 @@ function resetConversionState() {
   if (downloadBtn) {
     downloadBtn.removeAttribute('href');
     downloadBtn.removeAttribute('download');
-    downloadBtn.innerHTML = '📥 Download Now';
+    downloadBtn.innerHTML = `${icon('download')}Download now`;
   }
 }
 
@@ -182,11 +187,18 @@ if (convertAnotherBtn) {
   });
 }
 
-if (closeOverlayBtn) {
-  closeOverlayBtn.addEventListener('click', () => {
-    if (downloadOverlay) downloadOverlay.style.display = 'none';
-  });
+function closeOverlay() {
+  if (!downloadOverlay || downloadOverlay.style.display === 'none') return;
+  downloadOverlay.style.display = 'none';
+  (document.getElementById('convertBtn') || mediaUrlInput)?.focus();
 }
+
+if (closeOverlayBtn) {
+  closeOverlayBtn.addEventListener('click', closeOverlay);
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeOverlay();
+});
 
 if (modalConvertAgainBtn) {
   modalConvertAgainBtn.addEventListener('click', () => {
@@ -207,6 +219,7 @@ async function startDownloadWithOverlay(media) {
 
   if (downloadOverlay) {
     downloadOverlay.style.display = 'flex';
+    closeOverlayBtn?.focus();
   }
 
   // Populate Track Details in Modal
@@ -219,14 +232,14 @@ async function startDownloadWithOverlay(media) {
 
   // Reset Modal Progress
   if (modalProgressBarFill) {
-    modalProgressBarFill.style.background = 'linear-gradient(90deg, #ec4899, #06b6d4, #10b981)';
+    modalProgressBarFill.classList.remove('is-done', 'is-error');
     modalProgressBarFill.style.width = '15%';
   }
   if (modalPercentText) modalPercentText.textContent = '15%';
-  if (modalStatusText) modalStatusText.textContent = '⏳ Connecting to audio stream pipeline...';
+  if (modalStatusText) modalStatusText.textContent = 'Connecting to audio stream...';
   if (modalSubstatus) modalSubstatus.textContent = 'Transcoding & streaming directly to your device';
   if (modalConvertAgainBtn) {
-    modalConvertAgainBtn.textContent = '✨ Convert Another Track';
+    modalConvertAgainBtn.textContent = 'Convert another track';
     modalConvertAgainBtn.style.display = 'none';
   }
   if (modalDoneControls) modalDoneControls.style.display = 'none';
@@ -262,9 +275,9 @@ async function startDownloadWithOverlay(media) {
     if (modalProgressBarFill) modalProgressBarFill.style.width = `${rounded}%`;
     if (modalPercentText) modalPercentText.textContent = `${rounded}%`;
     if (rounded > 35 && rounded < 75 && modalStatusText) {
-      modalStatusText.textContent = '⚡ Transcoding master audio stream...';
+      modalStatusText.textContent = 'Transcoding master audio stream...';
     } else if (rounded >= 75 && modalStatusText) {
-      modalStatusText.textContent = '📦 Packaging file for Downloads folder...';
+      modalStatusText.textContent = 'Packaging file for your Downloads folder...';
     }
   }, 450);
 
@@ -278,7 +291,7 @@ async function startDownloadWithOverlay(media) {
 
     if (modalProgressBarFill) modalProgressBarFill.style.width = '95%';
     if (modalPercentText) modalPercentText.textContent = '95%';
-    if (modalStatusText) modalStatusText.textContent = '💾 Saving to Downloads folder...';
+    if (modalStatusText) modalStatusText.textContent = 'Saving to your Downloads folder...';
 
     const blob = await res.blob();
     if (!blob || blob.size < 2048) {
@@ -299,16 +312,16 @@ async function startDownloadWithOverlay(media) {
 
     // 100% Complete & Reveal Convert Again Button
     if (modalProgressBarFill) {
-      modalProgressBarFill.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
+      modalProgressBarFill.classList.add('is-done');
       modalProgressBarFill.style.width = '100%';
     }
     if (modalPercentText) modalPercentText.textContent = '100%';
-    if (modalStatusText) modalStatusText.textContent = '✅ Download Complete!';
+    if (modalStatusText) modalStatusText.textContent = 'Download complete';
     if (modalSubstatus) modalSubstatus.textContent = `Saved: ${media.cleanTitle} in your Downloads folder`;
     if (modalWarningCard) modalWarningCard.style.display = 'none';
 
     if (modalConvertAgainBtn) {
-      modalConvertAgainBtn.textContent = '✨ Convert Another Track';
+      modalConvertAgainBtn.textContent = 'Convert another track';
       modalConvertAgainBtn.style.display = 'block';
     }
     if (modalDoneControls) {
@@ -319,7 +332,7 @@ async function startDownloadWithOverlay(media) {
       modalDirectDownloadLink.setAttribute('download', media.cleanTitle);
     }
 
-    showToast(`✅ Downloaded ${media.cleanTitle}!`, 'success');
+    showToast(`Downloaded ${media.cleanTitle}`, 'success');
     
     // Reveal high-converting partner creator perks inside modal
     const modalContextualPerks = document.getElementById('modalContextualPerks');
@@ -333,15 +346,15 @@ async function startDownloadWithOverlay(media) {
     console.error('[Download Stream Error]', err);
 
     if (modalProgressBarFill) {
-      modalProgressBarFill.style.background = '#ef4444';
+      modalProgressBarFill.classList.add('is-error');
       modalProgressBarFill.style.width = '100%';
     }
     if (modalPercentText) modalPercentText.textContent = 'FAILED';
-    if (modalStatusText) modalStatusText.textContent = '⚠️ Download Incomplete — File Not Saved';
+    if (modalStatusText) modalStatusText.textContent = 'Download incomplete: file not saved';
     if (modalSubstatus) modalSubstatus.textContent = 'The track could not be saved to your Downloads folder';
 
     if (modalWarningCard) {
-      modalWarningCard.style.display = 'flex';
+      modalWarningCard.style.display = 'grid';
     }
     if (modalWarningMessage) {
       modalWarningMessage.textContent = `Warning: The download failed (${err.message || 'connection interrupted'}). The upstream provider may have temporarily throttled this stream. Please try again.`;
@@ -366,7 +379,7 @@ async function startDownloadWithOverlay(media) {
     }
 
     if (modalConvertAgainBtn) {
-      modalConvertAgainBtn.textContent = '🔄 Try Another Track';
+      modalConvertAgainBtn.textContent = 'Try another track';
       modalConvertAgainBtn.style.display = 'block';
     }
     showToast(err.message || 'Download failed — please try again', 'error');
@@ -393,7 +406,7 @@ if (convertBtn) {
 
     // Lock UI and show active progress
     convertBtn.disabled = true;
-    convertBtn.textContent = '⏳ Resolving & Preparing Download...';
+    convertBtn.innerHTML = `${icon('loader-circle')}Preparing download...`;
     if (progressContainer) progressContainer.style.display = 'block';
     if (resultBox) resultBox.style.display = 'none';
 
@@ -474,7 +487,7 @@ if (convertBtn) {
       if (downloadNotice) {
         downloadNotice.style.display = 'block';
         if (downloadStatusText) {
-          downloadStatusText.textContent = `✅ Ready to download: ${media.cleanTitle}`;
+          downloadStatusText.textContent = `Ready to download: ${media.cleanTitle}`;
         }
       }
 
@@ -488,7 +501,7 @@ if (convertBtn) {
       showToast(err.message || 'Stream extraction error. Please check URL.', 'error');
     } finally {
       convertBtn.disabled = false;
-      convertBtn.textContent = '⚡ Convert & Download to Computer';
+      convertBtn.innerHTML = `${icon('download')}Convert &amp; download`;
     }
   });
 }
@@ -517,22 +530,21 @@ function showGentleMilestoneTipCard(count) {
 
   const card = document.createElement('div');
   card.id = 'bmcGentleTipCard';
-  card.className = 'bmc-gentle-card';
+  card.className = 'tip-card';
+  card.setAttribute('role', 'status');
   card.innerHTML = `
-    <div class="bmc-gentle-header">
-      <span class="bmc-gentle-title">🎉 Track #${count} Downloaded!</span>
-      <button type="button" class="bmc-gentle-close" onclick="window.dismissBmcTip(false)" aria-label="Close">&times;</button>
+    <div class="tip-card-head">
+      <span class="tip-card-title">Track #${Number(count)} downloaded</span>
+      <button type="button" class="btn btn-ghost btn-icon btn-sm" onclick="window.dismissBmcTip(false)" aria-label="Dismiss">${icon('x')}</button>
     </div>
-    <p class="bmc-gentle-body">
-      Enjoying clean 320kbps audio without popup ads or paywalls? If our converter saved you time, consider dropping a tip in the studio coffee jar to help cover bandwidth!
+    <p class="small muted">
+      Enjoying clean 320kbps audio without popup ads or paywalls? A tip helps cover bandwidth.
     </p>
-    <div class="bmc-gentle-actions">
-      <a href="https://buymeacoffee.com/danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-coffee btn-sm" onclick="window.dismissBmcTip(true)">
-        ☕ Buy a Coffee ($5 or Custom) ↗
+    <div class="button-row">
+      <a href="https://buymeacoffee.com/danglingdicestudios" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" onclick="window.dismissBmcTip(true)">
+        ${icon('coffee')}Buy a coffee<span class="sr-only"> (opens in a new tab)</span>
       </a>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="window.dismissBmcTip(false)">
-        Maybe Later
-      </button>
+      <button type="button" class="btn btn-sm" onclick="window.dismissBmcTip(false)">Maybe later</button>
     </div>
   `;
 
@@ -548,9 +560,7 @@ function showGentleMilestoneTipCard(count) {
 function dismissBmcTip(isSupporter) {
   const card = document.getElementById('bmcGentleTipCard');
   if (card) {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'all 0.3s ease';
+    card.classList.add('is-leaving');
     setTimeout(() => card.remove(), 300);
   }
 

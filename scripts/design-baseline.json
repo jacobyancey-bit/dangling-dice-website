@@ -48,11 +48,11 @@
     "emoji": 225
   },
   "media": {
-    "gradient": 22,
-    "blur": 6,
-    "shadow": 21,
-    "radius_gt8": 7,
-    "hex_color": 151,
-    "emoji": 74
+    "gradient": 0,
+    "blur": 0,
+    "shadow": 0,
+    "radius_gt8": 0,
+    "hex_color": 0,
+    "emoji": 0
   }
 }

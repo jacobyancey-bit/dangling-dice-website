@@ -1,5 +1,5 @@
 import './style.css';
-import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell, icon } from '@dangling-dice/shared';
+import { initStaffCommandPalette, initPwaServiceWorker, initStudioShell, icon, hydrateIcons } from '@dangling-dice/shared';
 import { initHeroConsole } from './heroConsole.js';
 
 // Universal PWA Service Worker Registration
@@ -99,12 +99,6 @@ function initTabKeyboard() {
   });
 }
 
-// Static HTML uses <span data-icon="name"> placeholders; swap in the shared stroke icons
-function hydrateIcons(root = document) {
-  root.querySelectorAll('[data-icon]').forEach((el) => {
-    el.outerHTML = icon(el.dataset.icon);
-  });
-}
 
 // ============================================================================
 // 1. API Studio: Live Glass-Box Runner & Code Generator

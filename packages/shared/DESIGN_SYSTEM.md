@@ -112,8 +112,8 @@ Design-rule violations at baseline: see `scripts/design-baseline.json`
 | App | Status | Design violations | Lighthouse a11y / SEO |
 | --- | --- | --- | --- |
 | dev | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 93 / 92) |
-| media | Next | see baseline | 91 / 92 baseline |
-| games | Pending | see baseline | 92 / 92 baseline |
+| media | Migrated 2026-11-28 | 0 (locked) | 100 / 100 (local build; baseline 91 / 92) |
+| games | Next | see baseline | 92 / 92 baseline |
 | web | Pending | see baseline | 89 / 92 baseline |
 | beats | Pending | see baseline | 79 / 92 baseline |
 
@@ -135,3 +135,7 @@ Notes:
   win. Do not raise their specificity.
 - Vite configs never inline fonts (`assetsInlineLimit`), because CSP `font-src` allows `'self'` only.
 - Status colors differ per theme so they pass 4.5:1 on every surface; the lint verifies them.
+- Shared page patterns (skip link, eyebrow, buttons rows, section heads, callouts, Tutor Calculator promo,
+  footer) live in `base.css`; `hydrateIcons()` is exported from `@dangling-dice/shared`. Put new generic
+  patterns there instead of copying them into an app stylesheet.
+- Utility pages put the tool directly after the headline on phones (see Media's hero reorder).

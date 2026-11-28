@@ -5,7 +5,7 @@
 
 import { icon } from './icons.js';
 
-export { icon } from './icons.js';
+export { icon, hydrateIcons } from './icons.js';
 export { initStudioShell } from './shell.js';
 
 export const ITEM_CATEGORIES = [

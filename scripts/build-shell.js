@@ -18,7 +18,7 @@ const PAGES = [
   { site: 'beats', file: 'apps/beats/index.html' },
   { site: 'dev', file: 'apps/dev/index.html', options: { landmark: true } }, // migrated (Phase 3)
   { site: 'games', file: 'apps/games/index.html' },
-  { site: 'media', file: 'apps/media/index.html' },
+  { site: 'media', file: 'apps/media/index.html', options: { landmark: true } }, // migrated (Phase 3)
 ];
 
 const START = '<!-- dds-shell:start -->';

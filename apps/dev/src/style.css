@@ -7,52 +7,13 @@
 @import '@dangling-dice/shared/design.css';
 @import '@dangling-dice/shared/shell.css';
 
-/* ---------- Page scaffolding ---------- */
-.skip-link {
-  position: absolute;
-  left: var(--dds-space-3);
-  top: -100px;
-  z-index: 2000;
-  padding: var(--dds-space-2) var(--dds-space-3);
-  border-radius: var(--dds-radius-control);
-  background: var(--dds-accent);
-  color: var(--dds-ink-on-accent);
-  font-weight: 600;
-}
-.skip-link:focus { top: var(--dds-space-2); }
-
-.dds main { display: block; }
-.dds .small { font-size: var(--dds-text-sm); }
-.dds .ink { color: var(--dds-ink); }
-.dds .push-right { margin-left: auto; }
-.dds .eyebrow {
-  margin: 0 0 var(--dds-space-3);
-  color: var(--dds-ink-muted);
-  font-size: var(--dds-text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.dds :not(pre) > code {
-  padding: 1px 5px;
-  border: var(--dds-border);
-  border-radius: 4px;
-  background: var(--dds-surface-subtle);
-  font-size: 0.92em;
-}
-.dds [data-icon] { display: inline-block; width: 16px; height: 16px; flex: none; }
-.dds .btn .icon,
+/* ---------- Page scaffolding (generic patterns live in shared base.css) ---------- */
 .dds .tab .icon,
-.dds .note .icon,
-.dds .privacy-note .icon,
 .dds .trust-strip .icon,
 .dds .subcard-title .icon { width: 16px; height: 16px; }
-.dds .btn-sm { min-height: 30px; padding: 0 var(--dds-space-3); font-size: var(--dds-text-xs); }
-.dds .btn-icon { min-width: 36px; padding: 0; justify-content: center; }
-.dds .button-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dds-space-2); }
 
 /* ---------- Hero (asymmetric split) ---------- */
 .dds .hero-split { padding-block: var(--dds-space-7) var(--dds-space-6); }
-.dds .lead { margin-top: var(--dds-space-4); color: var(--dds-ink-muted); font-size: var(--dds-text-md); }
 .dds .hero-actions { display: flex; flex-wrap: wrap; gap: var(--dds-space-3); margin-top: var(--dds-space-5); }
 .dds .hero-stats {
   display: grid;
@@ -171,11 +132,6 @@
 .dds .tab.active { border-bottom-color: var(--dds-accent); color: var(--dds-ink); font-weight: 600; }
 
 /* ---------- Sections ---------- */
-.dds .panel-section { padding-block: var(--dds-space-6); scroll-margin-top: var(--dds-shell-height); }
-.dds .panel-section[hidden] { display: none; }
-.dds .section-head { display: grid; gap: var(--dds-space-2); margin-bottom: var(--dds-space-5); }
-.dds .section-head-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--dds-space-4); }
-.dds .section-title { font-size: var(--dds-text-lg); }
 .dds .toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--dds-space-3); margin-bottom: var(--dds-space-4); }
 .dds .field-inline { min-width: min(100%, 420px); }
 .dds .subcard { margin-top: var(--dds-space-5); }
@@ -278,26 +234,6 @@
 .dds .readout-featured { border-left: var(--dds-accent-bar) solid var(--dds-accent); }
 .dds .readout-featured .readout-value { font-size: var(--dds-text-md); font-weight: 600; word-break: normal; }
 .dds .readout-scroll { max-height: 160px; overflow: auto; font-size: var(--dds-text-xs); white-space: pre-wrap; }
-.dds .callout {
-  margin-block: var(--dds-space-3);
-  padding: var(--dds-space-2) var(--dds-space-3);
-  border: var(--dds-border);
-  border-left-width: var(--dds-accent-bar);
-  border-radius: var(--dds-radius-control);
-  background: var(--dds-surface-subtle);
-  font-size: var(--dds-text-sm);
-}
-.dds .callout.is-ok { border-left-color: var(--dds-status-ok); color: var(--dds-status-ok); }
-.dds .callout.is-error { border-left-color: var(--dds-status-error); color: var(--dds-status-error); }
-.dds .note,
-.dds .privacy-note {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--dds-space-2);
-  max-width: none;
-  color: var(--dds-ink-muted);
-  font-size: var(--dds-text-sm);
-}
 .dds .log-ok { color: var(--dds-status-ok); }
 .dds .log-error { color: var(--dds-status-error); }
 
@@ -431,13 +367,6 @@
 .dds .item-desc { color: var(--dds-ink-muted); font-size: var(--dds-text-sm); }
 .dds .item-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--dds-space-2); margin-top: auto; font-size: var(--dds-text-sm); }
 
-/* ---------- Tutor Calculator promo ---------- */
-.dds .promo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dds-space-4); margin-block: var(--dds-space-5) var(--dds-space-7); }
-.dds .promo-icon { width: 56px; height: 56px; flex: none; border-radius: var(--dds-radius-panel); }
-.dds .promo-copy { flex: 1; min-width: 260px; }
-.dds .promo-copy .eyebrow { margin-bottom: var(--dds-space-1); }
-.dds .promo-title { font-size: var(--dds-text-md); letter-spacing: var(--dds-tracking-body); }
-
 /* ---------- Modal & toast ---------- */
 .dds .modal-overlay {
   position: fixed;
@@ -473,13 +402,6 @@
   background: var(--dds-surface);
   font-size: var(--dds-text-sm);
 }
-
-/* ---------- Footer ---------- */
-.dds .site-footer { padding-block: var(--dds-space-6); border-top: var(--dds-border); }
-.dds .footer-inner { display: grid; gap: var(--dds-space-3); }
-.dds .footer-links { display: flex; flex-wrap: wrap; gap: var(--dds-space-2) var(--dds-space-5); font-size: var(--dds-text-sm); }
-.dds .footer-links a { color: var(--dds-ink-muted); text-decoration: none; }
-.dds .footer-links a:hover { color: var(--dds-ink); text-decoration: underline; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
