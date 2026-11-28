@@ -54,7 +54,7 @@ const seedData = async () => {
         description: 'Offline-first Android medication cabinet, refill reminders, and real-time FDA generic launch, shortage, and pharmacy savings lookups. Zero user accounts, zero ad networks, and zero tracking.',
         category: 'Mobile Apps',
         mediaUrl: 'https://play.google.com/store/apps/details?id=com.danglingdicestudios.rx',
-        imageUrl: '/rx-savings-watch/icon.png',
+        imageUrl: '/rx-savings-watch/thumbnail.jpg',
         tags: ['Android', 'Google Play', 'Healthcare', 'Privacy', 'Mobile App'],
         price: 0,
         isFeatured: true,
